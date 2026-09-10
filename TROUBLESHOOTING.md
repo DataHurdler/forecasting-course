@@ -152,6 +152,10 @@ Since **2026-08-14** auto mode is the **default starting mode** for new interact
 
 The Claude Code VSCode extension expects **`allowDangerouslySkipPermissions: true`** (no `claudeCode.` prefix). The prefixed form `claudeCode.allowDangerouslySkipPermissions` is silently ignored, leaving the protected-paths gate active even with broad CLI bypass. Fix: drop the `claudeCode.` prefix on that one key (`claudeCode.initialPermissionMode` keeps its prefix). Reload the VSCode window after editing `.vscode/settings.json` for the change to register.
 
+This repository does **not** ship `.vscode/settings.json` (since 2026-09-10; `.vscode/` is
+gitignored). Earlier versions of the template did, with bypass switched on for anyone who opened
+the repo. If you want these keys, create the file yourself — it stays on your machine.
+
 ## Peer-review pipeline (v1.5.0)
 
 ### `/review-paper --peer AER` fails with "journal not found"
