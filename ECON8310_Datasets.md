@@ -193,8 +193,13 @@ history was shared for this course.
 The store is not named here, and nothing in the file identifies it, its products, or anyone who
 bought from it. The file is weekly totals and nothing else.
 
-**Where to get it.** Nowhere — it is already in your repository, at
-`data/processed/onlinestore_weekly.csv`. There is no download and no prep script.
+**Where to get it.** Three ways, no account and no prep script needed:
+
+- **Already in your `forecasting-env` clone**, at `data/processed/onlinestore_weekly.csv`. If you
+  cloned before 21 September 2026, `git pull` brings it down.
+- **[Download the CSV directly](https://raw.githubusercontent.com/DataHurdler/forecasting-env/main/data/processed/onlinestore_weekly.csv)** — about 14 KB, one file, nothing to unpack.
+- **[Browse the repository on GitHub](https://github.com/DataHurdler/forecasting-env)** if you would
+  rather look before you download.
 
 | Column | |
 |---|---|
