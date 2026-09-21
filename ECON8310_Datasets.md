@@ -200,9 +200,18 @@ bought from it. The file is weekly totals and nothing else.
 |---|---|
 | `week_start` | the Monday the week begins |
 | `orders` | orders placed that week |
+| `orders_intl` | how many of those came from outside the US |
 | `units` | items across those orders |
 | `revenue_index` | revenue, indexed (see below) |
+| `revenue_index_intl` | the part of that revenue from outside the US |
 | `merch_index`, `shipping_index` | the same revenue split into goods and shipping |
+
+**The international columns are parts, not separate series.** Domestic is the subtraction:
+`revenue_index - revenue_index_intl`, and likewise for orders. Everything is on one index base,
+so the two halves add back to the total exactly. The US is 63% of orders and international is
+37% of revenue — the export orders are worth more each — spread across **55 countries** led by
+Canada, Australia and the UK. That is a grab-bag, not one export market, so treat it as two
+series at most rather than a per-country panel.
 
 **Revenue is an index, not dollars.** November 2025 = 100, and every other week is relative to
 it. A week at 50 did half that month's average business; a week at 200, twice. The store's actual

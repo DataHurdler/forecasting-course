@@ -436,6 +436,10 @@ is no download and no prep script.</p>
 <td>orders placed that week</td>
 </tr>
 <tr>
+<td><code>orders_intl</code></td>
+<td>how many of those came from outside the US</td>
+</tr>
+<tr>
 <td><code>units</code></td>
 <td>items across those orders</td>
 </tr>
@@ -444,11 +448,24 @@ is no download and no prep script.</p>
 <td>revenue, indexed (see below)</td>
 </tr>
 <tr>
+<td><code>revenue_index_intl</code></td>
+<td>the part of that revenue from outside the US</td>
+</tr>
+<tr>
 <td><code>merch_index</code>, <code>shipping_index</code></td>
 <td>the same revenue split into goods and shipping</td>
 </tr>
 </tbody>
 </table>
+<p><strong>The international columns are parts, not separate
+series.</strong> Domestic is the subtraction:
+<code>revenue_index - revenue_index_intl</code>, and likewise for
+orders. Everything is on one index base, so the two halves add back to
+the total exactly. The US is 63% of orders and international is 37% of
+revenue — the export orders are worth more each — spread across
+<strong>55 countries</strong> led by Canada, Australia and the UK. That
+is a grab-bag, not one export market, so treat it as two series at most
+rather than a per-country panel.</p>
 <p><strong>Revenue is an index, not dollars.</strong> November 2025 =
 100, and every other week is relative to it. A week at 50 did half that
 month’s average business; a week at 200, twice. The store’s actual
