@@ -50,7 +50,19 @@ not yet opened; three methods from a single part of the course; no benchmark nam
 a hobby — almost always produces a better project, because you can tell when an answer is
 implausible and a stranger's dataset gives you no such instinct.
 
-**If you do not have one, use Favorita.** Daily sales for Corporación Favorita, a large Ecuadorian
+**If you do not have one, two are ready for you.**
+
+**The online store.** Weekly sales from a small online retailer that is still trading —
+454 weeks, 2018 to 2026, already in your repository at
+`data/processed/onlinestore_weekly.csv`. No account, no download. Revenue is an index
+(November 2025 = 100) rather than dollars, which changes nothing about forecasting it. Two
+things make it worth choosing: **nobody has ever modelled it**, so there is no published answer
+to lean on, and **the owner is reachable through me** — you can ask the business questions the
+data cannot answer, which is what you would do on a real engagement. It is small and lumpy, and
+deciding what should not be modelled at all is part of the work. Full description in
+[the datasets guide](https://www.luozijun.com/forecasting-course/files/datasets.html).
+
+**Favorita.** Daily sales for Corporación Favorita, a large Ecuadorian
 grocery chain, 2013–2017, with promotions, store metadata, national holidays and a daily oil price:
 [Kaggle: Corporación Favorita Grocery Sales Forecasting](https://www.kaggle.com/c/favorita-grocery-sales-forecasting)
 (a Kaggle account is required). It is rich enough for serious work and different enough from the
@@ -58,10 +70,6 @@ M5 spine that you cannot reuse lecture code unchanged — which is the point. It
 documented natural experiment: the magnitude 7.8 earthquake of **16 April 2016**, after which sales
 spiked for weeks. A group that wants to study a genuine structural break rather than simulate one
 has a clean case waiting.
-
-**A third option may appear.** Your instructor may supply a real, non-public sales panel from a
-working website; if it is ready it will be announced by Week 4. Favorita is the supported fallback
-either way — do not hold your project waiting for it.
 
 **What you may not use:** the M5 weekly panel exactly as the homework uses it. Reframing it — a
 different aggregation, a different question, a different horizon — is fine and sometimes strong.

@@ -187,8 +187,8 @@ cannot reuse lecture code unchanged — which is rather the point.
 ## 5. An online store — optional, for final projects
 
 **What it is.** Weekly sales from a single small online retailer, **454 weeks from 1 January
-2018 to 7 September 2026**. The shop is real, independently owned, and still trading. Its owner
-shared the order history for this course.
+2018 to 7 September 2026**. The shop is real, independently owned, and still trading. Its order
+history was shared for this course.
 
 The store is not named here, and nothing in the file identifies it, its products, or anyone who
 bought from it. The file is weekly totals and nothing else.
@@ -225,9 +225,10 @@ it is the part the famous datasets let you skip.
 the history is not ordinary demand, the data will not say so. Finding it, deciding what it is,
 and defending how you handled it is the project.
 
-**One thing you have that you will not usually have:** the owner is reachable. Ask me business
-questions the data cannot answer — what changed in a given year, how the store sells, what a
-quiet week looks like from the inside. Treat me as the client. That is what the client is for.
+**One thing you have that you will not usually have:** the owner is reachable through me. Ask me
+the business questions the data cannot answer — what changed in a given year, how the store
+sells, what a quiet week looks like from the inside. Treat me as the client; that is what a
+client is for, and it is how the work is actually done.
 
 ---
 

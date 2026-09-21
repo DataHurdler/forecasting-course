@@ -239,7 +239,10 @@ template-maintenance gates that this course repo does not satisfy.
 **Dataset architecture:** see
 [`quality_reports/decisions/ADR-0001-course-dataset-architecture.md`](quality_reports/decisions/ADR-0001-course-dataset-architecture.md).
 **M5/Walmart** is the spine, supplemented by FRED (L02 VAR/Granger) and electricity demand
-(L03 multiple seasonality). **Favorita is project-only** as of 2026-08-31 — there is no
+(L03 multiple seasonality). **Two datasets are project-only:** the **online store** (`onlinestore_weekly.csv`, 454 weeks
+2018–2026, revenue indexed to Nov 2025 = 100, built by `forecasting-instructor/prep_ico_weekly.py`
+from a gitignored dump; shipped in the student repo, documented as §5 of the datasets guide) and
+**Favorita** as of 2026-08-31 — there is no
 `prep_favorita.py` and Week 16 does not use it. The Week 16 shock cameo is built on M5's own
 Christmas closures (units = 0 on 25 Dec, five years; `is_event` fires on 158 days of which 5
 are closures), which needs no second dataset. The migration off

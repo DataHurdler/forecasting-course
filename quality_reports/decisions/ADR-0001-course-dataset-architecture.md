@@ -245,3 +245,25 @@ publisher, so the URL is less durable than FRED's. The prep script caches to
 `data/processed/`, so a broken upstream affects only a fresh setup, not a working checkout.
 If the mirror disappears, EIA-930 (`eia.gov`, official, reachable) is the fallback and covers
 2015 onward.
+
+---
+
+## Addendum, 2026-09-21 — a fifth dataset, for projects only
+
+A sixth option was added to the project menu and nothing above is retracted: the spine, the two
+supplements and Favorita all stand.
+
+`onlinestore_weekly.csv` — 454 weeks (2018-01-01 to 2026-09-07) of orders, units and indexed
+revenue from a small online retailer still trading today. It ships in the student repository;
+there is no download and no account. Revenue is indexed to November 2025 = 100 because the
+series is published and the store's real takings are not ours to publish; no forecasting property
+survives rescaling any worse for it.
+
+It answers something none of the four could: **an unmodelled series**. Every other dataset here
+has a literature a student can consult. This one has none, which is the condition the course
+claims to prepare them for. The cost is honest and stated in the guide — it is short, thin and
+lumpy, and much of the work is deciding what not to model.
+
+The raw source is a CubeCart database dump carrying customer names, addresses, phone numbers,
+emails and IP addresses. It lives in the private instructor repository, gitignored, and is
+processed by `prep_ico_weekly.py`; nothing but weekly totals leaves it.
