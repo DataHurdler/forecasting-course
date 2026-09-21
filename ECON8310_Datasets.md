@@ -1,6 +1,6 @@
 ECON 8310 — The Data We Use
 ===========================
-### A guide to the four datasets in this course
+### A guide to the five datasets in this course
 
 [← Course website](https://www.luozijun.com/forecasting-course/) · [About this course](https://www.luozijun.com/forecasting-course/files/about.html)
 
@@ -13,7 +13,7 @@ runs on **one** dataset. That is deliberate. When exponential smoothing and an L
 in Week 9, you should be able to say the difference came from the **method**. If we switched
 datasets every lecture, you could never make that claim: the data would be a confound.
 
-Three other datasets appear during the semester. Each one is here for exactly **one** reason —
+Four other datasets appear during the semester. Each one is here for exactly **one** reason —
 something the spine genuinely cannot demonstrate. Noticing *which* dataset a question needs is
 itself part of the skill this course is teaching.
 
@@ -23,6 +23,7 @@ itself part of the skill this course is teaching.
 | **FRED** macro series | Lecture 2 | Gives a case where the causal *direction* is defensible — unemployment moves retail spending, not the reverse |
 | **Electricity demand** | Lecture 3 | Half-hourly data has daily, weekly *and* yearly cycles at once. Retail has one |
 | **Favorita** (Ecuador) | Optional, for final projects | A rich second panel with promotions, holidays and an oil price — and a documented natural experiment |
+| **Online store** | Optional, for final projects | A small shop still trading today: no published answer to copy, and real business messiness at a scale you can hold in your head |
 
 ---
 
@@ -183,11 +184,59 @@ cannot reuse lecture code unchanged — which is rather the point.
 
 ---
 
+## 5. An online store — optional, for final projects
+
+**What it is.** Weekly sales from a single small online retailer, **454 weeks from 1 January
+2018 to 7 September 2026**. The shop is real, independently owned, and still trading. Its owner
+shared the order history for this course.
+
+The store is not named here, and nothing in the file identifies it, its products, or anyone who
+bought from it. The file is weekly totals and nothing else.
+
+**Where to get it.** Nowhere — it is already in your repository, at
+`data/processed/onlinestore_weekly.csv`. There is no download and no prep script.
+
+| Column | |
+|---|---|
+| `week_start` | the Monday the week begins |
+| `orders` | orders placed that week |
+| `units` | items across those orders |
+| `revenue_index` | revenue, indexed (see below) |
+| `merch_index`, `shipping_index` | the same revenue split into goods and shipping |
+
+**Revenue is an index, not dollars.** November 2025 = 100, and every other week is relative to
+it. A week at 50 did half that month's average business; a week at 200, twice. The store's actual
+takings are its owner's business, and a forecast does not need them: growth, volatility,
+seasonality and every error metric behave identically under rescaling. Your RMSE will simply be
+in index points.
+
+**Why it is worth your time, and what it will cost you.** Every other dataset in this course is
+famous. Hundreds of people have published models of M5; you can look up what works. Nobody has
+ever modelled this series. There is no answer to check yourself against, which is the situation
+you will actually be in at work.
+
+It is also **small and awkward in ways the big public datasets are not**: a few orders in a
+typical week, weeks with none at all, and a level that does not sit still across eight years.
+Methods that shine on Walmart's thousands of units a day have less to work with here. Deciding
+what is signal, what is noise, and what should not be modelled at all is most of the work — and
+it is the part the famous datasets let you skip.
+
+**Nothing in this series is flagged for you.** As with Favorita's earthquake, if something in
+the history is not ordinary demand, the data will not say so. Finding it, deciding what it is,
+and defending how you handled it is the project.
+
+**One thing you have that you will not usually have:** the owner is reachable. Ask me business
+questions the data cannot answer — what changed in a given year, how the store sells, what a
+quiet week looks like from the inside. Treat me as the client. That is what the client is for.
+
+---
+
 ## Getting set up
 
 1. Install the Python packages listed in the syllabus.
 2. Run the data preparation script once, before your first assignment. It downloads and
-   subsets M5 and writes the processed files that the homework expects.
+   subsets M5 and writes the processed files that the homework expects. (The online-store
+   file in §5 is committed to the repository already — nothing to run.)
 3. Confirm the output files exist before starting Homework 1.
 
 If any step fails, email me *before* the assignment is due rather than the night it is due.

@@ -112,13 +112,16 @@ id="toc-electricity-demand-lecture-3">3. Electricity demand — Lecture
 <li><a href="#favorita-optional-for-final-projects"
 id="toc-favorita-optional-for-final-projects">4. Favorita — optional,
 for final projects</a></li>
+<li><a href="#an-online-store-optional-for-final-projects"
+id="toc-an-online-store-optional-for-final-projects">5. An online store
+— optional, for final projects</a></li>
 <li><a href="#getting-set-up" id="toc-getting-set-up">Getting set
 up</a></li>
 </ul></li>
 </ul>
 </nav>
 <h1 id="econ-8310-the-data-we-use">ECON 8310 — The Data We Use</h1>
-<h3 id="a-guide-to-the-four-datasets-in-this-course">A guide to the four
+<h3 id="a-guide-to-the-five-datasets-in-this-course">A guide to the five
 datasets in this course</h3>
 <p><a href="https://www.luozijun.com/forecasting-course/">← Course
 website</a> · <a
@@ -133,7 +136,7 @@ That is deliberate. When exponential smoothing and an LSTM disagree in
 Week 9, you should be able to say the difference came from the
 <strong>method</strong>. If we switched datasets every lecture, you
 could never make that claim: the data would be a confound.</p>
-<p>Three other datasets appear during the semester. Each one is here for
+<p>Four other datasets appear during the semester. Each one is here for
 exactly <strong>one</strong> reason — something the spine genuinely
 cannot demonstrate. Noticing <em>which</em> dataset a question needs is
 itself part of the skill this course is teaching.</p>
@@ -174,6 +177,12 @@ once. Retail has one</td>
 <td>Optional, for final projects</td>
 <td>A rich second panel with promotions, holidays and an oil price — and
 a documented natural experiment</td>
+</tr>
+<tr>
+<td><strong>Online store</strong></td>
+<td>Optional, for final projects</td>
+<td>A small shop still trading today: no published answer to copy, and
+real business messiness at a scale you can hold in your head</td>
 </tr>
 </tbody>
 </table>
@@ -394,12 +403,88 @@ dataset if your group wants one ready-made: it is rich enough for
 serious work and different enough from the spine that you cannot reuse
 lecture code unchanged — which is rather the point.</p>
 <hr />
+<h2 id="an-online-store-optional-for-final-projects">5. An online store
+— optional, for final projects</h2>
+<p><strong>What it is.</strong> Weekly sales from a single small online
+retailer, <strong>454 weeks from 1 January 2018 to 7 September
+2026</strong>. The shop is real, independently owned, and still trading.
+Its owner shared the order history for this course.</p>
+<p>The store is not named here, and nothing in the file identifies it,
+its products, or anyone who bought from it. The file is weekly totals
+and nothing else.</p>
+<p><strong>Where to get it.</strong> Nowhere — it is already in your
+repository, at <code>data/processed/onlinestore_weekly.csv</code>. There
+is no download and no prep script.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>week_start</code></td>
+<td>the Monday the week begins</td>
+</tr>
+<tr>
+<td><code>orders</code></td>
+<td>orders placed that week</td>
+</tr>
+<tr>
+<td><code>units</code></td>
+<td>items across those orders</td>
+</tr>
+<tr>
+<td><code>revenue_index</code></td>
+<td>revenue, indexed (see below)</td>
+</tr>
+<tr>
+<td><code>merch_index</code>, <code>shipping_index</code></td>
+<td>the same revenue split into goods and shipping</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Revenue is an index, not dollars.</strong> November 2025 =
+100, and every other week is relative to it. A week at 50 did half that
+month’s average business; a week at 200, twice. The store’s actual
+takings are its owner’s business, and a forecast does not need them:
+growth, volatility, seasonality and every error metric behave
+identically under rescaling. Your RMSE will simply be in index
+points.</p>
+<p><strong>Why it is worth your time, and what it will cost
+you.</strong> Every other dataset in this course is famous. Hundreds of
+people have published models of M5; you can look up what works. Nobody
+has ever modelled this series. There is no answer to check yourself
+against, which is the situation you will actually be in at work.</p>
+<p>It is also <strong>small and awkward in ways the big public datasets
+are not</strong>: a few orders in a typical week, weeks with none at
+all, and a level that does not sit still across eight years. Methods
+that shine on Walmart’s thousands of units a day have less to work with
+here. Deciding what is signal, what is noise, and what should not be
+modelled at all is most of the work — and it is the part the famous
+datasets let you skip.</p>
+<p><strong>Nothing in this series is flagged for you.</strong> As with
+Favorita’s earthquake, if something in the history is not ordinary
+demand, the data will not say so. Finding it, deciding what it is, and
+defending how you handled it is the project.</p>
+<p><strong>One thing you have that you will not usually have:</strong>
+the owner is reachable. Ask me business questions the data cannot answer
+— what changed in a given year, how the store sells, what a quiet week
+looks like from the inside. Treat me as the client. That is what the
+client is for.</p>
+<hr />
 <h2 id="getting-set-up">Getting set up</h2>
 <ol type="1">
 <li>Install the Python packages listed in the syllabus.</li>
 <li>Run the data preparation script once, before your first assignment.
 It downloads and subsets M5 and writes the processed files that the
-homework expects.</li>
+homework expects. (The online-store file in §5 is committed to the
+repository already — nothing to run.)</li>
 <li>Confirm the output files exist before starting Homework 1.</li>
 </ol>
 <p>If any step fails, email me <em>before</em> the assignment is due
