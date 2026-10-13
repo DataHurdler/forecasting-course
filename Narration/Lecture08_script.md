@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · CNN Architectures**
 
-Deck: `Slides/Lecture08_CNNs.pdf` (19 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture08_CNNs.pdf` (22 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -10,8 +10,10 @@ Deck: `Slides/Lecture08_CNNs.pdf` (19 pages) · Measured runtime: see the timing
 
 - **`▶ SLIDE n — Title`** marks where to advance. The number is the PDF page.
 - *Italic parentheticals* are stage directions. **[pause]** means stop for a beat.
-- Slide 7 plants an objection about pooling and slide 15 pays it off with a measurement. Do not
+- Slide 9 plants an objection about pooling and slide 18 pays it off with a measurement. Do not
   resolve it early — the delay is what makes the number land.
+- Slides 6, 7 and 13 are pictures. Talk to the figure, not the caption: the arithmetic on 6, the
+  two hand-set filters on 7, and the 64 filters nobody set on 13 are one argument in three steps.
 
 ---
 
@@ -114,8 +116,8 @@ lecture we will have an example of each, on the same dataset.
 For a sequence — which is what we care about — a one-dimensional convolution slides a filter of
 length K along the series, and at each position it takes a dot product.
 
-That's the formula on the slide, and honestly the formula is less useful than the picture: a
-small window sliding along, computing one number at each stop.
+That's the formula on the slide, and honestly the formula is less useful than the picture — which
+is the next slide: a small window sliding along, computing one number at each stop.
 
 *(Walk the four hyperparameters.)*
 
@@ -153,15 +155,107 @@ important number in this lecture.
 
 ---
 
-# ▶ SLIDE 6 — Section divider: Pooling and Dropout
+# ▶ SLIDE 6 — Convolution, Step by Step
+
+*(Walk the figure top to bottom. Do the first dot product out loud.)*
+
+Here's the whole operation on numbers small enough to check in your head. A series of ten values,
+and a filter of width three: one, five, one.
+
+Put the filter over the first three values — one, four, five. Multiply position by position and
+add: one times one, plus four times five, plus five times one. **Twenty-six.** That's the first
+output, the one boxed in red.
+
+Slide one step to the right and do it again. Four, five, three gives thirty-two. And so on down
+the series.
+
+**[pause]**
+
+*(Point at the "valid" row.)*
+
+Keep only the positions where the filter fits completely and you get eight outputs from ten
+inputs — ten minus three, plus one. That's called **valid**.
+
+*(Point at the "same" row and the dashed zeros.)*
+
+If you want the output the same length as the input, pad a zero at each end — the dashed boxes —
+and you get all ten. That's **same**, the `padding='same'` from the previous slide. Notice that the
+two end values, nine and twenty, are computed partly from zeros that aren't really there. The
+edges of a feature map are always its least trustworthy part.
+
+*(Point at the bottom row.)*
+
+And the last row is a preview of pooling: take the ten outputs in pairs and keep the larger of
+each pair. Ten numbers become five.
+
+**[pause]**
+
+Now notice what this particular filter *does*. A big weight in the middle, small weights on either
+side: it mostly reports the middle value, lightly smoothed by its neighbors. A different filter —
+say minus one, zero, plus one — would report the *change* across the window instead. Same sliding,
+same arithmetic, a completely different pattern detected.
+
+That's what "each filter learns one local pattern" means. And in a trained network, nobody picks
+those three numbers. Gradient descent does.
 
 ---
 
-# ▶ SLIDE 7 — Pooling: Downsampling Feature Maps
+# ▶ SLIDE 7 — What a Filter Sees
+
+The same operation in two dimensions. Instead of a window of three weeks, a three-by-three patch of
+pixels; instead of sliding along a line, the filter slides over every pixel of a photograph.
+
+*(Point at the two small grids at the bottom.)*
+
+Two filters, and I set both of them by hand. The first is negative on the left and positive on the
+right, so it fires wherever brightness changes from left to right — a **vertical** edge. The second
+is the same filter turned on its side: negative above, positive below. It fires on **horizontal**
+edges.
+
+*(Point at the two feature maps.)*
+
+And there is what each one sees. The vertical-edge map is all short upright strokes — the fronts of
+products, the price tags. The horizontal-edge map is the shelves themselves: long streaks running
+toward the back of the aisle.
+
+**[pause]**
+
+Same photograph, same sliding arithmetic, two completely different pictures of it. That's what a
+feature map is — one filter's answer to the question "where is my pattern?" A convolutional layer
+with thirty-two filters asks thirty-two of those questions at once.
+
+**[pause]**
+
+*(Point at the photo, then the line at the bottom.)*
+
+And I chose this photograph on purpose. That's a grocery aisle on the eighteenth of March, 2020 —
+the week panic buying emptied shelves across the country. A demand forecast built on that store's
+own history had no way to see it coming; nothing in the past looked like it.
+
+Keep that picture in your head. We come back to it in Week 16, when we talk about what forecasting
+cannot do.
+
+---
+
+# ▶ SLIDE 8 — Section divider: Pooling and Dropout
+
+---
+
+# ▶ SLIDE 9 — Pooling: Downsampling Feature Maps
 
 **Pooling** reduces a feature map by summarizing each little region with one number. Max pooling
-takes the largest value in the window. Average pooling takes the mean. A two-by-two max pool with
-stride two cuts the number of values to a quarter.
+takes the largest value in the window. Average pooling takes the mean.
+
+*(Walk the figure left to right.)*
+
+On the left is the horizontal-edge map from two slides ago. The red square is an eight-by-eight
+patch of it, around a shelf edge. In the middle, that patch as numbers, cut into two-by-two blocks,
+with the largest value in each block shaded. On the right, the sixteen winners. A two-by-two max
+pool: sixty-four values become sixteen, a quarter.
+
+Find the row of sixes, sevens and a nine across the middle of the patch. That's the shelf edge. It
+is still there after pooling — six, seven, nine, six. The fine detail is gone; the fact that there
+is an edge, roughly *here*, survives.
 
 You buy two things. **Fewer parameters downstream**, because the later layers see a smaller input.
 And **translation invariance** — shift the input slightly and the pooled output barely changes,
@@ -169,7 +263,7 @@ so the network recognizes a cat whether it's left or right of center.
 
 **[pause]**
 
-*(Now slow down. This box is the setup for slide 15.)*
+*(Now slow down. This box is the setup for slide 18.)*
 
 And here is where I want you to get suspicious.
 
@@ -189,13 +283,13 @@ in this lecture.
 
 ---
 
-# ▶ SLIDE 8 — Section divider: CNN Architecture Evolution
+# ▶ SLIDE 10 — Section divider: CNN Architecture Evolution
 
 Twenty years of image models, and the three ideas that outlived them.
 
 ---
 
-# ▶ SLIDE 9 — LeNet to VGG: Depth and Small Filters
+# ▶ SLIDE 11 — LeNet to VGG: Depth and Small Filters
 
 **LeNet-5**, in 1998, established the template that everything since has followed: alternating
 convolution and pooling layers, then fully connected layers at the end. Roughly sixty thousand
@@ -234,7 +328,7 @@ data preparation is.
 
 ---
 
-# ▶ SLIDE 10 — Inception and ResNet: Depth That Trains
+# ▶ SLIDE 12 — Inception and ResNet: Depth That Trains
 
 Two different attacks on that problem.
 
@@ -249,12 +343,17 @@ convolutions operate on a smaller input.
 Past a certain depth, deeper networks were getting **worse**. Not from overfitting — the training
 error was worse too. The gradients were degrading on their way back through many layers.
 
-The fix is one line: y equals F of x, **plus x**. A **residual**, or skip, connection.
+*(Point at the diagram.)*
+
+The fix is one line, and the diagram is that line. The input x forks. One copy goes through the
+block — convolution, ReLU, convolution — and what comes out is F of x. The other copy, the red path
+over the top, skips the block entirely. They meet at the plus: y equals F of x, **plus x**. A
+**residual**, or skip, connection.
 
 **[pause]**
 
 Two ways to read that. Each block now learns the *difference* from its input rather than a whole
-new representation — usually an easier job. And the plus-x gives the gradient a direct path
+new representation — usually an easier job; that's the bracket under the boxes. And the plus-x gives the gradient a direct path
 backward, unimpeded by the layers in between.
 
 That single change made networks of a hundred layers and more trainable. Skip connections now
@@ -279,7 +378,39 @@ depth.
 
 ---
 
-# ▶ SLIDE 11 — What Carries Over to Time Series
+# ▶ SLIDE 13 — What a Trained CNN Learns
+
+Back on slide 7, I set two filters by hand. Here's what happens when nobody does.
+
+*(Point at the grid on the left.)*
+
+This is the first layer of ResNet-18 — the architecture from the last slide — after training on
+one point two million labelled photographs. Sixty-four filters, each seven pixels square, in color.
+Nobody designed any of them. Every number in every one came out of gradient descent.
+
+Look at what it arrived at. A lot of them are edge detectors: light on one side, dark on the
+other, at every angle — horizontal, vertical, diagonal. The network rediscovered the filters we
+wrote down by hand, and then went further, because it needed more angles than we gave it. Most of
+the rest respond to color.
+
+*(Point at the four maps.)*
+
+The four boxed in red, run over the same grocery aisle. Different filters, different structure:
+some pick out the shelf lines, some the products, and one mostly tracks how bright each region is.
+
+**[pause]**
+
+That is the "learned features" promise in its purest form. Nobody told this network that edges
+matter. It found out, because edges are what made its task easier.
+
+And it is exactly the promise a 1D CNN makes on a time series: hand it the raw window, and its
+filters will find whichever local shapes — a spike, a dip, a ramp — help predict next week.
+Whether that promise pays off on *our* data is a separate question. It's the one we answer at the
+end of this lecture.
+
+---
+
+# ▶ SLIDE 14 — What Carries Over to Time Series
 
 These architectures were built for images, on problems that look nothing like weekly demand
 forecasting. Three of their ideas transfer anyway.
@@ -318,13 +449,13 @@ well is knowing which half you actually wanted.
 
 ---
 
-# ▶ SLIDE 12 — Section divider: 1D CNNs for Time Series
+# ▶ SLIDE 15 — Section divider: 1D CNNs for Time Series
 
 The same machinery, along a time axis — and what it costs.
 
 ---
 
-# ▶ SLIDE 13 — Why Use a 1D CNN for Forecasting?
+# ▶ SLIDE 16 — Why Use a 1D CNN for Forecasting?
 
 Here's the setup. A one-dimensional CNN takes a **window** of the recent past — say twenty-six
 weeks — across several channels, and predicts the next value. Each channel is one series: units,
@@ -334,21 +465,26 @@ The appeal is that you stop choosing lags. Instead of deciding that lag one, lag
 fifty-two are the ones that matter, you hand the model the whole window and let the filters work
 out which local shapes predict what comes next.
 
-*(Point at the key box.)*
-
-Two advantages that are genuinely real. It's far cheaper than a fully connected network on the
+Two advantages, both genuinely real. It's far cheaper than a fully connected network on the
 same window — that's weight sharing again. And it handles **many parallel series** naturally,
 because the same filters apply to every store-category at once.
 
 **[pause]**
 
-*(Now the catch, and flag it as the reason for the result on slide 15.)*
+*(Now the catch, and flag it as the reason for the result on slide 18. Point at the chart.)*
 
-But the catch is the receptive field, and it's serious.
+But the catch is the receptive field, and it's serious. The chart makes it concrete. That's CA_1
+food sales, and the red dot on the right is the week we want to forecast: Christmas week, 2015.
 
-Stack a width-five filter and a width-three filter and you see about **seven weeks** of context.
-That's it. Annual seasonality sits fifty-two weeks away, and no reasonable stack of small filters
-is going to reach that far.
+The gray band is the twenty-six-week window the model is given. The red band is what one output of
+a width-five-then-width-three stack actually sees: **seven weeks**. That's it.
+
+*(Point at the open circle on the left.)*
+
+And there is the most useful single number for forecasting Christmas week — the same week last
+year, which dipped too. Fifty-two weeks back. Not just outside the seven-week receptive field;
+outside the window altogether. Annual seasonality sits fifty-two weeks away, and no reasonable
+stack of small filters is going to reach that far.
 
 So you have two options. Add dilation — filters with gaps in them, which reach further for the
 same parameter count. Or feed the annual lag in as its own channel, which is a confession that
@@ -368,7 +504,7 @@ Remember that number — seven weeks. It explains the results two slides from no
 
 ---
 
-# ▶ SLIDE 14 — 1D CNN Forecasting Pipeline in PyTorch
+# ▶ SLIDE 17 — 1D CNN Forecasting Pipeline in PyTorch
 
 Six lines. Two convolutions with ReLUs, a pooling step, a flatten, and a linear layer down to one
 number.
@@ -390,7 +526,7 @@ Watch what that costs on the next slide.
 
 ---
 
-# ▶ SLIDE 15 — Does It Actually Work?
+# ▶ SLIDE 18 — Does It Actually Work?
 
 *(This is the payoff slide. Walk the table, then land both punchlines.)*
 
@@ -421,7 +557,7 @@ Swapping average pooling for `Flatten` — which keeps *where* each pattern occu
 averaging it away — is worth about **five hundred RMSE**. Three seeds each, against a run-to-run
 spread of roughly eighty. That gap is real.
 
-That's the objection from slide 7, measured. Pooling threw away position, and position was
+That's the objection from slide 9, measured. Pooling threw away position, and position was
 carrying signal.
 
 **[pause]**
@@ -440,11 +576,11 @@ it, and much more valuable.
 
 ---
 
-# ▶ SLIDE 16 — Section divider: Key Takeaways
+# ▶ SLIDE 19 — Section divider: Key Takeaways
 
 ---
 
-# ▶ SLIDE 17 — CNN Architecture Summary
+# ▶ SLIDE 20 — CNN Architecture Summary
 
 *(Table, then the two paragraphs. The second is the more useful one.)*
 
@@ -484,7 +620,7 @@ course is actually training.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 8: Key Takeaways
+# ▶ SLIDE 21 — Lecture 8: Key Takeaways
 
 One. Convolution is local connectivity plus weight sharing. A pattern is learned once and detected
 everywhere, at a fraction of the parameters.
@@ -508,6 +644,6 @@ what the receptive field could not do.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 22 — References
 
 *(Advance and close. No narration needed.)*

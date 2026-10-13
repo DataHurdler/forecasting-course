@@ -51,7 +51,10 @@ def sz(w: float, h: float) -> tuple[float, float]:
     return (w * SCALE, h * SCALE)
 
 
-plt.rcParams.update({"font.family": FONT, "font.size": 13, "svg.fonttype": "none",
+# SVG text is drawn as outlines ("path"), not left as live text. Live text renders in whatever
+# fonts the viewer has: on a machine without Helvetica Neue it falls back to Times, and the math
+# glyphs (DejaVu, cmsy10, STIX private-use code points) turn into a "0" for a prime or a blank box.
+plt.rcParams.update({"font.family": FONT, "font.size": 13, "svg.fonttype": "path",
                      "pdf.fonttype": 42, "axes.spines.top": False, "axes.spines.right": False})
 
 

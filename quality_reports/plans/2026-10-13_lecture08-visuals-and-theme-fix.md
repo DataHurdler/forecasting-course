@@ -87,3 +87,12 @@ Changes against the plan, and why:
   "full" is the *same* convolution, and its padded vector does not match its own input.
 
 **C — Lecture 7: not started.**
+
+## Owner review (2026-10-13)
+
+The owner read the Beamer PDF ("It looks good") and asked for the narration to match. Done:
+`Narration/Lecture08_script.md` now has 22 slides. It adds narration for the three new slides
+(6 Convolution, Step by Step; 7 What a Filter Sees; 13 What a Trained CNN Learns), walks the figures
+on slides 9, 12 and 16 (the old keybox cue on 16 is gone), and renumbers every cross-reference
+(pooling objection 7→9, payoff 15→18). `build_book.py` joins every new slide to its narration.
+Separately, the SVGs now draw their text as outlines (see the Lecture 9 Part 1 plan). Uncommitted.
