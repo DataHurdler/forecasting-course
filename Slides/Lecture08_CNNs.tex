@@ -89,6 +89,29 @@
   is a \textbf{feature map} whose high values mark where that pattern was found.
 \end{frame}
 
+% --- Slide: convolution, worked ----------------------------------------------
+\begin{frame}{Convolution, Step by Step}
+  A length-10 series and a width-3 filter $[1, 5, 1]$. Slide the filter along and take a dot
+  product at each position.
+  \begin{center}
+    \includegraphics[height=4.9cm]{../Figures/Lecture08/conv1d_step_by_step.pdf}
+  \end{center}
+  \vspace{-0.2cm}
+  {\small \textbf{Valid} keeps only full overlaps: $10 - 3 + 1 = 8$ outputs. \textbf{Same} pads
+  a zero at each end and keeps all 10. Max pooling then keeps the larger of each pair.}
+\end{frame}
+
+% --- Slide: a filter on a photograph -------------------------------------------
+\begin{frame}{What a Filter Sees}
+  The same operation in two dimensions: a $3\times3$ filter slides over every pixel of a
+  photograph. Two hand-set filters find two different kinds of structure.
+  \begin{center}
+    \includegraphics[height=5.3cm]{../Figures/Lecture08/filter_sees.pdf}
+  \end{center}
+  \vspace{-0.25cm}
+  \muted{\small 18 March 2020: shelves emptied by a shock no forecast saw coming --- more in Week 16.}
+\end{frame}
+
 % =============================================================================
 \section{Pooling and Dropout}
 % =============================================================================
@@ -99,24 +122,20 @@
 
 % --- Slide: Pooling ----------------------------------------------------------
 \begin{frame}{Pooling: Downsampling Feature Maps}
-  \textbf{Pooling} reduces a feature map by summarizing each small region with a single number.
-  Max pooling takes the largest value in the window; average pooling takes the mean. A
-  $2\times2$ max pool with stride 2 quarters the number of values.
-
-  \vspace{0.15cm}
-  Two things are bought. \textbf{Fewer parameters downstream}, because later layers see a smaller
-  input. And \textbf{translation invariance}: shift the input slightly and the pooled output
-  barely changes, so the network recognizes a cat whether it sits left or right of center.
+  \textbf{Pooling} summarizes each small region of a feature map with one number: max pooling
+  keeps the largest, average pooling the mean. A $2\times2$ max pool quarters the values.
+  \begin{center}
+    \includegraphics[height=3.0cm]{../Figures/Lecture08/pooling.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  It buys \textbf{fewer parameters downstream} and \textbf{translation invariance}: shift the
+  input slightly and the pooled output barely changes. The shelf edge above survives the pool.
 
   \begin{warningbox}
-    \textbf{Translation invariance is a feature for images and a problem for forecasting.} If a
-    demand spike moved three weeks later, that is not a nuisance to be smoothed away --- it is
-    the thing you are trying to predict. Pooling deliberately discards \emph{where} in the window
-    a pattern occurred, and for a time series the position is often the signal.
+    \textbf{A feature for images, a problem for forecasting.} A demand spike that moved three
+    weeks later is what you are predicting, not noise. Pooling discards \emph{where} a pattern
+    occurred --- we measure the cost later in this lecture.
   \end{warningbox}
-
-  \vspace{0.1cm}
-  Hold that objection. We measure exactly what it costs later in this lecture.
 \end{frame}
 
 % =============================================================================
@@ -151,24 +170,33 @@
 
 % --- Slide: Inception and ResNet ---------------------------------------------
 \begin{frame}{Inception and ResNet: Depth That Trains}
-  \textbf{Inception} \parencite{Szegedy2015} asked why a layer should commit to one filter size.
-  Its module runs $1\times1$, $3\times3$ and $5\times5$ convolutions \emph{in parallel} and
-  concatenates the results, letting the network choose the scale. $1\times1$ convolutions reduce
-  channel count first, keeping the cost down.
+  \textbf{Inception} \parencite{Szegedy2015} asked why a layer should commit to one filter size:
+  it runs $1\times1$, $3\times3$ and $5\times5$ convolutions \emph{in parallel} and lets the
+  network choose the scale, with $1\times1$ convolutions cutting channels first to keep cost down.
 
   \vspace{0.15cm}
   \textbf{ResNet} \parencite{He2016} solved a different problem. Past a certain depth, deeper
   networks got \emph{worse} --- not from overfitting, but because gradients degraded on their way
   back through many layers. The fix is a \textbf{residual} or skip connection:
-  \[
-    \mathbf{y} = \mathcal{F}(\mathbf{x}) + \mathbf{x}
-  \]
+  \begin{center}
+    \includegraphics[height=2.4cm]{../Figures/Lecture08/residual_block.pdf}
+  \end{center}
   \vspace{-0.3cm}
+  The $+\,\mathbf{x}$ gives the gradient a direct path backward. That one change made networks
+  of 100+ layers trainable, and skip connections now appear in nearly every deep architecture
+  --- including the Transformers in Lecture 9.
+\end{frame}
 
-  Each block learns the \emph{difference} from its input rather than a whole new representation,
-  and the $+\,\mathbf{x}$ gives the gradient a direct path backward. That single change made
-  networks of 100+ layers trainable, and skip connections now appear in nearly every deep
-  architecture --- including the Transformers in Lecture 9.
+% --- Slide: what a trained network learned --------------------------------------
+\begin{frame}{What a Trained CNN Learns}
+  ResNet-18, trained on 1.2 million labelled images. Nobody designed its first layer --- these
+  are the 64 filters it arrived at, and what four of them find in the same photograph.
+  \begin{center}
+    \includegraphics[height=4.9cm]{../Figures/Lecture08/learned_filters.pdf}
+  \end{center}
+  \vspace{-0.25cm}
+  {\small Many look like the edge filters we set by hand; the rest detect colour. \textbf{Learned,
+  not engineered} --- the same promise a 1D CNN makes for a time series.}
 \end{frame}
 
 % --- Slide: what the image architectures taught -------------------------------
@@ -207,25 +235,16 @@
 
 % --- Slide: why 1D CNN -------------------------------------------------------
 \begin{frame}{Why Use a 1D CNN for Forecasting?}
-  A 1D CNN takes a \textbf{window} of the recent past --- say 26 weeks --- across several
-  channels, and predicts the next value. Each channel is one series: units, SNAP days, events,
-  price.
-
-  \vspace{0.15cm}
-  The appeal is that you stop choosing lags. Rather than deciding that lag 1, lag 4 and lag 52
-  matter, you hand the model the whole window and let the filters learn which local shapes
-  predict what comes next.
-
-  \begin{keybox}
-    \textbf{Two genuine advantages.} It is far cheaper than a fully connected network on the same
-    window --- weight sharing again. And it handles \emph{many parallel series} naturally, since
-    the same filters apply to every store-category at once.
-  \end{keybox}
-
-  \vspace{0.1cm}
-  \textbf{The catch is the receptive field.} Stacked width-5 and width-3 filters see about seven
-  weeks of context. Annual seasonality is 52 weeks away, and no reasonable stack of small filters
-  reaches that far. Either you add dilation, or you feed the annual lag in as its own channel.
+  A 1D CNN takes a \textbf{window} of the recent past --- 26 weeks of units, SNAP days, events
+  and price --- and predicts the next week. You stop choosing lags: the filters learn which local
+  shapes matter. It is far cheaper than a dense network (weight sharing again), and the same
+  filters serve \emph{every} store-category at once.
+  \begin{center}
+    \includegraphics[height=3.9cm]{../Figures/Lecture08/receptive_field.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  \textbf{The catch is the receptive field.} Stacked width-5 and width-3 filters see seven weeks;
+  annual seasonality is 52 away. Add dilation, or feed the annual lag in as its own channel.
 \end{frame}
 
 % --- Slide: pipeline ---------------------------------------------------------

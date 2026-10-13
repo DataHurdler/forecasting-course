@@ -10,4 +10,5 @@ scikit-learn==1.9.0
 scipy==1.16.3
 statsmodels==0.14.6
 torch==2.13.0
+torchvision==0.28.0  # Lecture 8 figures only; 0.28 is the release built for torch 2.13 — 0.29 would upgrade torch
 xgboost==3.4.1
