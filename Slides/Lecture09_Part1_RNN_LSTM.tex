@@ -92,22 +92,15 @@
       \qquad
       \hat{y}_t = \mathbf{W}_y \mathbf{h}_t + \mathbf{b}_y
     \]
-    $\mathbf{W}_h$, $\mathbf{W}_x$, $\mathbf{W}_y$ are the \emph{same} matrices at every step.
   \end{definitionbox}
-
-  Read the first equation in words: the new summary is a squashed mix of the old summary and the
-  new observation. That is the entire model.
-
-  \vspace{0.15cm}
-  Because the weights are shared across steps, a 26-week window costs no more parameters than a
-  5-week one --- and the same network handles sequences of different lengths without modification.
-  Our RNN below holds about \textbf{4{,}500 parameters}, against 22{,}657 for the small
-  feedforward network in Lecture 7.
-
-  \vspace{0.1cm}
-  For forecasting we usually want one number, not a sequence, so we take the \textbf{final}
-  hidden state $\mathbf{h}_T$ --- the summary after reading the whole window --- and put one
-  linear layer on top of it.
+  \vspace{-0.2cm}
+  \begin{center}
+    \includegraphics[height=3.2cm]{../Figures/Lecture09_Part1/unrolled_rnn.pdf}
+  \end{center}
+  \vspace{-0.2cm}
+  In words: the new summary is a squashed mix of the old summary and the new week. Shared weights
+  mean a 26-week window costs no more parameters than a 5-week one --- about \textbf{4{,}500}
+  here, against 22{,}657 for Lecture 7's network.
 \end{frame}
 
 % --- Slide: BPTT -------------------------------------------------------------
@@ -124,8 +117,8 @@
   \begin{warningbox}
     \textbf{This is where it breaks.} Propagating a gradient back through $k$ steps multiplies by
     roughly $\mathbf{W}_h$ $k$ times. If the relevant factor is below 1, the gradient shrinks
-    \emph{exponentially}; above 1, it explodes. Either way, long-range signal does not survive
-    the trip.
+    \emph{exponentially}; above 1, it can explode. Either way, long-range signal does not
+    survive the trip.
   \end{warningbox}
 
   \vspace{0.1cm}
@@ -135,35 +128,15 @@
 
 % --- Slide: vanishing gradients ----------------------------------------------
 \begin{frame}{Why a Vanilla RNN Forgets \parencite{Bengio1994}}
-  Put numbers on it. Suppose each backward step multiplies the gradient by a factor of $0.7$ ---
-  an unremarkable value for a $\tanh$ network.
-
-  \vspace{0.1cm}
+  Suppose each backward step multiplies the gradient by $0.7$ --- an unremarkable value for a
+  $\tanh$ network --- and compare our own trained RNN, measured:
   \begin{center}
-    {\small
-    \begin{tabular}{rrl}
-      \toprule
-      \textbf{Steps back} & \textbf{Gradient factor} & \textbf{Meaning} \\
-      \midrule
-      1  & $0.70$        & full signal \\
-      5  & $0.17$        & weakened but usable \\
-      10 & $0.028$       & barely present \\
-      26 & $0.000\,002$  & gone \\
-      52 & $\approx 10^{-9}$ & the annual lag, invisible \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.3cm]{../Figures/Lecture09_Part1/gradient_decay.pdf}
   \end{center}
-
-  \vspace{0.1cm}
-  \textbf{The promise from two slides ago fails in practice.} A vanilla RNN \emph{can} in
-  principle encode arbitrarily long history, but the gradient that would teach it to do so has
-  vanished long before it reaches back that far. In practice these networks learn dependencies of
-  roughly ten steps.
-
-  \vspace{0.1cm}
-  \textbf{Bengio and colleagues} proved this is not an optimization bug to be tuned away --- it
-  is inherent to the architecture. Which is why the fix had to be a different architecture.
+  \vspace{-0.25cm}
+  \textbf{The same factor every step is a straight line on a log scale.} Ours keeps about $0.79$
+  a step: \textbf{0.4\%} of the gradient reaches 26 weeks back, \textbf{0.001\%} the same week
+  last year. \textbf{Bengio and colleagues} proved this is inherent to the architecture.
 \end{frame}
 
 % =============================================================================
@@ -175,10 +148,11 @@
   being recomputed at every step.}
 
 % --- Slide: LSTM gates -------------------------------------------------------
-\begin{frame}{LSTM: A Cell State and Three Gates \parencite{Hochreiter1997}}
+\begin{frame}{LSTM: A Cell State and Three Gates}
   An LSTM carries \textbf{two} things forward: a \textbf{cell state} $\mathbf{c}_t$, which is the
   long-term memory, and a \textbf{hidden state} $\mathbf{h}_t$, which is what the rest of the
-  network sees. Three gates control the traffic between them.
+  network sees. Three gates control the traffic between them
+  \parencite{Hochreiter1997,Gers2000}.
   \begin{center}
     {\small
     \begin{tabular}{p{2.3cm}p{10.2cm}}
@@ -237,29 +211,22 @@
 
 % --- Slide: why it fixes the gradient -----------------------------------------
 \begin{frame}{Why the Cell State Fixes the Gradient}
-  Look again at the memory update, and specifically at the operation in the middle:
-  \[
-    \mathbf{c}_t = \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{c}}_t
-  \]
+  Follow a gradient backward through
+  $\mathbf{c}_t = \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{c}}_t$.
+  Repeated multiplication shrinks; repeated addition does not.
+  \begin{center}
+    \includegraphics[height=3.5cm]{../Figures/Lecture09_Part1/cell_lanes.pdf}
+  \end{center}
   \vspace{-0.3cm}
-
-  The old memory enters \textbf{additively}, and it is not passed through a weight matrix or a
-  $\tanh$ on the way. When the forget gate is near 1, $\mathbf{c}_t \approx \mathbf{c}_{t-1}$
-  plus whatever is new --- and the gradient flows backward through that addition essentially
-  undiminished.
-
-  \vspace{0.15cm}
-  Compare with the vanilla RNN, where every backward step multiplies by $\mathbf{W}_h$ and the
-  $\tanh$ derivative. Repeated multiplication shrinks; repeated addition does not.
-
   \begin{keybox}
-    \textbf{You have seen this fix before.} It is the ResNet skip connection from Lecture 8 ---
-    $\mathbf{y} = \mathcal{F}(\mathbf{x}) + \mathbf{x}$ --- solving the same problem in the same
-    way. Give the gradient an additive path home and depth stops destroying it.
+    \small\textbf{You have seen this fix before:} Lecture 8's skip connection,
+    $\mathbf{y} = \mathcal{F}(\mathbf{x}) + \mathbf{x}$. The 1997 LSTM had no forget gate, so its
+    cell path \emph{was} that identity, eighteen years before ResNet; the forget gate (2000) made
+    it learnable.
   \end{keybox}
-
-  LSTM (1997) predates ResNet (2015) by eighteen years --- the idea was rediscovered for depth
-  after being invented for time.
+  \vspace{-0.1cm}
+  {\small\muted{On our panel the median forget gate is 0.52, so 7\% survives four weeks. Check 2
+  says why.}}
 \end{frame}
 
 % =============================================================================
@@ -354,32 +321,16 @@
 
 % --- Slide: the budget check -------------------------------------------------
 \begin{frame}{Check 1: Was It a Fair Fight?}
-  An LSTM carries four times the parameters. Bigger models converge slower. So vary the
-  \textbf{training budget} and watch the margin, at the 26-week window:
+  Bigger models converge slower, and the LSTM has $4\times$ the parameters. Vary the
+  \textbf{budget}:
   \begin{center}
-    {\small
-    \begin{tabular}{lrrrr}
-      \toprule
-      \textbf{Epochs} & \textbf{10} & \textbf{30} & \textbf{60} & \textbf{100} \\
-      \midrule
-      Vanilla RNN & 1{,}099 & \textbf{842} & 828 & 830 \\
-      LSTM & 1{,}002 & 987 & 926 & \textbf{821} \\
-      \midrule
-      Gap (LSTM $-$ RNN) & $-97$ & $+145$ & $+98$ & $-9$ \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.0cm]{../Figures/Lecture09_Part1/budget_curve.pdf}
   \end{center}
-
-  \vspace{-0.1cm}
-  The gap is \textbf{largest at exactly the budget we used}, and it closes at every checkpoint
-  after it. The RNN is flat from about epoch 45; the LSTM is \emph{still improving} at 100 --- we
-  ran out of patience, not the model.
-
+  \vspace{-0.3cm}
   \begin{keybox}
-    At a fixed 30-epoch budget the RNN wins by a wide margin. At convergence the two
-    \textbf{tie}. The RNN's genuine advantage is that it gets there roughly \textbf{three times
-    faster on a quarter of the parameters} --- an optimization advantage, not a verdict on gating.
+    At 30 epochs the RNN wins by a wide margin. By 100 the two \textbf{tie}, and the LSTM is still
+    improving: we ran out of patience, not the model. The RNN's real edge is speed ---
+    \textbf{three times faster on a quarter of the parameters} --- not a verdict on gating.
   \end{keybox}
 \end{frame}
 
@@ -401,7 +352,8 @@
 
   \vspace{0.06cm}
   \textbf{3. Nothing arrives early.} \texttt{snap\_days} correlates $+0.14$ with units in the
-  same week and $\approx 0$ at every lead; \texttt{event\_days} is flat everywhere. No
+  same week; its $-0.13$ and $+0.12$ two and four weeks ahead only echo that through the monthly
+  SNAP calendar. \texttt{event\_days} is flat everywhere. No
   \emph{announcement} structure --- precisely what a forget gate is for.
   }
 
@@ -457,7 +409,7 @@
 
       \item Training is \textbf{backpropagation through time}: unroll the recurrence and it is a
             deep network whose layers share weights. Repeated multiplication shrinks the
-            gradient exponentially --- at 52 steps, around $10^{-9}$.
+            gradient exponentially --- at 52 steps, around $10^{-8}$.
 
       \item An \textbf{LSTM} adds a cell state updated \textbf{additively}. Addition preserves
             gradients where multiplication destroys them --- the ResNet fix, eighteen years

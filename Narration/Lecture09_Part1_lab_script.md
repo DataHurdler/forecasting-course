@@ -313,8 +313,11 @@ Gating earns its keep when a value must survive many steps that would otherwise 
 — and here nothing overwrites anything, because the series was filled in continuously the whole
 way along.
 
-**Three. Nothing in the inputs arrives early.** SNAP correlates 0.14 with units in the same week
-and essentially zero at every lead. Events are flat everywhere, including at zero. There is no
+**Three. Nothing in the inputs arrives early.** SNAP correlates 0.14 with units in the same week.
+The printout shows minus 0.13 two weeks ahead and plus 0.12 four weeks ahead — and that is the
+calendar, not a warning. SNAP days fall on the same dates every month, so this week's count
+predicts the count two and four weeks out, and those weeks carry their own same-week effect. The
+same 0.14, echoed. Events are flat everywhere, including at zero. There is no
 **announcement** in this data — nothing shows up at time *t* that must be held until *t + k*.
 
 That is the textbook use for a forget gate and an input gate, and this panel does not contain a

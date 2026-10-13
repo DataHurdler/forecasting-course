@@ -140,6 +140,14 @@ new observation.** That is the entire model. Everything else today is consequenc
 
 The three weight matrices are the *same* at every time step. Not one per step — one, reused.
 
+*(Now the picture under the box.)*
+
+Across the top: twenty-six real weeks of Walmart food sales — the same window you saw last week,
+the run-up to Christmas 2015. Each week drops into a cell. All twenty-six cells are drawn the same
+because they **are** the same cell — one set of weights, reused at every step. The little arrows
+along the row are the hidden state being handed forward, week to week. And only the last one,
+h-twenty-six, goes into the linear layer that makes next week's forecast.
+
 **[pause]**
 
 Two things follow from that sharing, and both are genuinely nice.
@@ -213,20 +221,31 @@ Let's put numbers on it, because "the gradient shrinks" is not vivid enough to c
 behavior.
 
 Suppose each backward step multiplies the gradient by a factor of zero-point-seven. That's an
-unremarkable value for a tanh network — nothing pathological.
+unremarkable value for a tanh network — nothing pathological. That's the dashed gray line.
 
-*(Walk the table, slowly. The last two rows are the point.)*
+*(Walk the dashed line, slowly.)*
 
-One step back: zero-point-seven. Full signal.
+Ten steps back: zero-point-zero-two-eight. Barely present.
 
-Five steps: zero-point-one-seven. Weakened, but usable.
+Twenty-six steps — our window length — about **one ten-thousandth.** Gone.
 
-Ten steps: zero-point-zero-two-eight. Barely present.
+A year back: around ten to the minus eight. Invisible. There is no optimizer, no learning rate, no
+amount of training that recovers a signal that small.
 
-Twenty-six steps — our window length — **two millionths.** Gone.
+**[pause]**
 
-Fifty-two steps, which is the annual lag: about ten to the minus nine. Invisible. There is no
-optimizer, no learning rate, no amount of training that recovers a signal that small.
+Now notice the *shape*. The vertical axis is a log scale, and on a log scale the same factor every
+step draws a **straight line**. How steep the line is *is* the factor. That's the whole mechanism
+in one picture: repeated multiplication.
+
+*(Point at the red line.)*
+
+And the red line is not an example. That's our own RNN — the lab's model, trained on fifty-two-week
+windows — and we measured how much gradient actually reaches each step back. It keeps more than
+the example, about zero-point-seven-nine per step; before training it was zero-point-five-five, so
+training did stretch its memory. But it is still a straight line down. About four tenths of a
+percent survives to twenty-six weeks back. By the same week last year, one thousandth of a
+percent.
 
 **[pause]**
 
@@ -336,17 +355,20 @@ sentence forty.
 
 Back to that plus sign.
 
-*(Point at the equation.)*
+*(Point at the picture. Read it right to left — that's the direction a gradient travels.)*
 
-Look at how the old memory enters. It's **additive**. And notice what is *not* happening to it: it
-is not passed through a weight matrix, and it is not passed through a tanh, on its way from c-t
-minus one to c-t.
+Top lane: the vanilla RNN. Every backward hop multiplies by W-h and by the slope of the tanh. The
+red arrow gets thinner at every hop, and by the left edge almost nothing arrives.
+
+Bottom lane: the LSTM's cell state. Look at how the old memory enters — it's **additive**. The new
+information comes in from below, the green plus. And notice what is *not* happening on the way
+from c-t minus one to c-t: no weight matrix, no tanh. Just the forget gate.
 
 When the forget gate sits near one, c-t is approximately c-t minus one, plus whatever's new. And a
-gradient flowing backward through that addition passes essentially **undiminished**.
+gradient flowing backward through that addition passes essentially **undiminished** — the arrow
+stays thick.
 
-Compare the vanilla RNN, where every single backward step multiplies by W-h and by the derivative
-of tanh. Repeated multiplication shrinks. Repeated addition does not.
+Repeated multiplication shrinks. Repeated addition does not.
 
 **[pause]**
 
@@ -359,13 +381,22 @@ they travel back through depth. Same solution: give the gradient an additive pat
 
 *(Beat.)*
 
-Here's the detail I enjoy. The LSTM is from 1997. ResNet is from 2015. The idea was invented for
-**time**, forgotten by the computer vision community, and then rediscovered eighteen years later
-for **depth**.
+Here's the detail I enjoy. The LSTM is from 1997. ResNet is from 2015. And the 1997 LSTM had no
+forget gate at all — its memory path was c-t equals c-t minus one plus the new part, which is
+*exactly* ResNet's identity. The forget gate came in 2000, from Gers, Schmidhuber and Cummins, and
+made that path learnable. So the idea was invented for **time**, forgotten by the computer vision
+community, and then rediscovered eighteen years later for **depth**.
 
 Same mathematics, two fields, two decades apart. Which is a decent argument for understanding
 mechanisms rather than memorizing architectures — the mechanism transferred, the architecture
 didn't.
+
+*(Point at the gray line at the bottom.)*
+
+One honest footnote. "Near one" is a condition, not a promise. On our panel, the trained forget
+gates sit around one half — median point five two — so the cell keeps only about seven percent
+of a memory after four weeks. The model *chose* to forget. Hold that thought; Check 2 explains
+why it was right to.
 
 ---
 
@@ -486,20 +517,21 @@ So the next two slides do the two things this table owes us: **was the compariso
 
 # ▶ SLIDE 18 — Check 1: Was It a Fair Fight?
 
-*(Table up. Take this one slowly — it reverses the previous slide.)*
+*(Chart up. Take this one slowly — it reverses the previous slide.)*
 
 Same two models, twenty-six-week window. This time we vary the training budget and watch the
-margin.
+margin. Red is the RNN, blue is the LSTM, and the dashed line is the thirty epochs we used.
 
 At ten epochs, the LSTM is **ahead** by ninety-seven. At thirty — our setting — the RNN is ahead
-by a hundred and forty-five. At sixty, ninety-eight. At a hundred, the gap is **minus nine**.
+by a hundred and forty-five; that's the bracket. At sixty, ninety-eight. At a hundred, the gap is
+**minus nine**.
 
 **[pause]** — *let that sit.*
 
 Read the shape of it. The gap is **largest at exactly the budget we chose**. Not near the largest:
 the largest anywhere in the range we looked at.
 
-*(Point at the two rows.)*
+*(Trace the two lines.)*
 
 And look at the curves separately, because they are different shapes. The RNN is finished by about
 epoch forty-five — eight twenty-eight, eight thirty-three, eight thirty. Flat. The LSTM is still
@@ -549,7 +581,10 @@ Gating earns its keep when something must survive steps that would overwrite it.
 overwrites anything.
 
 **Three. Nothing in the inputs arrives early.** SNAP days correlate about point one four with
-units in the same week, and essentially zero at every lead. Event days are flat everywhere,
+units in the same week. Two and four weeks ahead you do see something — minus point one three,
+plus point one two — but that's the calendar, not a warning. SNAP days fall on the same dates every
+month, so this week's count tells you the count two and four weeks out, and those weeks have their
+own same-week effect. It's the same plus point one four, echoed. Event days are flat everywhere,
 including at zero. There is no **announcement** structure in this data — nothing shows up at time
 *t* that has to be stored until *t* plus *k*. That is the textbook use for a forget gate and an
 input gate, and this panel does not contain one instance of it.
@@ -626,7 +661,7 @@ across time, so window length costs no parameters.
 
 Two. Training is backpropagation through time — unroll the recurrence and it's a deep network
 whose layers share weights. Repeated multiplication shrinks the gradient exponentially. At
-fifty-two steps, around ten to the minus nine.
+fifty-two steps, around ten to the minus eight.
 
 Three. An LSTM adds a cell state updated **additively**. Addition preserves gradients where
 multiplication destroys them — the ResNet fix, eighteen years earlier.

@@ -347,8 +347,11 @@ off when a value must survive many steps that would otherwise **overwrite** it �
 overwrites anything.
 
 **3. Nothing in the inputs arrives early.** `snap_days` correlates **+0.14** with units in the
-same week and essentially zero at every lead; `event_days` is flat at every horizon including
-zero. There is no *announcement* structure in this data — nothing shows up at time $t$ that must
+same week. The −0.13 at `t+2` and +0.12 at `t+4` are not advance notice: SNAP days fall on the
+same dates every month, so this week's `snap_days` predicts the count two and four weeks out
+(correlations of −0.84 and +0.82), and those weeks carry their own same-week effect. The lead
+correlations are the same-week +0.14 echoed by the calendar. `event_days` is flat at every horizon
+including zero. There is no *announcement* structure in this data — nothing shows up at time $t$ that must
 be stored until $t+k$. That is the canonical use for a forget gate and an input gate, and this
 panel does not contain one instance of it.
 
