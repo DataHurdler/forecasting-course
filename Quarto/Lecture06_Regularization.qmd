@@ -66,8 +66,6 @@ Subset selection is **discrete** — a predictor is in or out. Small changes in 
 
 [This is the approach in *FPP* §7.5. Shrinkage replaces the in-or-out decision with a continuous dial — more stable, and easier to tune.]{.neutral .smaller}
 
----
-
 # Shrinkage Methods
 
 Keep every predictor, but pull its coefficient toward zero.
@@ -148,8 +146,6 @@ The mix keeps LASSO's ability to zero out predictors while adding Ridge's **grou
 
 **This is usually the right default for forecasting.** Lagged predictors are correlated almost by construction — $y_{t-1}$ and $y_{t-2}$ move together — which is precisely the situation where pure LASSO picks a winner at random and pure Ridge refuses to simplify.
 
----
-
 # Choosing the Penalty
 
 $\lambda$ is not estimated from the model. It is tuned — and how you tune it decides whether the model generalizes.
@@ -179,8 +175,6 @@ $\lambda$ is not estimated from the model — it is tuned, and how you tune it d
 ::: {.warningbox}
 **Never use `KFold` here.** Random folds put future observations in the training set and past ones in validation. The CV error will look excellent and the forecast will fail [@Bergmeir2018]. Use `TimeSeriesSplit`, exactly as in Lecture 1's walk-forward evaluation.
 :::
-
----
 
 # In Practice
 

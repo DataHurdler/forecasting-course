@@ -1243,9 +1243,6 @@ Department of Economics
 <p><strong>Use it when</strong> the causal direction is clear (advertising → sales), you already have <span class="math inline">\(x_t\)</span> or can forecast it, and adding <span class="math inline">\(x_t\)</span> actually reduces cross-validated forecast error — check that last one rather than assuming it.</p>
 <p><strong>The catch that surprises people:</strong> to forecast <span class="math inline">\(y_{t+h}\)</span> you need <span class="math inline">\(x_{t+h}\)</span> — a forecast of your own predictor. If that is unavailable, ARIMAX buys you nothing at forecast time and you should use a VAR instead, which generates its own.</p>
 <p><span class="neutral smaller"><strong>Python:</strong> <code>SARIMAX(y, exog=X, order=(p,d,q)).fit()</code></span></p>
-</section>
-<section class="slide level2">
-
 </section></section>
 <section>
 <section id="key-takeaways-and-roadmap" class="title-slide slide level1 center">

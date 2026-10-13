@@ -1117,9 +1117,6 @@ Department of Economics
 <p>Subset selection is <strong>discrete</strong> — a predictor is in or out. Small changes in the data flip predictors in and out, so the <em>selected model</em> is itself high-variance. You have not removed the instability; you have moved it somewhere harder to see.</p>
 </div>
 <p><span class="neutral smaller">This is the approach in <em>FPP</em> §7.5. Shrinkage replaces the in-or-out decision with a continuous dial — more stable, and easier to tune.</span></p>
-</section>
-<section class="slide level2">
-
 </section></section>
 <section>
 <section id="shrinkage-methods" class="title-slide slide level1 center">
@@ -1182,9 +1179,6 @@ Department of Economics
 </div>
 <p>The mix keeps LASSO’s ability to zero out predictors while adding Ridge’s <strong>grouping effect</strong>: correlated predictors now enter or leave together instead of one surviving arbitrarily.</p>
 <p><strong>This is usually the right default for forecasting.</strong> Lagged predictors are correlated almost by construction — <span class="math inline">\(y_{t-1}\)</span> and <span class="math inline">\(y_{t-2}\)</span> move together — which is precisely the situation where pure LASSO picks a winner at random and pure Ridge refuses to simplify.</p>
-</section>
-<section class="slide level2">
-
 </section></section>
 <section>
 <section id="choosing-the-penalty" class="title-slide slide level1 center">
@@ -1209,9 +1203,6 @@ Department of Economics
 <div class="warningbox">
 <p><strong>Never use <code>KFold</code> here.</strong> Random folds put future observations in the training set and past ones in validation. The CV error will look excellent and the forecast will fail <span class="citation" data-cites="Bergmeir2018">(<a href="#/references" role="doc-biblioref" onclick>Bergmeir et al. 2018</a>)</span>. Use <code>TimeSeriesSplit</code>, exactly as in Lecture 1’s walk-forward evaluation.</p>
 </div>
-</section>
-<section class="slide level2">
-
 </section></section>
 <section>
 <section id="in-practice" class="title-slide slide level1 center">

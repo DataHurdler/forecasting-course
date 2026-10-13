@@ -347,8 +347,6 @@ $\mathbf{x}_t$ are exogenous regressors; $\eta_t$ absorbs whatever autocorrelati
 
 [**Python:** `SARIMAX(y, exog=X, order=(p,d,q)).fit()`]{.neutral .smaller}
 
----
-
 # Key Takeaways and Roadmap
 
 Stationarity, ARIMA, VAR, and ARIMAX form the classical time series toolkit.
