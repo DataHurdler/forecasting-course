@@ -120,3 +120,7 @@ workbook/.gitignore
 # Quarto writes this on every render of the book project.
 book/.gitignore
 book/_book/
+
+# slide-qa.py writes a report and one screenshot per slide on every run; regenerable,
+# and large. Only its folder is ignored — other audits here are tracked on purpose.
+quality_reports/audits/slide-qa/
