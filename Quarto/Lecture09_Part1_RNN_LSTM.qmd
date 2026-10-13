@@ -314,8 +314,6 @@ An LSTM holds roughly **four times** the parameters of a vanilla RNN at the same
 6. The **LSTM lost to the vanilla RNN at a 30-epoch budget**, at all three window lengths — but the two **tie** once both are trained to convergence, and 91% of this panel's variance is cross-sectional anyway. Gating solves long-range forgetting; this data does not suffer from it. **Fit the architecture to the problem — and check that a margin survives the budget you measured it at.**
 :::
 
-[Next week: attention and Transformers — reading the whole sequence at once.]{.neutral}
-
 ---
 
 ## References
