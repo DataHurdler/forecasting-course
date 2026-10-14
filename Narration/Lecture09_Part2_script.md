@@ -73,7 +73,7 @@ recurrence cannot.
 Attention removes both at once, and the idea is almost aggressively simple: let **every position
 look directly at every other position**, in one operation.
 
-No compression through intermediate states — position twenty-six reads position three directly.
+No compression through intermediate states — the last week reads week three directly.
 And no ordering constraint on the computation — all positions are computed simultaneously.
 
 ---
@@ -86,27 +86,39 @@ A learned, weighted lookup — which is a more useful way to read it than the fo
 
 # ▶ SLIDE 6 — Scaled Dot-Product Attention
 
-*(Point at the definition box, then immediately translate it.)*
+*(Point at the formula, then immediately translate it with the picture.)*
 
 Here's the formula. Attention of Q, K, V equals softmax of Q K-transpose over root d-k, times V.
 
 That's the whole mechanism. Every Transformer in the world is that line, repeated.
 
 Now let me translate it, because the formula makes it look more exotic than it is. Read it as a
-**lookup table with soft matching.**
+**lookup with soft matching.** Each week emits a **query** — "what am I looking for?" Every week
+also offers a **key** — "here's what I have" — and a **value** — "here's what I'd contribute if
+you pick me."
 
-Each position emits a **query** — that's the "what am I looking for?" vector. Every position also
-offers a **key**, which says "here's what I have." And a **value**, which says "here's what I
-would contribute if you pick me."
+*(Point at the left panel.)*
 
-**[pause]**
+The picture is a two-dimensional cartoon of what one head does; ours works in sixteen dimensions,
+but the geometry is the same. The red arrow is the query. The gray arrows are keys from five
+different weeks. A dot product has a very simple picture: drop each key straight down onto the
+query's line, and the score is how far along the line it lands, times the query's length. Keys
+pointing the same way as the query land far out — big scores. A key at right angles lands at
+zero. A key pointing backwards lands on the negative side.
 
-So: Q times K-transpose scores every query against every key. That's a big matrix of similarity
-scores — every position against every position. The softmax turns each row of those scores into
-weights that sum to one. And then you multiply by V, which gives you a weighted average of the
-values, with more weight wherever query and key matched well.
+*(Middle panel.)*
 
-That's it. Score, normalize, average.
+The softmax turns those five scores into weights. Two things are guaranteed: every weight is
+positive, and they sum to one. Last week gets more than half; the same week last year, pointing
+the wrong way, gets almost nothing.
+
+*(Right panel.)*
+
+And the output is the weighted average of the values. Here's the consequence that's worth
+remembering: because the weights are positive and sum to one, the output always lands **inside**
+the shape the values make. Attention blends what's in the window. It can't extrapolate beyond it.
+
+Score, normalize, average. That's it.
 
 **[pause]**
 
@@ -118,7 +130,7 @@ formula.
 Attention is the same *shape* of operation with the weights **learned**, and recomputed for every
 input. That's the whole upgrade. Not a new kind of mathematics — a new source for the numbers.
 
-*(Point at the scaling term.)*
+*(Point at the root d-k.)*
 
 Why divide by root d-k? Because dot products grow with dimension. In high dimensions the raw
 scores get large, and large inputs push the softmax toward a one-hot distribution — all the weight
@@ -126,52 +138,61 @@ on one position — where its gradient is nearly zero and nothing trains. Dividi
 the scores in a range where the softmax stays soft.
 
 It's a numerical fix, not a conceptual one, but leave it out and the model doesn't learn.
-
 ---
 
 # ▶ SLIDE 7 — What That Buys a Forecaster
 
 Let me make that concrete for our problem.
 
-You're predicting units for the first week of December. With attention, the model can place high
-weight on **last** December, and on the weeks around it, and near-zero weight on an unremarkable
-Tuesday in March. It looks where the information is.
-
-Two properties make that genuinely different from anything we've built.
-
-**[pause]**
-
-**The weights are learned, not specified.** You do not tell the model that lag fifty-two matters.
-Contrast that with Lecture 6, where you built the `lag52` column by hand and the LASSO penalty
-merely decided whether to keep it. Here the model discovers which positions to consult.
-
-**And the path is direct.** Attention reaches week t minus fifty-two in **one** operation. A
-recurrent model needs fifty-two successive state updates to get there — and we saw last week what
+Attention can put weight on **any** week in the window, in one step. A recurrent model needs
+fifty-two successive state updates to reach the same week last year — and we saw last week what
 survives fifty-two multiplications. A CNN needs a receptive field that wide, which it doesn't have.
-
 Distance costs attention nothing. That's the headline.
 
+But "can" is a claim about the architecture. So we looked at what ours actually *did*.
+
+*(Point at the heatmap. Explain the layout before the content.)*
+
+This is our trained model — the one from the lab. Each row is one attention head; there are four
+heads in each of two layers. Each column is a week in the window, from fifty-two weeks back on the
+left to last week on the right. The color is how much weight the forecasting position put on that
+week, averaged over the whole test year. White is less than an even share, dark red is a lot.
+
+And we trained it twice, with two different seeds — that's the left and right panels.
+
 **[pause]**
 
-There's a third property worth naming, because it matters for how you'd sell this to a
-stakeholder. Attention weights are **inspectable**. You can pull out the matrix and look at which
-weeks the model consulted when it made a given forecast.
+Read it. Almost all of the dark red is in the last two to seven weeks. That's where the model
+looks. A couple of heads spread their weight almost evenly — that flat, pale row.
 
-That is not the same as an explanation — a high attention weight tells you where the model looked,
-not why it decided what it decided, and there's a real literature arguing about how much to read
-into them. But compared with an LSTM's hidden state, which is sixty-four numbers with no
-interpretation whatsoever, it's a meaningful step toward a model whose reasoning you can
-interrogate.
+*(Point at the blue box on the left edge, then the callout.)*
+
+And the same week last year? In the first run, nothing — no head gives it more than about an even share.
+In the second run, one head in the first layer put eleven percent of its weight there: six times an
+even share. Same data, same code, different seed — and one run found the annual lag and the other
+didn't.
+
+**[pause]**
+
+Two lessons in that. First, **the weights are learned, not specified.** You never told the model
+that lag fifty-two matters. Contrast Lecture 6, where you built the `lag52` column by hand and the
+LASSO penalty merely decided whether to keep it. Here the model decides which weeks to consult —
+and, it turns out, it mostly decides on the recent past.
+
+Second, a caution about reading pictures like this one. Attention weights are **inspectable**, which
+is genuinely useful — compared with an LSTM's hidden state, sixty-four numbers with no
+interpretation at all, you can see where the model looked. But where it looked is not the same as
+what mattered. A high weight tells you where the model consulted, not why it decided what it
+decided, and there's a real literature arguing about how much to read into them.
 
 *(Point at the warning box.)*
 
 **[pause]**
 
-And here's the price, which is real. Scoring every position against every other position is
-**quadratic** — order T-squared in both time and memory. At T equals twenty-six, that's
-irrelevant. At T equals ten thousand, it is the central engineering constraint of the entire
-field, and there's a whole literature on approximating it.
-
+And here's the price, which is real. Scoring every week against every other week is **quadratic** —
+order T-squared in both time and memory. At T equals fifty-two, that's irrelevant. At T equals ten
+thousand, it is the central engineering constraint of the entire field, and there's a whole
+literature on approximating it.
 ---
 
 # ▶ SLIDE 8 — Multi-Head Attention
@@ -182,9 +203,10 @@ limiting, because different kinds of relevance coexist in the same sequence.
 **Multi-head attention** runs h attention operations in parallel, on different learned projections
 of the same input, then concatenates the results.
 
-Each head can specialize. In a forecasting model, one head might track position within the month,
-another the annual cycle, another the effect of promotional flags — all attending over the same
-window simultaneously.
+Each head can specialize — and the heatmap on the last slide shows ours did. Most of the heads
+watch the last few weeks, each at slightly different lags. One or two spread their weight almost
+evenly across the window. And in one of the two training runs, one head found the annual lag.
+Nobody assigned those jobs; the heads divided the work among themselves.
 
 **[pause]**
 
@@ -215,20 +237,22 @@ Attention, plus the three pieces that make it trainable.
 A Transformer encoder layer is four components in a fixed arrangement, and the good news is that
 you already know three of them.
 
-*(Walk the table.)*
+*(Walk the diagram left to right.)*
 
-**Multi-head attention** — every position attends to every position. That's the new part.
+Each week comes in with its position added — more on that on the next slide. Then **multi-head
+attention**, in red, because it's the only new part: every week attends to every week.
 
-**Residual plus LayerNorm** — z equals LayerNorm of x plus MultiHead of x. That's the ResNet skip
-connection from Lecture 8, doing exactly the same job: giving the gradient an additive path home.
+Then a plus sign, and a gray line arching over the top. That's the **skip connection** from Lecture
+8 — the input is added back to attention's output, giving the gradient an additive path home. Then
+**LayerNorm**, which rescales each week's vector so the numbers stay in a sensible range.
 
-**A feed-forward sublayer** — a small MLP applied to each position independently. That is
-literally the network from Lecture 7, run at every time step.
+Then a **feed-forward sublayer** — a small MLP applied to each week independently. That is
+literally the network from Lecture 7, run at every week of the window.
 
-**Residual and LayerNorm again**, this time around the feed-forward block.
+And around it, **another skip and another LayerNorm**.
 
-Stack N of those and you have the encoder. Nothing in the block is new to you except attention
-itself.
+The bracket underneath says stack N of those; our model stacks two. Nothing in the block is new to
+you except attention itself.
 
 That is genuinely worth pausing on. The architecture that reorganized machine learning is one new
 mechanism, wrapped in a residual connection from 2015 and a two-layer network from the 1980s.
@@ -244,12 +268,10 @@ rather than model names.
 And one thing is conspicuously missing. It is not an oversight, and I want you to spot it before
 I say it.
 
-Look at every operation in that block. Attention: a weighted average over positions.
-Feed-forward: applied to each position independently. LayerNorm: per position. Residual: per
-position.
+Look at every operation in that block. Attention: a weighted average over weeks.
+Feed-forward: applied to each week independently. LayerNorm: per week. Skip: per week.
 
 **Nothing in there depends on the *order* of the input.**
-
 ---
 
 # ▶ SLIDE 11 — Positional Encoding: Attention Cannot Tell Time
@@ -257,9 +279,8 @@ position.
 Let's make that precise, because it's the most important slide in the lecture.
 
 Attention computes a weighted average over positions. Averaging does not care about order.
-Shuffle the input sequence, and every attention output is **unchanged**.
-
-The technical term is that attention is **permutation-invariant**.
+Shuffle the input window, and every attention output is **unchanged**. The technical term is that
+attention is **permutation-invariant**.
 
 **[pause]**
 
@@ -269,20 +290,37 @@ is not forecasting at all; it's computing a weighted average of an unordered bag
 
 So the fix is to add position information **to the input itself**, before attention ever sees it.
 
-*(Point at the sinusoid formulas.)*
+*(Point at the formula, then straight to the dials.)*
 
-The original paper uses fixed sinusoids at different frequencies — sines on the even dimensions,
-cosines on the odd ones, with wavelengths that grow geometrically.
+The original paper adds thirty-two pairs of numbers to each week: a sine and a cosine, each pair at
+its own speed. Here's the way to picture it. A sine and a cosine of the same angle are just the two
+coordinates of a point on a circle. So each pair is a **clock hand**, and as you move through the
+window, week by week, every hand turns — each at its own speed.
 
-Two properties make that work. Each position gets a **distinct** pattern across dimensions, so the
-model can tell positions apart. And **nearby positions get similar patterns**, so the model can
-learn relative distance rather than just absolute index. You can also learn the position vectors
-instead of fixing them; both are used in practice.
+*(Walk the four dials left to right.)*
+
+The first hand is fast: one full turn every six weeks. It tells neighboring weeks apart easily —
+but it comes back around, so on its own it can't tell this week from six weeks ago. The next turns
+once every twenty weeks. The third, once every sixty-three — slow enough that every week of the
+year sits at its own angle. And the slowest barely moves across a whole year.
+
+Read together, like the hands of a real clock, they pin down every week uniquely. Fast hands
+separate nearby weeks; slow hands separate distant ones.
+
+*(Point at the square on the right.)*
+
+And here's the property that makes it work for learning. Move any week forward by, say, three
+weeks, and **every hand turns by its own fixed angle** — the same angle no matter which week you
+started from. So how similar two weeks look depends only on how far apart they are. That's what
+this square shows: week against week, colored by similarity, and it's the same color along every
+diagonal. The model can learn "three weeks ago" as a single idea, wherever it falls in the window.
+
+You can also learn the position vectors instead of fixing them; both are used in practice.
 
 **[pause]**
 
-We measure exactly what removing this costs, on the slide after next. Hold the question.
-
+We measure exactly what removing this costs at the end of the lecture, on slide sixteen. Hold the
+question.
 ---
 
 # ▶ SLIDE 12 — Why Transformers Took Over
@@ -298,7 +336,7 @@ than an RNN. When your competitive advantage is training on more data, the archi
 trains faster wins by default.
 
 **Direct long-range paths.** Any position reaches any other in one step. There is no distance at
-which information degrades. Compare the ten-to-the-minus-nine we computed last week.
+which information degrades. Compare the ten-to-the-minus-eight we computed last week.
 
 **Scale.** The architecture kept getting better as parameters and data grew, well past the point
 where earlier architectures plateaued. That property is the entire foundation of the last five
@@ -313,8 +351,8 @@ Read that list again with a forecaster's eye, though.
 
 Every single one of those advantages is about **large data and long sequences**.
 
-Hold that against what we actually have: a twenty-six-week window, and five thousand nine hundred
-forty training examples.
+Hold that against what we actually have: a fifty-two-week window, and five thousand one hundred
+sixty training examples.
 
 ---
 
@@ -367,17 +405,19 @@ in your project, that's the thing to look up.
 
 # ▶ SLIDE 15 — Does It Work?
 
-*(Walk the table. Same panel, same test block as everything since Homework 3.)*
+*(Walk the table. Same panel, same test block as everything since Homework 3, and every sequence
+model reading fifty-two-week windows.)*
 
 LASSO with forty-six engineered features: seven forty-four. XGBoost: seven eighty-one. Vanilla
-RNN: eight forty-two, on four and a half thousand parameters. Random forest: eight ninety-nine.
-LSTM: nine eighty-seven. **Transformer encoder, two layers: nine ninety** — on sixty-seven
-thousand parameters. Best CNN: one thousand thirty-two. Seasonal naive: twenty-one fifty-two.
+RNN: eight-oh-five, on four and a half thousand parameters. Random forest: eight ninety-nine.
+**Transformer encoder, two layers: nine ninety** — on sixty-seven thousand parameters. LSTM: nine
+ninety-eight. Best CNN: one thousand thirty-two — that one from Lecture 8, on twenty-six-week
+windows. Seasonal naive: twenty-one fifty-two.
 
 **[pause]**
 
 So: the Transformer beats the CNN, and it **ties the LSTM** — nine ninety against nine
-eighty-seven, a difference far smaller than the run-to-run spread. Calling that a win in either
+ninety-eight, a difference far smaller than the run-to-run spread. Calling that a win in either
 direction would be reading noise.
 
 And it loses to a vanilla RNN holding **one-fifteenth** as many parameters. And to a
@@ -385,7 +425,7 @@ forty-six-coefficient linear model.
 
 *(Beat.)*
 
-That is the state-of-the-art architecture of the last decade, finishing sixth of eight on our
+That is the state-of-the-art architecture of the last decade, finishing fifth of eight on our
 data. Next slide is why, and the reason is not that we implemented it badly.
 
 **[pause]**
@@ -393,14 +433,14 @@ data. Next slide is why, and the reason is not that we implemented it badly.
 Look at the parameter column once before we move on, because the trend across the whole table is
 the real story of these three lectures.
 
-Four and a half thousand parameters bought eight forty-two. Eighteen thousand bought nine
-eighty-seven. Sixty-seven thousand bought nine ninety. And forty-six coefficients bought seven
-forty-four.
+Four and a half thousand parameters bought eight-oh-five. Eighteen thousand bought nine
+ninety-eight. Sixty-seven thousand bought nine ninety — a tie with the eighteen thousand. And
+forty-six coefficients bought seven forty-four.
 
-Model size and accuracy are running in **opposite directions** on this dataset. That is not a
-universal law — on a large enough corpus the ordering flips entirely, which is precisely why these
-architectures exist. But on the data in front of you, more capacity has bought worse forecasts
-every single time.
+Model size and accuracy are running in **opposite directions** on this dataset, or at best
+sideways. That is not a universal law — on a large enough corpus the ordering flips entirely, which
+is precisely why these architectures exist. But on the data in front of you, more capacity has
+never once bought a meaningfully better forecast.
 
 ---
 
@@ -418,7 +458,7 @@ about ninety seconds.
 recent past. Attention's superpower is reaching week t minus fifty-two cheaply. Our data mostly
 wants week t minus one.
 
-**Scales with data.** True, and five thousand nine hundred forty training windows is simply not
+**Scales with data.** True, and five thousand one hundred sixty training windows is simply not
 the regime where that pays. Transformers overtake other architectures somewhere, but that
 somewhere is orders of magnitude from here.
 
@@ -430,7 +470,7 @@ But I don't want you to leave thinking the mechanism did nothing, because one pa
 very visible work — and we can measure it.
 
 Take the same model and remove the positional encoding. Now it has to forecast from an unordered
-bag of twenty-six weeks.
+bag of fifty-two weeks.
 
 *(Point at the two-row table.)*
 
@@ -485,7 +525,7 @@ Not by a Transformer. By gradient boosting.
 Let me anticipate a reasonable objection: if this architecture loses here, why spend an hour on it?
 
 Two answers. The first is that you now have a *reason* — you can say, before fitting anything,
-that a twenty-six-week window with recent-lag signal and six thousand training examples is not the
+that a fifty-two-week window with recent-lag signal and five thousand training examples is not the
 regime where attention pays. That prediction-in-advance is worth far more than the fitted number.
 
 The second is that most of you will encounter this architecture outside forecasting, in tools you
@@ -500,7 +540,7 @@ that understanding transfers well beyond this course.
 One. Attention is a learned soft lookup: score every query against every key, softmax the scores,
 average the values. Distance in the sequence costs nothing.
 
-Two. The price is quadratic in sequence length — irrelevant at twenty-six steps, the central
+Two. The price is quadratic in sequence length — irrelevant at fifty-two steps, the central
 constraint at ten thousand.
 
 Three. Multi-head attention runs several notions of relevance in parallel, at roughly the cost of

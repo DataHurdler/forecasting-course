@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · RNNs and LSTMs**
 
-Deck: `Slides/Lecture09_Part1_RNN_LSTM.pdf` (21 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture09_Part1_RNN_LSTM.pdf` (24 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -580,6 +580,10 @@ the gap was filled in continuously along the way.
 Gating earns its keep when something must survive steps that would overwrite it. Here nothing
 overwrites anything.
 
+---
+
+# ▶ SLIDE 20 — Check 2, Continued: Nothing Arrives Early
+
 **Three. Nothing in the inputs arrives early.** SNAP days correlate about point one four with
 units in the same week. Two and four weeks ahead you do see something — minus point one three,
 plus point one two — but that's the calendar, not a warning. SNAP days fall on the same dates every
@@ -602,13 +606,13 @@ If the answers look like this panel's, the extra machinery has nothing to do.
 
 ---
 
-# ▶ SLIDE 20 — Section divider: Key Takeaways
+# ▶ SLIDE 21 — Section divider: Key Takeaways
 
 What recurrence buys, what it costs, and what is still missing.
 
 ---
 
-# ▶ SLIDE 21 — RNN and LSTM in Context
+# ▶ SLIDE 22 — RNN and LSTM in Context
 
 *(Table first, then the two paragraphs.)*
 
@@ -654,14 +658,14 @@ other position in a single operation.
 
 ---
 
-# ▶ SLIDE 22 — Lecture 9 Part 1: Key Takeaways
+# ▶ SLIDE 23 — Lecture 9 Part 1: Key Takeaways
 
 One. A recurrent network reads a sequence in order and carries a hidden state. Weights are shared
 across time, so window length costs no parameters.
 
 Two. Training is backpropagation through time — unroll the recurrence and it's a deep network
-whose layers share weights. Repeated multiplication shrinks the gradient exponentially. At
-fifty-two steps, around ten to the minus eight.
+whose layers share weights. Repeated multiplication shrinks the gradient exponentially: our own
+RNN keeps about a thousandth of a percent of it a year back.
 
 Three. An LSTM adds a cell state updated **additively**. Addition preserves gradients where
 multiplication destroys them — the ResNet fix, eighteen years earlier.
@@ -682,6 +686,6 @@ Next week: attention and Transformers. Reading the whole sequence at once.
 
 ---
 
-# ▶ SLIDE 23 — References
+# ▶ SLIDE 24 — References
 
 *(Advance and close. No narration needed.)*

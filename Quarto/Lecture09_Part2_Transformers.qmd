@@ -42,15 +42,16 @@ Two constraints that are built into reading a sequence one step at a time.
 
 ## Two Problems Built Into Recurrence
 
-Part 1 ended with a working recurrent forecaster. Both of its remaining problems come from the same source — it reads strictly left to right.
+Part 1's recurrent forecaster has two problems left, both from reading strictly left to right.
 
-**The information bottleneck.** Everything the model knows about step 3 must survive being squeezed through every hidden state between 3 and $T$. An LSTM's gates make that survival more likely, but the whole history is still compressed into one fixed-size vector.
+**The information bottleneck.** Everything about step 3 must squeeze through every hidden state between 3 and $T$. Gates help, but the whole history still lives in one fixed-size vector.
 
-**The sequential bottleneck.** Step $t$ cannot be computed until step $t-1$ is finished. That is a hard constraint: a 1,000-step sequence takes 1,000 sequential operations no matter how many GPUs you own. Convolutions parallelize; recurrence does not.
+**The sequential bottleneck.** Step $t$ waits for step $t-1$: a 1,000-step sequence takes 1,000 sequential operations, however many GPUs you own.
 
 ::: {.keybox}
-**Attention removes both at once.** Let every position look directly at every other position, in one operation. No compression through intermediate states, and no ordering constraint on the computation.
+**Attention removes both at once.** Every position looks directly at every other, in one operation: no compression through intermediate states, no ordering constraint on the computation.
 :::
+
 
 # The Attention Mechanism
 
@@ -60,52 +61,42 @@ A learned, weighted lookup — which is a more useful way to read it than the fo
 
 ## Scaled Dot-Product Attention
 
-::: {.definitionbox}
-::: {.definitionbox-title}
-The whole mechanism
-:::
 $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
 
-$Q$ = queries, $K$ = keys, $V$ = values, $d_k$ = key dimension.
-:::
+A lookup with soft matching [@Vaswani2017]: each week's **query** is scored against every week's **key**, and the scores weight the **values**.
 
-Read it as a **lookup table with soft matching** [@Vaswani2017]. Each position emits a **query**: *"what am I looking for?"* Every position also offers a **key**: *"here is what I have"* — and a **value**: *"here is what I would contribute."*
+![](../Figures/Lecture09_Part2/attention_geometry.svg){fig-align="center" height="300px"}
 
-$QK^\top$ scores every query against every key. The softmax turns those scores into weights that sum to one. The output is a weighted average of the values, with more weight where query and key matched.
-
-**Why divide by $\sqrt{d_k}$?** Dot products grow with dimension, and large inputs push the softmax toward one-hot, where its gradient nearly vanishes. The scaling keeps it trainable.
+[The score is the query's length times the key's shadow on it. Softmax makes the weights positive and sum to one, so the output stays *inside* the values: attention averages, it cannot extrapolate. The $\sqrt{d_k}$ keeps the softmax from saturating.]{.smaller}
 
 ---
 
 ## What That Buys a Forecaster
 
-Concretely: predicting units for the first week of December, the model can place high weight on *last* December and on the surrounding weeks, and near-zero weight on an unremarkable Tuesday in March.
+Attention can weight any week in the window in one step; an RNN needs 52 updates to reach last year. Where our trained model actually looked, over the test year:
 
-Two properties make that different from anything so far.
+![](../Figures/Lecture09_Part2/attention_heatmap.svg){fig-align="center" height="300px"}
 
-**The weights are learned, not specified.** You do not tell the model that lag 52 matters. Compare that with LASSO in Lecture 6, where you built `lag52` by hand and the penalty decided whether to keep it.
-
-**The path is direct.** Attention reaches week $t-52$ in *one* operation, where a recurrent model needs 52 successive state updates and a CNN needs a receptive field that wide. Distance costs attention nothing.
+[Mostly the last two to seven weeks; in one of two training runs, one head found last year's week. The weights are **learned, not specified** — and they show where the model looked, not what mattered.]{.smaller}
 
 ::: {.warningbox}
-The price is quadratic: scoring every position against every other is $O(T^2)$ in time and memory — fine at $T = 26$, painful at $T = 10{,}000$.
+The price is quadratic: $O(T^2)$ in time and memory — fine at $T = 52$, painful at $T = 10{,}000$.
 :::
 
 ---
 
 ## Multi-Head Attention
 
-One attention operation produces one set of weights — one notion of what is relevant. That is limiting, because different kinds of relevance coexist.
-
-**Multi-head attention** runs $h$ attention operations in parallel on different learned projections of the same input, then concatenates:
+One attention operation gives one set of weights — one notion of what is relevant. **Multi-head attention** runs $h$ of them in parallel on different learned projections, then concatenates:
 
 $$\text{MultiHead}(Q,K,V) = \text{concat}(\text{head}_1, \ldots, \text{head}_h)\, W^O$$
 
-Each head can specialize. In a forecasting model one head might track weekly position, another the annual cycle, another the effect of promotional flags — all attending over the same window at once.
+Each head can specialize. Ours did: most watch the last few weeks, one spreads its weight evenly, and in one run one found the annual lag.
 
-**The cost is not what you would guess.** Each head works in a lower-dimensional subspace of size $d_{\text{model}}/h$, so eight heads cost about the same as one head at full width. You buy the diversity nearly for free.
+**The cost is not what you would guess.** Each head works in $d_{\text{model}}/h$ dimensions, so eight heads cost about the same as one full-width head.
 
-[Our model below uses `nhead=4` with `d_model=64` — four heads of 16 dimensions each.]{.neutral .smaller}
+[Our model: `nhead=4`, `d_model=64` — four heads of 16 dimensions.]{.neutral .smaller}
+
 
 # The Transformer Encoder
 
@@ -115,16 +106,11 @@ Attention, plus the three pieces that make it trainable.
 
 ## The Encoder Block
 
-A Transformer encoder layer is four components in a fixed arrangement.
+A Transformer encoder layer is four components in a fixed arrangement:
 
-| | |
-|---|---|
-| **Multi-head attention** | Every position attends to every position. |
-| **Residual + LayerNorm** | $\mathbf{z} = \text{LayerNorm}(\mathbf{x} + \text{MultiHead}(\mathbf{x}))$. The skip connection from Lecture 8, doing the same job. |
-| **Feed-forward sublayer** | A small MLP applied to each position independently — the Lecture 7 network, at every step. |
-| **Residual + LayerNorm** | Again, around the feed-forward block. |
+![](../Figures/Lecture09_Part2/encoder_block.svg){fig-align="center" height="250px"}
 
-Stack $N$ of those and you have the encoder. Nothing in the block is new to you except attention itself — the residual connections are ResNet's, and the feed-forward sublayer is the network from Lecture 7.
+Stack $N$ of those and you have the encoder. Nothing in the block is new to you except attention itself — the skip connections are ResNet's, LayerNorm rescales each week's vector, and the feed-forward sublayer is the Lecture 7 network applied to every week.
 
 **One thing is conspicuously missing, and it is not an oversight.** Nothing above depends on the *order* of the input.
 
@@ -132,17 +118,13 @@ Stack $N$ of those and you have the encoder. Nothing in the block is new to you 
 
 ## Positional Encoding: Attention Cannot Tell Time
 
-Attention computes a weighted average over positions. Averaging does not care about order — shuffle the input sequence and every attention output is unchanged.
+**Attention is permutation-invariant**: shuffle the window and every output is unchanged. A forecaster that cannot tell last week from thirty weeks ago is not forecasting.
 
-**Attention is permutation-invariant.** For language that is fatal, and for forecasting it is worse: a model that cannot distinguish last week from thirty weeks ago is not forecasting at all.
+The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{-2i/d}$, to each week — each pair a clock hand turning at its own speed:
 
-The fix is to add position information to the input itself, before attention sees it. The original paper uses fixed sinusoids of different frequencies:
+![](../Figures/Lecture09_Part2/positional_clocks.svg){fig-align="center" height="270px"}
 
-$$PE_{(t, 2i)} = \sin\!\left(\frac{t}{10000^{2i/d}}\right), \qquad PE_{(t, 2i+1)} = \cos\!\left(\frac{t}{10000^{2i/d}}\right)$$
-
-Each position gets a distinct pattern across dimensions, and nearby positions get similar patterns — so the model can learn relative distance, not just absolute index.
-
-**We measure what removing it costs on the next slide but one.**
+[Moving $\Delta$ weeks turns every hand by its own fixed angle, so how alike two weeks look depends only on their distance. **We measure what removing it costs at the end.**]{.smaller}
 
 ---
 
@@ -150,15 +132,16 @@ Each position gets a distinct pattern across dimensions, and nearby positions ge
 
 Three properties, in the order they mattered commercially.
 
-**Parallelism.** Every position is computed at once, so training scales across hardware in a way recurrence never could. This, more than accuracy, is why the architecture won — it could absorb far more data and compute per unit of wall-clock time.
+**Parallelism.** Every position is computed at once, so training scales across hardware. More than accuracy, this is why it won.
 
-**Direct long-range paths.** Any position reaches any other in one step, so there is no distance at which information degrades.
+**Direct long-range paths.** Any position reaches any other in one step.
 
-**Scale.** The architecture kept improving as parameters and data grew, well past the point where earlier architectures plateaued. BERT [@Devlin2019] is an encoder stack used for understanding; GPT is a decoder stack used for generation. Both are this block, repeated.
+**Scale.** It kept improving as parameters and data grew. BERT [@Devlin2019] is an encoder stack for understanding, GPT a decoder stack for generation — both this block, repeated.
 
 ::: {.warningbox}
-Every one of those advantages is about **large data and long sequences**. Hold that thought against a 26-week window and 5,940 training examples.
+Every one of those advantages is about **large data and long sequences**. Hold that thought against a 52-week window and 5,160 training examples.
 :::
+
 
 # Transformers for Time Series
 
@@ -193,20 +176,20 @@ def forward(self, x):
 
 ## Does It Work?
 
-Same weekly panel, same 26-week windows, same test block as everything since Homework 3.
+Same weekly panel and test block as everything since Homework 3; every sequence model reads 52-week windows.
 
 | Model | Test RMSE | Parameters |
 |---|---:|---:|
 | LASSO, 46 engineered features | **744** | 46 |
 | XGBoost | 781 | — |
-| Vanilla RNN | **842** | 4,545 |
+| Vanilla RNN | **805** | 4,545 |
 | Random forest | 899 | — |
-| LSTM | 987 | 17,985 |
 | **Transformer encoder**, 2 layers | **990** | 67,329 |
-| 1D CNN, best variant | 1,032 | 8,161 |
+| LSTM | 998 | 17,985 |
+| 1D CNN, best variant (26-week window) | 1,032 | 8,161 |
 | Seasonal naive | 2,152 | 0 |
 
-The Transformer beats the CNN and **ties the LSTM** — 990 against 987, a difference far smaller than the run-to-run spread. It loses to a vanilla RNN holding **one-fifteenth** as many parameters, and to a 46-coefficient linear model.
+The Transformer beats the CNN and **ties the LSTM** — 990 against 998, a difference far smaller than the run-to-run spread. It loses to a vanilla RNN holding **one-fifteenth** as many parameters, and to a 46-coefficient linear model.
 
 ---
 
@@ -218,9 +201,9 @@ Every advantage on the "why Transformers took over" slide is an advantage *at sc
 |---|---|
 | **Parallel computation** | Real, but irrelevant — the RNN trains in seconds either way. |
 | **Direct long-range paths** | Worth little when the signal is dominated by recent weeks. |
-| **Scales with data** | 5,940 training windows is not the regime where that pays. |
+| **Scales with data** | 5,160 training windows is not the regime where that pays. |
 
-**And positional encoding is doing real work, which we can measure.** Remove it and the same model must forecast from an unordered bag of 26 weeks:
+**And positional encoding is doing real work, which we can measure.** Remove it and the same model must forecast from an unordered bag of 52 weeks:
 
 | | |
 |---|---:|
@@ -253,20 +236,20 @@ That second case is language, which is why this architecture reshaped that field
 ## Lecture 9 Part 2: Key Takeaways
 
 ::: {.keybox}
-1. **Attention** is a learned soft lookup: score every query against every key, softmax the scores, average the values. Distance in the sequence costs nothing.
+1. **Attention**: score queries against keys, softmax, average the values. Distance costs nothing.
 
-2. The price is **quadratic** in sequence length — fine at 26 steps, the central constraint at 10,000.
+2. The price is **quadratic** in sequence length: fine at 52 steps, the central constraint at 10,000.
 
-3. **Multi-head** attention runs several notions of relevance in parallel, at roughly the cost of one, by splitting the dimension.
+3. **Multi-head** attention runs several notions of relevance at roughly the cost of one.
 
-4. An encoder block is attention $+$ **residual** $+$ LayerNorm $+$ a feed-forward sublayer. Only attention is new — the residuals are ResNet, the sublayer is Lecture 7.
+4. An encoder block: attention, **skips**, LayerNorm, feed-forward. Only attention is new.
 
-5. **Attention is permutation-invariant**, so position must be added explicitly. PyTorch does not do this for you, and omitting it fails silently.
+5. **Attention is permutation-invariant**: add position yourself — PyTorch will not, and forgetting fails silently.
 
-6. On our panel the Transformer **tied the LSTM**, beat the CNN, and lost to a vanilla RNN with **one-fifteenth** the parameters. Its advantages are advantages at scale.
+6. Here it **tied the LSTM** and lost to an RNN with **one-fifteenth** the parameters: its advantages are advantages at scale.
 :::
 
-[Next: Bayesian Statistics I — a different answer to the question of what a forecast should tell you.]{.neutral}
+[Next: Bayesian Statistics I — a different answer to what a forecast should tell you.]{.neutral}
 
 ---
 

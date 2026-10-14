@@ -380,7 +380,45 @@ def receptive_field() -> None:
     save(fig, "receptive_field")
 
 
-FIGURES = {"conv1d": conv1d, "filter_sees": filter_sees, "pooling": pooling,
+# ------------------------------------------------------------------ dense vs convolutional wiring
+def dense_vs_conv() -> None:
+    """Local connectivity plus weight sharing, drawn: 32 distinct weights against 3 shared ones."""
+    fig, axes = plt.subplots(1, 2, figsize=sz(13, 4.4))
+    n_in = 8
+    xin = np.arange(n_in) * 1.0
+    for ax in axes:
+        ax.set_xlim(-0.5, n_in - 0.5); ax.set_ylim(-1.3, 2.6); ax.axis("off"); ax.set_aspect("equal")
+
+    def nodes(ax, xs, y, face):
+        for x in xs:
+            ax.add_patch(plt.Circle((x, y), 0.2, facecolor=face, edgecolor=GRAY, lw=1.4, zorder=3))
+
+    # dense: every input wired to every output, each wire its own weight
+    ax = axes[0]
+    xout = np.linspace(1.0, n_in - 2.0, 4)
+    for xo in xout:
+        for xi in xin:
+            ax.plot([xi, xo], [0, 2], color=GRAY, lw=0.9, alpha=0.75, zorder=1)
+    nodes(ax, xin, 0, "white"); nodes(ax, xout, 2, LIGHT_GRAY)
+    ax.text((n_in - 1) / 2, -0.55, "every output sees every input", ha="center", va="top", fontsize=12)
+    ax.set_title("dense layer: 32 weights, all different", fontsize=13, pad=4)
+
+    # convolution: each output sees 3 neighbors, through the same 3 weights
+    ax = axes[1]
+    colors = [CRIMSON, BLUE, GREEN]
+    xout = xin[1:-1]
+    for xo in xout:
+        for k, c in zip((-1, 0, 1), colors):
+            ax.plot([xo + k, xo], [0, 2], color=c, lw=2.0, zorder=1)
+    nodes(ax, xin, 0, "white"); nodes(ax, xout, 2, LIGHT_CRIMSON)
+    ax.text((n_in - 1) / 2, -0.55, "each output sees 3 neighbors,\nthrough the same 3 weights",
+            ha="center", va="top", fontsize=12)
+    ax.set_title("convolution: 3 weights, shared", fontsize=13, pad=4)
+    fig.subplots_adjust(wspace=0.12)
+    save(fig, "dense_vs_conv")
+
+
+FIGURES = {"dense_vs_conv": dense_vs_conv, "conv1d": conv1d, "filter_sees": filter_sees, "pooling": pooling,
            "learned_filters": learned_filters, "residual_block": residual_block,
            "receptive_field": receptive_field}
 

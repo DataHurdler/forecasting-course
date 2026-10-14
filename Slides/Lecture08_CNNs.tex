@@ -35,29 +35,30 @@
   Look at a small window, and look for the same thing everywhere.
   Two ideas, and they are the whole architecture.}
 
-% --- Slide: Why convolution --------------------------------------------------
-\begin{frame}{Why Convolution?}
-  Start with why a fully connected layer fails on structured input. A $224 \times 224$ image has
-  50{,}176 pixels, so a single hidden layer of 1{,}000 neurons needs \textbf{50 million weights}
-  --- for one layer. Lecture 7's network had 22{,}657 parameters in total.
+% --- Slide: Why convolution (1 of 2: the cost) --------------------------------
+\begin{frame}{Why Convolution? A Dense Layer Wastes Its Weights}
+  A $224 \times 224$ image has 50{,}176 pixels. One hidden layer of 1{,}000 neurons on top of it
+  needs \textbf{50 million weights} --- for one layer. Lecture 7's whole network had 22{,}657.
 
-  \vspace{0.15cm}
-  Worse than the cost is the waste. That layer ignores \textbf{spatial structure}: it has no
-  notion that neighboring pixels are related and distant ones usually are not. And it does not
-  \textbf{generalize position} --- a pattern learned in the top-left corner is stored separately
-  from the same pattern in the bottom-right.
+  \vspace{0.3cm}
+  And the waste is worse than the cost. That layer has no idea that \textbf{neighboring pixels
+  are related} and distant ones usually are not. And it \textbf{cannot reuse what it learns}: a
+  pattern learned in the top-left corner is stored separately from the same pattern in the
+  bottom-right.
+\end{frame}
 
+% --- Slide: Why convolution (2 of 2: the two ideas) ----------------------------
+\begin{frame}{Why Convolution? Two Ideas}
+  \begin{center}
+    \includegraphics[height=3.0cm]{../Figures/Lecture08/dense_vs_conv.pdf}
+  \end{center}
   \begin{keybox}
-    A convolutional layer fixes both with two ideas. \textbf{Local connectivity:} each neuron
-    sees only a small \textbf{receptive field}. \textbf{Weight sharing:} the same filter is
-    applied at every position. Far fewer parameters, and a pattern learned anywhere is
-    recognized everywhere.
+    \textbf{Local connectivity:} each neuron sees only a small \textbf{receptive field}.
+    \textbf{Weight sharing:} the same filter is applied at every position. Far fewer parameters,
+    and a pattern learned anywhere is recognized everywhere.
   \end{keybox}
-
-  \vspace{0.1cm}
-  The analogy that makes it stick: a reader does not memorize the letter ``A'' separately for
-  every position on the page. They learn it once and apply it everywhere. A filter does exactly
-  that.
+  A reader does not memorize the letter ``A'' separately for every spot on the page. They learn
+  it once and apply it everywhere. A filter does exactly that.
 \end{frame}
 
 % --- Slide: How convolution works --------------------------------------------
@@ -123,13 +124,13 @@
 % --- Slide: Pooling ----------------------------------------------------------
 \begin{frame}{Pooling: Downsampling Feature Maps}
   \textbf{Pooling} summarizes each small region of a feature map with one number: max pooling
-  keeps the largest, average pooling the mean. A $2\times2$ max pool quarters the values.
+  keeps the largest, average pooling the mean.
   \begin{center}
     \includegraphics[height=3.0cm]{../Figures/Lecture08/pooling.pdf}
   \end{center}
   \vspace{-0.3cm}
   It buys \textbf{fewer parameters downstream} and \textbf{translation invariance}: shift the
-  input slightly and the pooled output barely changes. The shelf edge above survives the pool.
+  input slightly and the pooled output barely changes. The shelf edge survives.
 
   \begin{warningbox}
     \textbf{A feature for images, a problem for forecasting.} A demand spike that moved three
@@ -147,55 +148,50 @@
 
 % --- Slide: LeNet to VGG -----------------------------------------------------
 \begin{frame}{LeNet to VGG: Depth and Small Filters}
-  \textbf{LeNet-5} \parencite{LeCun1998} established the template in 1998: alternating
-  convolution and pooling layers, then fully connected layers at the end. It had roughly 60{,}000
-  parameters and read handwritten digits on cheques.
+  \textbf{LeNet-5} \parencite{LeCun1998} set the template in 1998: convolution and pooling
+  layers, then dense layers. It read handwritten digits on bank checks.
 
   \vspace{0.15cm}
-  \textbf{VGG} \parencite{Simonyan2015} scaled that idea up in 2014 and made one sharp
-  simplification: use \emph{only} $3\times3$ filters, but stack many of them. Two stacked
-  $3\times3$ layers see the same receptive field as one $5\times5$, with fewer parameters and an
-  extra nonlinearity in between.
+  \textbf{VGG} \parencite{Simonyan2015} scaled it up in 2014 with one simplification: \emph{only}
+  $3\times3$ filters, stacked deep. Two stacked $3\times3$ layers see what one $5\times5$ sees,
+  with fewer parameters and an extra nonlinearity.
 
   \begin{keybox}
     \textbf{The lesson that carried:} depth built from small filters beats width built from large
-    ones. It is cheaper in parameters and more expressive, and it is why almost every modern
-    architecture is deep and narrow rather than shallow and wide.
+    ones --- which is why modern architectures are deep and narrow.
   \end{keybox}
 
   \vspace{0.1cm}
-  VGG's cost was its size --- around 138 million parameters, most of them in the final fully
-  connected layers. That is the problem the next two architectures attacked.
+  VGG's cost: 138 million parameters, mostly in the final dense layers.
 \end{frame}
 
 % --- Slide: Inception and ResNet ---------------------------------------------
 \begin{frame}{Inception and ResNet: Depth That Trains}
-  \textbf{Inception} \parencite{Szegedy2015} asked why a layer should commit to one filter size:
-  it runs $1\times1$, $3\times3$ and $5\times5$ convolutions \emph{in parallel} and lets the
-  network choose the scale, with $1\times1$ convolutions cutting channels first to keep cost down.
+  \textbf{Inception} \parencite{Szegedy2015} runs $1\times1$, $3\times3$ and $5\times5$
+  convolutions \emph{in parallel} and lets the network choose the scale; $1\times1$
+  convolutions keep the cost down.
 
   \vspace{0.15cm}
-  \textbf{ResNet} \parencite{He2016} solved a different problem. Past a certain depth, deeper
-  networks got \emph{worse} --- not from overfitting, but because gradients degraded on their way
-  back through many layers. The fix is a \textbf{residual} or skip connection:
+  \textbf{ResNet} \parencite{He2016} fixed a different problem: past some depth, deeper networks
+  got \emph{worse} --- not from overfitting, but because gradients faded on the way back. The fix
+  is a \textbf{residual} or skip connection:
   \begin{center}
     \includegraphics[height=2.4cm]{../Figures/Lecture08/residual_block.pdf}
   \end{center}
   \vspace{-0.3cm}
-  The $+\,\mathbf{x}$ gives the gradient a direct path backward. That one change made networks
-  of 100+ layers trainable, and skip connections now appear in nearly every deep architecture
-  --- including the Transformers in Lecture 9.
+  The $+\,\mathbf{x}$ gives the gradient a direct path backward. It made 100-layer networks
+  trainable, and it is in nearly every deep architecture since --- including Lecture 9's.
 \end{frame}
 
 % --- Slide: what a trained network learned --------------------------------------
 \begin{frame}{What a Trained CNN Learns}
-  ResNet-18, trained on 1.2 million labelled images. Nobody designed its first layer --- these
+  ResNet-18, trained on 1.2 million labeled images. Nobody designed its first layer --- these
   are the 64 filters it arrived at, and what four of them find in the same photograph.
   \begin{center}
     \includegraphics[height=4.9cm]{../Figures/Lecture08/learned_filters.pdf}
   \end{center}
   \vspace{-0.25cm}
-  {\small Many look like the edge filters we set by hand; the rest detect colour. \textbf{Learned,
+  {\small Many look like the edge filters we set by hand; the rest detect color. \textbf{Learned,
   not engineered} --- the same promise a 1D CNN makes for a time series.}
 \end{frame}
 
@@ -343,29 +339,22 @@
 % --- Slide: Key takeaways ----------------------------------------------------
 \begin{frame}{Lecture 8: Key Takeaways}
   \begin{keybox}
-    {\footnotesize
-    \begin{enumerate}\itemsep2pt
-      \item \textbf{Convolution} is local connectivity plus weight sharing. A pattern is learned
-            once and detected everywhere, at a fraction of the parameters.
-
-      \item \textbf{Pooling} buys translation invariance --- which an image classifier wants and
-            a forecaster usually does not. Measured cost here: about 500 RMSE.
-
-      \item The architecture history reduces to three transferable ideas: \textbf{small filters
-            stacked deep}, \textbf{skip connections} for trainable depth, and \textbf{learned}
-            rather than hand-engineered features.
-
-      \item A \textbf{1D CNN} takes a window across channels and predicts the next step. Its
-            weakness is the \textbf{receptive field}: seven weeks of context cannot see an annual
-            lag.
-
-      \item On our panel every CNN variant \textbf{lost to a 46-coefficient LASSO}. Architecture
-            has to fit the problem; it is not a ladder you climb.
+    {\small
+    \begin{enumerate}\itemsep3pt
+      \item \textbf{Convolution} = local connectivity + weight sharing: learn a pattern once,
+            find it everywhere.
+      \item \textbf{Pooling} buys translation invariance --- which images want and forecasts
+            usually don't. Cost here: about 500 RMSE.
+      \item Three ideas outlived the architectures: \textbf{small filters stacked deep},
+            \textbf{skip connections}, \textbf{learned features}.
+      \item A \textbf{1D CNN} reads a window across channels. Its limit is the
+            \textbf{receptive field}: seven weeks cannot see an annual lag.
+      \item Every CNN variant \textbf{lost to a 46-coefficient LASSO}. Fit the architecture to
+            the problem.
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: RNNs and LSTMs --- architectures built to carry state through time,
-  which is what the receptive field could not do.}
+  \muted{\itshape Next: RNNs and LSTMs --- built to carry state through time.}
 \end{frame}
 
 % --- References ---------------------------------------------------------------

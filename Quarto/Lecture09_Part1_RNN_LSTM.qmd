@@ -42,27 +42,23 @@ Two architectures, two different ways of failing to see time.
 
 ## Two Architectures That Cannot See Time
 
-Lecture 7 gave you a feedforward network. It treats each row independently — everything it knows about *when* something happened, you encoded by hand as a lag column. Shuffle the features and the model is unchanged.
+Lecture 7's feedforward network treats each row independently: everything it knows about *when*, you encoded by hand as lag columns.
 
-Lecture 8 gave you a 1D CNN, which does see local shape. But its **receptive field** is fixed by architecture: stacked width-5 and width-3 filters reach about seven weeks back, and no reasonable stack of small filters reaches an annual lag. Worse, pooling deliberately discarded *where* in the window each pattern occurred — and we measured that costing about 500 RMSE.
+Lecture 8's 1D CNN sees local shape, but its **receptive field** stops at about seven weeks, and pooling threw away *where* each pattern occurred — a measured 500 RMSE.
 
 ::: {.keybox}
-Both architectures share one assumption: the input is a **fixed-size block** to be processed all at once. Neither has any notion of reading a sequence *in order* and carrying something forward.
+Both treat the input as a **fixed-size block**, processed all at once. Neither reads a sequence *in order*, carrying something forward. That is the gap today closes.
 :::
-
-That is the gap today closes.
 
 ---
 
 ## The Recurrent Idea: Carry State Forward
 
-A recurrent network reads the sequence one step at a time and maintains a **hidden state** $\mathbf{h}_t$ — a running summary of everything seen so far.
+A recurrent network reads the sequence one step at a time, keeping a **hidden state** $\mathbf{h}_t$: a running summary of everything so far. Each step updates the summary from the new input *and* the old summary, with the same weights every step — weight sharing again, along time instead of space.
 
-At each step it does two things: update the summary using the new input *and* the previous summary, then optionally emit an output. The same weights are used at every step, which is weight sharing again — along time rather than along space.
+**The promise:** no fixed window. In principle $\mathbf{h}_t$ carries the whole history.
 
-**The consequence worth sitting with.** There is no fixed window. In principle $\mathbf{h}_t$ encodes the entire history $x_1, \ldots, x_t$, so the architecture imposes no limit on how far back the model can look.
-
-**In principle.** Most of this lecture is about the gap between that promise and what a recurrent network actually delivers — and about the architecture built to close it.
+**In principle.** Most of this lecture is about the gap between that promise and what a recurrent network delivers — and the architecture built to close it.
 
 # The Vanilla RNN
 
@@ -88,15 +84,13 @@ In words: the new summary is a squashed mix of the old summary and the new week.
 
 ## Training It: Backpropagation Through Time
 
-Training an RNN is ordinary backpropagation applied to an unusual graph. **Unroll** the recurrence across the window and it becomes a 26-layer feedforward network — one layer per time step — in which every layer shares the same weights.
-
-Gradients then flow backward from the loss at step $T$ all the way to step 1. Because $\mathbf{W}_h$ appears at every step, its gradient is a *sum* of contributions from all 26 positions.
+Training is ordinary backpropagation on an unusual graph. **Unroll** the recurrence and it is a 26-layer network, one layer per week, every layer sharing the same weights. Gradients flow back from step $T$ to step 1, and $\mathbf{W}_h$'s gradient sums contributions from all 26.
 
 ::: {.warningbox}
-**This is where it breaks.** Propagating a gradient back through $k$ steps multiplies by roughly $\mathbf{W}_h$ $k$ times. If the relevant factor is below 1, the gradient shrinks *exponentially*; above 1, it can explode. Either way, long-range signal does not survive the trip.
+**This is where it breaks.** Going back $k$ steps multiplies by roughly $\mathbf{W}_h$, $k$ times. Below 1, the gradient shrinks *exponentially*; above 1, it can explode.
 :::
 
-Exploding gradients have an easy fix — `clip_grad_norm_` caps the size of the update, and we use it. Vanishing gradients do not, which is what the next section is for.
+Exploding has an easy fix, `clip_grad_norm_`, and we use it. Vanishing does not — that is the next section.
 
 ---
 
@@ -211,7 +205,7 @@ Same weekly panel, same 26-week windows, same test block as Homework 4.
 
 ## Why the Gated Model Lost at 30 Epochs
 
-The result holds at all three window lengths. That rules out a fluke of one *window* — though all three rows share one panel and one split, so it is one finding measured three ways, not three independent tests:
+All three windows share one panel and one split: one finding measured three ways, not three tests.
 
 | Window | Vanilla RNN | LSTM | |
 |---|---:|---:|---|
@@ -219,12 +213,10 @@ The result holds at all three window lengths. That rules out a fluke of one *win
 | 26 weeks | **842** | 987 | RNN wins |
 | 52 weeks | **805** | 998 | RNN wins |
 
-**An LSTM solves a problem this data does not have.** Gating preserves information across *long* dependency chains, and weekly demand is dominated by the recent past.
-
-The gates are not free: **17,985 parameters against 4,545**. But before concluding that they bought nothing, a table like this one owes two checks — **was the comparison fair**, and **what in the data explains it**. The next two slides run both.
+**An LSTM solves a problem this data does not have**: gating preserves information across *long* chains, and weekly demand is dominated by the recent past. The gates cost **17,985 parameters against 4,545**. Two checks first: **was the comparison fair**, and **what in the data explains it**?
 
 ::: {.warningbox}
-A margin measured at one training budget is a claim about that budget. We chose 30 epochs because it is the default, not because it was shown to be enough for both models.
+A margin measured at one training budget is a claim about that budget — and 30 epochs was just the default.
 :::
 
 ---
@@ -243,17 +235,22 @@ At 30 epochs the RNN wins by a wide margin. By 100 the two **tie**, and the LSTM
 
 ## Check 2: What in the Data Explains It
 
-Gating pays when a value must survive many steps that would otherwise overwrite it. Three measurements say this panel has no such structure.
+Gating pays when a value must survive many steps that would otherwise overwrite it. Does this panel have that?
 
-**1. Most variance is not sequential.** **91%** of the variation in weekly units is *between* series — which store, which category — and 9% is within a series over time. The main task is reading the level, and the last few weeks give you that.
+**1. Most variance is not sequential.** **91%** of the variation in weekly units is *between* series — which store, which category. The main task is reading the level, and the last few weeks give you that.
 
-**2. The series are smooth.** Within-series autocorrelation is **0.83** at lag 1 and still **0.43** at lag 52. That is why long memory is unnecessary rather than why it is needed: the recent past is a *sufficient statistic* for the distant past. Nothing must be carried across a gap, because the gap was filled in continuously.
+**2. The series are smooth.** Autocorrelation is **0.83** at lag 1 and **0.43** at lag 52: the recent past is a *sufficient statistic* for the distant past. Nothing needs carrying across a gap; the gap is filled in continuously.
 
-**3. Nothing in the inputs arrives early.** `snap_days` correlates +0.14 with units in the same week; its −0.13 and +0.12 two and four weeks ahead only echo that through the monthly SNAP calendar. `event_days` is flat everywhere. No *announcement* structure — and that is precisely what a forget gate is for.
+---
+
+## Check 2, Continued: Nothing Arrives Early
+
+**3. Nothing arrives early.** `snap_days` correlates +0.14 with units in the same week. Its −0.13 and +0.12 two and four weeks ahead only echo that through the monthly SNAP calendar, and `event_days` is flat everywhere. No *announcement* structure — exactly what a forget gate is for.
 
 ::: {.keybox}
-Ask these three of your own series before reaching for a gated model: how much of my variance is cross-sectional? Is my series smooth enough that recent values already summarize old ones? Does anything in my inputs **lead** the target?
+Ask these of your own series before reaching for a gated model: How much of my variance is cross-sectional? Do recent values already summarize old ones? Does anything in my inputs **lead** the target?
 :::
+
 
 # Key Takeaways
 
@@ -270,26 +267,26 @@ What recurrence buys, what it costs, and what is still missing.
 | Vanilla RNN | yes | $\sim$10–30 steps in practice | cheap |
 | LSTM | yes | hundreds of steps | 4$\times$ an RNN |
 
-An LSTM holds roughly **four times** the parameters of a vanilla RNN at the same hidden size — each of the three gates plus the candidate needs its own weight matrix. That is the price of the memory, and on a short window you pay it for nothing.
+An LSTM holds about **four times** an RNN's parameters at the same hidden size: three gates and the candidate each need a weight matrix. On a short window you pay that for nothing.
 
-**What is still missing.** An LSTM reads strictly left to right, one step at a time, so it cannot be parallelized across the sequence, and everything it knows about step 3 must survive being squeezed through every state between 3 and $T$. Part 2 removes both constraints.
+**Still missing:** an LSTM reads strictly left to right, so it cannot be parallelized, and everything about step 3 must squeeze through every state between 3 and $T$. Part 2 removes both.
 
 ---
 
 ## Lecture 9 Part 1: Key Takeaways
 
 ::: {.keybox}
-1. A **recurrent network** reads a sequence in order and carries a hidden state. Weights are shared across time, so window length costs no parameters.
+1. A **recurrent network** reads in order, carrying a hidden state.
 
-2. Training is **backpropagation through time**: unroll the recurrence and it is a deep network whose layers share weights. Repeated multiplication shrinks the gradient exponentially — at 52 steps, around $10^{-8}$.
+2. **Backpropagation through time** multiplies at every step, so the gradient shrinks exponentially — ours keeps 0.001% of it a year back.
 
-3. An **LSTM** adds a cell state updated **additively**. Addition preserves gradients where multiplication destroys them — the ResNet fix, eighteen years earlier.
+3. An **LSTM**'s cell state is updated **additively**: the ResNet fix, eighteen years earlier.
 
-4. Three gates: **forget** what is stale, **input** what is new, **output** what is relevant now.
+4. Three gates: **forget** the stale, **input** the new, **output** what matters now.
 
-5. On our panel both recurrent models **beat every CNN variant** on four raw channels — and both still lose to a 46-coefficient LASSO.
+5. Both **beat every CNN**; both lose to a 46-coefficient LASSO.
 
-6. The **LSTM lost to the vanilla RNN at a 30-epoch budget**, at all three window lengths — but the two **tie** once both are trained to convergence, and 91% of this panel's variance is cross-sectional anyway. Gating solves long-range forgetting; this data does not suffer from it. **Fit the architecture to the problem — and check that a margin survives the budget you measured it at.**
+6. The LSTM **lost at 30 epochs and tied by 100**. Check that a margin survives the budget it was measured at.
 :::
 
 ---

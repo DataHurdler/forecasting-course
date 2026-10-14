@@ -207,7 +207,7 @@ board = {
     "Vanilla RNN (Lab 9 Pt 1)": 805,
     "LSTM (Lab 9 Pt 1)": 998,
     "Transformer (today)": round(np.mean([r for r in rows[0]["runs"]])),
-    "1D CNN (Lab 8)": 1032,
+    "1D CNN (Lab 8, 26-week window)": 1032,
     "Seasonal naive": 2152,
 }
 print(pd.Series(board).sort_values().to_string())
@@ -218,8 +218,8 @@ parameters of the RNN that beat both.
 
 **Every advantage attention has is an advantage at scale.** Parallel computation across positions
 matters when a sequence is thousands of steps and a corpus is billions of tokens. Direct
-long-range paths matter when the signal genuinely sits far back. Neither describes 5,900 windows
-of weekly retail demand.
+long-range paths matter when the signal genuinely sits far back. Neither describes 5,160 training
+windows of weekly retail demand.
 
 ---
 

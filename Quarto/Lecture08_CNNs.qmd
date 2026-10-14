@@ -40,17 +40,23 @@ Look at a small window, and look for the same thing everywhere. Two ideas, and t
 
 ---
 
-## Why Convolution?
+## Why Convolution? A Dense Layer Wastes Its Weights
 
-Start with why a fully connected layer fails on structured input. A $224 \times 224$ image has 50,176 pixels, so a single hidden layer of 1,000 neurons needs **50 million weights** — for one layer. Lecture 7's network had 22,657 parameters in total.
+A $224 \times 224$ image has 50,176 pixels. One hidden layer of 1,000 neurons on top of it needs **50 million weights** — for one layer. Lecture 7's whole network had 22,657.
 
-Worse than the cost is the waste. That layer ignores **spatial structure**: it has no notion that neighboring pixels are related and distant ones usually are not. And it does not **generalize position** — a pattern learned in the top-left corner is stored separately from the same pattern in the bottom-right.
+And the waste is worse than the cost. That layer has no idea that **neighboring pixels are related** and distant ones usually are not. And it **cannot reuse what it learns**: a pattern learned in the top-left corner is stored separately from the same pattern in the bottom-right.
+
+---
+
+## Why Convolution? Two Ideas
+
+![](../Figures/Lecture08/dense_vs_conv.svg){fig-align="center" height="230px"}
 
 ::: {.keybox}
-A convolutional layer fixes both with two ideas. **Local connectivity:** each neuron sees only a small **receptive field**. **Weight sharing:** the same filter is applied at every position. Far fewer parameters, and a pattern learned anywhere is recognized everywhere.
+**Local connectivity:** each neuron sees only a small **receptive field**. **Weight sharing:** the same filter is applied at every position. Far fewer parameters, and a pattern learned anywhere is recognized everywhere.
 :::
 
-The analogy that makes it stick: a reader does not memorize the letter "A" separately for every position on the page. They learn it once and apply it everywhere. A filter does exactly that.
+A reader does not memorize the letter "A" separately for every spot on the page. They learn it once and apply it everywhere. A filter does exactly that.
 
 ---
 
@@ -97,11 +103,11 @@ Pooling shrinks the feature map and buys robustness — at a price that matters 
 
 ## Pooling: Downsampling Feature Maps
 
-**Pooling** summarizes each small region of a feature map with one number: max pooling keeps the largest, average pooling the mean. A $2\times2$ max pool quarters the values.
+**Pooling** summarizes each small region of a feature map with one number: max pooling keeps the largest, average pooling the mean.
 
 ![](../Figures/Lecture08/pooling.svg){fig-align="center" height="200px"}
 
-It buys **fewer parameters downstream** and **translation invariance**: shift the input slightly and the pooled output barely changes. The shelf edge above survives the pool.
+It buys **fewer parameters downstream** and **translation invariance**: shift the input slightly and the pooled output barely changes. The shelf edge survives.
 
 ::: {.warningbox}
 **A feature for images, a problem for forecasting.** A demand spike that moved three weeks later is what you are predicting, not noise. Pooling discards *where* a pattern occurred — we measure the cost later in this lecture.
@@ -115,37 +121,37 @@ Twenty years of image models, and the three ideas that outlived them.
 
 ## LeNet to VGG: Depth and Small Filters
 
-**LeNet-5** [@LeCun1998] established the template in 1998: alternating convolution and pooling layers, then fully connected layers at the end. It had roughly 60,000 parameters and read handwritten digits on cheques.
+**LeNet-5** [@LeCun1998] set the template in 1998: convolution and pooling layers, then dense layers. It read handwritten digits on bank checks.
 
-**VGG** [@Simonyan2015] scaled that idea up in 2014 and made one sharp simplification: use *only* $3\times3$ filters, but stack many of them. Two stacked $3\times3$ layers see the same receptive field as one $5\times5$, with fewer parameters and an extra nonlinearity in between.
+**VGG** [@Simonyan2015] scaled it up in 2014 with one simplification: *only* $3\times3$ filters, stacked deep. Two stacked $3\times3$ layers see what one $5\times5$ sees, with fewer parameters and an extra nonlinearity.
 
 ::: {.keybox}
-**The lesson that carried:** depth built from small filters beats width built from large ones. It is cheaper in parameters and more expressive, and it is why almost every modern architecture is deep and narrow rather than shallow and wide.
+**The lesson that carried:** depth built from small filters beats width built from large ones — which is why modern architectures are deep and narrow.
 :::
 
-VGG's cost was its size — around 138 million parameters, most of them in the final fully connected layers. That is the problem the next two architectures attacked.
+VGG's cost: 138 million parameters, mostly in the final dense layers.
 
 ---
 
 ## Inception and ResNet: Depth That Trains
 
-**Inception** [@Szegedy2015] asked why a layer should commit to one filter size: it runs $1\times1$, $3\times3$ and $5\times5$ convolutions *in parallel* and lets the network choose the scale, with $1\times1$ convolutions cutting channels first to keep cost down.
+**Inception** [@Szegedy2015] runs $1\times1$, $3\times3$ and $5\times5$ convolutions *in parallel* and lets the network choose the scale; $1\times1$ convolutions keep the cost down.
 
-**ResNet** [@He2016] solved a different problem. Past a certain depth, deeper networks got *worse* — not from overfitting, but because gradients degraded on their way back through many layers. The fix is a **residual** or skip connection:
+**ResNet** [@He2016] fixed a different problem: past some depth, deeper networks got *worse* — not from overfitting, but because gradients faded on the way back. The fix is a **residual** or skip connection:
 
 ![](../Figures/Lecture08/residual_block.svg){fig-align="center" height="150px"}
 
-The $+\,\mathbf{x}$ gives the gradient a direct path backward. That one change made networks of 100+ layers trainable, and skip connections now appear in nearly every deep architecture — including the Transformers in Lecture 9.
+The $+\,\mathbf{x}$ gives the gradient a direct path backward. It made 100-layer networks trainable, and it is in nearly every deep architecture since — including Lecture 9's.
 
 ---
 
 ## What a Trained CNN Learns
 
-ResNet-18, trained on 1.2 million labelled images. Nobody designed its first layer — these are the 64 filters it arrived at, and what four of them find in the same photograph.
+ResNet-18, trained on 1.2 million labeled images. Nobody designed its first layer — these are the 64 filters it arrived at, and what four of them find in the same photograph.
 
 ![](../Figures/Lecture08/learned_filters.svg){fig-align="center" height="390px"}
 
-[Many look like the edge filters we set by hand; the rest detect colour. **Learned, not engineered** — the same promise a 1D CNN makes for a time series.]{.smaller}
+[Many look like the edge filters we set by hand; the rest detect color. **Learned, not engineered** — the same promise a 1D CNN makes for a time series.]{.smaller}
 
 ---
 
@@ -244,18 +250,18 @@ And swapping average pooling for `Flatten`, which keeps *where* each pattern occ
 ## Lecture 8: Key Takeaways
 
 ::: {.keybox}
-1. **Convolution** is local connectivity plus weight sharing. A pattern is learned once and detected everywhere, at a fraction of the parameters.
+1. **Convolution** = local connectivity + weight sharing: learn a pattern once, find it everywhere.
 
-2. **Pooling** buys translation invariance — which an image classifier wants and a forecaster usually does not. Measured cost here: about 500 RMSE.
+2. **Pooling** buys translation invariance — which images want and forecasts usually don't. Cost here: about 500 RMSE.
 
-3. The architecture history reduces to three transferable ideas: **small filters stacked deep**, **skip connections** for trainable depth, and **learned** rather than hand-engineered features.
+3. Three ideas outlived the architectures: **small filters stacked deep**, **skip connections**, **learned features**.
 
-4. A **1D CNN** takes a window across channels and predicts the next step. Its weakness is the **receptive field**: seven weeks of context cannot see an annual lag.
+4. A **1D CNN** reads a window across channels. Its limit is the **receptive field**: seven weeks cannot see an annual lag.
 
-5. On our panel every CNN variant **lost to a 46-coefficient LASSO**. Architecture has to fit the problem; it is not a ladder you climb.
+5. Every CNN variant **lost to a 46-coefficient LASSO**. Fit the architecture to the problem.
 :::
 
-[Next: RNNs and LSTMs — architectures built to carry state through time, which is what the receptive field could not do.]{.neutral}
+[Next: RNNs and LSTMs — built to carry state through time.]{.neutral}
 
 ---
 

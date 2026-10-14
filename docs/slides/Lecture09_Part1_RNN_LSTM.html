@@ -1103,19 +1103,17 @@ Department of Economics
 </section>
 <section id="two-architectures-that-cannot-see-time" class="slide level2">
 <h2>Two Architectures That Cannot See Time</h2>
-<p>Lecture 7 gave you a feedforward network. It treats each row independently — everything it knows about <em>when</em> something happened, you encoded by hand as a lag column. Shuffle the features and the model is unchanged.</p>
-<p>Lecture 8 gave you a 1D CNN, which does see local shape. But its <strong>receptive field</strong> is fixed by architecture: stacked width-5 and width-3 filters reach about seven weeks back, and no reasonable stack of small filters reaches an annual lag. Worse, pooling deliberately discarded <em>where</em> in the window each pattern occurred — and we measured that costing about 500 RMSE.</p>
+<p>Lecture 7’s feedforward network treats each row independently: everything it knows about <em>when</em>, you encoded by hand as lag columns.</p>
+<p>Lecture 8’s 1D CNN sees local shape, but its <strong>receptive field</strong> stops at about seven weeks, and pooling threw away <em>where</em> each pattern occurred — a measured 500 RMSE.</p>
 <div class="keybox">
-<p>Both architectures share one assumption: the input is a <strong>fixed-size block</strong> to be processed all at once. Neither has any notion of reading a sequence <em>in order</em> and carrying something forward.</p>
+<p>Both treat the input as a <strong>fixed-size block</strong>, processed all at once. Neither reads a sequence <em>in order</em>, carrying something forward. That is the gap today closes.</p>
 </div>
-<p>That is the gap today closes.</p>
 </section>
 <section id="the-recurrent-idea-carry-state-forward" class="slide level2">
 <h2>The Recurrent Idea: Carry State Forward</h2>
-<p>A recurrent network reads the sequence one step at a time and maintains a <strong>hidden state</strong> <span class="math inline">\(\mathbf{h}_t\)</span> — a running summary of everything seen so far.</p>
-<p>At each step it does two things: update the summary using the new input <em>and</em> the previous summary, then optionally emit an output. The same weights are used at every step, which is weight sharing again — along time rather than along space.</p>
-<p><strong>The consequence worth sitting with.</strong> There is no fixed window. In principle <span class="math inline">\(\mathbf{h}_t\)</span> encodes the entire history <span class="math inline">\(x_1, \ldots, x_t\)</span>, so the architecture imposes no limit on how far back the model can look.</p>
-<p><strong>In principle.</strong> Most of this lecture is about the gap between that promise and what a recurrent network actually delivers — and about the architecture built to close it.</p>
+<p>A recurrent network reads the sequence one step at a time, keeping a <strong>hidden state</strong> <span class="math inline">\(\mathbf{h}_t\)</span>: a running summary of everything so far. Each step updates the summary from the new input <em>and</em> the old summary, with the same weights every step — weight sharing again, along time instead of space.</p>
+<p><strong>The promise:</strong> no fixed window. In principle <span class="math inline">\(\mathbf{h}_t\)</span> carries the whole history.</p>
+<p><strong>In principle.</strong> Most of this lecture is about the gap between that promise and what a recurrent network delivers — and the architecture built to close it.</p>
 </section></section>
 <section>
 <section id="the-vanilla-rnn" class="title-slide slide level1 center">
@@ -1140,12 +1138,11 @@ Department of Economics
 </section>
 <section id="training-it-backpropagation-through-time" class="slide level2">
 <h2>Training It: Backpropagation Through Time</h2>
-<p>Training an RNN is ordinary backpropagation applied to an unusual graph. <strong>Unroll</strong> the recurrence across the window and it becomes a 26-layer feedforward network — one layer per time step — in which every layer shares the same weights.</p>
-<p>Gradients then flow backward from the loss at step <span class="math inline">\(T\)</span> all the way to step 1. Because <span class="math inline">\(\mathbf{W}_h\)</span> appears at every step, its gradient is a <em>sum</em> of contributions from all 26 positions.</p>
+<p>Training is ordinary backpropagation on an unusual graph. <strong>Unroll</strong> the recurrence and it is a 26-layer network, one layer per week, every layer sharing the same weights. Gradients flow back from step <span class="math inline">\(T\)</span> to step 1, and <span class="math inline">\(\mathbf{W}_h\)</span>’s gradient sums contributions from all 26.</p>
 <div class="warningbox">
-<p><strong>This is where it breaks.</strong> Propagating a gradient back through <span class="math inline">\(k\)</span> steps multiplies by roughly <span class="math inline">\(\mathbf{W}_h\)</span> <span class="math inline">\(k\)</span> times. If the relevant factor is below 1, the gradient shrinks <em>exponentially</em>; above 1, it can explode. Either way, long-range signal does not survive the trip.</p>
+<p><strong>This is where it breaks.</strong> Going back <span class="math inline">\(k\)</span> steps multiplies by roughly <span class="math inline">\(\mathbf{W}_h\)</span>, <span class="math inline">\(k\)</span> times. Below 1, the gradient shrinks <em>exponentially</em>; above 1, it can explode.</p>
 </div>
-<p>Exploding gradients have an easy fix — <code>clip_grad_norm_</code> caps the size of the update, and we use it. Vanishing gradients do not, which is what the next section is for.</p>
+<p>Exploding has an easy fix, <code>clip_grad_norm_</code>, and we use it. Vanishing does not — that is the next section.</p>
 </section>
 <section id="why-a-vanilla-rnn-forgets" class="slide level2">
 <h2>Why a Vanilla RNN Forgets</h2>
@@ -1306,7 +1303,7 @@ Department of Economics
 </section>
 <section id="why-the-gated-model-lost-at-30-epochs" class="slide level2">
 <h2>Why the Gated Model Lost at 30 Epochs</h2>
-<p>The result holds at all three window lengths. That rules out a fluke of one <em>window</em> — though all three rows share one panel and one split, so it is one finding measured three ways, not three independent tests:</p>
+<p>All three windows share one panel and one split: one finding measured three ways, not three tests.</p>
 <table class="caption-top">
 <thead>
 <tr class="header">
@@ -1337,10 +1334,9 @@ Department of Economics
 </tr>
 </tbody>
 </table>
-<p><strong>An LSTM solves a problem this data does not have.</strong> Gating preserves information across <em>long</em> dependency chains, and weekly demand is dominated by the recent past.</p>
-<p>The gates are not free: <strong>17,985 parameters against 4,545</strong>. But before concluding that they bought nothing, a table like this one owes two checks — <strong>was the comparison fair</strong>, and <strong>what in the data explains it</strong>. The next two slides run both.</p>
+<p><strong>An LSTM solves a problem this data does not have</strong>: gating preserves information across <em>long</em> chains, and weekly demand is dominated by the recent past. The gates cost <strong>17,985 parameters against 4,545</strong>. Two checks first: <strong>was the comparison fair</strong>, and <strong>what in the data explains it</strong>?</p>
 <div class="warningbox">
-<p>A margin measured at one training budget is a claim about that budget. We chose 30 epochs because it is the default, not because it was shown to be enough for both models.</p>
+<p>A margin measured at one training budget is a claim about that budget — and 30 epochs was just the default.</p>
 </div>
 </section>
 <section id="check-1-was-it-a-fair-fight" class="slide level2">
@@ -1357,12 +1353,15 @@ Department of Economics
 </section>
 <section id="check-2-what-in-the-data-explains-it" class="slide level2">
 <h2>Check 2: What in the Data Explains It</h2>
-<p>Gating pays when a value must survive many steps that would otherwise overwrite it. Three measurements say this panel has no such structure.</p>
-<p><strong>1. Most variance is not sequential.</strong> <strong>91%</strong> of the variation in weekly units is <em>between</em> series — which store, which category — and 9% is within a series over time. The main task is reading the level, and the last few weeks give you that.</p>
-<p><strong>2. The series are smooth.</strong> Within-series autocorrelation is <strong>0.83</strong> at lag 1 and still <strong>0.43</strong> at lag 52. That is why long memory is unnecessary rather than why it is needed: the recent past is a <em>sufficient statistic</em> for the distant past. Nothing must be carried across a gap, because the gap was filled in continuously.</p>
-<p><strong>3. Nothing in the inputs arrives early.</strong> <code>snap_days</code> correlates +0.14 with units in the same week; its −0.13 and +0.12 two and four weeks ahead only echo that through the monthly SNAP calendar. <code>event_days</code> is flat everywhere. No <em>announcement</em> structure — and that is precisely what a forget gate is for.</p>
+<p>Gating pays when a value must survive many steps that would otherwise overwrite it. Does this panel have that?</p>
+<p><strong>1. Most variance is not sequential.</strong> <strong>91%</strong> of the variation in weekly units is <em>between</em> series — which store, which category. The main task is reading the level, and the last few weeks give you that.</p>
+<p><strong>2. The series are smooth.</strong> Autocorrelation is <strong>0.83</strong> at lag 1 and <strong>0.43</strong> at lag 52: the recent past is a <em>sufficient statistic</em> for the distant past. Nothing needs carrying across a gap; the gap is filled in continuously.</p>
+</section>
+<section id="check-2-continued-nothing-arrives-early" class="slide level2">
+<h2>Check 2, Continued: Nothing Arrives Early</h2>
+<p><strong>3. Nothing arrives early.</strong> <code>snap_days</code> correlates +0.14 with units in the same week. Its −0.13 and +0.12 two and four weeks ahead only echo that through the monthly SNAP calendar, and <code>event_days</code> is flat everywhere. No <em>announcement</em> structure — exactly what a forget gate is for.</p>
 <div class="keybox">
-<p>Ask these three of your own series before reaching for a gated model: how much of my variance is cross-sectional? Is my series smooth enough that recent values already summarize old ones? Does anything in my inputs <strong>lead</strong> the target?</p>
+<p>Ask these of your own series before reaching for a gated model: How much of my variance is cross-sectional? Do recent values already summarize old ones? Does anything in my inputs <strong>lead</strong> the target?</p>
 </div>
 </section></section>
 <section>
@@ -1409,19 +1408,19 @@ Department of Economics
 </tr>
 </tbody>
 </table>
-<p>An LSTM holds roughly <strong>four times</strong> the parameters of a vanilla RNN at the same hidden size — each of the three gates plus the candidate needs its own weight matrix. That is the price of the memory, and on a short window you pay it for nothing.</p>
-<p><strong>What is still missing.</strong> An LSTM reads strictly left to right, one step at a time, so it cannot be parallelized across the sequence, and everything it knows about step 3 must survive being squeezed through every state between 3 and <span class="math inline">\(T\)</span>. Part 2 removes both constraints.</p>
+<p>An LSTM holds about <strong>four times</strong> an RNN’s parameters at the same hidden size: three gates and the candidate each need a weight matrix. On a short window you pay that for nothing.</p>
+<p><strong>Still missing:</strong> an LSTM reads strictly left to right, so it cannot be parallelized, and everything about step 3 must squeeze through every state between 3 and <span class="math inline">\(T\)</span>. Part 2 removes both.</p>
 </section>
 <section id="lecture-9-part-1-key-takeaways" class="slide level2">
 <h2>Lecture 9 Part 1: Key Takeaways</h2>
 <div class="keybox">
 <ol type="1">
-<li><p>A <strong>recurrent network</strong> reads a sequence in order and carries a hidden state. Weights are shared across time, so window length costs no parameters.</p></li>
-<li><p>Training is <strong>backpropagation through time</strong>: unroll the recurrence and it is a deep network whose layers share weights. Repeated multiplication shrinks the gradient exponentially — at 52 steps, around <span class="math inline">\(10^{-8}\)</span>.</p></li>
-<li><p>An <strong>LSTM</strong> adds a cell state updated <strong>additively</strong>. Addition preserves gradients where multiplication destroys them — the ResNet fix, eighteen years earlier.</p></li>
-<li><p>Three gates: <strong>forget</strong> what is stale, <strong>input</strong> what is new, <strong>output</strong> what is relevant now.</p></li>
-<li><p>On our panel both recurrent models <strong>beat every CNN variant</strong> on four raw channels — and both still lose to a 46-coefficient LASSO.</p></li>
-<li><p>The <strong>LSTM lost to the vanilla RNN at a 30-epoch budget</strong>, at all three window lengths — but the two <strong>tie</strong> once both are trained to convergence, and 91% of this panel’s variance is cross-sectional anyway. Gating solves long-range forgetting; this data does not suffer from it. <strong>Fit the architecture to the problem — and check that a margin survives the budget you measured it at.</strong></p></li>
+<li><p>A <strong>recurrent network</strong> reads in order, carrying a hidden state.</p></li>
+<li><p><strong>Backpropagation through time</strong> multiplies at every step, so the gradient shrinks exponentially — ours keeps 0.001% of it a year back.</p></li>
+<li><p>An <strong>LSTM</strong>’s cell state is updated <strong>additively</strong>: the ResNet fix, eighteen years earlier.</p></li>
+<li><p>Three gates: <strong>forget</strong> the stale, <strong>input</strong> the new, <strong>output</strong> what matters now.</p></li>
+<li><p>Both <strong>beat every CNN</strong>; both lose to a 46-coefficient LASSO.</p></li>
+<li><p>The LSTM <strong>lost at 30 epochs and tied by 100</strong>. Check that a margin survives the budget it was measured at.</p></li>
 </ol>
 </div>
 </section>
