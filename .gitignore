@@ -59,6 +59,9 @@ CLAUDE.local.md
 # Upstream excludes these because a *template* should not ship project-internal
 # content. This is a real course project: plans, specs, session logs, and merge
 # reports are part of the record and stay tracked.
+# The exception is the Stop hook's *_auto.md logs: a machine list of changed files that
+# git log already records better. Hand-written session logs stay tracked.
+quality_reports/session_logs/*_auto.md
 
 # R analysis outputs (generated artifacts; keep scripts, ignore outputs)
 scripts/R/_outputs/
