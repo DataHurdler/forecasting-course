@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Introduction, Exponential Smoothing & Forecast Evaluation**
 
-Deck: `Slides/Lecture01_ETS_Eval.pdf` (21 pages) · Measured runtime: **~28 minutes** (26–32 depending on pace)
+Deck: `Slides/Lecture01_ETS_Eval.pdf` (22 pages) · Measured runtime: **~33 minutes** (31–38 depending on pace)
 
 ---
 
@@ -241,24 +241,38 @@ Here's the problem we're solving.
 Most classical methods treat every historical observation equally. Every data point gets the
 same vote. That's fine if the world is stable — but what if it changes?
 
-Take a concrete case. A retailer renovates a store. Traffic patterns shift, the product mix
-shifts, sales shift. If your model is equal-weighting three years of pre-renovation data,
-it will keep forecasting the old store. And it won't be wrong once — it'll be wrong for
-months, in the same direction, until the new data finally outweighs the old.
+Take a concrete case. A retailer renovates a store, and sales shift. If your model is
+equal-weighting three years of pre-renovation data, it will keep forecasting the old store —
+wrong for months, in the same direction, until the new data finally outweighs the old.
 
-**Exponential weighting** fixes this. Assign geometrically declining weights, so recent
-observations matter more.
+**Exponential weighting** fixes this. An observation k weeks old gets weight alpha times
+one-minus-alpha to the k. Each step back in time, the weight shrinks by the same factor.
 
-Look at the table. The most recent observation, y-sub-T, gets weight alpha. The one before
-it gets alpha times one-minus-alpha. The one before that, alpha times one-minus-alpha
-squared. Each step back in time, the weight shrinks by a constant factor.
+*(Point at the left panel first.)*
 
-Two things worth noticing. The weights never hit exactly zero — old data still counts, just
-less and less. And they sum to one, so this is a proper weighted average, not an arbitrary
-reweighting.
+These are real weights from the store you'll use in the lab: two aisles of Walmart's store
+TX_1, with alpha fitted to each. Each bar is the weight on one past week. The vertical axis is
+a log scale — each gridline is ten times the one below — and on a log scale, shrinking by the
+same factor every week is a straight staircase.
 
-Alpha is the forgetting rate. High alpha means short memory — you react fast, you forget
-fast. Low alpha means long memory — you're stable, but slow to notice change.
+On the left, household goods, alpha zero point six two: last week alone gets sixty-two percent
+of the vote. On the right, food, alpha zero point two one: a much gentler staircase.
+
+The dashed line is equal weighting: one over two hundred twenty-five, the number of training
+weeks. On household goods, every week older than five gets *less* than an equal share; on
+food, every week older than sixteen.
+
+**[pause]**
+
+Now the triangles. Think of the bars as weights on a plank. The triangle is where the plank
+balances — the average age of the data the forecast is built from. Household goods: zero point
+six weeks, essentially last week. Food: three point seven weeks. Equal weighting would balance
+a hundred and twelve weeks back — more than two years in the past.
+
+The weights never hit exactly zero, and they sum to one, so this is a proper weighted average.
+Alpha is the forgetting rate. High alpha, short memory: you react fast and forget fast. Low
+alpha, long memory: stable, but slow to notice change. Same store, two aisles, very different
+memories.
 
 Hold onto alpha. It's about to become the single parameter of our first model.
 
@@ -266,35 +280,40 @@ Hold onto alpha. It's about to become the single parameter of our first model.
 
 # ▶ SLIDE 10 — Simple Exponential Smoothing (SES)
 
-Here's the model. One equation.
+Here's the model. One equation, written two ways.
 
-The level at time t equals alpha times the current observation, plus one-minus-alpha times
-the previous level. Alpha between zero and one.
+First: the new level is alpha times the current observation plus one-minus-alpha times the
+previous level. Second — the same equation rearranged, and the one to picture — the new level
+is the old level plus alpha times the *gap* between what just happened, y-sub-t, and what the
+old level said. Every week, the level closes the fraction alpha of the gap. Alpha is a learning
+rate.
 
-Read that as a compromise. Every period you get new information, y-sub-t, and you have your
-existing belief, ell-t-minus-one. Alpha is how much you let the new information move you.
-It's a learning rate.
+*(Point at the right-hand panel.)*
 
-And the forecast is just: y-hat equals ell-T, for every horizon h. Flat. Whatever the level
-is now is what we predict forever.
+That's the picture on the right: one real week, the first week of July 2013, food sales at
+Walmart's store CA_1. Sales jumped four thousand eight hundred and sixty-two units above the
+old level. With alpha at zero point three two, the level moved up one thousand five hundred and
+thirty-four — about a third of the gap — and kept two thirds of its old belief.
 
-That flatness is the model's honest admission of its own limits. Simple exponential
-smoothing has no concept of trend. If your series is climbing, SES will forecast a
-horizontal line and be wrong by more every period. We'll fix that on the next slide.
+And the forecast is just y-hat equals ell-T, for every horizon h. Flat.
 
 **[pause]**
 
-Now the comparison in the middle.
+*(Now the main panel.)*
 
-Large alpha — say zero point eight. You react quickly to shocks. But your forecasts are
-noisy and volatile, because you're chasing every wiggle. Good for rapidly changing series.
+Two years of weekly food sales in gray, then the test year, shaded. Three levels run through
+it. Orange, alpha zero point eight, closes eighty percent of every gap — it chases every wiggle,
+almost a copy of the data. Blue, alpha zero point one, closes ten percent: smooth, and slow —
+see how long it takes to come down after the 2013 peak. Red is the alpha statsmodels picked,
+zero point three two, by minimizing next-week squared errors in the training data.
 
-Small alpha — say zero point one. You adapt slowly. Your forecasts are smooth and stable.
-Good for slowly evolving series.
+Then the test year starts, and each level runs flat. That flatness is the model's honest
+admission of its limits: SES has no concept of trend or season. We'll fix trend on the next
+slide.
 
-There's no universally right answer. It's a genuine bias-variance tradeoff, and we'll name
-it that way in Lecture 4. In practice you estimate alpha from the data by minimizing
-squared error.
+One twist worth knowing. On this test year the three flat lines land within about thirty units
+of RMSE of each other, and the fitted one isn't the best. Alpha is fitted to next-week errors,
+not a whole year ahead.
 
 **[pause]**
 
@@ -314,38 +333,42 @@ Use it when there's no trend and no seasonality.
 SES gives a flat forecast. So if the series trends, we need more. Holt's insight, from 1957,
 is to track two things instead of one: the level, and the slope.
 
-Three equations in the box.
+Three equations in the box. The **level** equation looks like SES, except it compares against
+the old level *plus* the old trend: the series was expected to move. The **trend** equation is
+the same smoothing idea applied to the slope, controlled by beta-star. And the **forecast** is
+level plus h times trend — a sloped line instead of a flat one.
 
-The **level** equation looks like SES, with one change: instead of comparing against the
-old level, we compare against the old level plus the old trend. We account for the fact
-that the series was expected to move.
-
-The **trend** equation is the same smoothing idea applied to the slope. How much did the
-level change this period? Blend that with our previous estimate of the slope, controlled by
-beta-star.
-
-And the **forecast** is level plus h times trend. Now we get a sloped line instead of a flat
-one.
-
-The reading I'd offer: ell-t is where the series *is* right now, and b-sub-t is how fast
-it's moving. Position and velocity.
+Read ell-t as where the series *is* right now, and b-sub-t as how fast it's moving. Position
+and velocity.
 
 **[pause]**
 
-Now the caution, and this one has cost people real money.
+Now the caution, and this one has cost people real money. That forecast is a straight line
+extended forever. Nothing grows without limit.
 
-Linear extrapolation gets unrealistic at long horizons. That forecast is a straight line
-extended forever. Twelve months out, fine. Five years out, your model is projecting a
-company that grows without limit. Nothing grows without limit.
+*(Point at the chart.)*
 
-The fix is the **damped trend**. Multiply the trend by phi, then phi squared, then phi
-cubed, with phi between zero and one. Each step forward, the trend contributes a little
-less.
+Here's Holt fitted to the same food series. Today's level is twenty-one thousand two hundred
+seventy-two units, and the fitted slope is seventy units a week. The red line is the
+undamped forecast: plus seventy, every week, forever — by the end of a year, three thousand
+six hundred more units a week than the store sells today. On the real test year, that model's
+RMSE is three thousand four hundred and twenty-eight, about double SES's.
 
-At phi equals zero point eight-five, the forecast converges to a finite ceiling instead of
-growing forever. And empirically, damped trend is one of the strongest performers in
-forecasting competitions — often beating far more sophisticated models. Use it for anything
-beyond about six periods.
+The fix is the **damped trend**, in blue. Each week ahead adds phi times the previous week's
+rise. Here phi is zero point eight five, an illustrative value. The first week adds about sixty
+units instead of seventy, the next about fifty, then forty-three: a staircase whose steps
+shrink by the same factor each week.
+
+**[pause]**
+
+And a staircase like that has a top. Add up all the steps, forever, and you never pass the
+dashed line: today's level plus five point seven weeks' worth of slope. That's the ceiling,
+ell-T plus b-T times phi over one-minus-phi. Instead of adding thirty-six hundred units over a
+year, the damped forecast adds at most about four hundred.
+
+Empirically, damped trend is one of the strongest performers in forecasting competitions.
+Use it for anything beyond about six periods. In the lab you'll fit phi yourself — and I'll ask
+you to look hard at where it lands.
 
 ---
 
@@ -394,13 +417,18 @@ method as a **state space model**, described by three letters: Error, Trend, Sea
 The **Error** can be additive or multiplicative. The **Trend** can be none, additive, or
 damped. The **Seasonal** can be none, additive, or multiplicative.
 
-Fifteen valid combinations. And every method from the last three slides is one of them.
+Two times three times three is eighteen combinations. Three of them — additive errors with
+multiplicative seasonality — are numerically unstable, because the state equations end up
+dividing by numbers that can get close to zero. So the textbook drops them, which leaves
+fifteen. And every method from the last three slides is one of them.
 
 ETS(A,N,N) — additive error, no trend, no season — that's simple exponential smoothing.
 
 ETS(A,A,N) is Holt linear. ETS(A,A-damped,N) is Holt with a damped trend.
 
-ETS(A,A,A) is Holt-Winters additive, and ETS(A,A,M) is Holt-Winters multiplicative.
+ETS(A,A,A) is Holt-Winters additive. And Holt-Winters multiplicative is ETS(M,A,M) —
+multiplicative errors to go with the multiplicative season, which keeps it out of the
+unstable three.
 
 **[pause]**
 
@@ -409,7 +437,8 @@ see the whole space at once — including combinations we never discussed.
 
 And here's the practical payoff. **Automatic selection.** You don't have to agonize over
 which of the fifteen to use. Fit all fifteen, and pick the one with the minimum AIC. In
-Python, that's the ETSModel class in statsmodels, and it will do the search for you.
+Python, the ETSModel class in statsmodels fits any one of them; the search itself is a short
+loop over the fifteen that you write, and the AIC comes back with every fit.
 
 Which raises a fair question: if the computer picks the model, why did we walk through the
 equations? Because when the automatic selection returns something strange — a multiplicative
@@ -429,46 +458,84 @@ science. It's storytelling.
 
 # ▶ SLIDE 15 — How Do We Measure Forecast Accuracy?
 
-We have out-of-sample errors — actual minus forecast. How do we summarize them into one
-number?
+We have out-of-sample errors — actual minus forecast, one for each week of the test year. How
+do we summarize fifty-two of them into one number?
 
-Two families.
+Two classic answers, on the left. MAE is the mean absolute error: average the sizes of the
+misses. RMSE is the root mean squared error: square each miss, average the squares, take the
+square root. Both come out in the same units as your data — here, units of food per week.
+Which makes them easy to explain to a manager: "we're off by about fourteen hundred units a
+week."
 
-On the left, **scale-dependent** measures. RMSE is the square root of the mean squared
-error. MAE is the mean absolute error. Both come out in the same units as your data —
-dollars, units, patients. Which makes them easy to explain to a manager: "we're off by about
-four hundred units a month." But it also means you can only compare models on the *same*
-series. An RMSE of four hundred means nothing next to an RMSE of two.
+*(Point at the left panel of the figure.)*
 
-On the right, **scale-free** measures. MAPE is mean absolute *percentage* error. MASE is the
-mean absolute error divided by the MAE of a seasonal naive forecast. These let you compare
-*across* series.
+Here's the picture that tells them apart. Each test week's miss is drawn as a square, with
+the size of the miss as its side. All fifty-two squares share a corner. The left panel is
+SES on the food series; the right panel is seasonal naive, the same week last year.
+
+The dashed square has the *average side*. That's MAE. The filled square has the *average
+area* — its area is the average of the fifty-two squares' areas — and its side is RMSE.
 
 **[pause]**
 
-Now, RMSE versus MAE. Because RMSE squares the errors before averaging, it punishes large
-errors much harder. One catastrophic miss hurts RMSE far more than several small ones.
+Now look at what that does. SES and seasonal naive have almost the same dashed square: MAE of
+thirteen seventy-six against thirteen sixty-five. On MAE, they tie. But SES has a few huge
+squares out at the edge — the biggest is the week of Christmas 2015, when sales fell four
+thousand six hundred units below its flat forecast. Area grows with the square of the side, so
+those few big squares dominate the average area. Five weeks carry forty percent of all of
+SES's squared error. And so the filled square is bigger: RMSE of seventeen fifty-four against
+sixteen sixty. On RMSE, seasonal naive wins.
+
+And notice the filled square always contains the dashed one. An average of squares can never
+be smaller than the square of the average. RMSE is always at least as big as MAE, and the gap
+between them tells you how lumpy the misses are.
+
+**[pause]**
 
 So which should you use? It depends on your cost function. If big misses are especially
-costly — a stockout, an understaffed shift, a blown capital reserve — prefer RMSE, because
-it reflects that asymmetry. If all errors hurt roughly in proportion to size, MAE is more
+costly — a stockout, an understaffed shift, a blown capital reserve — prefer RMSE, because it
+reflects that asymmetry. If all errors hurt roughly in proportion to size, MAE is more
 representative.
 
 That's a business judgment, not a statistical one. Ask what the error actually costs.
 
+---
+
+# ▶ SLIDE 16 — Comparing Across Series: MAPE and MASE
+
+Both of those numbers come in units — units of food, dollars, patients. That means you can
+only compare models on the *same* series. An RMSE of four hundred means nothing next to an
+RMSE of two, if one series sells forty units a week and the other forty thousand.
+
+To compare *across* series, you scale the errors. Two ways.
+
+MAPE is mean absolute *percentage* error: each miss as a percentage of the actual value. Easy
+to explain. But it breaks down when the actual value is near zero — divide by a tiny number
+and one week can blow up the whole average. Slow-moving products, with weeks of zero sales,
+make MAPE useless.
+
+MASE is mean absolute *scaled* error. The top is the MAE you already know. The bottom is the
+yardstick: how far off seasonal naive was, on average, on the *training* data — predicting
+each week from the same week a year earlier.
+
 **[pause]**
 
-And **MASE** is the one I'd have you report when comparing across series. It's built on the
-benchmark idea from slide seven. If MASE is less than one, you beat seasonal naive. If
-it's greater than one, you're worse than doing nothing clever — and you should say so.
+So MASE below one means your errors are smaller than seasonal naive's typical miss in the
+past. Above one, you're doing worse than that — and you should say so. It's built on the
+benchmark idea from slide seven, it's the standard in the M-Competitions, and it has a
+property the others lack: the number carries its own yardstick. An RMSE of eight hundred
+needs context. A MASE of one point two says you missed by more than last year's value used to.
 
-It's the standard in the M-Competitions, and it has a property the others lack: the number
-carries its own verdict. An RMSE of eight hundred needs context. A MASE of one point two
-tells you immediately that you've failed.
+One honest caution, from our own food series. Both SES *and* seasonal naive score about zero
+point five nine there. Why? Because the yardstick was set in the training years, and in 2012
+the store's food sales jumped twenty-nine percent — so last year was a terrible guess that
+year, and the yardstick is generous. MASE below one does not mean you beat seasonal naive on
+*this* test year. To compare two models on the same series, compare their MASEs to each
+other.
 
 ---
 
-# ▶ SLIDE 16 — The Golden Rule: Always Evaluate Out-of-Sample
+# ▶ SLIDE 17 — The Golden Rule: Always Evaluate Out-of-Sample
 
 If you take one operational rule from this lecture, take this one.
 
@@ -502,13 +569,13 @@ So: `TimeSeriesSplit`. Every time. This will come back in every remaining lectur
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Course Roadmap
+# ▶ SLIDE 18 — Section divider: Course Roadmap
 
 Last part. Let's look at where the semester goes.
 
 ---
 
-# ▶ SLIDE 18 — ECON 8310: Four-Part Structure
+# ▶ SLIDE 19 — ECON 8310: Four-Part Structure
 
 Twelve lectures, four parts.
 
@@ -538,7 +605,7 @@ the next one harder.
 
 ---
 
-# ▶ SLIDE 19 — Tools and What You Will Be Able to Do
+# ▶ SLIDE 20 — Tools and What You Will Be Able to Do
 
 Quickly, the stack. Statsmodels for the classical time series models. Scikit-learn for
 machine learning models, pipelines, and cross-validation. XGBoost for gradient boosting.
@@ -561,7 +628,7 @@ judgment is what you're here for.
 
 ---
 
-# ▶ SLIDE 20 — Lecture 1: Key Takeaways
+# ▶ SLIDE 21 — Lecture 1: Key Takeaways
 
 Five things to carry out of today.
 
@@ -577,8 +644,8 @@ observations. Alpha controls how fast old data is forgotten.
 **Four.** SES gives you level. Holt adds trend. Holt-Winters adds seasonality. The ETS
 framework unifies all fifteen variants, and AIC selects among them automatically.
 
-**Five.** Evaluate out-of-sample only. RMSE punishes large errors; MASE benchmarks against
-seasonal naive. And never shuffle time series data.
+**Five.** Evaluate out-of-sample only, and never shuffle time series data. RMSE punishes
+large errors; MASE scales by seasonal naive's misses, so it compares across series.
 
 **[pause]**
 
@@ -588,7 +655,7 @@ standards.
 
 ---
 
-# ▶ SLIDE 21 — References
+# ▶ SLIDE 22 — References
 
 Readings for this week are in the syllabus. For today, that's chapters one, two, five, and
 eight of *Forecasting: Principles and Practice* — either edition works for this material,
@@ -603,32 +670,34 @@ See you then.
 
 ## Timing guide
 
-Measured from the script: **3,880 spoken words**. At 140 wpm — a normal lecture pace —
-that is **~28 minutes**; 32 if you read deliberately, 26 if you push.
+Measured from the script (2026-10-13, after the figures were added): **4,646 spoken words**.
+At 140 wpm — a normal lecture pace — that is **~33 minutes**; 38 if you read deliberately, 31
+if you push.
 
 | Segment | Slides | Words | Runtime |
 |---|---|---:|---:|
-| Opening & why forecasting matters | 1–7 | 1,410 | ~10 min |
-| Exponential smoothing | 8–13 | 1,291 | ~9 min |
-| Forecast evaluation | 14–16 | 580 | ~4 min |
-| Roadmap & close | 17–21 | 599 | ~4 min |
-| **Total** | | **3,880** | **~28 min** |
+| Opening & why forecasting matters | 1–7 | 1,391 | ~10 min |
+| Exponential smoothing | 8–13 | 1,685 | ~12 min |
+| Forecast evaluation | 14–17 | 973 | ~7 min |
+| Roadmap & close | 18–22 | 597 | ~4 min |
+| **Total** | | **4,646** | **~33 min** |
 
-Content slides run 90–155 seconds each; section dividers 4–17 seconds.
+Content slides run 65–165 seconds each; section dividers 4–17 seconds.
 
-If you're running long, slides 4 and 19 compress most easily — the domain examples and the
-tool list both survive trimming. Do **not** compress slides 7, 15, or 16; those carry the
+If you're running long, slides 4 and 20 compress most easily — the domain examples and the
+tool list both survive trimming. Do **not** compress slides 7, 15, 16, or 17; those carry the
 standards the rest of the course depends on.
 
 **If you need this longer**, the script is deliberately lean and there are three honest ways
 to extend it, in rough order of value:
 
-1. **Work a numeric example on screen.** Slides 10–12 (SES, Holt, Holt-Winters) currently
-   state the update equations without ever turning a crank. Walking through three periods of
-   an SES update by hand adds 4–6 minutes and is where the intuition actually lands.
+1. **Work a numeric example on screen.** Slide 10 turns the SES crank for one real week;
+   slides 11–12 (Holt, Holt-Winters) state their update equations without turning one.
+   Walking through three periods of a Holt update by hand adds 4–6 minutes and is where the
+   intuition actually lands.
 2. **Live-code the ETS fit.** Slide 13 mentions `ETSModel` in one sentence. Fitting it to a
    real series on camera, and showing what automatic selection picks, adds 6–10 minutes.
-3. **Demonstrate the leakage failure.** Slide 16 asserts that `KFold` flatters a model.
+3. **Demonstrate the leakage failure.** Slide 17 asserts that `KFold` flatters a model.
    Showing the inflated CV score next to the honest one makes the warning land far harder
    than stating it. Adds 4–5 minutes.
 

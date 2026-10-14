@@ -139,8 +139,8 @@ shape. The data decides.
 
 Because the terms are *added* rather than multiplied, the effects stay independent and each
 can be visualized on its own. And every function is fitted to minimize prediction error
-subject to a smoothness penalty — which is the next slide, and is what stops the curves from
-chasing noise.
+subject to a smoothness penalty — that's two slides from now, and it's what stops the curves
+from chasing noise.
 
 **[pause]**
 
@@ -206,31 +206,55 @@ If each $f$ can be any shape, what stops it from being a squiggle that passes th
 data point? This slide.
 
 A GAM minimizes a **penalized** sum of squared errors. Two terms. The first is the ordinary
-fit term — squared errors, exactly as in OLS. The second is the penalty.
-
-Look at what's being penalized: the integral of the *squared second derivative*.
-
-The second derivative measures how fast the slope is changing. A straight line has a second
-derivative of zero everywhere. A wiggly function has a large second derivative, wiggling in
-both directions, and squaring it before integrating means all that wiggle accumulates.
-
-So the penalty charges the model for wiggliness. And lambda sets the price.
+fit term — squared errors, exactly as in OLS. The second is the penalty: the integral of the
+*squared second derivative*.
 
 **[pause]**
 
-The two extremes are worth holding in mind.
+The second derivative measures bending — how fast the slope is changing. A straight line has
+a second derivative of zero everywhere. So look at the thin strips under each panel. *(Point
+at the strips.)* Each one shades the squared bending of the curve above it, along the year, and
+the shaded area *is* the penalty. Area, not a formula. Strictly, pyGAM charges a discrete
+version of this integral — squared differences between neighboring spline coefficients — but
+both are zero for exactly the same curves: straight lines.
 
-As **lambda goes to zero**, the penalty vanishes. The curve is free to chase every point.
-That's overfitting — a model that memorizes your sample.
+Now the three panels. Same data in every one: a year of daily electricity demand, 2014, against
+day of year. Same curve family: a hundred splines. The only thing that changes is lambda, the
+price of bending.
 
-As **lambda goes to infinity**, the penalty dominates. Any curvature is infinitely expensive,
-so every $f$ is forced straight, and the GAM collapses back into ordinary least squares.
+**[pause]**
 
-So OLS isn't a different method from a GAM. It's a GAM with the smoothness dial turned all
-the way up. Everything useful happens in between.
+*(Point at the left panel.)* Lambda near zero. Bending is free, so the curve chases every
+wiggle — every cold snap, every heat wave, every weekend dip. It uses about a hundred effective
+degrees of freedom: basically all of them. Its strip is off the scale — eighty times the area
+of the middle one.
 
-And lambda is chosen by **cross-validation** or GCV — not by eye. You'll hear that refrain all
-semester: the tuning parameter is selected against held-out error, never by what looks nice.
+*(Point at the right panel.)* Lambda huge. Any bending at all is infinitely expensive, so the
+curve can't bend, and what's left is a straight line. And not just any line — it's exactly the
+ordinary least squares line. Its strip is empty, because a straight line never bends. So OLS
+isn't a different method from a GAM. It's a GAM with the smoothness dial turned all the way up.
+
+One technical aside. This only works because I used an ordinary spline basis here. The lab uses
+a *cyclic* spline, which forces December thirty-first to meet January first. A straight line
+can't do that unless it's flat, so with a cyclic spline the limit is a flat line, not the OLS
+line.
+
+**[pause]**
+
+*(Point at the middle panel.)* And in between: lambda chosen by GCV, generalized
+cross-validation — not by eye. You'll hear that refrain all semester: the tuning parameter is
+selected against held-out error, never by what looks nice. Forty-three effective degrees of
+freedom. It keeps the two humps, heating and cooling, and drops most of the noise.
+
+The proof is in the titles: each curve scored on the *next* year, 2015. The wiggly fit misses
+by thirty-nine forty-six. The straight line by forty-six twenty. The GCV fit by thirty-six
+twenty-one — the best of the three. The noise the left panel memorized doesn't come back next
+year.
+
+To be fair to the picture: GCV still keeps some week-long cold snaps that won't repeat, because
+it treats neighboring days as independent, and they aren't. I checked every year from 2010 to
+2016 the same way. The GCV fit beat the lambda-near-zero fit in seven years out of seven; the
+straight line lost to it in six out of seven.
 
 **[pause]**
 
@@ -430,35 +454,47 @@ their shape.
 
 This is the payoff slide — the thing you actually deliver.
 
-A partial dependence plot shows the estimated function $f$-hat-$j$ across the range of values
-actually observed, with confidence bands around it.
-
-Reading the shape is most of the interpretation.
-
-A **flat line** means the variable does nothing for $y$. And notice — in a linear model that
-variable might still have had a significant coefficient. Here you see immediately that it
-isn't buying you anything.
-
-A **rising curve** means a positive effect, but not at a constant rate. That's the case a
-linear model would report as a single number and get wrong at both ends.
-
-A **U-shape** means there's an optimal level, and both too little and too much are worse.
-Inventory works like this. So does advertising spend. A linear model finds a slope near zero
-here and concludes the variable doesn't matter — which is exactly backwards.
+A partial dependence plot shows one estimated function, $f$-hat-$j$, across the range of values
+you observed, with a confidence band around it. Reading the shape is most of the
+interpretation. And this is a real one: Lab 3's model of daily electricity demand, a smooth
+term in day of year plus a factor for day of week. You'll fit it yourself.
 
 **[pause]**
 
-Watch the bands as well as the curve. They widen wherever the data thin out, which is usually
-at the extremes — exactly where a reader is most tempted to extrapolate. If the band is wide,
-the curve there is a guess. Say so.
+*(Point at the left panel.)* Day of year. Demand is high in January, falls to a trough in late
+April, climbs to the annual peak in mid-July, and falls again into the autumn. Two peaks:
+heating in winter, air conditioning in summer. Nobody told the model that. It bent its way
+there.
+
+Now think back to the right-hand panel on the penalty slide — the straight line. A linear term in
+day of year would have reported a gentle slope and concluded the calendar hardly matters. That's
+exactly backwards. A flat line, a rising curve, a U-shape, a double hump: those are the shapes
+you'll meet, and a linear term can only ever show you a straight line — rising, falling or flat.
+
+*(Point at the right panel.)* Day of week. Weekdays sit together; Saturday and Sunday drop. The
+bars are each day's band.
+
+**[pause]**
+
+Watch the band as well as the curve. Here it's about the same width all year, and that's worth
+noticing, because it isn't the usual picture. Every day of the year appears four or five times
+in the training data, and a cyclic spline has no ends, so the model is roughly equally sure everywhere.
+On a predictor whose extremes are rare — unemployment above ten percent, say — the band fans out
+exactly where the data thin, which is where a reader is most tempted to extrapolate. If the band
+is wide, the curve there is a guess. Say so.
 
 **[pause]**
 
 And this is what makes a GAM worth its accuracy cost. The output isn't a number. It's a
-sentence someone can act on: *"as unemployment rises from 5% to 10%, predicted sales fall by
-X percent — and the decline steepens past 8%."*
+sentence someone can act on. *(Point at the key box.)* "Plan for mid-July demand about eleven
+thousand four hundred megawatts above the late-April trough, a winter peak about eighty-five
+hundred above it, and weekends about three thousand below weekdays."
 
-That second clause is the part no linear model could ever have told them.
+Notice the sentence talks in *gaps* — peak above trough — and the brackets on the plot draw
+them. That's deliberate: the zero line of a smooth term is a bookkeeping choice, so the
+differences are what mean something.
+
+And the last clause on the slide is the point: no straight line in day of year has two peaks.
 
 ---
 
@@ -498,8 +534,9 @@ model interactions.
 rather than straight. When a time series has complex trend and seasonality — reach for
 Prophet. And when interpretability matters more than the last few points of accuracy.
 
-That last clause is the honest one. On tabular data, XGBoost will usually win on RMSE. Lecture
-6 is where we take that seriously and stop pretending otherwise.
+That last clause is the honest one. Whether a more flexible model actually buys those last few
+points is an empirical question, and Lectures 4 through 6 test it on our data. The answer is
+not always the one the reputation predicts.
 
 ---
 
@@ -552,6 +589,6 @@ See you then.
 | pyGAM & interpretation | 13–15 | ~9 min |
 | Close | 16–19 | ~5 min |
 
-If you need to compress, slide 13's term-type list survives trimming. Do **not** compress
-slides 5, 14, or 16 — the additivity argument, the partial dependence plot, and the
+If you need to compress, slide 14's term-type list survives trimming. Do **not** compress
+slides 5, 15, or 17 — the additivity argument, the partial dependence plot, and the
 interactions tradeoff are the three ideas this lecture exists to deliver.

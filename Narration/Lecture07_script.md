@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Introduction to Neural Networks**
 
-Deck: `Slides/Lecture07_NeuralNets.pdf` (20 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture07_NeuralNets.pdf` (21 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -67,7 +67,9 @@ feature columns, the model would be identical.
 The second reason: a tree's prediction is **piecewise constant**. Remember Lab 4, where the tree
 could not predict above the largest value it had ever seen? That's not a bug in our
 implementation. It is what a tree is. It averages training values in a leaf, so it cannot
-extrapolate. A neural network learns a smooth, continuous function, and it can.
+extrapolate. A neural network's prediction is continuous instead. With the ReLU activation you're
+about to meet, it's made of straight pieces joined at kinks — you'll see exactly that in two slides —
+and past its last kink it just keeps going in a straight line. So it can extrapolate.
 
 **[pause]**
 
@@ -132,20 +134,55 @@ where negative is exactly what you want. Regression output layers stay linear.
 I want to be precise about what that sigma actually buys, because it is easy to assume that
 *depth* is what makes a network powerful. It is not.
 
-*(Point at the definition box.)*
-
-Here is the thing to understand. A linear function of a linear function is linear. If you stack
-two layers with no activation between them, you get W-two times W-one times x — and W-two times
-W-one is just some other matrix. So you have a single matrix, applied once. You've built a linear
-model with extra steps and a slower fitting procedure.
+Start with the line at the top of the slide. A linear function of a linear function is linear. If
+you stack two layers with no activation between them, you get W-two times W-one times x — and
+W-two times W-one is just some other matrix. One matrix, applied once. You've built a linear model
+with extra steps and a slower fitting procedure.
 
 Depth alone gains you **nothing**.
 
 **[pause]**
 
-Put a nonlinearity between the layers and the picture changes completely. There's a result called
-the **universal approximation theorem** which says a network with a single hidden layer can
-approximate any continuous function to arbitrary accuracy, given enough neurons.
+*(Point at the left panel.)*
+
+Here's what that costs on real data. Each gray dot is one weekday of electricity demand on the
+PJM East grid, 2002 to 2018 — the dataset from Lecture 3 — plotted against the day of the year. The
+year is shaped like a W: high in January from heating, a trough in spring, a big peak in July from
+air conditioning, another trough in October, and back up for winter.
+
+The blue line is the best straight line through it. And that line is the best that *any* stack of
+linear layers can ever do, however many layers you stack, because the whole stack collapses to one
+line. It's nearly flat, and it misses by about four and a half thousand megawatts on a typical
+day.
+
+*(Right panel.)*
+
+Now give the network four ReLU units. Each one is a hinge: zero up to its knot, then a straight
+ramp. Add four of them and you get the red curve — straight pieces, joined at four kinks, the red
+dots. At each dot one more unit switches on and bends the line; the dashed stub shows where the
+line would have gone without it.
+
+I fixed the knots here, at days forty, one twenty, two hundred and two ninety, and fitted only the
+weights, by least squares. So nothing in this picture depends on a random seed. And it already
+follows the W: the miss drops to about three thousand megawatts.
+
+**[pause]**
+
+Here's the geometry to take away. With one input, a hidden layer of H ReLU units draws a
+continuous, piecewise-linear curve with at most H kinks. That's a linear spline — and the knots,
+instead of being chosen by you, are learned by the network, along with the weights.
+
+If that sounds familiar, it should. Prophet's trend in Lecture 3 was piecewise linear with
+changepoints. That's this same sum of hinges, with the changepoints fixed in advance. A network is
+what you get when you let the data place them.
+
+---
+
+# ▶ SLIDE 7 — Universal Approximation: Existence, Not Estimation
+
+Add more units and the kinks multiply. That's the intuition behind a result called the **universal
+approximation theorem**: a network with a single hidden layer can approximate any continuous
+function as closely as you like, given enough neurons.
 
 Now — read that claim carefully, because it is quoted far more often than it is understood.
 
@@ -159,11 +196,19 @@ computationally hopeless. Same shape of problem, different setting.
 
 **[pause]**
 
-There's a practical reading of the theorem too, and it's more useful than the theoretical one.
-The theorem is about a *single* hidden layer, made arbitrarily wide. In practice nobody builds
-that. Everybody builds narrow-and-deep instead, because depth composes features — layer two
-builds on what layer one found, rather than starting over — and that turns out to need far fewer
-total neurons for the same job.
+And look at the number on the slide, because it makes the point concrete. Four units already get
+the electricity year to about three thousand and forty. The best *any* function of the day of the
+year can do on that data — the plain average for each calendar day — is about two thousand eight
+hundred and sixty. So four units have already captured almost everything the day of the year can
+tell you. More units can't buy much here. What's missing past that point isn't capacity, it's
+information — temperature, say.
+
+**[pause]**
+
+There's a practical reading of the theorem too. It's about a *single* hidden layer, made
+arbitrarily wide. In practice nobody builds that. Everybody builds narrow-and-deep instead, because
+depth composes features — layer two builds on what layer one found, rather than starting over — and
+that turns out to need far fewer total neurons for the same job.
 
 So when someone tells you "neural networks are universal approximators," the correct response is
 that so are polynomials, and so are splines, and you would not use a degree-forty polynomial to
@@ -173,13 +218,13 @@ is exactly the theme of the next two lectures.
 
 ---
 
-# ▶ SLIDE 7 — Section divider: Feedforward Networks
+# ▶ SLIDE 8 — Section divider: Feedforward Networks
 
 Stack layers of neurons, and each layer learns a higher-level representation of the one below it.
 
 ---
 
-# ▶ SLIDE 8 — Feedforward Network: Layers and Forward Pass
+# ▶ SLIDE 9 — Feedforward Network: Layers and Forward Pass
 
 A **feedforward network** — you'll also see it called an FFN or a multilayer perceptron — is
 three things in sequence.
@@ -222,7 +267,7 @@ curve and a forecast you shouldn't ship, and it takes ten times as long to disco
 
 ---
 
-# ▶ SLIDE 9 — How Big Is This Model, Actually?
+# ▶ SLIDE 10 — How Big Is This Model, Actually?
 
 Capacity is easy to add by accident, so let's count it once, properly.
 
@@ -253,13 +298,13 @@ What makes it survivable is not the architecture. It's the regularization. Which
 
 ---
 
-# ▶ SLIDE 10 — Section divider: Training — Loss and Backpropagation
+# ▶ SLIDE 11 — Section divider: Training — Loss and Backpropagation
 
 Compute the error, propagate it backward, adjust every weight by its share of the blame. Repeat.
 
 ---
 
-# ▶ SLIDE 11 — Training: Loss, Gradients, and the Update Step
+# ▶ SLIDE 12 — Training: Loss, Gradients, and the Update Step
 
 Training is one loop, repeated. Three steps.
 
@@ -275,7 +320,7 @@ derivative of the loss with respect to W. Eta is the **learning rate** — how b
 
 *(Point at the definition box.)*
 
-One refinement. Rather than using the whole dataset to compute each update, you use a random
+One refinement. Rather than using the whole dataset to compute each update, you use a
 **mini-batch** — typically thirty-two to two hundred fifty-six rows. The steps are noisier, but
 you take far more of them and each one is much cheaper. That's **stochastic gradient descent**.
 One full pass through every batch is called an **epoch**.
@@ -304,7 +349,7 @@ plain SGD, which is most of why it became standard.
 
 ---
 
-# ▶ SLIDE 12 — Preventing Overfitting — Where Lecture 6 Returns
+# ▶ SLIDE 13 — Preventing Overfitting — Where Lecture 6 Returns
 
 Twenty-two thousand parameters on five thousand rows will memorize the training set unless
 something stops it. Three things do — and **you have already met two of them.**
@@ -340,13 +385,13 @@ You'll see it a sixth time in Lecture 11, and there it will be the cleanest vers
 
 ---
 
-# ▶ SLIDE 13 — Section divider: PyTorch Implementation
+# ▶ SLIDE 14 — Section divider: PyTorch Implementation
 
 Four pieces: a Dataset, a DataLoader, a model, and a training loop.
 
 ---
 
-# ▶ SLIDE 14 — PyTorch: Dataset and DataLoader
+# ▶ SLIDE 15 — PyTorch: Dataset and DataLoader
 
 *(This is the first of three code slides. Read the structure, not every character.)*
 
@@ -385,9 +430,9 @@ because they're on a list, not because something broke.
 
 ---
 
-# ▶ SLIDE 15 — PyTorch: Defining the Model
+# ▶ SLIDE 16 — PyTorch: Defining the Model
 
-Here is the network from slide 9, in five lines.
+Here is the network from slide 10, in five lines.
 
 Read it top to bottom and it *is* the diagram. A linear map to a hundred twenty-eight units. A
 ReLU. Some dropout. Then again — linear, ReLU, dropout. Then a final linear layer down to one
@@ -405,7 +450,7 @@ those twenty-two thousand six hundred fifty-seven parameters are sitting.
 
 ---
 
-# ▶ SLIDE 16 — PyTorch: The Training Loop
+# ▶ SLIDE 17 — PyTorch: The Training Loop
 
 And here is the loop. Four steps per mini-batch, and every PyTorch training loop you will ever
 read is these four lines with more scaffolding around them.
@@ -434,13 +479,13 @@ deadline.
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Key Takeaways
+# ▶ SLIDE 18 — Section divider: Key Takeaways
 
 Where a network belongs in the toolkit you now have.
 
 ---
 
-# ▶ SLIDE 18 — Neural Networks vs. Tree Methods
+# ▶ SLIDE 19 — Neural Networks vs. Tree Methods
 
 *(Walk the table across, then land on the paragraph below it.)*
 
@@ -486,12 +531,13 @@ thing a DAG in Lecture 12 helps you reason about.
 
 ---
 
-# ▶ SLIDE 19 — Lecture 7: Key Takeaways
+# ▶ SLIDE 20 — Lecture 7: Key Takeaways
 
 *(Six points. Read them at a steady pace; don't rush the last two.)*
 
 One. A neuron is linear regression wrapped in a nonlinear activation — and without that
-nonlinearity, stacking layers collapses back to a single linear model.
+nonlinearity, stacking layers collapses back to a single linear model. With ReLU, each unit adds
+one kink, which is how four units drew the W in the electricity year.
 
 Two. An FFN stacks those layers. Width and depth set capacity, and capacity accumulates faster
 than you expect. Twenty-two thousand parameters on five thousand rows.
@@ -515,6 +561,6 @@ to a time series.
 
 ---
 
-# ▶ SLIDE 20 — References
+# ▶ SLIDE 21 — References
 
 *(Advance and close. No narration needed.)*

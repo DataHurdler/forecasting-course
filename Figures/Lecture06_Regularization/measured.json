@@ -1,0 +1,25 @@
+{
+ "note": "Written by scripts/figures/lecture06_figures.py: every number the Lecture 6 diamond-and-disc figure prints. Lab 6 training window, standardized lag7/lag14.",
+ "n_train": 1210,
+ "rho_lag7_lag14": 0.7547787414599004,
+ "corr_with_units": [
+  0.7545099867777999,
+  0.7163954827979139
+ ],
+ "ols": [
+  0.4968287447556485,
+  0.3413997081101433
+ ],
+ "ols_l1": 0.8382284528657917,
+ "t_corner": 0.15542903664550514,
+ "t_corner_share_of_ols_l1": 0.18542562724292394,
+ "budget_drawn": 0.1,
+ "ridge_contact": [
+  0.0728204263594846,
+  0.06853601611432403
+ ],
+ "lasso_contact": [
+  0.1,
+  0.0
+ ]
+}

@@ -243,8 +243,9 @@ print(f"with    zero_grad():  {train(make_model(X_tr.shape[1], 1)):,.0f}")
 print(f"without zero_grad():  {train_broken(make_model(X_tr.shape[1], 1)):,.0f}")
 ```
 
-Without `zero_grad()`, PyTorch **accumulates** gradients across batches instead of replacing them,
-so every update uses a sum of all gradients seen so far in that epoch.
+Without `zero_grad()`, PyTorch **accumulates** gradients across batches instead of replacing them.
+Nothing resets them at the end of an epoch either, so every update uses the sum of every gradient
+computed since training began: all 60 epochs' worth by the end.
 
 No exception. No warning. Just a model that trains badly — and note *how* badly. The broken
 version lands at **7,325**, which is more than three times worse than the seasonal-naive

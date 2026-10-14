@@ -1,0 +1,182 @@
+{
+ "note": "Written by scripts/figures/lecture03_figures.py; every number the Lecture 3 figures print. electricity_daily.csv (PJM East).",
+ "penalty": {
+  "fit_year": 2014,
+  "holdout_year": 2015,
+  "n_splines": 100,
+  "basis": "ps",
+  "lambda_grid": "logspace(-4, 8, 49)",
+  "tiny": {
+   "lam": 0.0001,
+   "edof": 99.77003384715445,
+   "train_rmse": 2167.875074120011,
+   "holdout_rmse": 3945.6876810869326,
+   "integral_f2sq": 199273639.4775324
+  },
+  "gcv": {
+   "lam": 1.0,
+   "edof": 43.274492975903755,
+   "train_rmse": 2558.4237004108186,
+   "holdout_rmse": 3621.294070300093,
+   "integral_f2sq": 2487630.9930419885
+  },
+  "huge": {
+   "lam": 1000000000.0,
+   "edof": 1.9981752015748178,
+   "train_rmse": 4272.4735080700775,
+   "holdout_rmse": 4620.469132916978,
+   "integral_f2sq": 3.842794873145116e-06
+  },
+  "tiny_over_gcv_bending": 80.1057874077423,
+  "huge_vs_ols_line_max_mw": 5.598562516439415,
+  "ols_holdout_rmse": 4620.059120372998,
+  "robustness_every_fit_year": [
+   {
+    "fit_year": 2010,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 3783
+    },
+    "gcv": {
+     "edof": 78.1,
+     "hold_rmse": 3503
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 4794
+    }
+   },
+   {
+    "fit_year": 2011,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 3727
+    },
+    "gcv": {
+     "edof": 83.6,
+     "hold_rmse": 3547
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 4860
+    }
+   },
+   {
+    "fit_year": 2012,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 3929
+    },
+    "gcv": {
+     "edof": 83.7,
+     "hold_rmse": 3753
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 4596
+    }
+   },
+   {
+    "fit_year": 2013,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 4040
+    },
+    "gcv": {
+     "edof": 78.1,
+     "hold_rmse": 3836
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 4370
+    }
+   },
+   {
+    "fit_year": 2014,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 3946
+    },
+    "gcv": {
+     "edof": 43.3,
+     "hold_rmse": 3621
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 4620
+    }
+   },
+   {
+    "fit_year": 2015,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 4183
+    },
+    "gcv": {
+     "edof": 88.4,
+     "hold_rmse": 4117
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 5480
+    }
+   },
+   {
+    "fit_year": 2016,
+    "tiny": {
+     "edof": 99.8,
+     "hold_rmse": 4927
+    },
+    "gcv": {
+     "edof": 92.1,
+     "hold_rmse": 4809
+    },
+    "huge": {
+     "edof": 2.0,
+     "hold_rmse": 4409
+    }
+   }
+  ]
+ },
+ "partial_dependence": {
+  "model": "Lab 3 Step 6: LinearGAM(s(0, n_splines=20, basis='cp') + f(1)), train 2013-01-01..2017-07-31",
+  "edof": 22.46706181175346,
+  "test_rmse": 3443.7824156654033,
+  "doy_peak": [
+   199.0,
+   8413.70802318448
+  ],
+  "doy_trough": [
+   116.0,
+   -3006.46243382841
+  ],
+  "doy_winter_peak": [
+   28.0,
+   5535.234309239219
+  ],
+  "summer_peak_minus_trough": 11420.17045701289,
+  "winter_peak_minus_trough": 8541.69674306763,
+  "doy_term_mean_over_train_note": "pyGAM does not centre the cyclic term on the data, so only differences along the curve are meaningful",
+  "doy_band_full_width": {
+   "min": 3298.1840632645312,
+   "median": 3914.566061267952,
+   "max": 4627.5606791831415,
+   "share_within_10pct_of_median": 0.8387978142076503
+  },
+  "train_obs_per_doy_before_after_day212": [
+   5.0,
+   3.9805194805194803
+  ],
+  "dow_effects": {
+   "Mon": 550.2305332387895,
+   "Tue": 1207.933751836737,
+   "Wed": 1103.4522838966564,
+   "Thu": 862.0108663424621,
+   "Fri": 547.2898240916336,
+   "Sat": -1817.0184140289994,
+   "Sun": -2453.8981198080282
+  },
+  "dow_band_full_width": 709.5249833909494,
+  "weekday_minus_weekend": 2989.6417187997695
+ }
+}

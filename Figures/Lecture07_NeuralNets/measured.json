@@ -1,0 +1,24 @@
+{
+ "note": "Written by scripts/figures/lecture07_figures.py: every number the Lecture 7 ReLU-hinge figure prints. Weekday days only, x = day of year.",
+ "n": 4329,
+ "line_rmse": 4513.476456250796,
+ "line_w": [
+  33499.268122384754,
+  -2.7852186004937853
+ ],
+ "knots": [
+  40,
+  120,
+  200,
+  290
+ ],
+ "hinge_rmse": 3036.8947997096375,
+ "hinge_w": [
+  34988.376502221545,
+  -99.21316350962847,
+  270.8940375842813,
+  -311.090203708404,
+  217.18405701626293
+ ],
+ "ceiling_rmse": 2863.661127591651
+}

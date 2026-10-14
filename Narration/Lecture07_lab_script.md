@@ -284,9 +284,10 @@ without zero_grad():  7,325
 
 **[pause]**
 
-PyTorch **accumulates** gradients by default. It does not replace them. If you never zero them,
-every update is driven by the sum of every gradient seen so far in that epoch — so the steps get
-larger and larger and increasingly unrelated to the batch in front of you.
+PyTorch **accumulates** gradients by default. It does not replace them, and nothing resets them
+at the end of an epoch. If you never zero them, every update is driven by the sum of every gradient
+computed since training began — sixty epochs' worth by the end — so the direction of each step has
+less and less to do with the batch in front of you.
 
 The result is 7,325. The seasonal-naive benchmark is 2,152. **The broken model is three and a half
 times worse than predicting last year's value.**

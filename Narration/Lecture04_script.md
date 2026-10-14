@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Decision Trees**
 
-Deck: `Slides/Lecture04_DecisionTrees.pdf` (17 pages) · Measured runtime: **~19 minutes** (17–21 depending on pace)
+Deck: `Slides/Lecture04_DecisionTrees.pdf` (20 pages) · Measured runtime: **~19 minutes** (17–21 depending on pace)
 
 ---
 
@@ -134,19 +134,32 @@ Part two. The mechanism — partition the feature space, predict the mean in eac
 
 # ▶ SLIDE 7 — What Is a Decision Tree?
 
-Here's the whole idea in one picture.
+Here's the whole idea in one picture — and it's a real one. This is the tree a computer actually
+grows on our weekly CA_1 food sales, stopped at two levels so we can read it.
 
 A tree asks a series of yes/no questions about the features and arrives at a prediction.
 
 *(Walk the diagram.)*
 
-Start at the top. Was last year's same-month sales below thirty-eight thousand? If yes, go
-left, and we're done — the forecast is twenty-eight thousand four hundred.
+Start at the top. Did the store sell twenty thousand six hundred and three units or fewer four
+weeks ago? If yes, go left, and there's a second question about the same lag: eighteen thousand
+six hundred or fewer? Yes, and the forecast is about eighteen thousand four hundred. No, and it's
+about twenty thousand one hundred.
 
-If no, go right, and there's a second question: was last month above fifty-two thousand? If
-yes, forecast forty-four thousand one hundred. If no, sixty-one thousand three hundred.
+If the first answer was no — four weeks ago was a strong week — go right, and now the tree asks a
+different question: did the same week last year sell more than twenty-one thousand seven
+hundred? If not, forecast about twenty-one thousand four hundred. If so, about twenty-three
+thousand.
 
-That's it. Every prediction is the answer at the bottom of one path.
+**[pause]**
+
+Each green box is just an average. The "twenty-seven weeks" under the first one means
+twenty-seven training weeks landed there, and the forecast is their mean. Every prediction is
+the answer at the bottom of one path.
+
+Notice the right branch asks about last year and the left branch doesn't. That's an interaction,
+found without anyone specifying it: last year's level matters, but only when recent demand is
+already high.
 
 **[pause]**
 
@@ -160,64 +173,59 @@ threshold," and that question doesn't care about units.
 
 That last one will matter in Lecture 6, where standardization becomes mandatory.
 
-And the warning at the bottom is the whole reason Lectures 5 and 6 exist: a single deep tree
+And the warning in the last line is the whole reason Lectures 5 and 6 exist: a single deep tree
 overfits severely.
 
 ---
 
-# ▶ SLIDE 8 — The CART Algorithm
+# ▶ SLIDE 8 — The CART Algorithm (Regression)
 
 How does the tree decide what to ask?
 
 CART builds greedily, top to bottom. At each node it searches over **every feature and every
-possible threshold**, and picks the split that most reduces within-region variance.
-
-Look at what's being minimized: the sum of squared deviations from the mean in the left region
-plus the same in the right. Split the data in two, and ask how much total variability you
-removed.
-
-**[pause]**
+possible threshold**, and keeps the split with the smallest total squared error — the squared
+deviations from the mean on the left, plus the same on the right.
 
 Hold onto the word **greedily** — the next slide is entirely about what it costs.
 
-The prediction at a leaf is just the mean of the training observations that landed there.
+**[pause]**
+
+The picture on the right is that search, done on our data for the very first split.
+
+*(Point at the top panel.)*
+
+Every dot is one of the hundred seventy-three training weeks. Across the bottom, what the store
+sold four weeks earlier; up the side, what it sold that week. The dashed line is a cut. Weeks to
+its left are red, weeks to its right are blue, and each side gets one prediction: its mean, the
+thick horizontal line. The thin vertical sticks are the errors — how far each week sits from its
+side's mean.
+
+The algorithm squares every stick and adds them up. That total is the number it is trying to
+make small.
+
+*(Point at the bottom panel.)*
+
+Now slide the cut. The bottom panel is that total, for every place the cut could go. With no
+split at all the total is about six hundred sixty million — that's the dotted line. Wherever you
+put the cut, the total drops. It drops furthest with the cut at twenty thousand six hundred and
+three: four hundred thirty-one million.
 
 **[pause]**
 
-The framing I'd offer: at every node the algorithm is asking *"what is the single yes/no
-question that best separates high-sales months from low-sales months?"* Then it repeats that
-question within each group.
+Six hundred sixty-one million down to four hundred thirty-one. **One yes/no question removed
+thirty-five percent of the squared error.** Eighty-nine weeks on the left, averaging about
+nineteen thousand six hundred; eighty-four on the right, averaging about twenty-one thousand
+nine hundred.
 
-**[pause]**
+The algorithm did this for every feature, not just this one, and the four-week lag won. That's
+the root of the tree on the previous slide.
 
-Let me turn the crank once, on our actual data, because the arithmetic is less mysterious than
-the notation.
+Then it repeats the whole search inside each group, and again inside those — until the groups get
+too small or you hit the depth cap. The prediction at a leaf is just the mean of the training
+weeks that landed there.
 
-Take CA_1 food sales — two hundred seventy-three weeks. Before any split, the mean is about
-nineteen thousand eight hundred units, and the total sum of squared deviations around that mean
-is roughly **one point nine billion**. That number is large because units are large and we're
-squaring; ignore its scale and watch what happens to it.
-
-Now the algorithm tries every feature and every threshold. The winner is: *was the four-week
-lag at or below eighteen thousand six hundred?*
-
-That splits the data into eighty-five weeks on the left, averaging about **sixteen thousand
-nine hundred**, and one hundred eighty-eight weeks on the right, averaging about **twenty-one
-thousand one hundred**.
-
-Add up the squared deviations *within* each of those two groups and you get about **nine
-hundred million**.
-
-**[pause]**
-
-One point nine billion down to nine hundred million. **A single yes/no question removed
-fifty-two percent of the variance.**
-
-That's the entire algorithm. Ask the question that removes the most variance, then repeat
-inside each group, then repeat again — until the groups get too small or you hit the depth cap.
-
-For classification, replace variance with Gini impurity or entropy. Same algorithm, different
-measure of how mixed a region is.
+For classification, replace squared error with Gini impurity or entropy. Same algorithm,
+different measure of how mixed a region is.
 
 ---
 
@@ -233,7 +241,8 @@ What it never does is **look ahead**. It evaluates one split, commits to it, and
 
 **[pause]**
 
-The table shows what that costs. Suppose splitting on price removes forty percent of the
+The table is a made-up illustration, to show what that costs. Suppose splitting on price removes
+forty percent of the
 variance right now. Splitting on promotion removes thirty-eight — slightly worse. But *because*
 of how promotion divides the data, it sets up two further splits that would together remove
 another fifty percent.
@@ -304,35 +313,77 @@ over at least ten weeks — smoother, and far more honest about what the data su
 **`ccp_alpha`** works the other way around. Grow the tree out fully, *then* charge a penalty per
 leaf and cut back the branches that don't pay for themselves. Larger alpha, smaller tree.
 
+Whichever you use, choose its value by cross-validation — which for us means `TimeSeriesSplit` —
+and never by looking at the test year.
+
+---
+
+# ▶ SLIDE 12 — Cost-Complexity Pruning: A Line Touching the Curve
+
+Pruning has a picture, and it's worth two minutes, because the same picture comes back twice in
+this course.
+
+Cost-complexity pruning minimizes the fit — the sum of squared errors — plus a price alpha for
+every leaf.
+
+*(Point at the black curve.)*
+
+Each black dot is a pruned version of one fully grown tree on our weekly data. Across the bottom,
+how many leaves it keeps; up the side, its training error. One leaf — no splits at all — is the
+dot at the top left, six hundred sixty million. Every leaf you add lowers the error, so the curve
+runs down to the right, flattening as it goes. The full tree, off the right edge, has a hundred
+seventy-three leaves and zero training error: one leaf per week, pure memorization.
+
 **[pause]**
 
-Look at what cost-complexity pruning actually minimizes: fit on the left, a penalty proportional
-to the number of leaves on the right, and alpha setting the exchange rate between them.
+Now the geometry. Take a straight line with slope minus alpha and push it up from below until it
+touches the curve. The first dot it touches is the tree that alpha picks.
+
+*(Point at the red line.)*
+
+At thirty-four million per leaf — the red line — it touches at four leaves. That four-leaf tree is
+exactly the flowchart from slide 7.
+
+*(Point at the blue line.)*
+
+Cheapen leaves to fifteen million — the blue line, flatter — and it touches further right, at
+nine leaves. A bigger alpha means a steeper line, which means a smaller tree. That's all alpha
+does.
+
+**[pause]**
+
+The hollow circles are trees capped by `max_depth` at three and at four. They sit *above* the
+curve: for the same number of leaves, pruning found a lower training error. A depth cap cuts every
+branch at the same level whether it was earning its keep or not.
+
+**[pause]**
 
 You have seen this before. That is the GAM smoothing penalty from Lecture 3 with a different
-symbol on it — fit against complexity, one parameter tuning the trade. And you'll meet it a
-third time in Lecture 6, as Ridge and LASSO.
+symbol on it — fit against complexity, one parameter tuning the trade. And you'll meet it a third
+time in Lecture 6, as Ridge and LASSO, where the curve becomes a diamond and a disc.
 
 Three model families that look nothing alike, one idea underneath. I'd rather you remember the
 idea than the three implementations, because the idea is what transfers.
 
-And alpha is chosen the same way every time: by cross-validation. Which for us means
-`TimeSeriesSplit`.
+One technical footnote on the slide: scikit-learn measures `ccp_alpha` per observation, so its
+number is this alpha divided by the number of training rows.
 
 ---
 
-# ▶ SLIDE 12 — Section divider: Implementing Decision Trees in Python
+# ▶ SLIDE 13 — Section divider: Implementing Decision Trees in Python
 
 Part three. One class, a few hyperparameters.
 
 ---
 
-# ▶ SLIDE 13 — Decision Tree Regression in Python
+# ▶ SLIDE 14 — Decision Tree Regression in Python
 
 The code is short.
 
-Import `DecisionTreeRegressor`. Build lag features. Instantiate with `max_depth=5`,
-`min_samples_leaf=10`, and `random_state=42`. Fit. Predict.
+Import `DecisionTreeRegressor`. Take the weekly features — the lags, SNAP days, events and price.
+Instantiate with `max_depth=5`,
+`min_samples_leaf=10`, and `random_state=42`. Fit. Predict. That template is exactly what produced
+the importance table on the next slide.
 
 The table gives you the four hyperparameters worth knowing. Two of them — `min_samples_leaf`
 and `ccp_alpha` — we just spent a slide on. `max_depth` caps the depth. And `max_features` does
@@ -348,7 +399,7 @@ or a warning — it produces a number that looks better than the truth.
 
 ---
 
-# ▶ SLIDE 14 — Feature Importance
+# ▶ SLIDE 15 — Feature Importance
 
 A tree will tell you which variables it found useful.
 
@@ -358,8 +409,8 @@ normalize so it sums to one.
 
 On our weekly Walmart data a depth-five tree ranks them like this: the **four-week lag**
 dominates at about zero point six two, then the **same week last year** at zero point one five,
-then **last week** at zero point one three, and then **SNAP benefit days** and **price**, both
-around zero point zero four.
+then **last week** at zero point one three, and then **SNAP benefit days** at zero point zero
+five and **price** at zero point zero four.
 
 Notice how concentrated that is — one feature takes almost two-thirds of the total. That is
 characteristic of a single tree, and it is a symptom of the greediness we discussed: the root
@@ -383,8 +434,8 @@ so the algorithm gets hundreds of chances to find one that happens to help. `sna
 handful of integer values, and `event_days` fewer still. Price gets more opportunities to look
 useful purely because it has more thresholds to try, not because it carries more signal.
 
-Which means the gap between price at zero point zero four and SNAP at zero point zero four is
-not something I'd read anything into at all — and if anything, the bias runs in price's favor.
+Which means the gap between SNAP at zero point zero five and price at zero point zero four is not
+something I'd read anything into at all — and if anything, the bias runs in price's favor.
 
 Permutation importance is the honest alternative: shuffle one column, and measure how much
 accuracy falls. Slower, and worth it whenever the ranking will inform a decision. We'll use it
@@ -392,7 +443,7 @@ properly next week.
 
 ---
 
-# ▶ SLIDE 15 — Interpreting and Communicating Tree Predictions
+# ▶ SLIDE 16 — Interpreting and Communicating Tree Predictions
 
 This is the tree's real advantage, and it's worth dwelling on because you lose it steadily from
 here.
@@ -401,9 +452,10 @@ You can explain **why** a specific prediction came out the way it did.
 
 *(Read the manager quote from the slide.)*
 
-Notice what that explanation is: it's just the decision path, read aloud. Last year's
-same-month sales were above thirty-eight thousand. Last month was above fifty-two thousand.
-When both hold, the average outcome in our training data was sixty-one thousand three hundred.
+Notice what that explanation is: it's just the right-hand path of the flowchart from slide 7,
+read aloud. Four weeks ago the store sold more than twenty thousand six hundred units. The same
+week last year sold more than twenty-one thousand seven hundred. The twenty-five training weeks
+where both held averaged about twenty-three thousand units.
 
 No coefficients. No "holding all else constant." A sequence of conditions and an average.
 
@@ -418,13 +470,13 @@ knowledge you have, and every method after this one makes it harder to access.
 
 ---
 
-# ▶ SLIDE 16 — Section divider: Limitations and Preview
+# ▶ SLIDE 17 — Section divider: Limitations and Preview
 
 Part four. Where a single tree falls short.
 
 ---
 
-# ▶ SLIDE 17 — When a Single Tree Falls Short
+# ▶ SLIDE 18 — When a Single Tree Falls Short
 
 Strengths on the left, and they're real: interpretable, no scaling needed, captures
 nonlinearity, handles missing values, fast to train.
@@ -464,22 +516,24 @@ survives — typically twenty to forty percent better RMSE than a single tree.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 4: Key Takeaways
+# ▶ SLIDE 19 — Lecture 4: Key Takeaways
 
-Five things.
+Six things.
 
 **One.** Linear models cannot capture interactions or threshold effects. Trees can, without
 your specifying them in advance.
 
-**Two.** The bias–variance tradeoff: too-simple underfits, too-deep overfits. Tune with
-`max_depth` and `min_samples_leaf`.
+**Two.** Depth sets the bias–variance trade: too shallow underfits, too deep overfits.
 
-**Three.** CART greedily minimizes within-region variance at each split. The prediction is the
-mean of the leaf.
+**Three.** CART takes the split with the least squared error — slide the cut, total the squared
+sticks. The prediction is the mean of the leaf.
 
-**Four.** Trees are interpretable — you can trace the exact path to any prediction.
+**Four.** Stop overfitting with `min_samples_leaf` or `ccp_alpha` — a line of slope minus alpha
+touching the curve — tuned by `TimeSeriesSplit`.
 
-**Five.** Single trees have high variance. Ensembles solve this, and that's Lecture 5.
+**Five.** Trees are interpretable — you can trace the exact path to any prediction.
+
+**Six.** Single trees have high variance. Ensembles solve this, and that's Lecture 5.
 
 **[pause]**
 
@@ -488,7 +542,7 @@ and everything bad about today follows from that sentence.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 20 — References
 
 Reading is ISLP section 8.1 — the basics of decision trees. That's the chapter we'll live in
 for the next two weeks as well.
@@ -505,12 +559,12 @@ See you then.
 | Segment | Slides | Target |
 |---|---|---:|
 | Opening & why beyond linear | 1–5 | ~5 min |
-| How trees work | 6–11 | ~10 min |
-| Python & interpretation | 12–15 | ~5 min |
-| Limitations & close | 16–19 | ~2 min |
-| **Total** | | **~22 min** |
+| How trees work | 6–12 | ~11 min |
+| Python & interpretation | 13–16 | ~5 min |
+| Limitations & close | 17–20 | ~2 min |
+| **Total** | | **~23 min** |
 
-If you're compressing, slide 13's hyperparameter table survives trimming — slide 11 has already
-covered the two parameters that matter. Do **not** compress slides 9, 10, or 17: the greedy
+If you're compressing, slide 14's hyperparameter table survives trimming — slides 11 and 12 have
+already covered the two parameters that matter. Do **not** compress slides 9, 10, or 18: the greedy
 approximation, the instability it produces, and the extrapolation limit are the three things
 Lectures 5 and 6 are built on.

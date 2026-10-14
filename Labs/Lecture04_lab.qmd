@@ -138,7 +138,8 @@ Same store. Same product. Different frequency, different answer. Say why before 
 
 # Step 2 — Watch the bias–variance tradeoff happen
 
-Lecture 4 drew this as a curve. Now produce it.
+Lecture 4 summarized this in a table: stump, middle depths, full tree. Now measure it on your own
+data and draw it as a curve.
 
 ```{python}
 rows = []

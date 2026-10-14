@@ -99,7 +99,10 @@ about 7% over what you built yourself in three lines last week.
 Sit with how small that is for a moment. **Most of the gain was already yours.** The idea —
 resample, refit, average — is where the improvement came from; the professional implementation
 adds a useful but modest amount on top. Two things account for that remainder: three hundred trees
-instead of twenty, and a second source of randomness we meet in Step 3.
+instead of twenty, and deeper trees — last week's stopped at depth five. Notice what does *not*
+account for it: scikit-learn's regression forest considers every feature at every split unless you
+tell it otherwise, so this "random forest" is, strictly, still bagging. The second source of
+randomness — the one that makes it a forest — we switch on in Step 3.
 
 That is worth saying because the reverse impression is common — that the value is in the library.
 It isn't. It's in the idea, and you already had it.
@@ -150,7 +153,7 @@ badly. Hold that thought for twenty minutes.
 Here is the second randomness. Bagging gives every tree a different sample of **rows**. A random
 forest also gives every *split* a different random subset of **columns**. That is the entire
 difference between the two algorithms — and it is why what you built last week was bagging and
-not a forest.
+not a forest. So, strictly, was Step 1's default: the "all features" row below is the same 248.
 
 The argument from Lecture 5: if one feature is strongly predictive, every bagged tree splits on
 it first, so the trees are near-copies and their errors do not cancel. Deny each split most of the

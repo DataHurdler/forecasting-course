@@ -45,15 +45,13 @@
   \end{examplebox}
 
   \vspace{0.15cm}
-  The same principle transfers directly to models. A single decision tree is unstable and
-  noisy --- that was Lecture 4's closing complaint. Train many trees on different versions of
-  the data and average them, and the noise largely cancels while the signal survives.
+  Models work the same way. One tree is unstable, Lecture 4's closing complaint. Average many
+  trees fitted to different versions of the data and the noise largely cancels while the signal
+  survives.
 
   \vspace{0.15cm}
-  \textbf{Ensembles work because independent errors cancel.} And that word is doing real
-  work: the \emph{more independent} the individual predictions, the more variance averaging
-  removes. Hold onto it --- the entire difference between bagging and random forests turns on
-  it.
+  \textbf{Ensembles work because independent errors cancel.} The more independent the trees, the
+  more averaging removes: the difference between bagging and random forests turns on that word.
 \end{frame}
 
 % =============================================================================
@@ -65,52 +63,34 @@
 
 % --- Slide: What is bagging --------------------------------------------------
 \begin{frame}{Bagging: The Big Idea}
-  \textbf{Problem from Lecture 4:} a single decision tree has very high variance --- change a
-  few training points and you get a completely different tree.
-
-  \textbf{Bagging solution \parencite{Breiman1996}:}
+  \textbf{Problem from Lecture 4:} one tree has high variance. \textbf{Bagging}
+  \parencite{Breiman1996} averages it away:
   \begin{enumerate}\small\itemsep0pt
-    \item Draw $B$ \textbf{bootstrap samples} (with replacement, same size as the original)
-    \item Fit one deep decision tree on each
-    \item \textbf{Average} all $B$ predictions:
+    \item Draw $B$ \textbf{bootstrap samples} (with replacement, the same size as the data)
+    \item Fit one deep decision tree to each
+    \item \textbf{Average} the $B$ predictions:
           $\hat{y}_{\text{bag}} = \tfrac{1}{B}\sum_{b=1}^{B} \hat{f}^{(b)}(\mathbf{x})$
   \end{enumerate}
 
   \vspace{0.1cm}
-  \textbf{Why it works.} The variance of the averaged forecast is
+  \textbf{Why it works.} With $\rho$ the correlation between two trees' predictions,
   \[
-    \Var(\bar{f}) = \rho\sigma^2 + \tfrac{1-\rho}{B}\sigma^2,
+    \Var(\bar{f}) = \rho\sigma^2 + \tfrac{1-\rho}{B}\sigma^2 .
   \]
-  where $\rho$ is the pairwise correlation between tree predictions. The second term shrinks
-  as $B$ grows --- so more trees never hurts. But the first term does not move at all.
-
-  \vspace{0.1cm}
-  \textbf{That leaves a floor at $\rho\sigma^2$}, set by how alike the trees are rather than
-  by how many you grow. Averaging a thousand nearly identical trees buys you almost nothing,
-  and that is the problem the next section solves.
+  More trees shrink the second term; the first never moves. \textbf{That floor, $\rho\sigma^2$,
+  is set by how alike the trees are}, not by how many you grow.
 \end{frame}
 
 % --- Slide: Out-of-bag error --------------------------------------------------
 \begin{frame}{Out-of-Bag (OOB) Error: Free Cross-Validation}
-  Each bootstrap sample draws $n$ observations \emph{with replacement}, so it contains about
-  \textbf{63\%} of the distinct training points. The remaining 37\% are \textbf{out-of-bag}
-  for that tree --- a free test set, different for every tree:
-  \begin{enumerate}\small\itemsep0pt
-    \item For each observation $i$, collect predictions only from the trees where $i$ was
-          out-of-bag
-    \item Average them to get $\hat{y}_i^{\text{OOB}}$
-    \item Compute the RMSE across all observations
-  \end{enumerate}
-
-  \vspace{0.1cm}
-  Every one of those predictions came from a tree that never saw the observation --- so the
-  OOB RMSE is an honest out-of-sample estimate, and it lands close to 5-fold CV without
-  refitting anything. In \texttt{sklearn} it is one argument:
-  \texttt{RandomForestRegressor(oob\_score=True)}.
+  A bootstrap sample holds about \textbf{63\%} of the distinct rows; the rest are
+  \textbf{out-of-bag} for that tree. Score each row with only the trees that never saw it: an
+  out-of-sample RMSE, no refitting (\texttt{oob\_score=True}).
   \begin{warningbox}
-    Below about 1{,}000 observations the OOB estimate gets noisy, because each observation is
-    out-of-bag for too few trees. On a weekly business series --- a few hundred rows --- use
-    proper walk-forward CV instead.
+    \textbf{On a time series it is not a forecast test.} Each row is out-of-bag for about $0.37B$
+    trees whatever $n$ is; small $n$ is noisy only because there are few rows to average. Worse,
+    those trees trained on the weeks \emph{after} the row: OOB scores filling a gap, not
+    forecasting. Use walk-forward CV.
   \end{warningbox}
 \end{frame}
 
@@ -122,27 +102,18 @@
   Restrict each split to a random subset of features so trees are less alike.}
 
 % --- Slide: The correlation problem ------------------------------------------
+% Figure: scripts/figures/lecture05_figures.py root_splits (Lab 5's data; numbers in measured.json).
 \begin{frame}{The Problem Bagging Does Not Fully Solve}
-  Recall the variance of the averaged forecast:
-  $\Var(\bar{f}) = \rho\sigma^2 + \tfrac{1-\rho}{B}\sigma^2$. More trees shrink the second
-  term to nothing. The first term never moves.
-  \begin{warningbox}
-    \textbf{The correlation problem.} If one feature dominates --- and in forecasting it
-    always does, because last year's value is the best single predictor --- then nearly every
-    tree splits on it at the root. The trees end up near-identical, $\rho$ stays large, and
-    bagging buys you very little.
-  \end{warningbox}
-
-  \vspace{0.15cm}
-  \textbf{The Random Forest fix \parencite{Breiman2001}} is almost absurdly simple: at each
-  split, consider only a random subset of $m < p$ features, and take the best split among
-  \emph{those}.
-
-  \vspace{0.15cm}
-  Sometimes the dominant feature is not in the candidate set, so the tree is forced to find
-  its second-best story. Across hundreds of trees that produces genuinely different
-  structures --- $\rho$ falls, and the floor falls with it. You deliberately make each
-  individual tree \emph{worse} in order to make the ensemble better.
+  If one feature dominates (\texttt{dow} daily, the four-week lag weekly), nearly every bagged
+  tree splits on it first and $\rho$ stays high. \textbf{The random forest fix}
+  \parencite{Breiman2001}: at each split, consider only a random $m < p$ of the features.
+  \begin{center}
+    \includegraphics[height=4.0cm]{../Figures/Lecture05_TreeEnsembles/root_splits.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Lab 5, 300 trees each. The fix spreads the roots, and its trees average better (417 to
+  254, against 398 to 248), but they start worse: with one dominant feature among ten,
+  \texttt{sqrt} loses.}
 \end{frame}
 
 % --- Slide: RF hyperparameters -----------------------------------------------
@@ -154,7 +125,7 @@
       \textbf{Parameter} & \textbf{sklearn name} & \textbf{Default} & \textbf{Effect} \\
       \midrule
       Number of trees & \texttt{n\_estimators} & 100 & More = lower variance; plateaus $\sim$500 \\
-      Max features/split & \texttt{max\_features} & \texttt{'sqrt'} & Lower = more decorrelated \\
+      Max features/split & \texttt{max\_features} & \texttt{1.0} (all) & Lower = more decorrelated \\
       Max depth & \texttt{max\_depth} & None & Limit only to reduce memory \\
       Min samples/leaf & \texttt{min\_samples\_leaf} & 1 & Higher = smoother predictions \\
       OOB score & \texttt{oob\_score} & False & \texttt{True} gives a free CV estimate \\
@@ -163,10 +134,10 @@
     }
   \end{center}
 
-  \textbf{Start with} \texttt{n\_estimators=500}, \texttt{max\_features='sqrt'},
-  \texttt{min\_samples\_leaf=5}, \texttt{oob\_score=True}. Note how few genuinely need
-  tuning --- \texttt{max\_features} is the dial controlling $\rho$, and the rest is close to
-  fire-and-forget. That is most of why random forests make a good default.
+  \textbf{The default is plain bagging.} scikit-learn's regressor considers every feature at
+  every split; \texttt{'sqrt'} is the classifier's default. So set \texttt{max\_features}
+  yourself: it is the dial for $\rho$, and the only one that really needs tuning. Start with
+  \texttt{n\_estimators=500}, \texttt{min\_samples\_leaf=5}.
 
   \muted{\footnotesize Set \texttt{random\_state=42}: a forest is random twice over, in the
   bootstrap samples and in the feature subsets.}
@@ -192,20 +163,21 @@
       \toprule
       \textbf{Feature (CA\_1 FOODS, weekly)} & \textbf{Importance} \\
       \midrule
-      \texttt{units\_lag4}  & 0.45 \\
-      \texttt{units\_lag1}  & 0.18 \\
-      \texttt{units\_lag52} & 0.11 \\
-      \texttt{snap\_days}   & 0.08 \\
-      \texttt{units\_lag2}  & 0.04 \\
-      \texttt{avg\_price}   & 0.04 \\
+      \texttt{units\_lag4}  & 0.28 \\
+      \texttt{units\_lag1}  & 0.21 \\
+      \texttt{snap\_days}   & 0.17 \\
+      \texttt{units\_lag52} & 0.15 \\
+      \texttt{units\_lag2}  & 0.09 \\
+      \texttt{units\_lag3}  & 0.06 \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
 
-  Read it as a screening device, not an explanation. \textbf{MDI is biased} toward features
-  with many split points. \texttt{permutation\_importance} --- shuffle a column, see how much
-  accuracy falls --- is the honest alternative.
+  From the next slide's forest; Lecture 4's single tree gave the four-week lag 0.62. A screening
+  device only: \textbf{MDI is biased} toward features with many split points.
+  \texttt{permutation\_importance} (shuffle a column, measure the damage) is the honest
+  alternative.
 \end{frame}
 
 % --- Slide: Python implementation -----------------------------------------
@@ -225,15 +197,15 @@
       \textbf{Model (CA\_1 FOODS, 52-week test)} & \textbf{Test RMSE} \\
       \midrule
       Seasonal na\"{i}ve   & 1,660 \\
-      Single deep tree     & 1,415 \\
-      \textbf{Random Forest} & \textbf{1,020} \\
+      Single deep tree     & 1,456 \\
+      \textbf{Random Forest} & \textbf{1,115} \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
 
-  The forest cuts RMSE roughly \textbf{28\%} against a single deep tree, and is the first
-  method in this course to beat the seasonal naive benchmark on this series.
+  The forest cuts RMSE by \textbf{23\%} against a single deep tree. Both tree models beat the
+  seasonal naive benchmark, the first in this course to do so on this series.
 
   \muted{\footnotesize What changed is not a better model of the series but a richer feature
   set --- lags, price, and SNAP days are information ETS and ARIMA never had.}
@@ -253,28 +225,27 @@
     \begin{column}{0.48\textwidth}
       \textbf{Bagging (Random Forest):}
       \begin{itemize}\small\itemsep0pt
-        \item Trees built \textbf{in parallel}, independently
-        \item Each tree predicts $y$ directly
-        \item Averaging reduces \emph{variance}
-        \item More trees never reduces bias
+        \item Trees built \textbf{in parallel}
+        \item Each tree predicts $y$
+        \item Averaging cuts \emph{variance}
+        \item More trees never cut bias
       \end{itemize}
     \end{column}
     \begin{column}{0.48\textwidth}
       \textbf{Boosting:}
       \begin{itemize}\small\itemsep0pt
-        \item Trees built \textbf{sequentially}
-        \item Each fits the \emph{errors} of the ensemble so far
-        \item Reduces \emph{bias} as well as variance
-        \item Will overfit if trees are too deep or too many
+        \item Trees built \textbf{in sequence}
+        \item Each fits the \emph{errors} so far
+        \item Cuts \emph{bias} as well
+        \item Overfits if trees are too deep or too many
       \end{itemize}
     \end{column}
   \end{columns}
 
   \vspace{0.2cm}
-  \textbf{The intuition.} Forecast 1 says \$50,000; actual is \$60,000, so the error is
-  $+$\$10,000. Forecast 2 does not predict sales at all --- it predicts \emph{that error},
-  and says ``the first model was short by \$10,000.'' Add them: \$60,000. Each stage corrects
-  what remains, which is why boosting can fix a systematic bias that averaging never touches.
+  \textbf{The intuition.} Forecast 1 says \$50,000 against an actual \$60,000; forecast 2
+  predicts the \emph{error}, $+$\$10,000, and the sum is right. Each stage corrects what
+  remains, fixing a bias that averaging never touches.
 \end{frame}
 
 % --- Slide: Boosting algorithm -----------------------------------------------
@@ -290,15 +261,12 @@
     Final prediction: $\hat{y} = F_B(\mathbf{x})$
     }
   \end{definitionbox}
-  The trees are deliberately \textbf{shallow} --- depth 3 to 6 --- because each one only has
-  to capture a small piece of the remaining error. The ensemble converges slowly and on
-  purpose.
+  Trees are \textbf{shallow} (depth 3 to 6): each captures a little of what remains.
 
   \vspace{0.15cm}
-  \textbf{The learning rate $\eta$ is the main dial.} Small values (0.01--0.1) take a tiny
-  step per tree: slower, needs more trees, far more robust. Large values ($> 0.3$) move fast
-  and risk overshooting. The reliable recipe is a small $\eta$, many trees, and
-  \textbf{early stopping} --- without which boosting will happily fit your noise.
+  \textbf{The learning rate $\eta$ is the main dial:} 0.01--0.1 is slow and robust, above 0.3
+  risks overshooting. Use a small $\eta$, many trees and \textbf{early stopping}, or boosting
+  fits your noise.
 \end{frame}
 
 % =============================================================================
@@ -311,25 +279,21 @@
 
 % --- Slide: XGBoost innovations -----------------------------------------------
 \begin{frame}{XGBoost: Three Advances \parencite{Chen2016}}
-  \begin{enumerate}\itemsep2pt
-    \item \textbf{Newton step (second-order optimization).} Uses the gradient \emph{and} the
-          curvature of the loss to choose each tree's direction, so it converges in fewer
-          trees than first-order boosting.
-    \item \textbf{Explicit regularization.} Penalizes the number of leaves ($\gamma$) and the
-          magnitude of leaf weights ($\lambda$) directly in the objective --- so overfitting
-          is controlled by the loss function rather than only by early stopping.
-    \item \textbf{Column subsampling.} Borrowed straight from random forests: sample features
-          per tree and per split, decorrelating the ensemble.
+  \begin{enumerate}\itemsep3pt
+    \item \textbf{Newton step.} Uses the loss's curvature as well as its slope. For squared
+          error the curvature is constant, so this is the ordinary residual fit; it matters for
+          log-loss or Poisson.
+    \item \textbf{Explicit regularization.} Penalties on leaf count and leaf size, inside the
+          objective.
+    \item \textbf{Column subsampling}, borrowed from random forests.
   \end{enumerate}
 
   \vspace{0.15cm}
-  Notice that the second advance is \emph{exactly} the Ridge and LASSO idea from next week,
-  applied to leaf weights instead of regression coefficients. \texttt{reg\_lambda} is an
-  $\ell_2$ penalty; \texttt{gamma} penalizes complexity the way $\ell_1$ does.
+  \texttt{reg\_lambda} is Ridge and \texttt{reg\_alpha} is LASSO, on leaf weights (next week).
+  \texttt{gamma} is a price per leaf, like Lecture 4's \texttt{ccp\_alpha}.
 
   \vspace{0.15cm}
-  \muted{\small XGBoost dominated Kaggle tabular competitions from 2014--2018.
-  \texttt{LightGBM} is faster on large data; \texttt{CatBoost} handles categoricals natively.}
+  \muted{\small XGBoost dominated Kaggle tabular competitions in 2014--2018.}
 \end{frame}
 
 % --- Slide: XGBoost key hyperparameters --------------------------------------
@@ -406,37 +370,35 @@
   \textbf{Random Forest is the better default}: robust, almost no tuning, OOB error for free.
   \textbf{Move to XGBoost} when you can afford to tune and need the last few points --- and
   budget for that tuning, because an untuned XGBoost often loses to a default forest.
-  \begin{warningbox}
-    Neither can \textbf{extrapolate} beyond the training range. A tree predicts the mean of a
-    leaf, and no leaf contains values it never saw. On a trending series, both will flatten
-    out exactly when you need them to keep climbing.
-  \end{warningbox}
+\end{frame}
+
+% --- Slide: no tree can extrapolate ------------------------------------------
+% Figure: scripts/figures/lecture05_figures.py extrapolation (numbers in measured.json, "rsxfs").
+\begin{frame}{Why No Tree Can Extrapolate}
+  A forest's prediction is a weighted average of training targets, so it can never leave
+  [training min, training max]. A forest trained on US retail sales through 2019, then given each
+  later month's true lags:
+  \begin{center}
+    \includegraphics[height=4.0cm]{../Figures/Lecture05_TreeEnsembles/extrapolation.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small It never forecasts above \$450bn; by mid-2026 sales are \$665bn. Boosted trees go flat
+  beyond their last split too. On a trending series, keep a model that can extrapolate.}
 \end{frame}
 
 % --- Slide: Key takeaways ---------------------------------------------------
 \begin{frame}{Lecture 5: Key Takeaways}
   \begin{keybox}
-    {\footnotesize
-    \begin{enumerate}\itemsep1pt
+    {\small
+    \begin{enumerate}\itemsep2pt
       \item \textbf{Ensembles} work because independent errors cancel.
-            Averaging many imperfect models beats any single model.
-
-      \item \textbf{Bagging} averages $B$ trees fit to bootstrap samples;
-            variance falls as $B$ grows but floors at $\rho\sigma^2$.
-            \textbf{Random Forests} subsample features at each split to cut
-            $\rho$ --- the key gain over plain bagging.
-
-      \item \textbf{OOB error} is free cross-validation: each observation sits
-            out $\approx$37\% of trees, giving an unbiased generalization estimate.
-
-      \item \textbf{Boosting} inverts the idea --- trees are built sequentially,
-            each fitting the ensemble's remaining errors. Bagging attacks
-            variance; boosting attacks bias. \textbf{XGBoost} adds a Newton step,
-            penalties on leaf count and weights, and column subsampling.
-
-      \item Tune by cross-validation, always with \texttt{TimeSeriesSplit} ---
-            a random split leaks the future into the past --- and pair boosting
-            with \textbf{early stopping}.
+      \item \textbf{Bagging} averages bootstrap trees; variance floors at $\rho\sigma^2$.
+      \item \textbf{Random forests} cut $\rho$ by sampling features at each split --- when no
+            single feature dominates.
+      \item \textbf{OOB error} is free, but on a time series it scores gaps, not forecasts.
+      \item \textbf{Boosting} fits each tree to the errors so far: it attacks bias.
+      \item No tree can \textbf{extrapolate} beyond the training range.
+      \item Tune with \texttt{TimeSeriesSplit}; pair boosting with \textbf{early stopping}.
     \end{enumerate}
     }
   \end{keybox}

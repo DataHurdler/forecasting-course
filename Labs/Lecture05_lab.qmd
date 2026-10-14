@@ -96,7 +96,10 @@ print(f"Random Forest: {scoreboard['Random Forest (300 trees)']:,.0f}")
 ```
 
 Better than your hand-built version, and much better than one tree. Two differences account for
-it: more trees, and a second source of randomness we are about to meet.
+it: more trees (300 against 20), and deeper ones (Lab 4's trees stopped at depth 5). Note what is
+*not* different yet: scikit-learn's regression forest defaults to `max_features=1.0`, every feature
+at every split, so strictly this is still bagging. The second source of randomness, the one that
+makes it a random forest, comes in Step 3.
 
 ---
 

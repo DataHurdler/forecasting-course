@@ -295,9 +295,12 @@ high in January, falls through spring to a minimum around mid-April, climbs to a
 mid-July, and falls again into autumn. The model learned the M shape directly from the data by
 bending, without being given a single Fourier term.
 
-And say the other thing too: **the confidence band widens where the data is thin.** Look at the
-edges. That widening is the model telling you where it is guessing, and a forecast that comes
-with an honest statement of its own uncertainty is worth more than a point estimate that doesn't.
+And read the band too. It's about the same width all year: every day of the year appears four
+or five times in the training data, and a cyclic spline has no ends to fray. That's worth
+noticing, because it isn't the usual picture. On a predictor whose extremes are rare —
+unemployment above ten percent, say — **the band fans out exactly where the data thin**, and that
+widening is the model telling you where it is guessing. A forecast that comes with an honest
+statement of its own uncertainty is worth more than a point estimate that doesn't.
 
 ---
 

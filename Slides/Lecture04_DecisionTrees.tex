@@ -98,69 +98,85 @@
   Partition the feature space into rectangles; predict the mean in each region.}
 
 % --- Slide: The tree metaphor ------------------------------------------------
+% The real depth-2 tree on weekly CA_1 FOODS (173 training weeks); every number is in
+% Figures/Lecture04_DecisionTrees/measured.json ("depth2"), written by
+% scripts/figures/lecture04_figures.py. Thresholds x.5 on integer units are printed as <= x.
+% Coordinates (x, y), cm:
+%   root (4.9, 0)        -- y_{t-4} <= 20,603?
+%   L1   (2.1, -1.25)    -- y_{t-4} <= 18,598?      R1 (7.7, -1.25) -- y_{t-52} <= 21,692?
+%   leaves at y = -2.55: (0.7), (3.5), (6.3), (9.1) -- 18,399 / 20,110 / 21,434 / 22,988
 \begin{frame}{What Is a Decision Tree?}
-  A decision tree is a flowchart: ask yes/no questions about the features to
-  arrive at a prediction.
+  A flowchart of yes/no questions about the features, ending in a prediction. Here is the real
+  depth-2 tree for weekly CA\_1 FOODS units:
 
-  \vspace{-0.1cm}
+  \vspace{0.05cm}
   \begin{center}
     \begin{tikzpicture}[
       every node/.style={font=\small},
       internal/.style={rectangle, rounded corners=3pt,
         fill=unolightcrimson, draw=unocrimson, line width=0.8pt,
-        align=center, inner sep=4pt,
-        minimum width=2.4cm, minimum height=0.6cm},
+        align=center, inner sep=3pt, text width=3.2cm,
+        minimum width=3.4cm, minimum height=0.6cm},
       leaf/.style={rectangle, rounded corners=3pt,
         fill=unolightgreen, draw=unogreen, line width=0.8pt,
-        align=center, inner sep=4pt,
-        minimum width=1.8cm, minimum height=0.6cm},
+        align=center, inner sep=3pt, text width=2.2cm,
+        minimum width=2.4cm, minimum height=0.85cm},
     ]
-      \node[internal] (root) at (3.6, 0) {$y_{t-12} \leq 38{,}000$?};
-      \node[leaf] (l1) at (1.2, -1.35) {\footnotesize $\hat{y} = 28{,}400$};
-      \node[internal] (r1) at (6.0, -1.35) {$y_{t-1} \leq 52{,}000$?};
-      \node[leaf] (l2) at (4.6, -2.7) {\footnotesize $\hat{y} = 44{,}100$};
-      \node[leaf] (r2) at (7.6, -2.7) {\footnotesize $\hat{y} = 61{,}300$};
+      \node[internal] (root) at (4.9, 0)     {$y_{t-4} \leq 20{,}603$?};
+      \node[internal] (l1)   at (2.1, -1.25) {$y_{t-4} \leq 18{,}598$?};
+      \node[internal] (r1)   at (7.7, -1.25) {$y_{t-52} \leq 21{,}692$?};
+      \node[leaf] (a) at (0.7, -2.55) {$\hat{y} = 18{,}399$\\[-1pt]{\scriptsize 27 weeks}};
+      \node[leaf] (b) at (3.5, -2.55) {$\hat{y} = 20{,}110$\\[-1pt]{\scriptsize 62 weeks}};
+      \node[leaf] (c) at (6.3, -2.55) {$\hat{y} = 21{,}434$\\[-1pt]{\scriptsize 59 weeks}};
+      \node[leaf] (d) at (9.1, -2.55) {$\hat{y} = 22{,}988$\\[-1pt]{\scriptsize 25 weeks}};
       \draw[->, gray] (root) -- (l1) node[midway, above left, font=\tiny]{Yes};
       \draw[->, gray] (root) -- (r1) node[midway, above right, font=\tiny]{No};
-      \draw[->, gray] (r1) -- (l2) node[midway, above left, font=\tiny]{Yes};
-      \draw[->, gray] (r1) -- (r2) node[midway, above right, font=\tiny]{No};
+      \draw[->, gray] (l1) -- (a) node[midway, left, font=\tiny]{Yes};
+      \draw[->, gray] (l1) -- (b) node[midway, right, font=\tiny]{No};
+      \draw[->, gray] (r1) -- (c) node[midway, left, font=\tiny]{Yes};
+      \draw[->, gray] (r1) -- (d) node[midway, right, font=\tiny]{No};
     \end{tikzpicture}
   \end{center}
-  \vspace{-0.25cm}
-  {\small \textbf{Non-parametric} $\cdot$ \textbf{nonlinear} (captures
-  thresholds) $\cdot$ \textbf{interpretable} $\cdot$ \textbf{scale-invariant}
-  $\cdot$ handles lags, rolling statistics, and dummies together.}
-  {\small A single \emph{deep} tree \textbf{overfits severely}. Ensembles are
-  the fix, and are where the next two lectures go.}
+  \vspace{-0.15cm}
+  {\small \textbf{Non-parametric} $\cdot$ \textbf{nonlinear} (captures thresholds) $\cdot$
+  \textbf{interpretable} $\cdot$ \textbf{scale-invariant}. A single \emph{deep} tree
+  \textbf{overfits severely}; ensembles, the next lecture, are the fix.}
+
+  \muted{\footnotesize $y_{t-4}$: units four weeks earlier; $y_{t-52}$: the same week last year.
+  Fitted on the 173 weeks before the test year.}
 \end{frame}
 
 % --- Slide: CART algorithm ---------------------------------------------------
+% Figure: scripts/figures/lecture04_figures.py cart_split (numbers in measured.json, "root").
 \begin{frame}{The CART Algorithm (Regression) \parencite{Breiman1984}}
-  \textbf{CART} builds the tree greedily, top to bottom. At each node it
-  searches over every feature $j$ and threshold $t$ for the split that most
-  reduces within-region variance:
-  \[
-    \min_{j,\, t}
-    \left[
-      \sum_{i: x_{ij} \leq t} (y_i - \bar{y}_{L})^2
-      +
-      \sum_{i: x_{ij} > t} (y_i - \bar{y}_{R})^2
-    \right]
-  \]
-  Start with all the data at the root; split until nodes get too small or a
-  depth cap is reached. The \textbf{prediction} at a leaf is simply the mean
-  of the observations that land there.
-  At every node the algorithm is really asking: \emph{``what is the single
-  yes/no question that best separates high-sales months from low-sales
-  months?''} --- then repeating it within each group.
-  \muted{\footnotesize For classification, replace variance with Gini impurity
-  or entropy (information gain).}
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      At each node, CART tries every feature $j$ and threshold $t$, and keeps the split with the
+      least squared error:
+      {\small
+      \[
+        \textstyle\sum_{x_{ij} \leq t} (y_i - \bar{y}_{L})^2 + \sum_{x_{ij} > t} (y_i - \bar{y}_{R})^2
+      \]}%
+      Each leaf predicts its mean; then repeat inside each group.
+
+      \vspace{0.15cm}
+      \textbf{Geometrically:} slide the cut and total the squared vertical sticks. Our best first
+      cut, $y_{t-4} \leq 20{,}603$, removes 35\% of the squared error.
+
+      \vspace{0.1cm}
+      \muted{\footnotesize Classification uses Gini impurity or entropy instead.}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \includegraphics[height=5.9cm]{../Figures/Lecture04_DecisionTrees/cart_split.pdf}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % --- Slide: greedy is not optimal --------------------------------------------
 \begin{frame}{Greedy Is Not Optimal --- and That Matters}
-  CART is \textbf{exhaustive} at each node: it really does try every feature and every
-  threshold. But it is \textbf{greedy} across nodes --- it never looks ahead.
+  CART is \textbf{exhaustive} at each node: it tries every feature and every threshold. But it
+  is \textbf{greedy} across nodes: it never looks ahead. An illustration:
   \begin{center}
     {\small
     \begin{tabular}{lcc}
@@ -174,18 +190,12 @@
     }
   \end{center}
   \vspace{-0.1cm}
-  CART takes the 40\%. It has no way to see the 50\% coming, because it evaluates one split at
-  a time and commits.
+  CART takes the 40\%. It cannot see the 50\% coming: it scores one split at a time.
 
   \vspace{0.15cm}
-  So a fitted tree is \textbf{not the optimal tree} --- it is the result of a sequence of
-  locally optimal decisions, which is a different thing. Finding the genuinely optimal tree is
-  computationally intractable for any realistic number of features, which is why nobody does it.
-
-  \vspace{0.15cm}
-  Two consequences worth carrying forward. A tree can \textbf{miss structure that is really
-  there}. And a small change in the data can send the whole greedy sequence down a different
-  path --- which is exactly the instability we turn to next.
+  So a fitted tree is a sequence of locally best choices, \textbf{not the optimal tree} (finding
+  that is intractable). It can \textbf{miss real structure}, and a small change in the data can
+  send the greedy sequence down a different path: the instability we turn to next.
 \end{frame}
 
 % --- Slide: Bias-variance in trees -------------------------------------------
@@ -232,19 +242,26 @@
     \end{tabular}
     }
   \end{center}
-  \vspace{-0.1cm}
-  Cost-complexity pruning minimizes
-  \vspace{-0.2cm}
-  \[
-    \underbrace{\textstyle\sum_{\text{leaves}} \text{SSE}}_{\text{fit}}
-    \;+\; \underbrace{\alpha \cdot |T|}_{\text{complexity}},
-    \qquad |T| = \text{number of leaves}
-  \]
-  \vspace{-0.25cm}
+  Choose either one by \texttt{TimeSeriesSplit} cross-validation, never by the test year.
+\end{frame}
 
-  \textbf{You have seen this before} --- it is the GAM smoothing penalty from Lecture 3, and it
-  returns in Lecture 6 as Ridge and LASSO. Three model families, one idea, and $\alpha$ chosen
-  the same way each time: by cross-validation.
+% --- Slide: pruning, drawn ---------------------------------------------------
+% Figure: scripts/figures/lecture04_figures.py pruning_hull (numbers in measured.json, "pruning").
+\begin{frame}{Cost-Complexity Pruning: A Line Touching the Curve}
+  Pruning minimizes $\sum_{\text{leaves}} \text{SSE} + \alpha\,|T|$: the fit, plus a price
+  $\alpha$ for each of the $|T|$ leaves. Each black dot is the best pruned tree for some range of
+  $\alpha$.
+  \begin{center}
+    \includegraphics[height=4.15cm]{../Figures/Lecture04_DecisionTrees/pruning_hull.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Push a line of slope $-\alpha$ up from below: the first dot it touches is the tree
+  $\alpha$ picks. A bigger $\alpha$ tilts it and picks a smaller tree. The 4-leaf tree is the
+  flowchart from earlier.}
+
+  \muted{\footnotesize The same idea as Lecture 3's smoothing penalty and Lecture 6's Ridge and
+  LASSO; $\alpha$ is chosen by cross-validation. scikit-learn's \texttt{ccp\_alpha} is
+  $\alpha/n$.}
 \end{frame}
 
 % =============================================================================
@@ -259,7 +276,7 @@
   \begin{examplebox}{sklearn Code Template}
     {\scriptsize
     \texttt{from sklearn.tree import DecisionTreeRegressor}\\
-    \texttt{X = make\_lag\_features(df, lags=[1, 2, 3, 12]);\ \ y = df['sales']}\\
+    \texttt{X, y = weekly[FEATURES], weekly['units']\ \ \# lags, SNAP, events, price}\\
     \texttt{tree = DecisionTreeRegressor(max\_depth=5, min\_samples\_leaf=10, random\_state=42)}\\
     \texttt{tree.fit(X\_train, y\_train);\ \ y\_hat = tree.predict(X\_test)}
     }
@@ -300,15 +317,15 @@
       \texttt{units\_lag4}  & 0.62 \\
       \texttt{units\_lag52} & 0.15 \\
       \texttt{units\_lag1}  & 0.13 \\
-      \texttt{snap\_days}   & 0.04 \\
+      \texttt{snap\_days}   & 0.05 \\
       \texttt{avg\_price}   & 0.04 \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
   \vspace{-0.1cm}
-  This tells you which variables the tree found most useful for splitting ---
-  a fast way to screen predictors.
+  From the previous slide's depth-5 tree. Read it as a list of what the tree leaned on: a fast
+  way to screen predictors.
   \muted{\footnotesize But impurity importance is biased toward
   high-cardinality features. Permutation importance and SHAP give more
   reliable attributions; we return to this in Lecture 5.}
@@ -319,12 +336,11 @@
   A tree's main advantage is that you can explain \emph{why} a specific
   prediction was made.
   \begin{examplebox}{Explaining a Prediction to a Manager}
-    ``Our model forecasts \$61,300 in sales for next month because:
+    ``Our model forecasts 22,988 units for this week because:
     \begin{enumerate}\small
-      \item Last year's same-month sales were above \$38,000 (economy growing)
-      \item Last month's sales were above \$52,000 (current momentum strong)
-      \item When both conditions hold, the average outcome in our training
-            data was \$61,300.''
+      \item Four weeks ago the store sold more than 20,603 units (recent demand is high)
+      \item The same week last year sold more than 21,692 (the season is strong)
+      \item The 25 training weeks where both held averaged 22,988 units.''
     \end{enumerate}
   \end{examplebox}
   Produce the path with \texttt{sklearn.tree.plot\_tree(tree)} or
@@ -366,10 +382,8 @@
     \end{column}
   \end{columns}
   \vspace{0.2cm}
-  \textbf{The ensemble solution:} average many trees trained on different
-  bootstrap samples. Variance falls sharply while feature-importance
-  interpretability survives --- typically a 20--40\% RMSE improvement over a
-  single tree.
+  \textbf{The ensemble solution:} average many trees fitted to bootstrap samples. Variance falls
+  sharply and feature importance survives, typically for 20--40\% lower RMSE than one tree.
 \end{frame}
 
 % --- Slide: Key takeaways ---------------------------------------------------
@@ -377,24 +391,14 @@
   \begin{keybox}
     {\small
     \begin{enumerate}
-      \item Linear models cannot capture \textbf{interactions} or
-            \textbf{threshold effects}. Decision trees can, without
-            needing to specify these relationships in advance.
-
-      \item The \textbf{bias--variance tradeoff} means that a
-            too-simple tree underfits (high bias) and a too-deep tree
-            overfits (high variance). Tune with \texttt{max\_depth}
-            and \texttt{min\_samples\_leaf}.
-
-      \item \textbf{CART} greedily minimizes within-region variance at
-            each split. Prediction = mean of observations in the leaf.
-
-      \item Decision trees are \textbf{interpretable}: you can trace
-            the exact decision path that led to any prediction.
-
-      \item Single trees have \textbf{high variance} --- they change
-            dramatically when the data changes slightly.
-            Ensembles (Random Forests, XGBoost) solve this.
+      \item Trees capture \textbf{interactions} and \textbf{thresholds} without being told.
+      \item Depth sets the \textbf{bias--variance} trade: too shallow underfits, too deep
+            overfits.
+      \item \textbf{CART} takes the split with the least squared error; a leaf predicts its mean.
+      \item Stop overfitting with \texttt{min\_samples\_leaf} or \texttt{ccp\_alpha}, tuned by
+            \texttt{TimeSeriesSplit}.
+      \item Trees are \textbf{interpretable}: you can read the path to any prediction.
+      \item One tree has \textbf{high variance}; ensembles (Lecture 5) fix that.
     \end{enumerate}
     }
   \end{keybox}

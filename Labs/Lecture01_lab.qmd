@@ -197,7 +197,11 @@ You are forecasting **52**.
 # print(f"estimated phi: {holt_damped.params['damping_trend']:.3f}")
 ```
 
-Report the value of $\phi$. What does it mean that it came out below 1?
+Report the value of $\phi$ — then check it against the range statsmodels searches, which is
+$0.8 \le \phi \le 0.995$. If yours reads exactly 0.800, the optimizer stopped at the edge of
+that range: it wanted *more* damping than it was allowed. That is the bound talking, not an
+estimate. Now compare the damped model's RMSE with SES's. What does that suggest the damped
+trend is actually doing?
 
 ---
 

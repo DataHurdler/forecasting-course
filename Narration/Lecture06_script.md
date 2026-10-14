@@ -242,35 +242,59 @@ claims, and only one of them is supported.
 
 # ▶ SLIDE 9 — Why LASSO Zeros Out and Ridge Does Not
 
-So why does one zero out and the other doesn't? The geometry answers it, and once you see it
-you won't forget it.
+So why does one zero out and the other doesn't? The geometry answers it, and today we draw it on
+our own data rather than on a cartoon.
 
 Both methods can be written the same way: minimize squared error subject to a *budget* on
-coefficient size. Spend the budget however you like, but don't exceed it.
+coefficient size. Spend the budget however you like, but don't exceed it. Every lambda in the
+penalty form corresponds to some budget t, so this is the same problem stated the other way round.
 
 The **shape** of that budget is the entire difference.
 
 **[pause]**
 
-*(Take the two columns in order — left, then right.)*
+*(Point at the figure, axes first.)*
 
-**Ridge.** Sum of squared betas below some budget t. In two dimensions that constraint region is
-a **circle**. Smooth boundary, no corners anywhere.
+This is Lab 6's data cut down to two predictors, so that we can draw it: daily units on lag seven
+and lag fourteen, everything standardized. The horizontal axis is the coefficient on lag seven, the
+vertical axis the coefficient on lag fourteen. The black dot top right is OLS — about point five on
+lag seven and point three four on lag fourteen.
 
-The solution sits where the error contours — the ellipses radiating out from the OLS estimate —
-first touch that circle. And on a smooth round boundary, the touch point almost never lands
-exactly on an axis. Landing on an axis would mean one coefficient is exactly zero, and that's a
-measure-zero coincidence.
+The gray rings around it are ellipses of equal squared error. Every point on one ring fits the data
+equally well, and the fit gets worse as the rings grow outward. They're tilted because the two lags
+are correlated, about point seven five.
 
-So Ridge coefficients get small. They don't get to zero.
+**[pause]**
 
-**LASSO.** Sum of absolute betas below t. That region is a **diamond** — and a diamond has
-corners, sitting exactly on the axes.
+*(Left panel.)*
 
-Now the contours expanding outward are quite likely to hit a **corner** first. Corners stick out.
-And a corner is precisely the point where one coefficient equals zero.
+**Ridge.** A budget on the sum of squared coefficients is a **disc** in two dimensions. Smooth, no
+corners. Grow the ellipses out from OLS until one first touches the disc — that's the black curve —
+and the touch point is the blue dot: about point oh seven on *each* lag. Both kept. The blue line
+shows where the solution goes as you loosen the budget, all the way out to OLS, and it never touches
+an axis. So ridge coefficients get small. They don't get to zero.
 
-That's it. That's the whole mechanism.
+*(Right panel.)*
+
+**LASSO.** A budget on the sum of absolute values is a **diamond**, and a diamond has corners
+sitting exactly on the axes. Same ellipses. Now the touch point is the corner, where lag fourteen is
+exactly zero. Follow the red line: as the budget grows, the solution slides out along the lag-seven
+axis with lag fourteen pinned at zero, until t reaches about point one six. Only then does lag
+fourteen enter, and the solution heads straight for OLS.
+
+That's the whole mechanism. A corner is a point where one coefficient is zero.
+
+**[pause]**
+
+Now look closely at the black curve on the right, because I want to be honest about it. It runs
+almost exactly along the diamond's face. The corner wins here, but only just, and only while the
+budget is small — below point one six, about a fifth of OLS's own total of point eight four. The
+reason is that lag seven and lag fourteen are nearly interchangeable: their correlations with sales
+are point seven five and point seven two. Lag seven wins by a hair. That is the coin toss from the
+previous slide, drawn.
+
+So the textbook line — the contours are likely to hit a corner first — needs a qualifier. Corners
+win when the budget is tight. Loosen it and LASSO keeps both.
 
 **[pause]**
 
@@ -285,7 +309,7 @@ hypothesis anywhere in what we just did, and no p-value.
 
 I labor this because LASSO output gets read as if it were a significance table, in papers and in
 business reports, and it isn't one. James and co-authors work through the geometry carefully in
-section six point two if you want the picture drawn out.
+section six point two, for any number of predictors.
 
 ---
 
@@ -350,6 +374,9 @@ Now here's the part I actually want you to use.
 Think about what that ordering means. A predictor that survives until very high lambda is one
 that keeps earning its place as the penalty gets punishing. The last survivors are the ones that
 hold up under the most pressure.
+
+You've already watched a tiny version of this. On the diamond, shrink the budget and lag fourteen
+is the first to go; lag seven is the last one standing.
 
 That ordering is far more stable across resamples than any single model's coefficient table. Move
 your training window a few weeks and the exact coefficients at your chosen lambda will shift.
@@ -493,9 +520,10 @@ different geometries.
 
 Look at XGBoost's hyperparameters — the ones on the regularization slide last week.
 `reg_lambda` is **literally a Ridge penalty on the leaf weights**. Same ℓ₂ form,
-applied to leaf values instead of regression coefficients. And `gamma` penalizes the *number of
-leaves* the way LASSO penalizes the *number of nonzero coefficients* — a fixed charge per unit of
-complexity, which is what produces the drop-to-zero behavior in both.
+applied to leaf values instead of regression coefficients. If you want the LASSO version, XGBoost
+has that too: `reg_alpha`, an ℓ₁ penalty on the same leaf weights. And `gamma` is a different kind
+of charge: a fixed price for every leaf, however small its weight. That's cost-complexity pruning's
+alpha from Lecture 4, back again.
 
 You were doing regularization last week. Nobody called it that.
 
@@ -525,7 +553,8 @@ n there's no unique solution at all.
 data changes flip the selected model, and that instability is invisible in your output.
 
 **Three.** Shrinkage replaces the switch with a dial. Ridge shrinks everything smoothly. LASSO
-shrinks and zeros out. Elastic Net does both and keeps correlated predictors together.
+shrinks and zeros out — through the corners of the diamond, and only when the budget is tight
+enough. Elastic Net does both and keeps correlated predictors together.
 
 **Four.** Standardize first, inside each CV fold — none of these penalties are scale-invariant.
 And lambda is tuned, not estimated: `TimeSeriesSplit`, never random K-fold.
@@ -580,7 +609,7 @@ See you next week for neural networks.
 | **Total** | | **~27 min** |
 
 If you must compress, slide 17's method table survives trimming — it's a reference students will
-photograph rather than absorb live. Do **not** compress slides 9 or 12: the ℓ₁-corner geometry and
+photograph rather than absorb live. Do **not** compress slides 9 or 12: the ℓ₁-corner figure and
 the regularization path are the two things that make the rest more than a list of estimators.
 
 Slide 17's XGBoost connection is the payoff for the whole first half of the course. If you are

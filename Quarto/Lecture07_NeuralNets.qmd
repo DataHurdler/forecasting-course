@@ -42,15 +42,13 @@ Trees predict in steps. Networks predict in curves — and that difference buys 
 
 ## Why Go Beyond Trees?
 
-A tree-based model treats every row as independent. Order is not part of the model — everything it knows about time, you put there by hand, as lag columns and rolling means. And its prediction is **piecewise constant**, which is why in Lab 4 the tree could not predict above the largest value it had seen.
+A tree treats rows as independent: time enters only as the lag columns you built. Its prediction is **piecewise constant**, so in Lab 4 it could not predict above the largest value it had seen.
 
-A neural network learns a **smooth, continuous** function instead. Its architecture is not fixed: the same machinery adapts to sequences, images and text, and it can learn its own intermediate representations rather than being handed engineered ones.
+A network's prediction is **continuous** — with ReLU, piecewise linear.
 
 ::: {.warningbox}
-**This is not an upgrade.** On the tabular problems of Homework 3 and 4, gradient boosting and a tuned LASSO were hard to beat, and a network will often lose to both. Reach for one when the data is a *sequence*, when the raw input is an image or audio, or when $n$ is very large. Otherwise you are paying in tuning time for accuracy you will not get.
+**This is not an upgrade.** On Homeworks 3 and 4, boosting and a tuned LASSO were hard to beat; a network often loses to both. Reach for one for *sequences*, images or audio, or very large $n$.
 :::
-
-So today is about the machinery. Lectures 8 and 9 are where it earns its place.
 
 ---
 
@@ -75,18 +73,21 @@ ReLU makes the intuition literal: the neuron asks *"is this pattern present?"* I
 
 ## Why the Nonlinearity Is the Whole Trick
 
-It is worth being precise about what $\sigma(\cdot)$ buys, because it is easy to assume that depth alone is what makes a network powerful. It is not.
+Depth alone buys nothing: a linear function of a linear function is linear, $\mathbf{W}_2(\mathbf{W}_1\mathbf{x}) = (\mathbf{W}_2\mathbf{W}_1)\mathbf{x}$. Weekday electricity load against the day of the year:
 
-::: {.definitionbox}
-::: {.definitionbox-title}
-Stacking linear layers gains you nothing
-:::
-A linear function of a linear function is linear. Compose two layers with no activation between them and you get $\mathbf{W}_2(\mathbf{W}_1\mathbf{x}) = (\mathbf{W}_2\mathbf{W}_1)\mathbf{x}$ — a single matrix, and therefore a single linear model with extra steps.
-:::
+![](../Figures/Lecture07_NeuralNets/relu_hinges.svg){fig-align="center" height="340px"}
 
-Insert a nonlinearity between the layers and the picture changes completely. The **universal approximation theorem** says a network with one hidden layer can approximate *any* continuous function to arbitrary accuracy, given enough neurons.
+[With one input, a hidden layer of $H$ ReLU units draws a continuous, piecewise-linear curve with at most $H$ kinks: a linear spline whose knots the network learns. Prophet's trend (Lecture 3) is the same sum, with its changepoints fixed in advance.]{.smaller}
 
-**Read that claim carefully.** It says a network *can* represent the function — not that your optimizer will find it, that you have the data to identify it, or that it will generalize. Existence is not estimation, the same gap as between the optimal tree and the greedy one CART builds.
+---
+
+## Universal Approximation: Existence, Not Estimation
+
+Add units and the kinks multiply. With enough of them, one hidden layer can approximate *any* continuous function arbitrarily well: the **universal approximation theorem**.
+
+**Read it carefully.** It says a network *can* represent the function — not that your optimizer will find it, that you have the data to identify it, or that it will generalize.
+
+Four units already reach RMSE 3,037 on the electricity year, and no function of the day of the year fits better than 2,864. Past that, capacity is not what is missing.
 
 # Feedforward Networks
 
@@ -96,23 +97,21 @@ Stack layers of neurons, and each layer learns a higher-level representation of 
 
 ## Feedforward Network: Layers and Forward Pass
 
-A **feedforward network** — an FFN, or multilayer perceptron — is three things in sequence. An **input layer** of raw features $\mathbf{x} \in \mathbb{R}^p$; some number of **hidden layers**, each applying $\mathbf{a}^{(\ell)} = \sigma\!\left(\mathbf{W}^{(\ell)}\mathbf{a}^{(\ell-1)} + \mathbf{b}^{(\ell)}\right)$; and an **output layer** that is linear for regression.
+A **feedforward network** (FFN, or multilayer perceptron) is three things in sequence: an **input layer** of features $\mathbf{x} \in \mathbb{R}^p$; **hidden layers**, each applying $\mathbf{a}^{(\ell)} = \sigma\!\left(\mathbf{W}^{(\ell)}\mathbf{a}^{(\ell-1)} + \mathbf{b}^{(\ell)}\right)$; and a linear **output layer** for regression.
 
-Two words you need: **width** is the number of neurons in a layer, **depth** is the number of hidden layers. Together they set the model's capacity.
+**Width** is the number of neurons in a layer, **depth** the number of hidden layers.
 
 ::: {.keybox}
-**Sensible starting sizes for forecasting:** 2–3 hidden layers, 64–256 neurons each, ReLU activations, dropout between 0.2 and 0.5. Start at the small end of every range.
+**Sensible starting sizes for forecasting:** 2–3 hidden layers, 64–256 neurons each, ReLU, dropout 0.2–0.5. Start at the small end of every range.
 :::
 
-Bigger is not better on its own. A wider or deeper network needs more data and more regularization to reach the same generalization, so add capacity only when validation error says the current model is genuinely too simple — not because it is available.
+Add capacity only when validation error says the model is too simple.
 
 ---
 
 ## How Big Is This Model, Actually?
 
-Capacity is easy to add by accident, so it is worth counting once. A layer mapping $m$ inputs to $n$ outputs holds $m \times n$ weights plus $n$ biases.
-
-Take a network for our weekly panel: 46 engineered features in, two hidden layers of 128, one output.
+Capacity is easy to add by accident, so count it once: a layer mapping $m$ inputs to $n$ outputs holds $m \times n$ weights plus $n$ biases. Our weekly panel, 46 engineered features in, two hidden layers of 128, one output:
 
 | Layer | Shape | Parameters |
 |---|---:|---:|
@@ -123,7 +122,7 @@ Take a network for our weekly panel: 46 engineered features in, two hidden layer
 
 [**Twenty-two thousand parameters on five thousand rows** — four per observation.]{.key-result}
 
-Lecture 6 called sixty predictors on a hundred and fifty observations a crisis. This is far past that ratio, and networks train here routinely. What makes it survivable is not the architecture but the regularization, next.
+Lecture 6 called sixty predictors on a hundred and fifty observations a crisis. Networks train far past that ratio routinely; what makes it survivable is the regularization, next.
 
 # Training: Loss and Backpropagation
 
@@ -133,9 +132,7 @@ Compute the error, propagate it backward, adjust every weight by its share of th
 
 ## Training: Loss, Gradients, and the Update Step
 
-Training is one loop, repeated. **First**, compute the loss — for regression, mean squared error, $\mathcal{L} = \frac{1}{n}\sum_i (y_i - \hat{y}_i)^2$.
-
-**Second, backpropagation:** work backward through the network, using the chain rule to assign each weight its share of the error. **Third**, nudge every weight against its gradient:
+Training is one loop. **First**, the loss: for regression, mean squared error $\mathcal{L} = \frac{1}{n}\sum_i (y_i - \hat{y}_i)^2$. **Second, backpropagation:** the chain rule, run backward, gives each weight its share of the error. **Third**, step every weight against its gradient:
 
 $$\mathbf{W} \leftarrow \mathbf{W} - \eta \, \frac{\partial \mathcal{L}}{\partial \mathbf{W}}, \qquad \eta = \text{learning rate}$$
 
@@ -143,10 +140,10 @@ $$\mathbf{W} \leftarrow \mathbf{W} - \eta \, \frac{\partial \mathcal{L}}{\partia
 ::: {.definitionbox-title}
 Stochastic gradient descent
 :::
-Rather than using the whole dataset for each update, use a random **mini-batch** of 32–256 rows. Noisier steps, far more of them, and much faster. One pass through every batch is an **epoch**.
+Update on a **mini-batch** of 32–256 rows, not the whole dataset: noisier steps, far more of them, much faster. One pass through every batch is an **epoch**.
 :::
 
-**You never differentiate by hand.** `loss.backward()` does the backward pass, and `torch.optim.Adam(lr=1e-3)` beats plain SGD — it adapts the step size per parameter.
+**You never differentiate by hand:** `loss.backward()` does it, and `torch.optim.Adam(lr=1e-3)` adapts the step size per parameter.
 
 ---
 
@@ -268,20 +265,20 @@ What changes in the next two lectures is the *architecture*: convolutions that s
 ## Lecture 7: Key Takeaways
 
 ::: {.keybox}
-1. A **neuron** is linear regression wrapped in a nonlinear activation. Without the nonlinearity, stacking layers collapses back to one linear model.
+1. A **neuron** is regression inside a nonlinearity. Without it, layers collapse to one line; with ReLU, each unit adds a kink.
 
-2. An **FFN** stacks those layers. Width and depth set capacity, and capacity accumulates faster than you expect — 22,657 parameters on 5,000 rows.
+2. Width and depth set an **FFN**'s capacity: 22,657 parameters on 5,000 rows.
 
-3. **Training** is one loop: loss $\to$ `backward()` $\to$ `step()`, on mini-batches, using Adam. You never differentiate by hand.
+3. **Training**: loss $\to$ `backward()` $\to$ `step()`, per mini-batch.
 
-4. **Regularization is not new.** Weight decay is Ridge; dropout and early stopping do the same job by other means. Fifth appearance of one idea.
+4. **Regularization is not new**: weight decay is Ridge.
 
-5. For time series: **do not shuffle** the DataLoader, split by time, and call `zero_grad()` every batch.
+5. For time series: **do not shuffle**, split by time, call `zero_grad()` every batch.
 
-6. An FFN on engineered features is a competitor to XGBoost, **not an upgrade**. Architecture is what earns its keep — next two lectures.
+6. An FFN on engineered features competes with XGBoost; it is **not an upgrade**.
 :::
 
-[Next: CNN architectures — convolution, pooling, and 1D convolutions for time series.]{.neutral}
+[Next: convolutions, including 1D ones for time series.]{.neutral}
 
 ---
 

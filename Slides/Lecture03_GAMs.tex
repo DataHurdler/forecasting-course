@@ -43,12 +43,12 @@
       {\setbeamertemplate{itemize item}{\pos{$\checkmark$}}
       \begin{itemize}\small\itemsep0pt
         \item Each coefficient has a clear meaning
-        \item Stable, well-understood properties
+        \item Stable, well understood
       \end{itemize}}
       {\setbeamertemplate{itemize item}{\negc{$\times$}}
       \begin{itemize}\small\itemsep0pt
-        \item Assume a constant slope everywhere
-        \item Miss curvature and threshold effects
+        \item One constant slope everywhere
+        \item Miss curves and thresholds
       \end{itemize}}
     \end{column}
     \begin{column}{0.48\textwidth}
@@ -56,21 +56,19 @@
       {\setbeamertemplate{itemize item}{\pos{$\checkmark$}}
       \begin{itemize}\small\itemsep0pt
         \item Capture almost any pattern
-        \item High accuracy on complex data
+        \item Accurate on complex data
       \end{itemize}}
       {\setbeamertemplate{itemize item}{\negc{$\times$}}
       \begin{itemize}\small\itemsep0pt
-        \item Hard to explain any single prediction
-        \item Interactions entangle all variables
+        \item Hard to explain one prediction
+        \item Interactions entangle variables
       \end{itemize}}
     \end{column}
   \end{columns}
 
   \vspace{0.3cm}
-  \textbf{GAMs sit between the two.} They allow a nonlinear, flexible relationship for each
-  variable, but keep the model \textbf{additive} --- so each variable's effect can still be
-  plotted and explained on its own. That is the whole bargain, and the rest of this lecture
-  is about what it costs.
+  \textbf{GAMs sit between:} a flexible curve per variable, \textbf{added} together, so
+  each effect still plots on its own.
 \end{frame}
 
 % --- Slide: The nonlinear marginal effect problem ----------------------------
@@ -110,16 +108,13 @@
     the data \parencite{Wood2017}.
   \end{definitionbox}
   Each $f_j$ is free to be linear, curved, U-shaped, or threshold-like --- the data decides.
-  Because the terms are \emph{added} rather than multiplied, the effects stay independent
-  and each one can be visualized on its own. Every function is fitted to minimize prediction
-  error subject to a smoothness penalty, which is the next slide.
+  Because the terms are \emph{added}, each one can be plotted on its own. A smoothness
+  penalty, two slides on, keeps them from chasing noise.
 
   \vspace{0.2cm}
-  \textbf{A retail example.} Model weekly sales as
-  $f_1(\text{time})$ for the long-run trend, plus $f_2(\text{week of year})$ for
-  seasonality, plus $f_3(\text{unemployment})$ for economic sensitivity. Three curves, each
-  plotted and interpreted separately --- and none of them requiring you to hold the others
-  fixed to make sense of it.
+  \textbf{A retail example.} Weekly sales as $f_1(\text{time})$ for the trend, plus
+  $f_2(\text{week of year})$ for seasonality, plus $f_3(\text{unemployment})$ for economic
+  sensitivity: three curves, each read on its own.
 \end{frame}
 
 % --- Slide: what the "Generalized" means -------------------------------------
@@ -156,26 +151,23 @@
 \end{frame}
 
 % --- Slide: Smoothness penalty -----------------------------------------------
+% Figure: scripts/figures/lecture03_figures.py (smoothing_penalty). basis="ps", not the lab's
+% cyclic "cp": with a cyclic basis the lambda -> infinity limit is a flat line, not OLS.
 \begin{frame}{Controlling Smoothness: The Penalty Term}
   A GAM minimizes a \textbf{penalized} sum of squared errors:
+  \vspace{-0.2cm}
   \[
     \text{PSSE} = \underbrace{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}_{\text{fit}} +
                   \underbrace{\lambda \int (f''(x))^2\,dx}_{\text{smoothness penalty}}
   \]
-  The second derivative $f''(x)$ measures how fast the slope is changing, so a wiggly
-  function accumulates a large integral and a smooth one accumulates a small one. The
-  penalty therefore charges the model for wiggliness, and $\lambda$ sets the price.
-
-  \vspace{0.2cm}
-  The two extremes are worth holding in mind. As \textbf{$\lambda \to 0$} the penalty
-  vanishes and the curve is free to chase every point --- overfitting. As
-  \textbf{$\lambda \to \infty$} every $f_j$ is forced straight and the GAM collapses back
-  into ordinary least squares. Everything useful happens in between, and $\lambda$ is
-  chosen by \textbf{cross-validation} or GCV rather than by eye.
-
-  \vspace{0.1cm}
-  \muted{\footnotesize \textbf{Splines} are how $f(x)$ is represented: piecewise polynomials
-  joined smoothly at \textbf{knot} points.}
+  \vspace{-0.45cm}
+  \begin{center}
+    \includegraphics[height=4.0cm]{../Figures/Lecture03_GAMs/smoothing_penalty.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small $f''$ measures bending, so the penalty is the shaded area: zero only for a straight
+  line. Same data, same 100 splines (cubic pieces joined at knots); only $\lambda$ changes,
+  and GCV chooses it, not your eye.}
 \end{frame}
 
 % =============================================================================
@@ -194,19 +186,14 @@
     y(t) = \underbrace{g(t)}_{\text{trend}} + \underbrace{s(t)}_{\text{seasonality}}
           + \underbrace{h(t)}_{\text{holidays}} + \varepsilon_t
   \]
-  \textbf{Trend $g(t)$} is piecewise linear or logistic, with \emph{changepoints} where the
-  slope is allowed to shift. \textbf{Seasonality $s(t)$} is a Fourier series, which is how
-  Prophet handles weekly and yearly cycles simultaneously. \textbf{Holidays $h(t)$} are
-  irregular events you supply yourself --- Black Friday, a product launch, a lockdown.
+  \textbf{Trend $g(t)$}: piecewise linear or logistic, with \emph{changepoints} where the
+  slope may shift. \textbf{Seasonality $s(t)$}: a Fourier series, so weekly and yearly cycles
+  fit at once. \textbf{Holidays $h(t)$}: irregular events you supply --- Black Friday, a
+  launch, a lockdown.
 
   \vspace{0.2cm}
-  The design goals were practical rather than statistical: one fit-and-forecast call, robust
-  to missing data and outliers, and interpretable because every component can be plotted on
-  its own. That is why it spread so quickly among analysts who are not statisticians.
-
-  \vspace{0.1cm}
-  \muted{\footnotesize\itshape \texttt{changepoint\_prior\_scale} controls trend flexibility:
-  high adapts quickly and risks overfitting; low keeps the trend stable.}
+  Built for analysts, not statisticians: one fit-and-forecast call, robust to gaps and
+  outliers, and every component plots on its own.
 \end{frame}
 
 % --- Slide: Prophet code -----------------------------------------------------
@@ -261,43 +248,20 @@
 \end{frame}
 
 % --- Slide: Partial dependence -----------------------------------------------
+% Figure: scripts/figures/lecture03_figures.py (partial_dependence) -- Lab 3's own model,
+% s(doy, cyclic) + f(dow), fitted on 2013 to July 2017.
 \begin{frame}{Interpreting GAM Results: Partial Dependence Plots}
-  A partial dependence plot shows $\hat{f}_j(x_j)$ across the observed range, with
-  confidence bands. Reading the shape is most of the interpretation.
+  Each panel is one $\hat{f}_j(x_j)$ with its confidence band, from Lab 3's electricity model:
   \begin{center}
-  \begin{tikzpicture}[scale=0.70]
-    \begin{scope}[shift={(0.0,0)}]
-      \node[font=\scriptsize\bfseries] at (1.8,2.15) {Flat};
-      \draw[->, unoblack] (0,0) -- (4.0,0) node[right, font=\scriptsize]{$x_j$};
-      \draw[->, unoblack] (0,0) -- (0,1.95) node[above, font=\scriptsize]{$\hat{f}_j$};
-      \fill[unocrimson!12] (0.00,1.30) -- (0.09,1.26) -- (0.18,1.23) -- (0.27,1.19) -- (0.36,1.15) -- (0.45,1.12) -- (0.54,1.09) -- (0.63,1.06) -- (0.72,1.04) -- (0.81,1.01) -- (0.90,0.99) -- (0.99,0.97) -- (1.08,0.95) -- (1.17,0.94) -- (1.26,0.92) -- (1.35,0.91) -- (1.44,0.90) -- (1.53,0.89) -- (1.62,0.89) -- (1.71,0.89) -- (1.80,0.89) -- (1.89,0.89) -- (1.98,0.89) -- (2.07,0.89) -- (2.16,0.90) -- (2.25,0.91) -- (2.34,0.92) -- (2.43,0.94) -- (2.52,0.95) -- (2.61,0.97) -- (2.70,0.99) -- (2.79,1.01) -- (2.88,1.04) -- (2.97,1.06) -- (3.06,1.09) -- (3.15,1.12) -- (3.24,1.15) -- (3.33,1.19) -- (3.42,1.23) -- (3.51,1.26) -- (3.60,1.30) -- (3.60,0.20) -- (3.51,0.24) -- (3.42,0.27) -- (3.33,0.31) -- (3.24,0.35) -- (3.15,0.38) -- (3.06,0.41) -- (2.97,0.44) -- (2.88,0.46) -- (2.79,0.49) -- (2.70,0.51) -- (2.61,0.53) -- (2.52,0.55) -- (2.43,0.56) -- (2.34,0.58) -- (2.25,0.59) -- (2.16,0.60) -- (2.07,0.61) -- (1.98,0.61) -- (1.89,0.61) -- (1.80,0.61) -- (1.71,0.61) -- (1.62,0.61) -- (1.53,0.61) -- (1.44,0.60) -- (1.35,0.59) -- (1.26,0.58) -- (1.17,0.56) -- (1.08,0.55) -- (0.99,0.53) -- (0.90,0.51) -- (0.81,0.49) -- (0.72,0.46) -- (0.63,0.44) -- (0.54,0.41) -- (0.45,0.38) -- (0.36,0.35) -- (0.27,0.31) -- (0.18,0.27) -- (0.09,0.24) -- (0.00,0.20) -- cycle;
-      \draw[unocrimson, line width=1.2pt] (0.00,0.75) -- (0.09,0.75) -- (0.18,0.75) -- (0.27,0.75) -- (0.36,0.75) -- (0.45,0.75) -- (0.54,0.75) -- (0.63,0.75) -- (0.72,0.75) -- (0.81,0.75) -- (0.90,0.75) -- (0.99,0.75) -- (1.08,0.75) -- (1.17,0.75) -- (1.26,0.75) -- (1.35,0.75) -- (1.44,0.75) -- (1.53,0.75) -- (1.62,0.75) -- (1.71,0.75) -- (1.80,0.75) -- (1.89,0.75) -- (1.98,0.75) -- (2.07,0.75) -- (2.16,0.75) -- (2.25,0.75) -- (2.34,0.75) -- (2.43,0.75) -- (2.52,0.75) -- (2.61,0.75) -- (2.70,0.75) -- (2.79,0.75) -- (2.88,0.75) -- (2.97,0.75) -- (3.06,0.75) -- (3.15,0.75) -- (3.24,0.75) -- (3.33,0.75) -- (3.42,0.75) -- (3.51,0.75) -- (3.60,0.75);
-      \node[font=\scriptsize, text width=3.4cm, align=center] at (1.8,-0.75) {no effect at all};
-    \end{scope}
-    \begin{scope}[shift={(5.0,0)}]
-      \node[font=\scriptsize\bfseries] at (1.8,2.15) {Rising};
-      \draw[->, unoblack] (0,0) -- (4.0,0) node[right, font=\scriptsize]{$x_j$};
-      \draw[->, unoblack] (0,0) -- (0,1.95) node[above, font=\scriptsize]{$\hat{f}_j$};
-      \fill[unocrimson!12] (0.00,0.73) -- (0.09,0.86) -- (0.18,0.90) -- (0.27,0.93) -- (0.36,0.95) -- (0.45,0.96) -- (0.54,0.98) -- (0.63,0.99) -- (0.72,1.00) -- (0.81,1.01) -- (0.90,1.02) -- (0.99,1.03) -- (1.08,1.05) -- (1.17,1.06) -- (1.26,1.08) -- (1.35,1.09) -- (1.44,1.11) -- (1.53,1.13) -- (1.62,1.15) -- (1.71,1.17) -- (1.80,1.20) -- (1.89,1.22) -- (1.98,1.25) -- (2.07,1.28) -- (2.16,1.31) -- (2.25,1.34) -- (2.34,1.37) -- (2.43,1.41) -- (2.52,1.44) -- (2.61,1.48) -- (2.70,1.52) -- (2.79,1.56) -- (2.88,1.61) -- (2.97,1.65) -- (3.06,1.70) -- (3.15,1.75) -- (3.24,1.80) -- (3.33,1.85) -- (3.42,1.91) -- (3.51,1.97) -- (3.60,2.02) -- (3.60,0.92) -- (3.51,0.94) -- (3.42,0.96) -- (3.33,0.98) -- (3.24,0.99) -- (3.15,1.01) -- (3.06,1.02) -- (2.97,1.03) -- (2.88,1.03) -- (2.79,1.04) -- (2.70,1.04) -- (2.61,1.04) -- (2.52,1.04) -- (2.43,1.03) -- (2.34,1.03) -- (2.25,1.01) -- (2.16,1.00) -- (2.07,0.99) -- (1.98,0.97) -- (1.89,0.95) -- (1.80,0.93) -- (1.71,0.90) -- (1.62,0.87) -- (1.53,0.84) -- (1.44,0.81) -- (1.35,0.77) -- (1.26,0.73) -- (1.17,0.69) -- (1.08,0.64) -- (0.99,0.59) -- (0.90,0.54) -- (0.81,0.49) -- (0.72,0.43) -- (0.63,0.36) -- (0.54,0.29) -- (0.45,0.22) -- (0.36,0.14) -- (0.27,0.05) -- (0.18,-0.05) -- (0.09,-0.16) -- (0.00,-0.37) -- cycle;
-      \draw[unocrimson, line width=1.2pt] (0.00,0.18) -- (0.09,0.35) -- (0.18,0.43) -- (0.27,0.49) -- (0.36,0.54) -- (0.45,0.59) -- (0.54,0.63) -- (0.63,0.67) -- (0.72,0.71) -- (0.81,0.75) -- (0.90,0.78) -- (0.99,0.81) -- (1.08,0.85) -- (1.17,0.88) -- (1.26,0.90) -- (1.35,0.93) -- (1.44,0.96) -- (1.53,0.99) -- (1.62,1.01) -- (1.71,1.04) -- (1.80,1.06) -- (1.89,1.09) -- (1.98,1.11) -- (2.07,1.13) -- (2.16,1.15) -- (2.25,1.18) -- (2.34,1.20) -- (2.43,1.22) -- (2.52,1.24) -- (2.61,1.26) -- (2.70,1.28) -- (2.79,1.30) -- (2.88,1.32) -- (2.97,1.34) -- (3.06,1.36) -- (3.15,1.38) -- (3.24,1.40) -- (3.33,1.42) -- (3.42,1.43) -- (3.51,1.45) -- (3.60,1.47);
-      \node[font=\scriptsize, text width=3.4cm, align=center] at (1.8,-0.75) {positive, changing rate};
-    \end{scope}
-    \begin{scope}[shift={(10.0,0)}]
-      \node[font=\scriptsize\bfseries] at (1.8,2.15) {U-shaped};
-      \draw[->, unoblack] (0,0) -- (4.0,0) node[right, font=\scriptsize]{$x_j$};
-      \draw[->, unoblack] (0,0) -- (0,1.95) node[above, font=\scriptsize]{$\hat{f}_j$};
-      \fill[unocrimson!12] (0.00,1.94) -- (0.09,1.80) -- (0.18,1.67) -- (0.27,1.54) -- (0.36,1.42) -- (0.45,1.31) -- (0.54,1.20) -- (0.63,1.11) -- (0.72,1.02) -- (0.81,0.93) -- (0.90,0.85) -- (0.99,0.78) -- (1.08,0.72) -- (1.17,0.66) -- (1.26,0.62) -- (1.35,0.57) -- (1.44,0.54) -- (1.53,0.51) -- (1.62,0.49) -- (1.71,0.47) -- (1.80,0.47) -- (1.89,0.47) -- (1.98,0.47) -- (2.07,0.49) -- (2.16,0.51) -- (2.25,0.53) -- (2.34,0.57) -- (2.43,0.61) -- (2.52,0.66) -- (2.61,0.71) -- (2.70,0.78) -- (2.79,0.85) -- (2.88,0.92) -- (2.97,1.01) -- (3.06,1.10) -- (3.15,1.19) -- (3.24,1.30) -- (3.33,1.41) -- (3.42,1.53) -- (3.51,1.65) -- (3.60,1.78) -- (3.60,0.67) -- (3.51,0.62) -- (3.42,0.58) -- (3.33,0.53) -- (3.24,0.49) -- (3.15,0.45) -- (3.06,0.41) -- (2.97,0.38) -- (2.88,0.35) -- (2.79,0.32) -- (2.70,0.30) -- (2.61,0.27) -- (2.52,0.25) -- (2.43,0.24) -- (2.34,0.22) -- (2.25,0.21) -- (2.16,0.20) -- (2.07,0.20) -- (1.98,0.19) -- (1.89,0.19) -- (1.80,0.20) -- (1.71,0.20) -- (1.62,0.21) -- (1.53,0.22) -- (1.44,0.23) -- (1.35,0.25) -- (1.26,0.27) -- (1.17,0.29) -- (1.08,0.32) -- (0.99,0.34) -- (0.90,0.37) -- (0.81,0.41) -- (0.72,0.44) -- (0.63,0.48) -- (0.54,0.52) -- (0.45,0.57) -- (0.36,0.61) -- (0.27,0.66) -- (0.18,0.72) -- (0.09,0.77) -- (0.00,0.83) -- cycle;
-      \draw[unocrimson, line width=1.2pt] (0.00,1.38) -- (0.09,1.29) -- (0.18,1.19) -- (0.27,1.10) -- (0.36,1.02) -- (0.45,0.94) -- (0.54,0.86) -- (0.63,0.79) -- (0.72,0.73) -- (0.81,0.67) -- (0.90,0.61) -- (0.99,0.56) -- (1.08,0.52) -- (1.17,0.48) -- (1.26,0.44) -- (1.35,0.41) -- (1.44,0.39) -- (1.53,0.37) -- (1.62,0.35) -- (1.71,0.34) -- (1.80,0.33) -- (1.89,0.33) -- (1.98,0.33) -- (2.07,0.34) -- (2.16,0.35) -- (2.25,0.37) -- (2.34,0.40) -- (2.43,0.42) -- (2.52,0.46) -- (2.61,0.49) -- (2.70,0.54) -- (2.79,0.58) -- (2.88,0.64) -- (2.97,0.69) -- (3.06,0.75) -- (3.15,0.82) -- (3.24,0.89) -- (3.33,0.97) -- (3.42,1.05) -- (3.51,1.14) -- (3.60,1.23);
-      \node[font=\scriptsize, text width=3.4cm, align=center] at (1.8,-0.75) {an optimal level exists};
-    \end{scope}
-  \end{tikzpicture}
+    \includegraphics[height=3.5cm]{../Figures/Lecture03_GAMs/partial_dependence.pdf}
   \end{center}
-  Watch the \textbf{bands} as much as the curve --- they widen where the data thin out,
-  which is exactly where a reader is tempted to extrapolate.
+  \vspace{-0.35cm}
+  {\small Read the band too. Every day of the year is equally covered, so it barely changes
+  width; where data thin out it fans, just where readers want to extrapolate.}
   \begin{keybox}
-    \small The output is a sentence someone can act on: \emph{``as unemployment rises from
-    5\% to 10\%, predicted sales fall by $X$\% --- and the decline steepens past 8\%.''}
-    No linear model could tell them that second clause.
+    \small A sentence someone can act on: \emph{``plan for mid-July demand about 11,400 MW
+    above the late-April trough, a winter peak about 8,500 above it, and weekends about 3,000
+    below weekdays.''} No straight line in day of year has two peaks.
   \end{keybox}
 \end{frame}
 
@@ -320,7 +284,7 @@
       Linear regression & No  & Manual & High   & Few predictors \\
       \textbf{GAM}      & Yes & No     & High   & Few predictors, explain effects \\
       Random Forest     & Yes & Yes    & Medium & Many predictors, tabular \\
-      XGBoost           & Yes & Yes    & Low    & Best accuracy, tabular \\
+      XGBoost           & Yes & Yes    & Low    & Many predictors, accuracy first \\
       \bottomrule
     \end{tabular}
     }
@@ -328,15 +292,14 @@
 
   \vspace{0.15cm}
   The column that decides it is usually \textbf{Interactions}. A GAM is additive by
-  construction, so if the effect of price genuinely depends on whether it is a holiday week,
-  a GAM cannot represent that and a tree can.
+  construction, so if the effect of price depends on whether it is a holiday week, a GAM
+  cannot represent that and a tree can.
 
   \vspace{0.15cm}
-  \textbf{Choose a GAM when} you must explain each predictor's effect, when those effects
-  are curved rather than straight, when a time series has complex trend and seasonality
-  (reach for Prophet), and when interpretability matters more than the last few points of
-  accuracy. That last clause is the honest one --- on tabular data, XGBoost will usually
-  win on RMSE, and Lecture 6 is where we take that seriously.
+  \textbf{Choose a GAM when} you must explain each predictor's effect, the effects are curved,
+  or a series has complex trend and seasonality (Prophet), and interpretability matters more
+  than the last few points of accuracy. Whether a flexible model buys those points is an
+  empirical question; Lectures 4--6 test it.
 \end{frame}
 
 % --- Slide: Key takeaways ---------------------------------------------------
@@ -344,25 +307,15 @@
   \begin{keybox}
     {\small
     \begin{enumerate}
-      \item \textbf{GAMs} offer nonlinear flexibility while maintaining interpretability:
-            $y = \alpha + f_1(x_1) + f_2(x_2) + \cdots + f_k(x_k) + \varepsilon$.
-            Because the model is additive, each variable's effect can be visualized
-            and explained independently.
-
-      \item \textbf{Smoothness penalty} (PSSE) prevents overfitting.
-            The penalty $\lambda$ controls the trade-off between fit and smoothness.
-            It is chosen by cross-validation.
-
-      \item \textbf{Prophet} decomposes a time series into trend, seasonality, and
-            holiday effects using a GAM. Ideal for business time series with
-            seasonal patterns and known irregular events.
-
-      \item \textbf{pyGAM} fits a general GAM with any combination of predictors.
-            Use \texttt{s()} for smooth effects, \texttt{l()} for linear,
-            \texttt{f()} for categorical. \texttt{gridsearch} tunes $\lambda$ automatically.
-
-      \item Partial dependence plots make results \textbf{actionable for stakeholders}:
-            show clearly how each variable affects the forecast.
+      \item \textbf{GAMs}, $y = \alpha + f_1(x_1) + \cdots + f_k(x_k) + \varepsilon$: nonlinear,
+            yet additive, so each effect plots on its own.
+      \item The \textbf{smoothness penalty} prices bending; $\lambda$, chosen by GCV or
+            cross-validation, trades fit against smoothness.
+      \item \textbf{Prophet} is a GAM for time series: trend + seasonality + holidays.
+      \item \textbf{pyGAM}: \texttt{s()} smooth, \texttt{l()} linear, \texttt{f()} categorical;
+            \texttt{gridsearch} tunes $\lambda$.
+      \item \textbf{Partial dependence plots} turn the model into sentences a stakeholder can
+            act on.
     \end{enumerate}
     }
   \end{keybox}

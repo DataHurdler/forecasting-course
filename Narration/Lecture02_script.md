@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · ARIMA, VAR & Multivariate Models**
 
-Deck: `Slides/Lecture02_ARIMA_VAR.pdf` (19 pages) · Measured runtime: **~30 minutes** (27–33 depending on pace)
+Deck: `Slides/Lecture02_ARIMA_VAR.pdf` (22 pages) · Measured runtime: **~30 minutes** (27–33 depending on pace)
 
 ---
 
@@ -88,9 +88,6 @@ The usual culprits are trending series — GDP, prices, sales, almost anything m
 dollars over time — and variance that grows with the level. First-differencing removes a
 stochastic trend. A log transform stabilizes variance. Often you need both.
 
-Rule of thumb: visible trend or growing variance means probably not stationary. But test it
-formally — ADF or KPSS — rather than trusting your eye.
-
 ---
 
 # ▶ SLIDE 5 — Unit Roots and Differencing
@@ -98,38 +95,70 @@ formally — ADF or KPSS — rather than trusting your eye.
 Here's the sharpest version of the idea. Take a simple AR(1): today equals phi times
 yesterday, plus noise. Everything turns on whether phi is below one, or exactly one.
 
-If the absolute value of phi is **less than one**, a shock decays. Something happens, the
-series is knocked off course, and it works its way back. That's a stationary AR(1).
-
-If phi equals **exactly one**, the shock never decays. It's absorbed permanently into the
-level of the series. That's a random walk — a unit root.
+The picture shows what that means. *(Point at the figure.)* Each line starts with one unit
+shock at time zero and tracks how much of it is left, period by period.
 
 **[pause]**
+
+The blue line is phi equal to one-half. Every period keeps half of what was there, so the
+shock halves after one period, then halves again, and by period five it's essentially gone.
+
+The orange line is phi equal to point nine. Same rule — every period keeps the same share —
+but the share is bigger, so the decline is slower. It takes six and a half periods to lose
+half the shock. That's the half-life, and there's a formula for it on the slide: log of a
+half over log of phi. It's the same staircase every time, just with a different step.
+
+**[pause]**
+
+Now the red line. Phi equals **exactly one**. Every period keeps *all* of the shock. It never
+halves. It never fades. It's absorbed permanently into the level of the series. That's a
+random walk — a unit root — and that flat red line is what "permanent" means.
 
 That distinction has real consequences. In a mean-reverting series, a bad quarter is a bad
 quarter. In a random walk, a bad quarter permanently lowers the level you forecast from,
 forever. Same data, completely different business implication.
 
-**First differencing** is the fix: model the change rather than the level. So $d$ equals zero
-means the series was already stationary. $d$ equals one means you took one difference. And
-capital $D$ equals one means a *seasonal* difference — this December minus last December.
+**[pause]**
 
-For testing, you have ADF and KPSS, and here's the thing worth remembering: they test
-**opposite nulls**. ADF's null hypothesis is that there *is* a unit root. KPSS's null is that
-the series *is* stationary. So run both. When they agree, you're confident. When they
-disagree, be suspicious — you're probably in a borderline case, and you should look at the
-plot again.
+**First differencing** is the fix: model the change rather than the level. Difference a random
+walk and the shock shows up exactly once, in the period it happened, and then it's gone from
+the changes. So $d$ equals zero means the series was already stationary. $d$ equals one means
+you took one difference. And capital $D$ equals one means a *seasonal* difference — this
+December minus last December.
+
+---
+
+# ▶ SLIDE 6 — Testing for a Unit Root
+
+How do you know which line you're on?
+
+Rule of thumb first: a visible trend or growing variance means the series is probably not
+stationary. But a phi of point nine five and a phi of exactly one look almost identical over a
+few years of data, so test it formally rather than trusting your eye.
+
+You have ADF and KPSS, and here's the thing worth remembering: they test **opposite nulls**.
+ADF's null hypothesis is that there *is* a unit root. KPSS's null is that the series *is*
+stationary. So run both. When they agree, you're confident. When they disagree, be
+suspicious — you're probably in a borderline case, and you should look at the plot again.
 
 **[pause]**
+
+*(Point at the warning box.)*
 
 And do not over-difference. If you difference an already-stationary series, you induce
 negative autocorrelation that you then have to model away — you've manufactured the very
 problem you're now solving. Test *after* differencing, and stop at $d$ equals one once the
 result is stationary.
 
+The line at the bottom is what a clean case looks like, on the series you forecast in
+Lecture 1, TX_1 household goods. The ADF statistic on the levels is minus one point three
+eight: no evidence against a unit root. After one difference it's minus eight point five one:
+decisively stationary. So $d$ equals one, and you stop there. We'll read that same series'
+ACF in a few slides.
+
 ---
 
-# ▶ SLIDE 6 — Why the Rule Exists: Spurious Regression
+# ▶ SLIDE 7 — Why the Rule Exists: Spurious Regression
 
 Before we go on, I want to show you *why* that differencing rule exists — because told as a
 rule it sounds like bookkeeping, and it is not.
@@ -175,7 +204,7 @@ correlation goes away, because the changes really are independent. Minus zero po
 
 ---
 
-# ▶ SLIDE 7 — ACF and PACF: Model Identification
+# ▶ SLIDE 8 — ACF and PACF: Model Identification
 
 Two diagnostic plots, and together they tell you what model to fit.
 
@@ -201,41 +230,40 @@ For an **ARMA**, both tail off — which is less informative, and in practice is
 reach for automatic order selection.
 
 And for a **random walk**, the ACF decays very slowly and the PACF has one big spike at lag
-one. That pattern is your warning sign.
-
-**[pause]**
-
-One rule, and it is absolute. **Always unit-root test and difference before reading either
-plot.** The ACF of a non-stationary series decays slowly no matter what the underlying
-process is. So a slowly-decaying ACF tells you nothing about $p$ or $q$. It only tells you
-that you haven't differenced yet.
-
-Students lose a lot of time reading tea leaves in the ACF of an undifferenced series. Don't.
+one. That pattern is your warning sign — and in two slides you'll see it on real data.
 
 ---
 
-# ▶ SLIDE 8 — What Those Patterns Actually Look Like
+# ▶ SLIDE 9 — What Those Patterns Actually Look Like
 
 Now let's actually look at them, because "tails off" and "cuts off" mean very little until
 you've seen the shapes.
 
-Four panels. Top row is an AR(1). Bottom row is an MA(1). Left column is the ACF, right
-column the PACF.
+Four panels, laid out like the table you just saw. Top row is an AR(1) with phi of point
+seven. Bottom row is an MA(1) with theta of point six. Left column is the ACF, right column the
+PACF. And these are exact values, computed from the models themselves — what you'd see with
+infinitely long data. Real data adds noise, which is the next slide.
 
 **[pause]**
 
-Top left — the ACF of an AR(1). See the geometric decay? Each bar is a constant fraction of
-the one before it. It fades out rather than stopping. That's "tails off."
+Top left — the ACF of an AR(1). Lag one is point seven, which is phi. Lag two is point seven
+times point seven. Lag three, times point seven again. *(Trace the dotted curve.)* Each bar
+keeps the same share of the one before it — the same staircase you just saw for a shock. It
+fades out rather than stopping. That's "tails off."
 
-Top right — the PACF of the same process. One spike at lag one, and then essentially nothing.
-The bars after it sit inside the dashed lines, which are the significance bands. Anything in
-there is noise. That's "cuts off," and the lag where it cuts off is your $p$.
+Top right — the PACF of the same process. One spike at lag one, and then exactly nothing.
+That's "cuts off," and the lag where it cuts off is your $p$.
 
 **[pause]**
 
-Bottom row, the MA(1), and it's the mirror image. The ACF has one spike then stops. The PACF
-decays — and notice it alternates sign, flipping above and below the axis. That alternating
-decay is characteristic of an MA process, and it's a pattern you'll start to recognize.
+Bottom row, the MA(1), and it's the mirror image. The ACF has one spike then stops. Notice how
+short that spike is: point four four. That's not an accident of the drawing. No MA(1), whatever
+its theta, can have a lag-one autocorrelation above one-half. That's the dashed line. If you
+see a lag-one spike of point eight followed by nothing, it isn't a clean MA(1).
+
+The PACF decays — and notice it alternates sign, flipping above and below the axis. That
+alternating decay is characteristic of an MA process, and it's a pattern you'll start to
+recognize.
 
 **[pause]**
 
@@ -245,22 +273,58 @@ If the PACF cuts off, you have an AR, and the cut-off lag gives you $p$. If the 
 you have an MA, and it gives you $q$. If neither cuts off — both just fade — you have a mixed
 ARMA, and that's when you stop squinting at plots and let `auto_arima` search.
 
-And the dashed bands matter. A bar poking slightly outside them at lag seven is almost
-certainly noise. With twenty lags plotted, you expect one of them to breach the band by
-chance. Don't build a model around it.
+---
+
+# ▶ SLIDE 10 — Difference First, Then Read the ACF
+
+Now real data. This is the TX_1 household series from Lecture 1 — the one whose ADF numbers
+you saw a few slides ago.
+
+*(Point at the left panel.)* The ACF of the levels. Point nine four at lag one, and still
+point five eight half a year later. It crawls down. And here's the thing: it would crawl down
+like that whatever the underlying process was. A slowly-decaying ACF tells you nothing about
+$p$ or $q$. It only tells you that you haven't differenced yet.
+
+**[pause]**
+
+So, one rule, and it is absolute. **Always unit-root test and difference before reading either
+plot.** Students lose a lot of time reading tea leaves in the ACF of an undifferenced series.
+Don't.
+
+*(Point at the right panel.)* Now the same series after one difference — the week-to-week
+change. Completely different picture. One clear negative spike at lag one, minus point two
+nine, and nothing else as big as point one six.
+
+The shaded band is what pure noise would show. Several later bars poke just past its edge —
+more than chance alone would give you, so there's a little structure left that a fuller model
+might chase. But none of them comes close to the spike at lag one. Don't build a model around a
+bar that barely pokes out at lag twenty-two.
+
+**[pause]**
+
+So what does one spike at lag one in the ACF of the change say? Look back at the previous
+slide: that's the MA(1) signature. A moving average of order one, on the differenced series.
+ARIMA zero-one-one.
+
+And here's why that's satisfying. ARIMA zero-one-one is simple exponential smoothing — you'll
+see that at the start of the next section. In Lecture 1, SES on this very series chose an alpha of point six
+two. That alpha implies a lag-one autocorrelation of minus point three three in the
+differences. The data show minus point two nine. Two different methods, from two different
+lectures, describing the same series the same way.
 
 ---
 
-# ▶ SLIDE 9 — Section divider: ARIMA Models
+# ▶ SLIDE 11 — Section divider: ARIMA Models
 
 Part two. ARIMA — combining differencing with the AR and MA components into one model.
 
 ---
 
-# ▶ SLIDE 10 — ARIMA(p, d, q)
+# ▶ SLIDE 12 — ARIMA(p, d, q)
 
-Here it is. Take the series, difference it $d$ times, then fit an ARMA with $p$ autoregressive
-lags and $q$ moving-average lags.
+Here it is. Take the series and difference it $d$ times — call the result $y$-prime. Then fit
+an ARMA with $p$ autoregressive lags and $q$ moving-average lags to $y$-prime, not to the
+original series. That's why the $y$'s in the box carry primes.
 
 That's what the three letters mean. $p$ is AR lags, $d$ is differences, $q$ is MA lags.
 
@@ -316,7 +380,7 @@ trust the test.
 
 ---
 
-# ▶ SLIDE 11 — SARIMA: Adding Seasonal Terms
+# ▶ SLIDE 13 — SARIMA: Adding Seasonal Terms
 
 For monthly or quarterly data, autocorrelation shows up not just at lags one and two, but at
 lag $m$, two-$m$, three-$m$ — the seasonal lags. December relates to last December.
@@ -326,7 +390,7 @@ frequency. The notation gets heavy — $p$, $d$, $q$ in lowercase, then capital 
 then $m$ in brackets — but the idea is simple.
 
 **Think of it as two ARIMA models running at different time scales.** The lowercase part
-handles week-to-week dynamics. The uppercase part handles year-over-year. They're fitted
+handles the short-run, month-to-month dynamics. The uppercase part handles year-over-year. They're fitted
 together.
 
 **[pause]**
@@ -365,13 +429,13 @@ before you try anything more elaborate.
 
 ---
 
-# ▶ SLIDE 12 — Section divider: VAR Models
+# ▶ SLIDE 14 — Section divider: VAR Models
 
 Part three. VAR — when two series influence each other, model them together.
 
 ---
 
-# ▶ SLIDE 13 — Why Use Multiple Series?
+# ▶ SLIDE 15 — Why Use Multiple Series?
 
 Everything so far — all of Lecture 1, everything today — uses only the series' own history.
 $y$ predicted from past $y$.
@@ -388,9 +452,12 @@ is not already in $y_t$'s own history, then including $x_t$ reduces forecast err
 Note the qualifier — "not already in $y$'s own history." That's doing real work. If $x$ is
 just a lagged reflection of $y$, it adds nothing. It has to bring genuinely new information.
 
-Granger causality is the formal test of exactly that claim, and we get to it in two slides.
+Granger causality is the formal test of exactly that claim, and we get to it right after the
+VAR.
 
-**[pause]**
+---
+
+# ▶ SLIDE 16 — VAR or ARIMAX: Which Way Does Influence Run?
 
 That leaves you a modeling choice, and it turns on whether influence runs one way or both.
 
@@ -401,9 +468,13 @@ variable is privileged. Use it when the influence genuinely runs in both directi
 story is clear — but note the third bullet, because it's the catch we'll come back to: ARIMAX
 needs a forecast of $x$ itself.
 
+The examples at the bottom are the two you'll meet. Retail sales and unemployment plausibly
+move each other, so that's a VAR question — and it's the one you test in the lab. Advertising
+drives sales and not the other way round, so that's ARIMAX.
+
 ---
 
-# ▶ SLIDE 14 — The VAR(p) Model
+# ▶ SLIDE 17 — The VAR(p) Model
 
 Here's the structure for two series. Two equations, and each one regresses on the lags of
 *both* variables.
@@ -457,7 +528,7 @@ of thing Lecture 6 gives you the tools for.
 
 ---
 
-# ▶ SLIDE 15 — Granger Causality Test
+# ▶ SLIDE 18 — Granger Causality Test
 
 The formal definition: $x$ **Granger-causes** $y$ if past values of $x$ help predict $y$
 beyond what $y$'s own past already explains.
@@ -551,7 +622,7 @@ we stop treating the interval as an add-on and make the whole distribution the o
 
 ---
 
-# ▶ SLIDE 16 — ARIMAX: Exogenous Variables with ARIMA Errors
+# ▶ SLIDE 19 — ARIMAX: Exogenous Variables with ARIMA Errors
 
 Last model today. When one variable clearly *drives* another rather than the relationship
 being symmetric, use ARIMAX.
@@ -586,13 +657,13 @@ by construction.
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Key Takeaways and Roadmap
+# ▶ SLIDE 20 — Section divider: Key Takeaways and Roadmap
 
 Let's pull it together.
 
 ---
 
-# ▶ SLIDE 18 — Key Takeaways
+# ▶ SLIDE 21 — Key Takeaways
 
 Five things.
 
@@ -620,7 +691,7 @@ to someone reading an ACF they should never have looked at.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 22 — References
 
 Readings are in the syllabus — Chapter 9 for ARIMA, Chapter 10 for dynamic regression, and
 section 12.3 for VAR. Either edition works; the chapter numbers are the same.
@@ -636,11 +707,11 @@ See you then.
 
 | Segment | Slides | Target |
 |---|---|---:|
-| Opening & stationarity | 1–8 | ~14 min |
-| ARIMA & SARIMA | 9–11 | ~6 min |
-| VAR, Granger, ARIMAX | 12–16 | ~15 min |
-| Close | 17–19 | ~3 min |
+| Opening & stationarity | 1–10 | ~16 min |
+| ARIMA & SARIMA | 11–13 | ~6 min |
+| VAR, Granger, ARIMAX | 14–19 | ~15 min |
+| Close | 20–22 | ~3 min |
 
-If you need to compress, slide 9's four-step workflow survives trimming. Do **not** compress
-slides 5, 6, or 13 — the differencing rule, the "difference before you read the ACF" rule,
+If you need to compress, slide 13's four-step workflow survives trimming. Do **not** compress
+slides 5, 10, or 18 — the differencing rule, the "difference before you read the ACF" rule,
 and the Granger caveat are the three things students most reliably get wrong.

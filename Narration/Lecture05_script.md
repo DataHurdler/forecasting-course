@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Tree Ensembles: Random Forests & Boosted Trees**
 
-Deck: `Slides/Lecture05_TreeEnsembles.pdf` (24 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture05_TreeEnsembles.pdf` (25 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -127,7 +127,7 @@ And it's exactly the problem the next section solves.
 
 ---
 
-# ▶ SLIDE 7 — Out-of-Bag Error
+# ▶ SLIDE 7 — Out-of-Bag (OOB) Error: Free Cross-Validation
 
 A pleasant side effect of bootstrapping.
 
@@ -151,14 +151,23 @@ In sklearn it's one argument: `oob_score=True`.
 
 **[pause]**
 
-One caution, and it's the one that matters for this course.
+One caution, and it's the one that matters for this course. Two, really — and the second is the
+important one.
 
-Below about a thousand observations, OOB gets noisy — each observation is out-of-bag for too
-few trees, so its OOB prediction is an average over a small, unstable set.
+First, the size. You may hear that OOB is unreliable on small data because each row is
+out-of-bag for too few trees. That's not the reason. Each row sits out about thirty-seven percent
+of the trees whatever the sample size is — with five hundred trees, about a hundred eighty of
+them. What a small sample lacks is *rows*: the OOB error is an average over n rows, and a forest
+on CA_1 food sales trains on a hundred seventy-three weeks. A hundred seventy-three errors make a
+noisy average. That part is ordinary sampling noise.
 
-Our weekly series have two hundred seventy-seven observations. That is well under a thousand.
-So on this data, use proper walk-forward cross-validation. OOB is a genuine convenience on
-large datasets and a trap on small ones, and business time series are almost always small.
+Second, and this is the one that bites. On a time series, the trees that score week fifty were
+trained on weeks fifty-one, fifty-two, and every week after. So OOB is answering "how well can the
+model fill in a missing week inside the years it has seen?" — not "how well will it forecast next
+month?" Those are different questions, and only the second one is your job.
+
+So on this data, use proper walk-forward cross-validation. Lab 5 shows you the two numbers side by
+side and asks you to account for the gap.
 
 ---
 
@@ -176,33 +185,44 @@ Why would trees end up correlated? Because of the greedy algorithm from last wee
 CART picks the single best split. If one feature is clearly the strongest predictor, then
 *every* tree picks it, and every tree starts the same way.
 
-And in forecasting, one feature is essentially always dominant — last year's value, or last
-week's. So this isn't an edge case. It's the normal situation.
-
-The trees end up near-identical. Rho stays large. Bagging buys you very little.
+And in forecasting, one feature is often dominant. On our weekly data it's the four-week lag —
+that was the root of last week's tree. On the daily data in Lab 5, it's the day of the week.
 
 **[pause]**
 
-The Random Forest fix, from Breiman in 2001, is almost absurdly simple.
+The Random Forest fix, from Breiman in 2001, is almost absurdly simple. At each split, don't
+consider all p features. Consider a random subset of **m**, and take the best split among
+*those*. That's the whole method.
 
-At each split, don't consider all p features. Consider a random subset of **m**, and take the
-best split among *those*.
+*(Point at the left panel.)*
 
-That's it. That's the whole method.
+Here is what that does, measured on Lab 5's data. The left panel is three hundred bagged trees,
+every feature available at every split. For each tree I asked one question: what did it split on
+first? Two hundred ninety-eight of the three hundred chose day of the week. The other two chose the
+four-week lag. Three hundred trees, one opening move.
+
+*(Point at the right panel.)*
+
+The right panel is a random forest — three of the ten features offered at each split. Now day of
+the week opens only seventy-seven trees. The four-week lag opens seventy-two, last week fifty-six,
+and so on down. The structures genuinely differ. That's the decorrelation, made visible.
 
 **[pause]**
 
-Think about what it does. Sometimes the dominant feature simply isn't in the candidate set. The
-tree is forced to find its second-best story — and then a third tree finds a different one.
-Across hundreds of trees you get genuinely different structures. Rho falls, and the floor falls
-with it.
+Now the honest part — read the numbers in the corners.
 
-And here's the part I find genuinely elegant: **you are deliberately making each individual
-tree worse in order to make the ensemble better.** Any single random forest tree is a poorer
-model than a single bagged tree. It was handicapped. But the ensemble beats it, because the
-handicap bought independence.
+The random forest's trees are individually *worse*: four hundred seventeen RMSE on average,
+against three hundred ninety-eight for the bagged trees. That's the price — many of them weren't
+allowed to look at day of the week first. And averaging does help them more: four seventeen down to
+two fifty-four, against three ninety-eight down to two forty-eight.
 
-That is one of the more counterintuitive ideas in applied statistics, and it works.
+But not enough. The bagged ensemble wins, two forty-eight to two fifty-four.
+
+That is not a failure of the idea. It's the idea's boundary condition. You deliberately make each
+tree worse in order to make the ensemble better — and that trade pays when you have many partly
+redundant features and no single dominant one. With ten features and one of them carrying most of
+the signal, the handicap costs more than the independence buys. In Homework 3 you'll run a forest
+on twenty-seven features where nothing dominates, and you should see the trade flip.
 
 ---
 
@@ -216,7 +236,12 @@ doesn't care.
 
 `max_features` — **this is the one that matters.** It's m from the previous slide. It is the
 dial controlling rho, and therefore the dial controlling the floor. Lower means more
-decorrelated trees. The `'sqrt'` default is a reasonable starting guess, not a law.
+decorrelated trees.
+
+And here is a trap. For a *regression* forest, scikit-learn's default is one point zero — every
+feature at every split. That is plain bagging, not a random forest. The `'sqrt'` you'll see in
+textbooks and tutorials is the *classifier's* default. So if you never set `max_features`, the
+"random forest" you fit has no feature randomness at all. Set it yourself, and tune it.
 
 `max_depth` — leave it at None. We want deep trees.
 
@@ -226,7 +251,8 @@ decorrelated trees. The `'sqrt'` default is a reasonable starting guess, not a l
 
 **[pause]**
 
-Start with five hundred trees, `sqrt` features, `min_samples_leaf` of five.
+Start with five hundred trees and `min_samples_leaf` of five, and try a few values of
+`max_features` — `sqrt`, and a larger fraction like zero point six — by walk-forward CV.
 
 And note the practical consequence: essentially one parameter needs real tuning. Compare that
 to what's coming with XGBoost, where you'll be juggling six. A large part of why random forests
@@ -249,14 +275,19 @@ Part four. Which predictors matter?
 Mean decrease in impurity. For each feature, sum the variance reduction across every split
 where it was used, weighted by how many observations passed through that node. Normalize to one.
 
-On our CA_1 food sales the ranking comes out: **four-week lag at zero point four five**, last
-week at zero point one eight, same week last year at zero point one one, and **SNAP benefit
-days at zero point zero eight** — ahead of price.
+This is the forest from the next slide, on our weekly CA_1 food sales. The ranking comes out:
+**four-week lag at zero point two eight**, last week at zero point two one, **SNAP benefit days at
+zero point one seven**, and the same week last year at zero point one five — with price further
+down.
+
+Compare last week's single tree, which gave the four-week lag zero point six two. The forest
+spreads the credit — partly because it averages many trees, and partly because each split was only
+allowed to see three of the eight features, so other features got their turn.
 
 **[pause]**
 
 That SNAP result is worth pausing on. Nobody told the model that food sales spike when benefits
-are disbursed. It found it, and ranked it above price. That is a real business finding, and no
+are disbursed. It found it, and ranked it above last year's sales and well above price. That is a real business finding, and no
 linear specification would have surfaced it unless someone already suspected it.
 
 **[pause]**
@@ -282,19 +313,20 @@ ranking in front of anyone who'll act on it.
 The code is four lines, and the results table is the interesting part.
 
 On CA_1 food sales, fifty-two week test: seasonal naive at **1,660**. A single deep tree at
-**1,415**. The random forest at **1,020**.
+**1,456**. The random forest at **1,115** — that's the template on this slide, five hundred trees,
+square-root features, at least five weeks per leaf.
 
 **[pause]**
 
 Two things.
 
-The forest cuts RMSE about **twenty-eight percent** against the single tree. That's the variance
-reduction, bought purely by averaging — same algorithm, same features, five hundred of them
-instead of one.
+The forest cuts RMSE about **twenty-three percent** against the single tree. That's the variance
+reduction, bought by averaging — same algorithm, same features, five hundred of them instead of
+one.
 
-And it is the **first method in this course to beat the seasonal naive benchmark on this
-series.** In Homework 1 you found that exponential smoothing couldn't. ARIMA couldn't either.
-This does, comfortably.
+And both tree models **beat the seasonal naive benchmark on this series** — the first methods in
+this course to do it. In Homework 1 you found that exponential smoothing couldn't. ARIMA couldn't
+either. Even last week's single tree does; the forest does it comfortably.
 
 **[pause]**
 
@@ -394,8 +426,11 @@ The version that won everything.
 Three improvements over vanilla gradient boosting.
 
 **The Newton step.** Vanilla boosting uses the gradient — the direction of steepest descent.
-XGBoost also uses the second derivative, the curvature. Knowing how sharply the loss is bending
-lets you take a better-sized step, so it converges in fewer trees.
+XGBoost also uses the second derivative, the curvature, to size each leaf's value. Be precise about
+when that matters. For squared error — what we use, and XGBoost's default for regression — the
+curvature is the same everywhere, so the Newton step is just the ordinary fit to the residuals;
+nothing changes. It earns its keep on losses that bend unevenly, like log-loss for classification
+or a Poisson loss for counts.
 
 **Explicit regularization.** This is the important one. XGBoost puts penalties directly in the
 objective — gamma on the number of leaves, lambda on the magnitude of the leaf weights. So
@@ -409,8 +444,10 @@ split. The decorrelation idea from slide nine, imported into boosting.
 Notice what that second advance actually is.
 
 `reg_lambda` penalizes the sum of squared leaf weights. That is an **L2 penalty** — it is Ridge
-regression, applied to leaf weights instead of regression coefficients. And `gamma` penalizes
-the count of leaves, which is what LASSO does to nonzero coefficients.
+regression, applied to leaf weights instead of regression coefficients. `reg_alpha` penalizes their
+absolute values: that's the **L1 penalty**, LASSO. And `gamma` is different from both: it charges
+a fixed price for every leaf, however small its weight. That's a count penalty — exactly Lecture
+4's `ccp_alpha`, the price per leaf in cost-complexity pruning.
 
 You are seeing next week's lecture, one week early, wearing different clothes.
 
@@ -498,52 +535,71 @@ that tuning honestly — an untuned XGBoost frequently loses to a default random
 accuracy in that column is the accuracy of a *well-tuned* XGBoost, and that word is carrying
 weight.
 
+---
+
+# ▶ SLIDE 23 — Why No Tree Can Extrapolate
+
+One limit applies to every row of that table, and it deserves its own picture.
+
+A forest's prediction is a weighted average of the training targets — every leaf is an average of
+training values, and the forest averages the leaves. A weighted average can never leave the range
+of the things it averages. So a forest can never predict above the highest value it was trained on,
+or below the lowest. Not "rarely does." Cannot.
+
+*(Point at the chart.)*
+
+This is US retail sales, monthly. I trained a forest on 1993 through 2019 — the shaded part — and
+then asked it for every month since, one month ahead, *giving it the true value of last month and
+the month before*. The most generous setup there is.
+
+The highest month in its training data was about four hundred fifty billion dollars: the dashed
+line. Sales went through it in 2020 and kept going, to six hundred sixty-five billion by mid-2026.
+Ninety-four percent of the months since have been above the line. The forest's forecast — the red
+line — never crosses it.
+
 **[pause]**
 
-And the warning box applies to every row.
-
-Neither can **extrapolate**. A tree predicts the mean of a leaf, and no leaf contains values it
-never saw. On a trending series, both flatten out exactly when you need them to keep climbing.
-
-We put a number on that last week: CA_1 food sales grew twenty-nine percent over five years.
-Train on the first four, and the highest number a tree can output is a leaf mean from the older,
-lower range.
+Boosted trees fail the same way for a slightly different reason: each tree is flat beyond its last
+split, so the sum is flat too.
 
 So the classical methods did not become obsolete today. If your series trends and you need to
 forecast beyond its historical range, an ARIMA with drift will do something a forest simply
-cannot.
+cannot. Or model the *change* instead of the level, so the target stays inside its range.
 
 ---
 
-# ▶ SLIDE 23 — Lecture 5: Key Takeaways
+# ▶ SLIDE 24 — Lecture 5: Key Takeaways
 
-Five things.
+Seven things, one line each.
 
 **One.** Ensembles work because independent errors cancel. The word independent is load-bearing.
 
 **Two.** Bagging averages B trees on bootstrap samples. Variance falls as B grows but floors at
-rho sigma squared. Random forests subsample features at each split to cut rho — the key gain
-over plain bagging.
+rho sigma squared.
 
-**Three.** OOB error is free cross-validation — but it needs a large dataset, and ours is not.
+**Three.** Random forests cut rho by sampling features at each split — a trade that pays when no
+single feature dominates, and didn't in Lab 5.
 
-**Four.** Boosting inverts the idea. Trees built sequentially, each fitting what remains.
-Bagging attacks variance; boosting attacks bias. XGBoost adds a Newton step, explicit
-penalties, and column subsampling.
+**Four.** OOB error is free, but on a time series it scores filling gaps, not forecasting.
 
-**Five.** Tune by cross-validation, always with `TimeSeriesSplit`, and pair boosting with early
+**Five.** Boosting inverts the idea. Trees built sequentially, each fitting what remains.
+Bagging attacks variance; boosting attacks bias.
+
+**Six.** No tree can extrapolate beyond its training range.
+
+**Seven.** Tune by cross-validation, always with `TimeSeriesSplit`, and pair boosting with early
 stopping.
 
 **[pause]**
 
-And one thing that isn't on the slide. The jump from ARIMA to random forest on our data was
-large — sixteen sixty down to ten twenty. Most of that came from the feature set, not the
+And one thing that isn't on the slide. The jump from the seasonal naive benchmark to the random
+forest on our data was large — sixteen sixty down to eleven fifteen. Most of that came from the feature set, not the
 algorithm. Remember that when you're tempted to reach for a more complicated model instead of a
 better predictor.
 
 ---
 
-# ▶ SLIDE 24 — References
+# ▶ SLIDE 25 — References
 
 Reading is ISLP section 8.2 — bagging, random forests, and boosting — plus the XGBoost
 "Introduction to Boosted Trees" tutorial, which derives the regularized objective we waved at
@@ -565,7 +621,7 @@ See you then.
 | Random forests | 8–10 | ~6 min |
 | Feature importance & Python | 11–13 | ~6 min |
 | Boosting & XGBoost | 14–20 | ~9 min |
-| Close | 21–24 | ~4 min |
+| Close | 21–25 | ~5 min |
 
 This is the longest deck in the course. If you must compress, slides 10 and 19 — the two
 hyperparameter tables — survive trimming best. Do **not** compress slides 6, 9, or 15: the

@@ -253,23 +253,30 @@ Phi comes out at **0.800**.
 
 **[pause]**
 
-Two things here, and the second one is the honest one.
+Three things here, and the last two are the honest ones.
 
-First: damping rescued the model completely. Eleven sixty-six down to four twenty-six. Same
-model, same data, same trend estimate — one parameter that says "the trend decays as you
-forecast further out" moved it from worst on the table to best. Phi of 0.8 means each step
-ahead gets eighty percent of the previous step's trend, so the forecast bends toward flat
-instead of running off. That is what phi below 1 *means*, and it's the answer to the question
-in the lab.
+First: damping rescued the model. Eleven sixty-six down to four twenty-six — from worst on the
+table to best.
 
-Second — and don't let this slide past — **damped Holt beat SES by one unit of RMSE.** Four
-twenty-six against four twenty-seven. That is not a win. On a different held-out year it could
-easily flip. If you report "the damped model is best" you're reporting noise as a finding.
+Second: look hard at that phi before you interpret it. Statsmodels only searches phi between
+0.8 and 0.995, and 0.800 is the floor of that range, to the third decimal. The optimizer didn't
+find eighty percent; it ran into the wall, because it wanted more damping than it was allowed.
+So "phi is 0.8" is a fact about the software's default bounds, not about this store. An
+estimate sitting exactly on the edge of its allowed range is the first thing to distrust in any
+fitted model.
 
-What actually happened is that damped Holt and SES are the same answer arrived at two ways.
-Damping the trend hard enough is close to not having a trend. The honest summary is: *on this
-series, models that keep the forecast near the current level beat models that extrapolate, and
-the two ways of doing that tie.*
+And it isn't the same trend estimate, either. The undamped model carries a slope of about
+thirty units a week into the test year. The damped refit set its trend smoothing to zero, so
+its starting slope just shrank by a fifth every week for all 225 training weeks — down to
+effectively nothing. The damped forecast isn't a bending trend at all. It's a flat line at
+6,688 units, within half a unit of SES's flat line.
+
+Third — and don't let this slide past — **damped Holt beat SES by one unit of RMSE.** Four
+twenty-six against four twenty-seven. That is not a win, and now you know why: they are the same
+forecast. If you report "the damped model is best" you're reporting noise as a finding.
+
+The honest summary is: *on this series, models that keep the forecast near the current level
+beat models that extrapolate — and the damped model got there by switching its trend off.*
 
 ---
 
@@ -358,7 +365,7 @@ if yours differ, the data changed.
 | Holt (undamped) RMSE / MAE | 1166 / 1029 |
 | Holt-Winters RMSE / MAE | 885 / 814 |
 | Holt (damped) RMSE / MAE | 426 / 351 |
-| Estimated phi | 0.800 |
+| Estimated phi | 0.800 (statsmodels' lower bound; the fitted trend is ≈ 0) |
 | SES estimated alpha | 0.621 |
 | TX_1 FOODS seasonal naive RMSE | 1308 |
 | TX_1 FOODS SES RMSE | 1474 (12.7% worse) |

@@ -38,42 +38,38 @@
 % --- Slide: Why regularize ---------------------------------------------------
 \begin{frame}{Why Regularize?}
   OLS minimizes $\sum_{i}(y_i - \mathbf{x}_i'\boldsymbol{\beta})^2$. A weekly model with lags,
-  calendar dummies, promotions, and macro series can easily carry $k = 60$ predictors on
-  $n = 150$ observations --- OLS will fit that sample beautifully and forecast badly.
+  calendar dummies and promotions easily carries $k = 60$ predictors on $n = 150$ weeks: OLS fits
+  that sample beautifully and forecasts badly.
 
   \vspace{0.15cm}
-  Three things go wrong at once. The variance of $\hat{\boldsymbol{\beta}}$ grows with $k$.
-  Correlated predictors produce unstable, wildly large coefficients with opposing signs. And
-  once $k > n$ there is no unique solution at all.
+  Three things go wrong. The variance of $\hat{\boldsymbol{\beta}}$ grows with $k$. Correlated
+  predictors get huge coefficients of opposite sign. Past $k > n$ there is no unique solution.
   \textbf{Regularization} adds a penalty on coefficient size:
   \[
     \underbrace{\textstyle\sum_i (y_i - \hat{y}_i)^2}_{\text{fit}}
     + \underbrace{\lambda \cdot \text{Penalty}(\boldsymbol{\beta})}_{\text{complexity}}
   \]
-  \vspace{-0.2cm}
-  You accept a little bias to buy a large reduction in variance --- and for a forecast, that
-  trade is almost always worth making.
+  You accept a little bias for a large cut in variance. For a forecast, that trade is almost
+  always worth making.
 \end{frame}
 
 % --- Slide: Subset selection -------------------------------------------------
 \begin{frame}{Subset Selection: The Classical Answer}
-  Before shrinkage, the standard approach was to \emph{count} predictors rather than shrink
-  them \parencite{Guyon2003}.
+  The classical approach \emph{counts} predictors rather than shrinking them
+  \parencite{Guyon2003}.
 
   \vspace{0.15cm}
-  \textbf{Best subset} fits all $2^k$ models and picks the winner --- exact, and
-  computationally hopeless past $k \approx 30$. \textbf{Stepwise} adds the strongest predictor
-  or drops the weakest, one at a time; it is greedy, and can miss the best combination
-  entirely. Either way the choice is made by adjusted $R^2$, AIC, AICc, BIC, or CV.
+  \textbf{Best subset} fits all $2^k$ models: exact, and hopeless past $k \approx 30$.
+  \textbf{Stepwise} adds or drops one predictor at a time: greedy, so it can miss the best
+  combination. AIC, BIC or CV picks the winner.
   \begin{warningbox}
-    Subset selection is \textbf{discrete} --- a predictor is in or out. Small changes in the
-    data flip predictors in and out, so the \emph{selected model} is itself high-variance.
-    You have not removed the instability; you have moved it somewhere harder to see.
+    Subset selection is \textbf{discrete}: a predictor is in or out, and small changes in the
+    data flip it. The \emph{selected model} is itself high-variance --- the instability has
+    moved somewhere harder to see.
   \end{warningbox}
 
   \vspace{0.1cm}
-  \muted{\footnotesize This is the approach in \emph{FPP} \S7.5. Shrinkage replaces the
-  in-or-out decision with a continuous dial --- more stable, and easier to tune.}
+  \muted{\footnotesize \emph{FPP} \S7.5. Shrinkage replaces in-or-out with a continuous dial.}
 \end{frame}
 
 % =============================================================================
@@ -93,19 +89,16 @@
         \; + \; \lambda \sum_{j=1}^{k} \beta_j^2
     \]
   \end{definitionbox}
-  Ridge shrinks every coefficient toward zero but sets none exactly to zero. At $\lambda = 0$
-  you have OLS; as $\lambda \to \infty$ all $\beta_j \to 0$. Its particular strength is
-  correlated predictors: rather than letting two collinear variables fight for the same
-  coefficient, it splits the effect between them.
+  Ridge shrinks every coefficient toward zero and sets none exactly to zero: $\lambda = 0$ is
+  OLS, and $\lambda \to \infty$ sends every $\beta_j \to 0$. Two correlated predictors split the
+  effect between them instead of fighting over it.
 
   \vspace{0.15cm}
-  \textbf{Use it when} you believe most predictors carry a little signal and you want to keep
-  them all.
+  \textbf{Use it when} most predictors carry a little signal and you want to keep them all.
 
   \vspace{0.15cm}
-  \textbf{Standardize first.} The penalty is not scale-invariant --- a predictor measured in
-  dollars is penalized differently from the same predictor in thousands of dollars. Get this
-  wrong and the units decide which variables survive.
+  \textbf{Standardize first.} The penalty is not scale-invariant: the same predictor in dollars
+  and in thousands of dollars is penalized differently, and the units decide what survives.
 \end{frame}
 
 % --- Slide: LASSO ------------------------------------------------------------
@@ -118,48 +111,33 @@
         \; + \; \lambda \sum_{j=1}^{k} |\beta_j|
     \]
   \end{definitionbox}
-  Swap the squared penalty for an absolute one and the behavior changes qualitatively. LASSO
-  sets some coefficients \textbf{exactly} to zero, performing selection and estimation in a
-  single step, and leaving a sparse model you can actually read aloud to a stakeholder.
+  Swap the square for an absolute value and LASSO sets some coefficients \textbf{exactly} to
+  zero: selection and estimation in one step, and a sparse model you can read aloud to a
+  stakeholder.
 
   \vspace{0.15cm}
-  \textbf{Use it when} you believe only a handful of predictors genuinely matter and you want
-  the model to tell you which.
+  \textbf{Use it when} only a handful of predictors genuinely matter and you want the model to
+  say which.
 
   \vspace{0.15cm}
-  \textbf{But be careful what you conclude.} Among a group of highly correlated predictors,
-  LASSO keeps \emph{one} more or less arbitrarily and zeros the rest. The survivor is not
-  ``the important one'' --- it is the one that happened to win a coin toss between
-  near-identical variables.
+  \textbf{But be careful what you conclude.} Among highly correlated predictors LASSO keeps
+  \emph{one}, more or less arbitrarily. The survivor is not ``the important one''; it won a coin
+  toss between near-identical variables.
 \end{frame}
 
 % --- Slide: Why LASSO zeros out ----------------------------------------------
 \begin{frame}{Why LASSO Zeros Out and Ridge Does Not}
-  Both solve ``minimize squared error subject to a budget on coefficient size.'' The
-  \emph{shape} of the budget is the whole difference.
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \textbf{Ridge:} $\sum_j \beta_j^2 \le t$ --- a \textbf{circle}
-      \begin{itemize}\small\itemsep0pt
-        \item Smooth boundary, no corners
-        \item Error contours almost never touch it on an axis
-        \item So coefficients get small, never zero
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \textbf{LASSO:} $\sum_j |\beta_j| \le t$ --- a \textbf{diamond}
-      \begin{itemize}\small\itemsep0pt
-        \item Corners sit exactly on the axes
-        \item Contours are likely to hit a corner first
-        \item A corner means $\beta_j = 0$ exactly
-      \end{itemize}
-    \end{column}
-  \end{columns}
-
-  \vspace{0.2cm}
-  So the sparsity of LASSO is a geometric accident of the $\ell_1$ ball having corners --- not
-  a statistical test of significance. A zeroed coefficient means ``not worth its budget
-  here,'' not ``proven irrelevant.'' See \textcite{James2021} \S6.2.
+  Both minimize squared error subject to a budget $t$: $\sum_j \beta_j^2 \le t$ or
+  $\sum_j |\beta_j| \le t$. Ellipses of equal error grow from OLS until they touch the budget.
+  Lab 6's lag7 and lag14, standardized:
+  \begin{center}
+    \includegraphics[height=4.3cm]{../Figures/Lecture06_Regularization/diamond_and_disc.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small The disc has no corners, so ridge keeps both. The diamond's corner zeros lag14, but only
+  while $t < 0.16$, a fifth of OLS's $\sum_j |\hat{\beta}_j| = 0.84$: these lags are nearly
+  interchangeable, so the ellipses run almost along its face. A zero means ``not worth its budget
+  here,'' not ``proven irrelevant'' \parencite[\S6.2]{James2021}.}
 \end{frame}
 
 % --- Slide: Elastic Net ------------------------------------------------------
@@ -193,24 +171,18 @@
 
 % --- Slide: Regularization path ----------------------------------------------
 \begin{frame}{The Regularization Path}
-  Fit the model across a grid of $\lambda$ values and trace each coefficient as it moves.
+  Fit across a grid of $\lambda$ and trace each coefficient. At small $\lambda$ the coefficients sit near OLS: dense and unstable. As $\lambda$ grows they
+  shrink, and under LASSO they drop to zero one at a time, until only the intercept --- the mean
+  forecast --- is left.
 
   \vspace{0.15cm}
-  Read the path left to right. At small $\lambda$ the coefficients sit near their OLS values
-  and the model is dense and unstable. As $\lambda$ grows they shrink, and under LASSO they
-  drop to zero one at a time. At large $\lambda$ only the most robust predictors survive, and
-  in the limit you are left with the intercept --- the mean forecast.
-  \vspace{0.15cm}
-  \textbf{The order in which predictors leave is the useful output.} The last survivors are
-  the ones that hold up under the most pressure. Report that ordering rather than a single
-  model's coefficient table --- far more stable across resamples, and far more honest about
-  what the data can support.
+  \textbf{The order in which predictors leave is the useful output.} The last survivors held up
+  under the most pressure. Report that ordering, not one model's coefficient table: it is far
+  more stable across resamples, and more honest about what the data support.
 \end{frame}
 
 % --- Slide: Choosing lambda --------------------------------------------------
 \begin{frame}{Choosing $\lambda$ by Cross-Validation}
-  $\lambda$ is not estimated from the model --- it is tuned, and how you tune it decides
-  whether the model generalizes.
   \begin{enumerate}\small\itemsep0pt
     \item Define a grid of $\lambda$, usually log-spaced
     \item For each $\lambda$, run walk-forward CV and record the mean validation RMSE
@@ -218,14 +190,13 @@
   \end{enumerate}
 
   \vspace{0.1cm}
-  \textbf{The one-standard-error rule} is worth knowing: rather than the outright minimum,
-  take the \emph{largest} $\lambda$ whose CV error is within one standard error of it. You
-  give up almost no accuracy and get a simpler, more stable model.
+  \textbf{The one-standard-error rule:} take the \emph{largest} $\lambda$ whose CV error is within
+  one standard error of the minimum. You give up almost no accuracy for a simpler, more stable
+  model.
   \begin{warningbox}
-    \textbf{Never use \texttt{KFold} here.} Random folds put future observations in the
-    training set and past ones in validation. The CV error will look excellent and the
-    forecast will fail \parencite{Bergmeir2018}. Use \texttt{TimeSeriesSplit}, exactly as in
-    Lecture 1's walk-forward evaluation.
+    \textbf{Never use \texttt{KFold} here.} Random folds train on the future and validate on the
+    past: CV looks excellent and the forecast fails \parencite{Bergmeir2018}. Use
+    \texttt{TimeSeriesSplit}, as in Lecture 1.
   \end{warningbox}
 \end{frame}
 
@@ -286,10 +257,9 @@
   \end{center}
   \vspace{0.15cm}
   \textbf{Connection to Lecture 5.} Trees and shrinkage solve the same problem in different
-  geometries. XGBoost's \texttt{reg\_lambda} is literally a Ridge penalty on leaf weights,
-  and its \texttt{gamma} penalizes leaf count the way LASSO penalizes nonzero coefficients.
-  Regularization is not a linear-model topic --- it is how every flexible model is kept
-  honest.
+  geometries. XGBoost's \texttt{reg\_lambda} is literally a Ridge penalty on leaf weights
+  (\texttt{reg\_alpha} is the LASSO one), and \texttt{gamma} charges a fixed price per leaf, like
+  pruning's $\alpha$ in Lecture 4. Regularization is how every flexible model is kept honest.
 \end{frame}
 
 % --- Slide: Key takeaways ---------------------------------------------------
@@ -297,28 +267,23 @@
   \begin{keybox}
     {\footnotesize
     \begin{enumerate}\itemsep1pt
-      \item With many predictors OLS overfits: coefficient variance grows with
-            $k$, and with $k > n$ there is no unique solution at all.
+      \item With many predictors OLS overfits; past $k > n$ it has no unique solution.
 
-      \item \textbf{Subset selection} counts predictors in or out. It is discrete,
-            greedy, and unstable --- small data changes flip the selected model.
+      \item \textbf{Subset selection} is discrete, greedy and unstable.
 
-      \item \textbf{Shrinkage} replaces that switch with a dial. Ridge ($\ell_2$)
-            shrinks everything smoothly; LASSO ($\ell_1$) shrinks and zeros out;
-            Elastic Net does both and keeps correlated predictors together.
+      \item \textbf{Shrinkage} is a dial. Ridge shrinks all; LASSO's corners zero some, at
+            small enough budgets; Elastic Net keeps correlated predictors together.
 
-      \item \textbf{Standardize first}, inside each CV fold --- none of these
-            penalties are scale-invariant. \textbf{$\lambda$ is tuned, not
-            estimated}: use \texttt{TimeSeriesSplit}, never random $K$-fold,
-            which leaks the future.
+      \item \textbf{Standardize} inside each CV fold, and \textbf{tune $\lambda$} with
+            \texttt{TimeSeriesSplit}, never random $K$-fold.
 
-      \item The \textbf{regularization path} --- the order in which predictors
-            drop out --- is a more stable finding than any single coefficient table.
+      \item The \textbf{regularization path}, the order predictors drop out, is more stable
+            than any one coefficient table.
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: Introduction to Neural Networks (PyTorch) ---
-  where these same penalties reappear as weight decay and dropout.}
+  \muted{\itshape Next: neural networks, where these penalties return as weight decay and
+  dropout.}
 \end{frame}
 
 % --- References ---------------------------------------------------------------

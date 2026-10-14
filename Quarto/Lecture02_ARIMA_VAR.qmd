@@ -52,28 +52,33 @@ A time series $\{y_t\}$ is **weakly stationary** if:
 3. $\mathrm{Cov}(y_t, y_{t-k}) = \gamma_k$ depends only on lag $k$, not on $t$
 :::
 
-**Why the definition earns its keep:** if the mean drifts, there is no single value to forecast. If the variance grows, prediction intervals widen without bound. Stationarity is what makes the past informative about the future — it is the assumption every model in this lecture rests on.
+**Why it matters:** a drifting mean leaves no single value to forecast, and a growing variance widens prediction intervals without bound. Every model in this lecture assumes it.
 
-**The usual culprits** are trending series — GDP, prices, sales — and variance that grows with the level. First-differencing removes a stochastic trend; a log transform stabilizes variance.
-
-[Rule of thumb: visible trend or growing variance ⟹ likely non-stationary. Test formally with ADF or KPSS.]{.neutral .smaller}
+**The usual culprits:** a trend, and variance that grows with the level. Differencing removes a stochastic trend; a log stabilizes the variance.
 
 ---
 
 ## Unit Roots and Differencing
 
-**AR(1):** $y_t = \phi_1\,y_{t-1} + \varepsilon_t$. Everything turns on whether $\phi_1$ is below one or exactly one.
+**AR(1):** $y_t = \phi_1\,y_{t-1} + \varepsilon_t$. Give it one unit shock and watch what is left of it:
 
-| Condition | Behavior | Implication |
-|-----------|----------|-------------|
-| $\|\phi_1\| < 1$ | Shock decays, reverts to mean | Stationary AR(1) |
-| $\phi_1 = 1$ | Shock persists *permanently* | Random walk (unit root) |
+![](../Figures/Lecture02_ARIMA_VAR/shock_response.svg){fig-align="center" height="340px"}
 
-**First differencing** removes a stochastic trend: $\Delta y_t = y_t - y_{t-1}$. So $d=0$ means already stationary, $d=1$ means one first difference, and $D=1$ means a seasonal difference, $\Delta_{12}y_t = y_t - y_{t-12}$.
+Below one, each period keeps the same share $\phi_1$, so the shock halves every $\ln 0.5 / \ln \phi_1$ periods. At $\phi_1 = 1$, a **unit root**, it never fades: a random walk. **Differencing**, $\Delta y_t = y_t - y_{t-1}$, removes it. $d$ counts first differences; $D$ counts seasonal ones, $\Delta_{12}y_t = y_t - y_{t-12}$.
 
-**Testing:** **ADF** ($H_0$: unit root) and **KPSS** ($H_0$: stationary) test *opposite* nulls — so run both, and be suspicious when they disagree.
+---
 
-**Do not over-difference.** A second difference on an already-stationary series induces negative autocorrelation that you then have to model away — you have manufactured the problem you are now solving. Test *after* differencing, and stop at $d=1$ once the result is stationary.
+## Testing for a Unit Root
+
+Rule of thumb: a visible trend or growing variance means the series is likely non-stationary. Then test formally.
+
+**ADF** ($H_0$: unit root) and **KPSS** ($H_0$: stationary) test *opposite* nulls, so run both, and be suspicious when they disagree.
+
+::: {.warningbox}
+**Do not over-difference.** Differencing an already-stationary series induces negative autocorrelation that you then have to model away. Difference, re-test, and stop at $d = 1$ once the result is stationary.
+:::
+
+[Lecture 1's TX_1 HOUSEHOLD: ADF −1.38 on the levels (a unit root), −8.51 after one difference (stationary). So $d = 1$.]{.neutral .smaller}
 
 ---
 
@@ -102,9 +107,9 @@ Two independent random walks — **no shared cause, no relationship at all**. Th
 
 ## ACF and PACF: Model Identification
 
-The **autocorrelation function**, $\rho_k = \mathrm{Corr}(y_t, y_{t-k})$, measures how $y_t$ relates to its own past. The **partial** autocorrelation measures the same thing while controlling for the lags in between — which is what separates a direct effect from one inherited through intermediate lags.
+The **autocorrelation function**, $\rho_k = \mathrm{Corr}(y_t, y_{t-k})$, measures how $y_t$ relates to its own past. The **partial** autocorrelation controls for the lags in between, which separates a direct effect from one inherited through them.
 
-Read them together and they identify the model:
+Read together, they identify the model:
 
 | Model | ACF | PACF |
 |-------|-----|------|
@@ -113,110 +118,23 @@ Read them together and they identify the model:
 | ARMA | Tails off | Tails off |
 | RW / I(1) | Decays slowly | Big spike at lag 1 |
 
-**Always unit-root test and difference *before* reading either plot.** The ACF of a non-stationary series decays slowly no matter what the underlying process is, so it tells you nothing about $p$ or $q$ — only that you have not differenced yet.
-
 ---
 
 ## What Those Patterns Actually Look Like
 
-<div style="text-align:center">
-<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;height:auto" role="img" aria-label="ACF and PACF patterns for AR(1) and MA(1) processes">
-<g transform="translate(15,22)">
-<text x="75.0" y="-6" font-size="10" font-weight="600" text-anchor="middle" fill="currentColor">AR(1): ACF tails off</text>
-<line x1="0" y1="19.2" x2="150" y2="19.2" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="44.8" x2="150" y2="44.8" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="32.0" x2="150" y2="32.0" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="0" y1="4" x2="0" y2="60" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="14" y1="32.0" x2="14" y2="6.5" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="14" cy="6.5" r="2.2" fill="#D71920"/>
-<line x1="29" y1="32.0" x2="29" y2="14.1" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="29" cy="14.1" r="2.2" fill="#D71920"/>
-<line x1="44" y1="32.0" x2="44" y2="19.5" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="44" cy="19.5" r="2.2" fill="#D71920"/>
-<line x1="59" y1="32.0" x2="59" y2="23.2" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="59" cy="23.2" r="2.2" fill="#D71920"/>
-<line x1="74" y1="32.0" x2="74" y2="25.8" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="74" cy="25.8" r="2.2" fill="#D71920"/>
-<line x1="89" y1="32.0" x2="89" y2="27.6" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="89" cy="27.6" r="2.2" fill="#D71920"/>
-<line x1="104" y1="32.0" x2="104" y2="28.9" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="104" cy="28.9" r="2.2" fill="#D71920"/>
-<line x1="119" y1="32.0" x2="119" y2="29.9" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="119" cy="29.9" r="2.2" fill="#D71920"/>
-</g>
-<g transform="translate(195,22)">
-<text x="75.0" y="-6" font-size="10" font-weight="600" text-anchor="middle" fill="currentColor">AR(1): PACF cuts off at 1</text>
-<line x1="0" y1="19.2" x2="150" y2="19.2" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="44.8" x2="150" y2="44.8" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="32.0" x2="150" y2="32.0" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="0" y1="4" x2="0" y2="60" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="14" y1="32.0" x2="14" y2="6.5" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="14" cy="6.5" r="2.2" fill="#D71920"/>
-<line x1="29" y1="32.0" x2="29" y2="30.4" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="29" cy="30.4" r="2.2" fill="#D71920"/>
-<line x1="44" y1="32.0" x2="44" y2="33.0" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="44" cy="33.0" r="2.2" fill="#D71920"/>
-<line x1="59" y1="32.0" x2="59" y2="30.7" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="59" cy="30.7" r="2.2" fill="#D71920"/>
-<line x1="74" y1="32.0" x2="74" y2="32.8" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="74" cy="32.8" r="2.2" fill="#D71920"/>
-<line x1="89" y1="32.0" x2="89" y2="30.7" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="89" cy="30.7" r="2.2" fill="#D71920"/>
-<line x1="104" y1="32.0" x2="104" y2="31.5" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="104" cy="31.5" r="2.2" fill="#D71920"/>
-<line x1="119" y1="32.0" x2="119" y2="33.0" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="119" cy="33.0" r="2.2" fill="#D71920"/>
-</g>
-<g transform="translate(15,130)">
-<text x="75.0" y="-6" font-size="10" font-weight="600" text-anchor="middle" fill="currentColor">MA(1): ACF cuts off at 1</text>
-<line x1="0" y1="19.2" x2="150" y2="19.2" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="44.8" x2="150" y2="44.8" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="32.0" x2="150" y2="32.0" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="0" y1="4" x2="0" y2="60" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="14" y1="32.0" x2="14" y2="7.6" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="14" cy="7.6" r="2.2" fill="#D71920"/>
-<line x1="29" y1="32.0" x2="29" y2="30.7" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="29" cy="30.7" r="2.2" fill="#D71920"/>
-<line x1="44" y1="32.0" x2="44" y2="32.8" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="44" cy="32.8" r="2.2" fill="#D71920"/>
-<line x1="59" y1="32.0" x2="59" y2="30.4" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="59" cy="30.4" r="2.2" fill="#D71920"/>
-<line x1="74" y1="32.0" x2="74" y2="31.5" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="74" cy="31.5" r="2.2" fill="#D71920"/>
-<line x1="89" y1="32.0" x2="89" y2="33.0" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="89" cy="33.0" r="2.2" fill="#D71920"/>
-<line x1="104" y1="32.0" x2="104" y2="31.2" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="104" cy="31.2" r="2.2" fill="#D71920"/>
-<line x1="119" y1="32.0" x2="119" y2="31.5" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="119" cy="31.5" r="2.2" fill="#D71920"/>
-</g>
-<g transform="translate(195,130)">
-<text x="75.0" y="-6" font-size="10" font-weight="600" text-anchor="middle" fill="currentColor">MA(1): PACF tails off</text>
-<line x1="0" y1="19.2" x2="150" y2="19.2" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="44.8" x2="150" y2="44.8" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 3"/>
-<line x1="0" y1="32.0" x2="150" y2="32.0" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="0" y1="4" x2="0" y2="60" stroke="currentColor" stroke-opacity=".55"/>
-<line x1="14" y1="32.0" x2="14" y2="7.6" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="14" cy="7.6" r="2.2" fill="#D71920"/>
-<line x1="29" y1="32.0" x2="29" y2="46.6" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="29" cy="46.6" r="2.2" fill="#D71920"/>
-<line x1="44" y1="32.0" x2="44" y2="22.6" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="44" cy="22.6" r="2.2" fill="#D71920"/>
-<line x1="59" y1="32.0" x2="59" y2="38.0" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="59" cy="38.0" r="2.2" fill="#D71920"/>
-<line x1="74" y1="32.0" x2="74" y2="28.1" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="74" cy="28.1" r="2.2" fill="#D71920"/>
-<line x1="89" y1="32.0" x2="89" y2="34.6" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="89" cy="34.6" r="2.2" fill="#D71920"/>
-<line x1="104" y1="32.0" x2="104" y2="30.4" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="104" cy="30.4" r="2.2" fill="#D71920"/>
-<line x1="119" y1="32.0" x2="119" y2="33.0" stroke="#D71920" stroke-width="2.4"/>
-<circle cx="119" cy="33.0" r="2.2" fill="#D71920"/>
-</g>
-</svg>
-</div>
+![](../Figures/Lecture02_ARIMA_VAR/acf_theory.svg){fig-align="center" height="450px"}
 
-Read the pair, never one alone. The [sharp cut-off]{.positive} tells you the order; the *slow decay* tells you which side it belongs on. Dashed lines are the significance bands — spikes inside them are noise, not signal.
+Exact values, not a sample. Read the pair: the [sharp cut-off]{.positive} gives the order, the *slow decay* says which side it is on. The AR(1) ACF is a staircase: each lag keeps $\phi$ of the one before.
+
+---
+
+## Difference First, Then Read the ACF
+
+Lecture 1's TX_1 HOUSEHOLD series, before and after one difference:
+
+![](../Figures/Lecture02_ARIMA_VAR/acf_levels_vs_diff.svg){fig-align="center" height="340px"}
+
+The levels' ACF crawls down whatever the process is: it only says you have not differenced yet. The change has one negative spike at lag 1, the MA(1) signature. So ARIMA(0,1,1), which is simple exponential smoothing: Lecture 1's $\alpha = 0.62$ implies $\rho_1 = -0.33$; the data show $-0.29$.
 
 # ARIMA Models
 
@@ -230,26 +148,22 @@ Combine differencing with AR and MA components into one unified model.
 ::: {.definitionbox-title}
 ARIMA($p$,$d$,$q$) Model
 :::
-Apply an ARMA($p$,$q$) to the $d$-times differenced series:
+Difference the series $d$ times, $y'_t = \Delta^d y_t$, then fit an ARMA($p$,$q$) to $y'_t$:
 
-$$y_t = c + \sum_{i=1}^{p}\phi_i y_{t-i} + \varepsilon_t + \sum_{j=1}^{q}\theta_j\varepsilon_{t-j}$$
+$$y'_t = c + \sum_{i=1}^{p}\phi_i\, y'_{t-i} + \varepsilon_t + \sum_{j=1}^{q}\theta_j\,\varepsilon_{t-j}$$
 :::
 
-$p$ is the number of AR lags, $d$ the number of differences, $q$ the number of MA lags. Several familiar models are just corners of this space: **ARIMA(0,1,0)** is a random walk, **ARIMA(1,0,0)** is an AR(1), and **ARIMA(0,1,1)** is algebraically equivalent to simple exponential smoothing from Lecture 1.
+Familiar models are corners of this space: **ARIMA(0,1,0)** is a random walk, **ARIMA(1,0,0)** an AR(1), and **ARIMA(0,1,1)** simple exponential smoothing.
 
-**A forecast by hand.** Take ARIMA(1,1,0) with $\hat{\phi}_1 = 0.5$. If $y_{100} = 120$ and $y_{99} = 118$, then $\Delta y_{100} = 2$, and
+**A forecast by hand.** ARIMA(1,1,0) with $\hat{\phi}_1 = 0.5$, $y_{100} = 120$ and $y_{99} = 118$. The last change was 2, so the next is half of it: $\hat{y}_{101|100} = 120 + 0.5 \times 2 = \mathbf{121}$.
 
-$$\hat{y}_{101|100} = 120 + 0.5 \times 2 = \mathbf{121}.$$
-
-**In Python:** `pmdarima.auto_arima()` searches orders automatically; `statsmodels.SARIMAX` fits any order you specify.
+[**Python:** `pmdarima.auto_arima()` searches orders; `statsmodels.SARIMAX` fits the order you choose.]{.neutral .smaller}
 
 ---
 
 ## SARIMA: Adding Seasonal Terms
 
-For monthly or quarterly data, autocorrelation often appears at lags $m, 2m, 3m, \ldots$ SARIMA($p$,$d$,$q$)($P$,$D$,$Q$)[$m$] adds seasonal AR and MA polynomials alongside the non-seasonal ones.
-
-The useful mental model is **two ARIMA models running at different time scales**: the non-seasonal part $(p,d,q)$ captures week-to-week dynamics, while the seasonal part $(P,D,Q)[m]$ captures the year-over-year pattern at lag $m$.
+Seasonal data also correlate at lags $m, 2m, 3m, \ldots$, and SARIMA adds AR and MA terms there: **two ARIMA models at different time scales**, $(p,d,q)$ for the short run and $(P,D,Q)[m]$ year over year.
 
 **Practical workflow:**
 
@@ -258,7 +172,7 @@ The useful mental model is **two ARIMA models running at different time scales**
 3. ACF / PACF on the differenced series → guide $p, q, P, Q$
 4. Minimize AIC, then check the residual ACF with a Ljung-Box test
 
-[For monthly retail data with trend and December seasonality, SARIMA(1,1,1)(0,1,1)[12] is a strong starting point — and a good default to beat before trying anything more elaborate.]{.neutral .smaller}
+[Monthly retail: start from SARIMA(1,1,1)(0,1,1)[12] and make anything fancier beat it.]{.neutral .smaller}
 
 # VAR Models
 
@@ -268,11 +182,19 @@ When two series influence each other, model them together symmetrically.
 
 ## Why Use Multiple Series?
 
-Every model so far — ETS, ARIMA — uses only $y_t$'s own history. But business variables are linked: consumer sentiment today moves retail spending next month, interest rates move housing starts within two quarters, advertising spend moves sales over the following weeks.
+Every model so far — ETS, ARIMA — uses only $y_t$'s own history. But business variables are linked: consumer sentiment today moves retail spending next month, and advertising moves sales over the following weeks.
 
-The principle underneath all of it: **if $x_t$ carries information about $y_{t+h}$ that is not already in $y_t$'s own history, including $x_t$ reduces forecast error.** **Granger causality** [@Granger1969] is the formal test of exactly that claim, and we get to it in two slides.
+::: {.keybox}
+If $x_t$ carries information about $y_{t+h}$ that is not already in $y_t$'s own history, including $x_t$ reduces forecast error.
+:::
 
-That leaves a modeling choice, and it turns on whether the influence runs one way or both:
+**Granger causality** [@Granger1969] is the formal test of exactly that claim. It comes right after the VAR.
+
+---
+
+## VAR or ARIMAX: Which Way Does Influence Run?
+
+The modeling choice turns on whether the influence runs one way or both:
 
 :::: {.columns}
 ::: {.column width="48%"}
@@ -281,6 +203,7 @@ That leaves a modeling choice, and it turns on whether the influence runs one wa
 - Every variable predicts every other
 - Use when influence runs both ways
 - No variable is privileged
+- Example: retail sales and unemployment (the lab)
 :::
 ::: {.column width="48%"}
 **ARIMAX — one direction**
@@ -288,6 +211,7 @@ That leaves a modeling choice, and it turns on whether the influence runs one wa
 - $x_t$ drives $y_t$, not the reverse
 - Use when the causal story is clear
 - Needs a forecast of $x_t$ itself
+- Example: advertising → sales
 :::
 ::::
 
@@ -295,17 +219,17 @@ That leaves a modeling choice, and it turns on whether the influence runs one wa
 
 ## The VAR($p$) Model
 
-For two stationary series $y_{1t}$ and $y_{2t}$, each equation regresses on the lags of *both*:
+For two stationary series, each equation regresses on the lags of *both*:
 
 $$\begin{cases} y_{1t} = c_1 + a_{11}\,y_{1,t-1} + a_{12}\,y_{2,t-1} + \varepsilon_{1t}\\ y_{2t} = c_2 + a_{21}\,y_{1,t-1} + a_{22}\,y_{2,t-1} + \varepsilon_{2t} \end{cases}$$
 
-The cross terms are where the value is: $a_{12}$ is how much $y_{2,t-1}$ predicts $y_{1t}$, which is precisely what a univariate AR throws away. If $a_{12} = a_{21} = 0$, the system collapses back into two separate AR models and you have learned that too. Each equation is estimated by OLS; the order $p$ is chosen by BIC.
+The cross terms carry the value: $a_{12}$ is how much $y_{2,t-1}$ predicts $y_{1t}$, exactly what a univariate AR throws away. If $a_{12} = a_{21} = 0$, the system is two separate ARs.
 
 ::: {.warningbox}
-**Parameter explosion.** A VAR($p$) with $k$ variables has $k^2 p$ coefficients. At $k=5$ and $p=4$ that is **100 coefficients** — typically more than a monthly business series has observations. Keep $k \leq 4$ unless you are using a LASSO-VAR.
+**Parameter explosion.** $k$ variables and $p$ lags make $k^2 p$ coefficients: at $k=5$, $p=4$, **100**, often more than a monthly series has observations. Keep $k \leq 4$, or use a LASSO-VAR.
 :::
 
-[**Python:** `statsmodels.tsa.api.VAR`; `var.fit(maxlags=p, ic='bic')` selects the order.]{.neutral .smaller}
+[**Python:** `statsmodels.tsa.api.VAR`; `var.fit(maxlags=p, ic='bic')` picks $p$ by BIC.]{.neutral .smaller}
 
 ---
 
@@ -318,19 +242,17 @@ Granger Causality
 $x_t$ **Granger-causes** $y_t$ if past values of $x_t$ help predict $y_t$ *beyond what $y_t$'s own past already explains*.
 :::
 
-**The test:** fit the $y$-equation with and without the $x$-lags, then run an $F$-test of $H_0$: all $x$-lag coefficients are zero. Rejecting means $x_t$ Granger-causes $y_t$.
+**The test:** fit the $y$-equation with and without the $x$-lags; an $F$-test of $H_0$: all $x$-lag coefficients are zero.
 
-**A concrete question.** Does unemployment (`UNRATE`) Granger-cause retail sales (`RSXFS`)? **We run exactly this in the lab** --- and the answer is instructive: it fires *both* ways, and which direction looks stronger depends on whether COVID is in the sample.
+**In the lab:** does unemployment Granger-cause retail sales? It fires *both* ways, and which direction looks stronger depends on whether COVID is in the sample.
 
-**Granger causality is not structural causality.** It tests *predictive content*, not whether $x$ mechanically brings $y$ about — a rooster reliably predicts sunrise. Report it as "predictive of," never "causes."
-
-[Impulse response functions trace how a shock propagates through the system over time.]{.neutral .smaller}
+**Not structural causality.** It tests predictive content: a rooster reliably predicts sunrise. Say "predictive of," never "causes."
 
 ---
 
 ## ARIMAX: Exogenous Variables with ARIMA Errors
 
-When one variable clearly *drives* another rather than the relationship being symmetric, use ARIMAX.
+When one variable clearly *drives* another, use ARIMAX.
 
 ::: {.definitionbox}
 ::: {.definitionbox-title}
@@ -338,12 +260,12 @@ ARIMAX Model
 :::
 $$y_t = \mathbf{x}_t'\boldsymbol{\beta} + \eta_t, \qquad \eta_t \sim \mathrm{ARIMA}(p,d,q)$$
 
-$\mathbf{x}_t$ are exogenous regressors; $\eta_t$ absorbs whatever autocorrelation is left in the residuals.
+$\mathbf{x}_t$ are exogenous regressors; $\eta_t$ absorbs the autocorrelation left in the residuals.
 :::
 
-**Use it when** the causal direction is clear (advertising → sales), you already have $x_t$ or can forecast it, and adding $x_t$ actually reduces cross-validated forecast error — check that last one rather than assuming it.
+**Use it when** the direction is clear (advertising → sales), you have $x_t$ or can forecast it, and adding it cuts cross-validated error. Check that last one.
 
-**The catch that surprises people:** to forecast $y_{t+h}$ you need $x_{t+h}$ — a forecast of your own predictor. If that is unavailable, ARIMAX buys you nothing at forecast time and you should use a VAR instead, which generates its own.
+**The catch:** forecasting $y_{t+h}$ needs $x_{t+h}$, a forecast of your own predictor. Without one, use a VAR, which forecasts every series it contains.
 
 [**Python:** `SARIMAX(y, exog=X, order=(p,d,q)).fit()`]{.neutral .smaller}
 
@@ -356,15 +278,15 @@ Stationarity, ARIMA, VAR, and ARIMAX form the classical time series toolkit.
 ## Key Takeaways
 
 ::: {.keybox}
-1. **Stationarity** is required before fitting time series models. Test with ADF ($H_0$: unit root) and KPSS ($H_0$: stationary). First-differencing removes a stochastic trend.
+1. **Stationarity first:** test with ADF and KPSS (opposite nulls); difference away a unit root.
 
-2. **ACF** identifies MA order; **PACF** identifies AR order. Always inspect after differencing.
+2. **ACF** gives the MA order, **PACF** the AR order — read after differencing.
 
-3. **ARIMA($p$,$d$,$q$)** combines differencing with AR/MA. SARIMA adds seasonal polynomials. Use `auto_arima` for automatic selection.
+3. **ARIMA($p$,$d$,$q$)** is an ARMA on the differenced series; SARIMA adds seasonal terms; `auto_arima` searches.
 
-4. **VAR** models all variables symmetrically and captures cross-variable dynamics. Keep $k \leq 4$. Use **Granger causality** to test predictive content.
+4. **VAR** treats series symmetrically; keep $k \leq 4$. **Granger** tests predictive content, not causation.
 
-5. **ARIMAX** adds exogenous predictors to ARIMA. Use when causal direction is clear and $x_t$ is forecastable.
+5. **ARIMAX** adds exogenous predictors, if you can forecast them.
 :::
 
 *Next: Generalized Additive Models (GAMs) — flexible, interpretable nonlinear forecasting with Prophet and pyGAM.*

@@ -61,16 +61,14 @@ Time Series
 A [time series]{.hi} is an ordered sequence of observations $\{y_1, y_2, \ldots, y_T\}$ where $t$ indexes time.
 :::
 
-**Notation used throughout the course:**
+**Notation for the whole course:**
 
 - $y_t$ — observed value at time $t$
-- $h$ — [forecast horizon]{.hi}, how many periods ahead
+- $h$ — [forecast horizon]{.hi}: harder as $h$ grows, as uncertainty compounds
 - $\hat{y}_{t+h|t}$ — forecast of $y_{t+h}$ made using information at time $t$
 - $e_t = y_t - \hat{y}_{t|t-1}$ — [forecast error]{.hi}
 
-Forecasting monthly retail sales, $h=1$ is next month and $h=12$ is a year out. The problem gets harder as $h$ grows, because uncertainty compounds.
-
-Under squared-error loss the optimal forecast is the **conditional expectation**, $\hat{y}_{t+h|t} = \mathbb{E}[y_{t+h} \mid \mathcal{F}_t]$, where $\mathcal{F}_t$ is everything known at time $t$.
+Under squared-error loss the best forecast is the **conditional expectation**, $\hat{y}_{t+h|t} = \mathbb{E}[y_{t+h} \mid \mathcal{F}_t]$, where $\mathcal{F}_t$ is everything known at time $t$.
 
 ---
 
@@ -83,7 +81,7 @@ Any series can be decomposed into four parts (additive form): $y_t = T_t + S_t +
 - [$C_t$ Cycle]{.hi} — medium-run business-cycle swings
 - [$I_t$ Irregular]{.hi} — random shocks
 
-Which parts matter depends entirely on the series: retail sales are trend + seasonality, quarterly GDP is trend + cycle, daily stock returns are mostly irregular, and energy demand has all four.
+Which parts matter depends on the series: retail sales are trend + seasonality, quarterly GDP is trend + cycle, daily stock returns are mostly irregular.
 
 ::: {.warningbox}
 **Ignoring seasonality causes large, systematic errors.** A non-seasonal model on monthly retail data will consistently under-forecast December and over-forecast January — every single year.
@@ -112,17 +110,13 @@ Recent observations should carry more weight than old ones.
 
 ## The Problem with Equal Weights
 
-Most classical methods treat every historical observation equally — but what if the world **changes**? When a retailer's sales pattern shifts after a store renovation, equal-weighting the pre-renovation data buys months of systematic over- or under-forecasting.
+Most classical methods weight every observation equally — but what if the world **changes**? After a store renovation, equal weights keep forecasting the old store for months.
 
-**Exponential weighting** assigns geometrically declining weights, so recent observations matter more:
+**Exponential weighting:** an observation $k$ weeks old gets weight $\alpha(1-\alpha)^k$. High $\alpha$ = short memory; low $\alpha$ = long memory:
 
-| Observation | Age | Weight |
-|-------------|-----|--------|
-| $y_T$ | 0 | $\alpha$ |
-| $y_{T-1}$ | 1 | $\alpha(1-\alpha)$ |
-| $y_{T-2}$ | 2 | $\alpha(1-\alpha)^2$ |
+![](../Figures/Lecture01_ETS_Eval/ses_weights.svg){fig-align="center" height="300px"}
 
-[$\alpha \in (0,1]$ is the forgetting rate. High $\alpha$ = short memory; low $\alpha$ = long memory.]{.neutral .smaller}
+[Fitted $\alpha$ on two aisles of one store. Log scale: each week back is the same step down, $\times(1-\alpha)$.]{.neutral .smaller}
 
 ---
 
@@ -132,39 +126,24 @@ Most classical methods treat every historical observation equally — but what i
 ::: {.definitionbox-title}
 SES Update Equation
 :::
-Let $\ell_t$ be the **level** at time $t$:
+The **level** $\ell_t$ closes the fraction $\alpha$ of each week's gap ($0 < \alpha \leq 1$); the forecast is flat.
 
-$$\ell_t = \alpha\, y_t + (1-\alpha)\,\ell_{t-1}, \qquad 0 < \alpha \leq 1$$
-
-**Forecast:** $\hat{y}_{T+h|T} = \ell_T$ for all horizons $h \geq 1$ (flat)
+$$
+\ell_t = \alpha\, y_t + (1-\alpha)\,\ell_{t-1}
+       = \ell_{t-1} + \alpha\,(y_t - \ell_{t-1}),
+\qquad \hat{y}_{T+h|T} = \ell_T
+$$
 :::
 
-:::: {.columns}
-::: {.column width="48%"}
-**Large $\alpha$ (e.g. 0.8):**
+![](../Figures/Lecture01_ETS_Eval/ses_levels.svg){fig-align="center" height="270px"}
 
-- Reacts quickly to shocks
-- Noisy, volatile forecasts
-- Good for rapidly changing series
-:::
-::: {.column width="48%"}
-**Small $\alpha$ (e.g. 0.1):**
-
-- Slow to adapt
-- Smooth, stable forecasts
-- Good for slowly evolving series
-:::
-::::
-
-SES **nests both benchmarks**: $\alpha = 1$ gives the naïve forecast, and $\alpha \to 0$ gives the historical mean.
-
-[Use when there is no trend and no seasonality.]{.neutral .smaller}
+[Large $\alpha$ chases every wiggle; small $\alpha$ is smooth but slow. SES **nests both benchmarks**: $\alpha = 1$ is naïve, $\alpha \to 0$ the historical mean.]{.smaller} [*No trend, no season.*]{.neutral .smaller}
 
 ---
 
 ## Holt's Method: Adding Trend
 
-SES produces a *flat* forecast. If the series trends, track both the level and the slope.
+SES is *flat*. For a trending series, track the level $\ell_t$ and the slope $b_t$:
 
 ::: {.definitionbox}
 ::: {.definitionbox-title}
@@ -177,9 +156,14 @@ Holt's Linear Exponential Smoothing [@Holt2004]
 **Forecast:** $\hat{y}_{T+h|T} = \ell_T + h\,b_T$
 :::
 
-Read $\ell_t$ as where the series *is* now and $b_t$ as its current growth rate.
-
-**Linear extrapolation gets unrealistic at long horizons.** For $h > 6$ use the **damped trend** variant, $\hat{y}_{T+h|T} = \ell_T + \sum_{j=1}^{h}\phi^j b_T$ with $0 < \phi < 1$. At $\phi = 0.85$ the forecast converges to a finite ceiling instead of growing forever.
+:::: {.columns}
+::: {.column width="40%"}
+**Straight lines get unrealistic far out.** For $h > 6$, the **damped trend** multiplies each week's rise by $\phi$ ($0 < \phi < 1$), so the forecast levels off under $\ell_T + b_T\,\phi/(1-\phi)$.
+:::
+::: {.column width="58%"}
+![](../Figures/Lecture01_ETS_Eval/damped_trend.svg){fig-align="center" height="300px"}
+:::
+::::
 
 ---
 
@@ -189,33 +173,32 @@ Read $\ell_t$ as where the series *is* now and $b_t$ as its current growth rate.
 ::: {.definitionbox-title}
 Holt-Winters Additive Method [@Winters1960]
 :::
-$\ell_t = \alpha(y_t - s_{t-m}) + (1-\alpha)(\ell_{t-1}+b_{t-1})$
-
-$b_t = \beta^*(\ell_t - \ell_{t-1}) + (1-\beta^*)\,b_{t-1}$
-
-$s_t = \gamma(y_t - \ell_{t-1} - b_{t-1}) + (1-\gamma)\,s_{t-m}$
-
-**Forecast:** $\hat{y}_{T+h|T} = \ell_T + h\,b_T + s_{T+h-m}$ &emsp; ($m$ = seasonal period)
+$$
+\begin{aligned}
+\ell_t &= \alpha(y_t - s_{t-m}) + (1-\alpha)(\ell_{t-1}+b_{t-1}) \\
+b_t &= \beta^*(\ell_t - \ell_{t-1}) + (1-\beta^*)\,b_{t-1} \\
+s_t &= \gamma(y_t - \ell_{t-1} - b_{t-1}) + (1-\gamma)\,s_{t-m} \\
+\hat{y}_{T+h|T} &= \ell_T + h\,b_T + s_{T+h-m} \qquad (m = \text{seasonal period})
+\end{aligned}
+$$
 :::
 
 :::: {.columns}
 ::: {.column width="48%"}
 **Additive seasonality:**
 
-- Seasonal swings are constant in size
-- Same ± amount every December
+- Swings constant in size: the same ± amount every December
 :::
 ::: {.column width="48%"}
 **Multiplicative seasonality:**
 
-- Swings grow with the level
-- Retail sales, tourism
+- Swings grow with the level: retail sales, tourism
 :::
 ::::
 
-In US retail sales the December spike grows every year as overall sales grow, which makes it **multiplicative**.
+US retail's December spike grows as overall sales grow: **multiplicative**.
 
-[Requires at least $2m$ observations to initialize ($m=12$ for monthly data).]{.neutral .smaller}
+[Needs at least $2m$ observations to initialize ($m=12$ for monthly data).]{.neutral .smaller}
 
 ---
 
@@ -229,7 +212,7 @@ In US retail sales the December spike grows every year as overall sales grow, wh
 | Trend ($T$) | N, A, A~d~ | None / Additive / Damped |
 | Seasonal ($S$) | N, A, M | None / Additive / Multiplicative |
 
-That gives 15 valid combinations, and the ones we have just built are among them: **ETS(A,N,N)** is SES, **ETS(A,A,N)** is Holt linear, **ETS(A,A~d~,N)** is Holt damped, **ETS(A,A,A)** is Holt-Winters additive, and **ETS(A,A,M)** is Holt-Winters multiplicative.
+That is 18 combinations; three are numerically unstable, which leaves 15. Ours are among them: **ETS(A,N,N)** is SES, **ETS(A,A,N)** is Holt linear, **ETS(A,A~d~,N)** is Holt damped, **ETS(A,A,A)** is Holt-Winters additive, and **ETS(M,A,M)** is Holt-Winters multiplicative.
 
 **Automatic selection:** fit all 15 and pick the minimum AIC. In Python, `statsmodels.tsa.exponential_smoothing.ets.ETSModel`.
 
@@ -241,32 +224,38 @@ Forecasting without evaluation is not science — it is storytelling.
 
 ## How Do We Measure Forecast Accuracy?
 
-Given out-of-sample errors $e_{T+h} = y_{T+h} - \hat{y}_{T+h|T}$:
+Draw each out-of-sample error $e_{T+h} = y_{T+h} - \hat{y}_{T+h|T}$ as a square. CA_1 FOODS, the 52 test weeks:
 
 :::: {.columns}
-::: {.column width="50%"}
-**Scale-dependent:**
+::: {.column width="36%"}
+$$\text{MAE} = \tfrac{1}{H}\sum_{h=1}^{H} |e_{T+h}|$$
 
 $$\text{RMSE} = \sqrt{\tfrac{1}{H}\sum_{h=1}^{H} e_{T+h}^2}$$
 
-$$\text{MAE} = \tfrac{1}{H}\sum_{h=1}^{H} |e_{T+h}|$$
-
-[Same units as $y_t$. Compare models on the *same* series.]{.neutral .smaller}
+[MAE is the average **side** (dashed). RMSE is the side of the average **square** (filled), so $\text{RMSE} \geq \text{MAE}$.]{.smaller}
 :::
-::: {.column width="46%"}
-**Scale-free:**
-
-$$\text{MAPE} = \tfrac{100\%}{H}\sum_{h=1}^{H}\left|\tfrac{e_{T+h}}{y_{T+h}}\right|$$
-
-$$\text{MASE} = \tfrac{\text{MAE}}{\text{MAE}_{\text{seas. naïve}}}$$
-
-[Compare *across* series.]{.neutral .smaller}
+::: {.column width="62%"}
+![](../Figures/Lecture01_ETS_Eval/error_squares.svg){fig-align="center" height="430px"}
 :::
 ::::
 
-**RMSE vs. MAE:** RMSE punishes large errors harder. When big misses are especially costly — a stockout, an understaffed shift — prefer RMSE.
+[A tie on MAE, not on RMSE: five big misses carry 40% of SES's squared error. When big misses are costly — a stockout — prefer RMSE.]{.smaller}
 
-**MASE** is the one to report across series: $\text{MASE} < 1$ beats seasonal naïve, $\text{MASE} > 1$ is [worse]{.negative} than doing nothing clever. It is the standard in the M-Competitions [@Makridakis2020].
+---
+
+## Comparing Across Series: MAPE and MASE
+
+RMSE and MAE come in the units of $y_t$, so they compare models on the *same* series. To compare *across* series, scale the errors:
+
+$$
+\text{MAPE} = \frac{100\%}{H}\sum_{h=1}^{H}\left|\frac{e_{T+h}}{y_{T+h}}\right|
+\qquad\qquad
+\text{MASE} = \frac{\text{MAE}}{\displaystyle\frac{1}{T-m}\sum_{t=m+1}^{T} |y_t - y_{t-m}|}
+$$
+
+The MASE denominator is seasonal naïve's average miss **on the training data**. $\text{MASE} < 1$: smaller errors than that; $\text{MASE} > 1$: [worse]{.negative}. It is the standard in the M-Competitions [@Makridakis2020].
+
+[MAPE breaks down when $y_t$ is near zero; MASE does not.]{.neutral .smaller}
 
 ---
 
@@ -320,15 +309,15 @@ What we will cover, and how it fits together.
 ## Lecture 1: Key Takeaways
 
 ::: {.keybox}
-1. Forecasting underpins every forward-looking business decision. The optimal point forecast (under squared loss) is the **conditional expectation**.
+1. Under squared loss the best forecast is the **conditional expectation**.
 
-2. **Always beat a benchmark first.** Naïve, seasonal naïve, mean, drift.
+2. **Always beat a benchmark first:** naïve, seasonal naïve, mean, drift.
 
-3. Exponential smoothing assigns **geometrically declining weights** to past observations. $\alpha$ controls how fast old data is forgotten.
+3. Exponential smoothing weights the past **geometrically**; $\alpha$ sets how fast it forgets.
 
-4. SES (level) → Holt (+ trend) → Holt-Winters (+ season). The **ETS framework** unifies all variants; AIC selects automatically.
+4. SES → Holt (+ trend) → Holt-Winters (+ season): all **ETS** models, chosen by AIC.
 
-5. **Evaluate out-of-sample only.** RMSE penalizes large errors; MASE benchmarks against seasonal naïve. Never shuffle time series data.
+5. **Evaluate out-of-sample, never shuffled.** RMSE punishes big misses; MASE compares across series.
 :::
 
 *Next: ARIMA & VAR — a regression-based approach to time series with richer autocorrelation structure.*

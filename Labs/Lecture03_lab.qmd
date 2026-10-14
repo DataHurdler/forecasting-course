@@ -250,7 +250,9 @@ plt.tight_layout()
 ```
 
 **Read the left panel and say what it means in words**, the way you would to a grid operator.
-The confidence band widens where the data is thin — say that too.
+Then read the band: every day of the year appears four or five times in the training data, and a
+cyclic spline has no ends, so the band is about the same width all year. Name a predictor where
+it would not be, and say where its band would widen.
 
 ---
 
