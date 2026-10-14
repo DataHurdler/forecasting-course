@@ -1,6 +1,6 @@
 # Visuals and geometry audit, all decks except Lecture 8
 
-**Status:** APPROVED 2026-10-13. Owner decisions:
+**Status:** APPROVED 2026-10-13; ★ figures and the five geometry pictures BUILT in every deck the same day. Owner decisions:
 - **The 52-week window is canonical** for the L9 Part 2 and L13 scoreboards.
 - **Build in teaching-calendar order** ("Your recommendation is sound. Follow the teaching calendar.")
 - L9 Part 1 is done: [its plan](2026-10-13_lecture09-part1-visuals.md). L9 Part 2 is next.
@@ -26,6 +26,22 @@ Quarto, drawn at display size (SCALE = 0.55). Use the course's own data, and put
 measured numbers in the figure. One generator script per deck: `scripts/figures/lectureNN_figures.py`.
 
 ---
+
+## Build status (update this table as each deck lands)
+
+This file is the standing roadmap for figures and geometry in every deck. Each deck gets its own
+build plan when its turn comes (as Lecture 9 Part 1 did); this table says where each one stands.
+
+| Deck | Taught (Fall 2026) | Status | Build plan |
+|---|---|---|---|
+| L01–L07 | weeks 1–6 | **Built 2026-10-13** (rollout): first figures + geometry pictures + word diet + verified error fixes | [rollout](2026-10-13_figures-rollout.md) |
+| L08 CNNs | week 8 (Oct 15) | **Built**; live 2026-10-13; word diet 2026-10-13 ("Why Convolution?" split, new wiring figure) | [L08 plan](2026-10-13_lecture08-visuals-and-theme-fix.md) |
+| L09 Part 1 | week 9 | **Built**; live 2026-10-13; word diet (Check 2 split) | [L09P1 plan](2026-10-13_lecture09-part1-visuals.md) |
+| L09 Part 2 | week 10 | **Built** 2026-10-13 | [L09P2 plan](2026-10-13_lecture09-part2-visuals.md) |
+| L10–L13 | weeks 11–16 | **Built 2026-10-13** (rollout) | [rollout](2026-10-13_figures-rollout.md) |
+
+Still open from the ranked lists: everything below the ★ and the five geometry pictures (e.g. L02
+Granger/COVID, L05 boosting stages, L09P1 Check 2 figure, L12 DAG and ROPE, L13 skill bars).
 
 ## Recurring geometric ideas (a visual vocabulary for the whole course)
 
@@ -143,14 +159,14 @@ are schematics (L01 timeline, L02 simulated walks and ACF, L03 partial dependenc
 5. **Activations (:62)**: ReLU/sigmoid/tanh with maximum slopes (¼, 1, 0/1); sets up L09's vanishing gradient. Drop the box-and-arrow neuron (it only redraws σ(wᵀx+b)).
 6. `zero_grad` on the bowl (:295); Low.
 
-### L09 Part 1 RNN/LSTM (**taught next week**)
+### L09 Part 1 RNN/LSTM — BUILT 2026-10-13 (#1, #2, #3, #4 done; #5 deferred)
 1. ★ **Why an RNN forgets (:137)**: log-scale gradient survival over k = 0–52. Measured ‖∂h_T/∂h_{T−k}‖ for the trained RNN, plus the at-init curve and the 0.7 example. Geometry: repeated multiplication is a straight line on a log axis, with slope = log spectral radius (0.6 at init → 0.83 trained). Replaces the table, including its wrong row.
 2. **Cell state (:239)**: two backward lanes in the L08 residual_block style. RNN hops pass through ×W·tanh′; LSTM hops are ⊙f and +. Inset: measured forget gates, median 0.54. **Don't draw an undiminished highway:** after 4 weeks the cell lane keeps 0.08.
 3. **Check 1 (:356)**: RMSE vs epochs at all 7 checkpoints; the lab already plots it. Slopes can't be read from a table.
 4. Unrolled RNN over the real 26-week strip (:88), reused on BPTT (:114) with thinning backward arrows.
 5. Check 2 (:387): 30 series on one axis (the 91% between-series share) plus mean ACF. Fix :404 first.
 
-### L09 Part 2 Transformers (week 10)
+### L09 Part 2 Transformers (week 10) — BUILT 2026-10-13 (#1, #2, #3, #5 done; #4 path figure not built)
 **Settle the window question first**, since every figure prints these numbers.
 1. ★ **Attention heatmap (:91, :116)**: 4 heads × 52 lags from the trained model, plus December 2015. Measured: three heads sit on lags 2–7, one is uniform, and lag 52 gets ≤ uniform. There is no annual-cycle head, so :91 and :116 should say what it *did*. Caveat: attention weights are not importance.
 2. **Positional encoding (:178)**: dials for 4 frequency pairs plus the 52×52 PE·PE′ matrix, constant along its diagonals. Geometry: each pair is a clock hand, and a shift rotates every hand by its own ω_i·Δ, so similarity depends only on Δ. State the limits: not monotone, W_Q/W_K in between, no pair has a 52-week period.
