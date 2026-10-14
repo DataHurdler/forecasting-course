@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics II — Hierarchical Models**
 
-Deck: `Slides/Lecture11_Part2_Hierarchical.pdf` (19 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture11_Part2_Hierarchical.pdf` (20 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -336,43 +336,85 @@ And on our data it produces this.
 
 *(Walk the table.)*
 
-Divergences: **one hundred twenty-seven**, where we want zero.
+Divergences: **forty-three**, where we want zero. The non-centered version: zero.
 
-R-hat: one-point-oh-four-four. **Fails**, but only just enough to argue about.
+R-hat: one-point-oh-oh-three for both. **Passes**, comfortably.
 
-ESS: four hundred thirteen. **Passes** — barely, thirteen over the line.
+ESS: nine hundred sixty-six for the centered fit. **Passes** too — more than twice the threshold.
 
 **[pause]**
 
 *(This is the point of the slide. Take it slowly.)*
 
-Look at those three numbers again, because they do not fail in the same way.
+Look at those three rows again, because only one of them objects.
 
-ESS clears its threshold. You would not look twice at four hundred thirteen. R-hat is over the
-line at one-point-oh-four-four — and be honest about what happens in practice when a number is a
-little over a threshold: people run it again, or say it is close enough, or quietly widen the
-threshold.
-
-**One hundred twenty-seven divergences against a threshold of exactly zero admits none of that.**
-There is no version of "close to zero" that gets you to a hundred and twenty-seven.
+If you checked R-hat and ESS — the two numbers Lecture 10 taught you to check — you would have
+shipped this model. Both are clean. **Forty-three divergences against a threshold of exactly
+zero** is the only alarm, and it is the one to trust. There is no version of "close to zero" that
+gets you to forty-three.
 
 So the rule to carry forward: on hierarchical models, **divergences fire first and least
-ambiguously.** Do not wait for R-hat to decide for you.
-Do not wait for R-hat to tell you something is wrong. It may never say so.
+ambiguously.** Do not wait for R-hat to tell you something is wrong. It may never say so.
 
-*(Point at the explanation.)*
+*(Point at the muted line.)*
 
 **[pause]**
 
-Why does it happen? When sigma-b is small, all the b-j have to crowd into a very narrow band. So
-the posterior takes on a **funnel** shape — wide and open where sigma-b is large, pinched to a
-point where sigma-b is small.
+One honest caveat about the exact numbers. Divergence counts are not stable quantities: change the
+seed, or even the machine, and they move. Reading the same data back from a CSV file, which changes
+the last binary digit of a few hundred values, moves this one from forty-three to forty-nine. Across ten more seeds, the centered form gave anywhere from fifteen to
+two hundred eighty-five divergences, and the non-centered form from zero to eleven. What does not
+move is the pattern: the centered form diverged on every one of the eleven runs, while R-hat or
+ESS objected on only two of them.
 
-A sampler tunes its step size for the wide part of the funnel. Then it tries to get into the neck
-with steps that are far too big, fails, and reports a divergence.
+So if you run the lab and see a different count, that is expected. If you see the centered form
+diverge and the non-centered one barely at all, you have reproduced the finding.
 
-The non-centered form samples z from a plain standard Normal — a nice round shape with no funnel —
-and *constructs* b afterwards. Same model. Same posterior. Geometry the sampler can actually walk.
+---
+
+# ▶ SLIDE 13 — Why It Breaks: a Funnel
+
+Why does it happen? This picture is the answer.
+
+*(Point at the left panel.)*
+
+Every gray dot is one posterior draw from the centered fit, for one thin series, CA_1. Across: how
+far its SNAP effect sits from the group mean, b-j minus mu-b. Up: sigma-b, on a log scale.
+
+The dashed lines are what the prior says. Given sigma-b, b-j sits within about two sigma-b of
+mu-b. So when sigma-b is large the band is wide, and when sigma-b is small the band pinches to
+nothing. On a log axis that is a **funnel**.
+
+**[pause]**
+
+*(Point at the crimson dots.)*
+
+The crimson dots are the forty-three divergences. Look where they are: **in the neck.** Thirty-nine
+of the forty-three sit in the bottom tenth of the sigma-b values the sampler visited.
+
+And look at the dotted line. The centered chains **never got below it** — never below a sigma-b of
+about point-oh-one-one. The sampler tunes its step size for the wide part of the funnel, then tries
+to get into the neck with steps that are far too big, fails, and reports a divergence. So it never
+explores the neck at all.
+
+*(Point at the right panel.)*
+
+**[pause]**
+
+Now the non-centered fit, on the same vertical axis. Across, z-j — the same quantity, divided by
+sigma-b. That is all non-centering is: b-j equals mu-b plus sigma-b times z-j is a **change of
+coordinates**. Dividing each height by its own width turns the funnel into a column. Under the
+prior, z-j has spread one at every height — the dashed lines are straight.
+
+And the sampler walks it. Zero divergences — and it goes below the dotted line: about three and a
+half percent of its draws sit in the region the centered chains never reached. Thirty draws go
+lower even than the bottom of this axis.
+
+*(Beat.)*
+
+One precision. The funnel-and-column statement is exact for the **prior**. The posterior adds the
+data, which narrows things a little, but as you can see the draws follow the prior's shape
+closely. Same model. Same posterior. Different coordinates — and only one set of them is walkable.
 
 This is BMCP section four-point-six-point-one, and it is the single most common failure in applied
 hierarchical modeling.
@@ -382,54 +424,70 @@ hierarchical modeling.
 *(A practical note, because students will reach for the wrong fix.)*
 
 The instinct when you see divergences is to raise `target_accept` — force smaller steps. Sometimes
-that helps a little. Here it mostly doesn't: at point-nine-five you still get divergences, you just
-get fewer, and the sampler runs much slower for the privilege.
+that helps a little. Here it helps partly: at point-nine-five the centered fit still gives fourteen
+divergences instead of forty-three, and it runs slower for the privilege.
 
-Reparameterizing is the actual fix, and it costs nothing. Same answer, no divergences, and it runs
-faster than the centered version did.
+Reparameterizing is the actual fix. It is not free — on this machine the non-centered fit took a
+little longer per run than the centered one — but it removes the problem instead of tiptoeing
+around it.
 
 So the habit: when a hierarchical model diverges, your first move is to check whether you wrote it
 centered — not to tune the sampler.
 
 ---
 
-# ▶ SLIDE 13 — Section divider: Reading the Result
+# ▶ SLIDE 14 — Section divider: Reading the Result
 
 Shrinkage, measured — and checked against data the model never saw.
 
 ---
 
-# ▶ SLIDE 14 — Shrinkage, Measured
+# ▶ SLIDE 15 — Shrinkage, Measured
 
-Now let's see what the pooling actually did. Fit both models — unpooled and hierarchical — and
-compare each series' estimate before and after.
+Now let's see what the pooling actually did. One row per series. The dot is each series' own
+estimate — the unpooled fit. The arrow goes to where the hierarchy put it.
 
-*(Walk the table.)*
+*(Point at the crimson rows.)*
 
-The **thin** series, eight weeks each: unpooled spread of point-one-oh-eight, collapsing to
-point-oh-one-oh after pooling. Mean movement: point-one-two-zero.
+The **thin** series, eight weeks each, in crimson. Look at the length of those arrows. CA_1 starts
+at point-two-nine and ends just right of the dashed line, which is mu-b, point-oh-seven-eight.
+WI_2 starts at point-three-four and travels even farther. Even TX_1, which started *below* the
+group mean, gets pulled up toward it. Shrinkage moves estimates both ways — always toward mu-b.
 
-The **full** series, two hundred seventy-seven weeks: spread of point-oh-five-five, going to
-point-oh-three-seven. Mean movement: point-oh-one-five.
+*(Point at the gray rows.)*
+
+The **full** series, two hundred seventy-seven weeks, in gray. Short arrows. TX_2 barely moves at
+all — that tick is its whole journey.
 
 **[pause]**
 
-So the data-poor series moved **eight times further** toward the group mean than the data-rich
+The average thin arrow is point-one-two-zero long; the average full arrow, point-oh-one-five. So the
+data-poor series moved **eight point one times further** toward the group mean than the data-rich
 ones. And nobody told the model which series were thin. It inferred that entirely from how much
 each series had to say.
 
-*(Point at the two right-hand columns. This is the subtle part.)*
+*(Point at the spread numbers. This is the subtle part.)*
 
 **[pause]**
 
-Now read those two columns together, because this is what separates partial pooling from just
+Now look at where the arrowheads land, because this is what separates partial pooling from just
 averaging everything.
 
 The thin series' apparent spread of point-one-oh-eight nearly **vanishes** — down to point-oh-one.
-But the full series **keep most of theirs** — point-oh-five-five down to point-oh-three-seven.
+But the full series **keep most of theirs** — point-oh-five-five down to point-oh-three-seven. WI_3
+still sits well right of the others after pooling.
 
 The hierarchy did not flatten everything. It discarded spread that eight weeks could not support,
 and kept spread that two hundred seventy-seven weeks *could*.
+
+*(Point at the muted note.)*
+
+There is a clean way to see the rule it followed. Each pooled estimate lands, approximately, at a
+precision-weighted point between mu-b and the series' own estimate. A thin series' own estimate is
+very imprecise, so it keeps only about a tenth of it and goes about ninety percent of the way to
+mu-b. A full series keeps about three-quarters of its own. I say "approximately" because mu-b and
+sigma-b are not known numbers here — the model averages over its uncertainty about them — but a
+plain weighted average lands within about point-oh-one of every arrowhead.
 
 *(Beat.)*
 
@@ -438,42 +496,42 @@ the model never saw.
 
 ---
 
-# ▶ SLIDE 15 — Checked Against Data the Model Never Saw
+# ▶ SLIDE 16 — Checked Against Data the Model Never Saw
 
 Here's the nice thing about having thinned those series ourselves: **the weeks we removed still
 exist.** So we can compute the SNAP effect that actually occurred in them, and grade both models
-against it.
+against it. That is the ring on each crimson row.
 
-*(Walk the table row by row — this is the payoff.)*
+*(Walk the crimson rows — this is the payoff.)*
 
-CA_1 FOODS. Unpooled says point-two-eight-six. Hierarchical says point-oh-nine-seven. The truth in
-the held-out weeks: **point-oh-eight-seven.**
+CA_1. Unpooled said point-two-eight-six. The hierarchy said point-oh-nine-seven. The truth in the
+held-out weeks: **point-oh-eight-seven** — right where the arrow landed.
 
-CA_3. Unpooled point-one-oh-five, hierarchical point-oh-eight-two, truth point-one-oh-two.
+CA_3. The arrow runs from point-one-oh-five to point-oh-eight-two, and the truth is point-one-oh-two.
+This is the one series where the unpooled estimate was closer — by a hair.
 
-TX_1. Unpooled point-oh-five-two, hierarchical point-oh-seven-five, truth point-oh-eight-two —
-note the hierarchical estimate is *higher* here, and closer. Shrinkage moves estimates both ways.
+TX_1. Unpooled point-oh-five-two, pooled point-oh-seven-five, truth point-oh-eight-two. The arrow
+pointed the right way and nearly reached the ring.
 
-TX_3. Two-one-nine, oh-nine-one, truth oh-seven-two.
+TX_3. From point-two-one-nine to point-oh-nine-one; truth point-oh-seven-two.
 
-WI_2. Three-three-eight, one-oh-three, truth two-oh-seven. This is the one where the unpooled fit
-was directionally right and the hierarchical was too conservative.
+WI_2. From point-three-three-eight all the way to point-one-oh-three — but the ring sits at
+point-two-oh-seven, in the middle of the arrow. The hierarchy pulled it **past** its truth. This is
+the honest cost of shrinkage: WI_2 really is a high-response store, and eight weeks were not
+enough to convince the model. Even so, the pooled estimate is closer than the unpooled one.
 
 **[pause]**
 
 *(Now the summary line.)*
 
-RMSE against the truth: unpooled point-one-two-six. Hierarchical **point-oh-four-eight.**
-
-**Partial pooling was two and a half times more accurate**, and it beat the unpooled fit on four of
-the five series.
-
-*(Point at the last paragraph.)*
+RMSE against the truth: unpooled point-one-two-six. Hierarchical **point-oh-four-eight.** The
+pooled error is **two point six times smaller**, and it beat the unpooled fit on four of the five
+series.
 
 And notice the character of the unpooled errors. They were not merely noisy — they were
 **confidently wrong**. Point-three-three-eight is a specific, precise-looking claim that a store's
-SNAP uplift is thirty-four percent. It came from eight weeks of data, and the truth was about
-twenty-one percent.
+SNAP uplift is forty percent. It came from eight weeks of data, and the truth was about
+twenty-three percent.
 
 *(Muted note.)*
 
@@ -482,14 +540,14 @@ other five existed.**
 
 ---
 
-# ▶ SLIDE 16 — What the Model Actually Concluded
+# ▶ SLIDE 17 — What the Model Actually Concluded
 
 So what's the business answer?
 
-The estimated hierarchy: mu-b of point-oh-seven-eight, with a ninety-four percent HDI from
-point-oh-one-seven to point-one-five-zero. And sigma-b of point-oh-six-five.
+The estimated hierarchy: mu-b of point-oh-seven-eight, with a ninety-four percent HDI from about
+point-oh-two to point-one-five. And sigma-b of point-oh-six-five.
 
-In words: a SNAP week lifts FOODS units by roughly **eight percent**, and stores genuinely differ
+In words: a SNAP week lifts FOODS units by about **eight percent**, and stores genuinely differ
 around that by about **seven percentage points**.
 
 **[pause]**
@@ -501,9 +559,9 @@ you. "How much do stores differ?" is a question with a number attached now.
 
 But be careful what you conclude from it.
 
-This does **not** license the store-level policy the unpooled fit suggested. An analyst reading
-those unpooled numbers would report uplifts from five percent to forty percent and build a
-differentiated stocking plan on it. The held-out weeks say most of that range was noise.
+This does **not** license store-by-store stocking. An analyst reading the thin stores' own
+estimates would report uplifts from five percent to forty percent and build a differentiated
+stocking plan on it. The held-out weeks say most of that range was noise.
 
 But — and this is the part that requires care — sigma-b of point-oh-six-five says it is **not all**
 noise either. Stores do differ. Just far less than eight weeks of data made it look.
@@ -512,22 +570,22 @@ noise either. Stores do differ. Just far less than eight weeks of data made it l
 
 *(Land the recommendation.)*
 
-So the defensible recommendation is a three-part sentence: plan on an eight percent FOODS uplift
-everywhere; allow for real but modest store variation around it; and do not act on any individual
-store's own estimate until that store has the weeks to support one.
+So the defensible plan is a three-part sentence: plan on an eight percent FOODS uplift everywhere;
+allow for real but modest store variation around it; and do not act on any individual store's own
+estimate until that store has the weeks to support one.
 
 That's a more nuanced answer than either extreme, it's backed by held-out data, and it is exactly
 what the hierarchy was for.
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Key Takeaways
+# ▶ SLIDE 18 — Section divider: Key Takeaways
 
 What hierarchy buys, and what it costs.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 11 Part 2: Key Takeaways
+# ▶ SLIDE 19 — Lecture 11 Part 2: Key Takeaways
 
 One, and it's first for a reason. **Ask what may be pooled before you pool it.** Groups must be
 exchangeable. FOODS and HOBBIES are not, and no amount of good sampling fixes a hierarchy built
@@ -541,14 +599,14 @@ estimates how much groups genuinely differ.
 
 Four. Shrinkage is automatic and proportionate. Our thin series moved **eight point one times**
 further toward the group mean than data-rich ones, with nobody specifying that — and on held-out
-weeks it was **two point six times** more accurate.
+weeks their error was **two point six times** smaller.
 
 Five. This is regularization for the sixth time, and the only version where the shrinkage strength
 is estimated rather than tuned.
 
-And six. **Write it non-centered.** The obvious form gave a hundred and twenty-seven divergences;
-the reparameterized form gave one. Same model, different geometry — and divergences objected
-loudest, against a threshold that allows no argument.
+And six. **Write it non-centered.** The obvious form gave forty-three divergences; the
+reparameterized form gave none. Same model, a change of coordinates — and divergences were the only
+alarm that fired, against a threshold that allows no argument.
 
 **[pause]**
 
@@ -557,6 +615,6 @@ a preprocessing step you have used all semester that will silently destroy the a
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 20 — References
 
 *(Advance and close. No narration needed.)*

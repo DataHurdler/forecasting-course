@@ -396,8 +396,12 @@ sampler tuned for the wide part cannot get in.
 ::: {.callout-tip}
 ## Which alarm fired
 
-Look at the two columns. $\hat{R}$ is near the threshold and ESS clears 400 — on those two
-numbers alone you might have shipped it. The divergence count is unambiguous.
+Look at the two columns. $\hat{R}$ passes and ESS clears 400 — on those two numbers alone you
+would have shipped it. The divergence count is unambiguous.
+
+Your count may not match a classmate's: divergence counts move with the seed, and even with the
+machine. The pattern should not move — the centered form diverges, the non-centered form barely or
+not at all.
 
 On hierarchical models, divergences are the sensitive instrument. Do not wait for $\hat{R}$.
 :::
@@ -415,8 +419,8 @@ On hierarchical models, divergences are the sensitive instrument. Do not wait fo
 > the way category did here — and say how you would handle it without abandoning the hierarchy.
 >
 > **Discuss (the judgment):** In Step 5, `sd_b` came out around 0.07 — stores genuinely differ.
-> The unpooled fit put the range at roughly 5% to 33%. Given both numbers, what do you actually
-> recommend the business do for the next SNAP week?
+> The unpooled fit put the thin stores' range at roughly 5% to 40%. Given both numbers, what do
+> you actually recommend the business do for the next SNAP week?
 >
 > **Discuss (the thread):** This is the sixth time this semester that a model has been improved by
 > pulling estimates toward a common value. Name the other five, and say what is different about

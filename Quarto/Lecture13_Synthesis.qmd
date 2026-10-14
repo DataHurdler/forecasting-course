@@ -59,18 +59,26 @@ From you, in the model structure. From the data, via a search procedure. From th
 
 Every model in this course, on the M5 weekly panel — same 30 series, same held-out block.
 
+<!-- The table stays: scripts/check-book-claims.py reads the book preface's ranking claims from it. -->
+:::: {.columns}
+::: {.column width="59%"}
+![](../Figures/Lecture13_Synthesis/scoreboard.svg){fig-align="center" width="100%"}
+:::
+::: {.column width="41%" .smaller}
 | Model | Test RMSE | Where |
 |---|---:|---|
-| LASSO, 46 engineered features | **744** | Homework 4 |
-| XGBoost, tuned | 781 | Homework 4 |
-| Vanilla RNN, 4 raw channels | 842 | Lecture 9 Part 1 |
-| Random forest | 899 | Homework 3 |
-| LSTM | 987 | Lecture 9 Part 1 |
-| Transformer encoder | 990 | Lecture 9 Part 2 |
-| 1D CNN, flatten head | 1,032 | Lecture 8 |
-| Seasonal naive | 2,152 | every week |
+| LASSO, 46 features | **744** | HW 4 |
+| XGBoost | 781 | HW 4 |
+| Vanilla RNN | 805 | L9 Part 1 |
+| Random forest | 899 | HW 3 |
+| Transformer | 990 | L9 Part 2 |
+| LSTM | 998 | L9 Part 1 |
+| 1D CNN (26-wk) | 1,032 | L8 |
+| Seasonal naive | 2,152 | benchmark |
+:::
+::::
 
-**The ordering is not the one anyone predicts in Week 1.** A 46-coefficient linear model is at the top. The two architectures with the most attention behind them — the LSTM and the Transformer — finished fifth and sixth of eight, behind a plain RNN with a fraction of their parameters — at the training budget each was measured at, which Lecture 9 Part 1 shows is part of the claim.
+**Not the ordering anyone predicts in Week 1.** A 46-coefficient linear model is on top; the Transformer and the LSTM finished fifth and sixth of eight, behind a plain RNN with a fraction of their parameters, at the training budget each was measured at.
 
 # What the Results Taught
 
@@ -80,15 +88,13 @@ Three lessons, each paid for with a measurement.
 
 ## Lesson 1: The Benchmark Is a Real Competitor
 
-In Homework 1 the seasonal-naive benchmark **beat every exponential smoothing and ARIMA model** you fitted — and the reason is countable. Holt-Winters must estimate **52 seasonal indices from 4.3 annual cycles** of training data: about four observations per parameter. Seasonal naive estimates **nothing**, and the level it carries moves +3.7%, +1.3%, −4.4%, +2.9% year over year — stable inside ±5%.
+In Homework 1 the seasonal-naive benchmark **beat every smoothing and ARIMA model** you fitted. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**, and since 2012 the level it carries has moved under 5% a year.
 
-Across the whole course the benchmark was beaten, but rarely by the margin the effort implied. The Bayesian structural model beat it by **4%**. The GAMs in Homework 2 beat it by **12%**. The best model on the weekly panel beat it by 65% — after 46 engineered features and a cross-validated penalty.
+The course beat it, but rarely by much: **4%** with the Bayesian structural model, **12%** with Homework 2's GAMs, 65% with the best weekly model and its 46 engineered features.
 
 ::: {.keybox}
-**Compute the benchmark first, every time.** It costs one line, it is often close, and it is the only number that tells you whether the rest of the work was worth doing.
+**Compute the benchmark first, every time.** It costs one line, it is often close, and it says whether the rest of the work was worth doing.
 :::
-
-This is also the cheapest professional habit you can carry out of this course. A forecast presented without a benchmark is a number no one can evaluate — including you.
 
 ---
 
@@ -98,12 +104,12 @@ Four times this course, the more advanced method failed to win — and each time
 
 | | |
 |---|---|
-| **LSTM lost to a plain RNN** | At three window lengths, *at a fixed 30-epoch budget* — they tie by 100. Gating fixes long-range forgetting; 91% of this panel's variance is between-series, so there is little to forget. |
-| **Transformer lost to an RNN** | 67,329 parameters against roughly **230 effectively independent** 26-week blocks — ours overlap 96%. Attention's long-range paths had nothing here to reach. |
+| **LSTM lost to a plain RNN** | At three windows, *at a fixed 30-epoch budget*; at 26 weeks they tie by 100 epochs. Gating fixes forgetting, and with 91% of the variance between series there is little to forget. |
+| **Transformer lost to an RNN** | 67,329 parameters against roughly **100 effectively independent** 52-week blocks — ours overlap 98%. |
 | **CNNs lost to LASSO** | A seven-week receptive field cannot see an annual lag. |
 | **Tuning bought nothing measurable** | Nine fits and a 3-unit change, against a **seed spread of 20–90** at one fixed config. CV improved; test did not. |
 
-**None of these means the losing method is bad** — each solves a problem this data does not have. LSTMs earn their gates on long dependency chains; Transformers earn their parameters on large corpora.
+**None of these means the losing method is bad** — each solves a problem this data does not have: long dependency chains, large corpora.
 
 **Match the method to the structure of the problem**, not to the recency of the paper.
 
@@ -182,19 +188,14 @@ Harder, and more common in professional work. Here **nothing is wrong with the p
 
 ## The Day Every Model in This Course Fails
 
-Every 25 December the stores close and recorded sales are **exactly zero** — five times in our sample, against a daily average near 2,800.
+Every 25 December the stores close and sales are **exactly zero**. CA_1 FOODS, 2012–15:
 
-| 25 Dec | 2012 | 2013 | 2014 | 2015 |
-|---|---:|---:|---:|---:|
-| Actual | 0 | 0 | 0 | 0 |
-| Seasonal naive | 2,230 | 2,045 | 2,485 | 2,365 |
+![](../Figures/Lecture13_Synthesis/christmas_squares.svg){fig-align="center" height="255px"}
 
-Four days — **0.25%** of the evaluation window — carry **4.6%** of its squared error, eighteen times their share. Drop them and the benchmark's RMSE falls from 537 to 525 without a single modeling change.
-
-**The information was never missing.** `is_event` fires on **158** days, of which **5** are closures: the feature cannot tell "the doors are locked" from an ordinary Super Bowl, so no model learned the difference.
+Four days, **0.25%** of the evaluation window, carry **4.6%** of its squared error. Yet `is_event` fires on **158** days, only **5** of them closures.
 
 ::: {.keybox}
-Knowable years ahead, and every method still failed — because the *encoding* discarded the distinction, not because the model was misspecified. The harder case is a shock nobody could have known at all: the Favorita earthquake of 16 April 2016 is one, and that dataset is available for final projects.
+Knowable years ahead, and every method failed: the *encoding*, not the model, lumped a locked door in with the Super Bowl.
 :::
 
 ---
@@ -250,19 +251,13 @@ The final project asks for exactly the report on the previous slide, on data of 
 ## Closing
 
 ::: {.keybox}
-1. **Compute the benchmark first.** It is often close, and it is the only number that says whether your work was worth doing.
-
-2. **Match the method to the problem**, not to the paper's publication date. The most advanced model on our data finished sixth.
-
-3. **One idea recurs**: fit against complexity, with a parameter setting the rate. You have now seen it six times under six names.
-
-4. **Split by time, always.** The leakage errors in this field do not crash — they return a better-looking number.
-
-5. **Diagnostics check the model you wrote, not whether it was the right one.** Convergence, $\hat{R}$ and ESS all passed on the two worst answers this course produced. Held-out data caught them.
-
-6. **Report what went against you.** It is the part that makes the rest credible.
-
-7. **Know what your forecast is for.** A point estimate and a predictive distribution answer different questions, and only one of them supports a decision under uncertainty.
+1. **Compute the benchmark first.** It says whether the rest was worth doing.
+2. **Match the method to the problem**, not the paper: our most advanced finished fifth.
+3. **One idea recurs:** fit against complexity, one parameter setting the rate.
+4. **Split by time, always.** Leakage does not crash; it flatters.
+5. **Diagnostics check the model, not the question.** Held-out data caught our worst two.
+6. **Report what went against you.** It makes the rest credible.
+7. **Know what the forecast is for.** A decision under uncertainty needs a distribution.
 :::
 
 [The libraries will change. The habits are the transferable part.]{.neutral}

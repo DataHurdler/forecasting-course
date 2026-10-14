@@ -61,33 +61,42 @@
 \end{frame}
 
 % --- Slide: the scoreboard ------------------------------------------------------
+% Figure: scripts/figures/lecture13_figures.py (scoreboard). Every number is recomputed there.
+% The table stays: scripts/check-book-claims.py reads the book preface's ranking claims from it.
 \begin{frame}{The Scoreboard}
   Every model in this course, on the M5 weekly panel --- same 30 series, same held-out block.
-  \begin{center}
-    {\small
-    \begin{tabular}{lrl}
-      \toprule
-      \textbf{Model} & \textbf{Test RMSE} & \textbf{Where} \\
-      \midrule
-      LASSO, 46 engineered features & \textbf{744} & Homework 4 \\
-      XGBoost, tuned & 781 & Homework 4 \\
-      Vanilla RNN, 4 raw channels & 842 & Lecture 9 Part 1 \\
-      Random forest & 899 & Homework 3 \\
-      LSTM & 987 & Lecture 9 Part 1 \\
-      Transformer encoder & 990 & Lecture 9 Part 2 \\
-      1D CNN, flatten head & 1{,}032 & Lecture 8 \\
-      \midrule
-      Seasonal naive & 2{,}152 & every week \\
-      \bottomrule
-    \end{tabular}
-    }
-  \end{center}
 
-  \vspace{-0.05cm}
-  \textbf{The ordering is not the one anyone predicts in Week 1.} A 46-coefficient linear model
-  is at the top. The two architectures with the most attention behind them --- the LSTM and the
-  Transformer --- finished fifth and sixth of eight, behind a plain RNN with a fraction of their
-  parameters, at the training budget each was measured at.
+  \vspace{0.1cm}
+  \begin{columns}[c,onlytextwidth]
+    \begin{column}{0.60\textwidth}
+      \includegraphics[width=\linewidth]{../Figures/Lecture13_Synthesis/scoreboard.pdf}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      {\footnotesize
+      \setlength{\tabcolsep}{3pt}
+      \begin{tabular}{@{}lrl@{}}
+        \toprule
+        \textbf{Model} & \textbf{RMSE} & \textbf{Where} \\
+        \midrule
+        LASSO, 46 features & \textbf{744} & HW 4 \\
+        XGBoost & 781 & HW 4 \\
+        Vanilla RNN & 805 & L9 Part 1 \\
+        Random forest & 899 & HW 3 \\
+        Transformer & 990 & L9 Part 2 \\
+        LSTM & 998 & L9 Part 1 \\
+        1D CNN (26-wk) & 1{,}032 & L8 \\
+        \midrule
+        Seasonal naive & 2{,}152 & benchmark \\
+        \bottomrule
+      \end{tabular}
+      }
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \textbf{Not the ordering anyone predicts in Week 1.} A 46-coefficient linear model is on top;
+  the Transformer and the LSTM finished fifth and sixth of eight, behind a plain RNN with a
+  fraction of their parameters, at the training budget each was measured at.
 \end{frame}
 
 % =============================================================================
@@ -100,26 +109,19 @@
 
 % --- Slide: benchmarks ----------------------------------------------------------
 \begin{frame}{Lesson 1: The Benchmark Is a Real Competitor}
-  In Homework 1 the seasonal-naive benchmark \textbf{beat every exponential smoothing and ARIMA
-  model} you fitted --- and the reason is countable. Holt-Winters must estimate \textbf{52
-  seasonal indices from 4.3 annual cycles} of training data: about four observations per
-  parameter. Seasonal naive estimates \textbf{nothing}, and the level it carries moves
-  $+3.7\%$, $+1.3\%$, $-4.4\%$, $+2.9\%$ year over year --- stable inside $\pm 5\%$.
+  In Homework 1 the seasonal-naive benchmark \textbf{beat every smoothing and ARIMA model} you
+  fitted. Holt-Winters estimated \textbf{52 seasonal indices from 4.3 annual cycles}; seasonal
+  naive estimates \textbf{nothing}, and since 2012 the level it carries has moved under 5\% a year.
 
   \vspace{0.15cm}
-  Across the whole course the benchmark was beaten, but rarely by the margin the effort implied.
-  The Bayesian structural model beat it by \textbf{4\%}. The GAMs in Homework 2 beat it by
-  \textbf{12\%}. The best model on the weekly panel beat it by 65\% --- after 46 engineered
-  features and a cross-validated penalty.
+  The course beat it, but rarely by much: \textbf{4\%} with the Bayesian structural model,
+  \textbf{12\%} with Homework 2's GAMs, 65\% with the best weekly model and its 46 engineered
+  features.
 
   \begin{keybox}
     \textbf{Compute the benchmark first, every time.} It costs one line, it is often close, and
-    it is the only number that tells you whether the rest of the work was worth doing.
+    it says whether the rest of the work was worth doing.
   \end{keybox}
-
-  \vspace{0.1cm}
-  This is also the cheapest professional habit you can carry out of this course. A forecast
-  presented without a benchmark is a number no one can evaluate --- including you.
 \end{frame}
 
 % --- Slide: sophistication -----------------------------------------------------
@@ -130,11 +132,11 @@
     {\small
     \begin{tabular}{p{3.6cm}p{8.7cm}}
       \toprule
-      \textbf{LSTM lost to a plain RNN} & At three window lengths, \emph{at a fixed 30-epoch
-      budget} --- they tie by 100. Gating fixes long-range forgetting; 91\% of this panel's
-      variance is between-series, so there is little to forget. \\[3pt]
-      \textbf{Transformer lost to an RNN} & 67{,}329 parameters against roughly \textbf{230
-      effectively independent} 26-week blocks --- ours overlap 96\%. \\[3pt]
+      \textbf{LSTM lost to a plain RNN} & At three windows, \emph{at a fixed 30-epoch budget}; at
+      26 weeks they tie by 100 epochs. Gating fixes forgetting, and with 91\% of the variance
+      between series there is little to forget. \\[3pt]
+      \textbf{Transformer lost to an RNN} & 67{,}329 parameters against roughly \textbf{100
+      effectively independent} 52-week blocks --- ours overlap 98\%. \\[3pt]
       \textbf{CNNs lost to LASSO} & A seven-week receptive field cannot see an annual lag. \\[3pt]
       \textbf{Tuning bought nothing measurable} & Nine fits and a 3-unit change, against a
       \textbf{seed spread of 20--90} at one fixed config. CV improved; test did not. \\
@@ -145,8 +147,7 @@
 
   \vspace{0.05cm}
   \textbf{None of these means the losing method is bad} --- each solves a problem this data does
-  not have. LSTMs earn their gates on long dependency chains; Transformers earn their parameters
-  on large corpora.
+  not have: long dependency chains, large corpora.
 
   \vspace{0.05cm}
   \textbf{Match the method to the structure of the problem}, not to the recency of the paper.
@@ -282,33 +283,17 @@
 
 % --- Slide: the day every model fails ----------------------------------------------
 \begin{frame}{The Day Every Model in This Course Fails}
-  Every 25 December the stores close and recorded sales are \textbf{exactly zero} --- five times
-  in our sample, against a daily average near 2{,}800.
+  Every 25 December the stores close and sales are \textbf{exactly zero}. CA\_1 FOODS, 2012--15:
   \begin{center}
-    {\small
-    \begin{tabular}{lrrrr}
-      \toprule
-      \textbf{25 Dec} & \textbf{2012} & \textbf{2013} & \textbf{2014} & \textbf{2015} \\
-      \midrule
-      Actual & 0 & 0 & 0 & 0 \\
-      Seasonal naive & 2{,}230 & 2{,}045 & 2{,}485 & 2{,}365 \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=3.7cm]{../Figures/Lecture13_Synthesis/christmas_squares.pdf}
   \end{center}
-
-  \vspace{-0.15cm}
-  Four days --- \textbf{0.25\%} of the evaluation window --- carry \textbf{4.6\%} of its squared
-  error, eighteen times their share.
-
-  \vspace{0.05cm}
-  \textbf{The information was never missing.} \texttt{is\_event} fires on \textbf{158} days, of
-  which \textbf{5} are closures: the feature cannot tell ``the doors are locked'' from an ordinary
-  Super Bowl, so no model learned the difference.
+  \vspace{-0.3cm}
+  Four days, \textbf{0.25\%} of the evaluation window, carry \textbf{4.6\%} of its squared error.
+  Yet \texttt{is\_event} fires on \textbf{158} days, only \textbf{5} of them closures.
 
   \begin{keybox}
-    Knowable years ahead, and every method still failed --- because the \emph{encoding} discarded
-    the distinction, not because the model was misspecified.
+    Knowable years ahead, and every method failed: the \emph{encoding}, not the model, lumped a
+    locked door in with the Super Bowl.
   \end{keybox}
 \end{frame}
 
@@ -404,29 +389,15 @@
 % --- Slide: closing ------------------------------------------------------------------
 \begin{frame}{Closing}
   \begin{keybox}
-    {\footnotesize
-    \begin{enumerate}\itemsep2pt
-      \item \textbf{Compute the benchmark first.} It is often close, and it is the only number
-            that says whether your work was worth doing.
-
-      \item \textbf{Match the method to the problem}, not to the paper's publication date. The
-            most advanced model on our data finished sixth.
-
-      \item \textbf{One idea recurs}: fit against complexity, with a parameter setting the rate.
-            You have now seen it six times under six names.
-
-      \item \textbf{Split by time, always.} The leakage errors in this field do not crash --- they
-            return a better-looking number.
-
-      \item \textbf{Diagnostics check the model you wrote, not whether it was the right one.}
-            Convergence, $\hat{R}$ and ESS all passed on the two worst answers this course
-            produced. Held-out data caught them.
-
-      \item \textbf{Report what went against you.} It is the part that makes the rest credible.
-
-      \item \textbf{Know what your forecast is for.} A point estimate and a predictive
-            distribution answer different questions, and only one of them supports a decision
-            under uncertainty.
+    {\small
+    \begin{enumerate}\itemsep3pt
+      \item \textbf{Compute the benchmark first.} It says whether the rest was worth doing.
+      \item \textbf{Match the method to the problem}, not the paper: our most advanced finished fifth.
+      \item \textbf{One idea recurs:} fit against complexity, one parameter setting the rate.
+      \item \textbf{Split by time, always.} Leakage does not crash; it flatters.
+      \item \textbf{Diagnostics check the model, not the question.} Held-out data caught our worst two.
+      \item \textbf{Report what went against you.} It makes the rest credible.
+      \item \textbf{Know what the forecast is for.} A decision under uncertainty needs a distribution.
     \end{enumerate}
     }
   \end{keybox}

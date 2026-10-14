@@ -57,17 +57,17 @@ Everything else follows from that first row. If the parameter is fixed, you can 
 
 ## What This Buys You in a Meeting
 
-A 95% confidence interval of $[0.02,\ 0.08]$ does *not* mean there is a 95% chance the parameter lies in that range. It means that intervals built this way would contain the true value 95% of the time across repeated samples. That is a statement about the procedure.
+A 95% **confidence** interval of $[0.02,\ 0.08]$ does *not* mean a 95% chance the parameter is in it. It means the *procedure* catches the true value in 95% of repeated samples.
 
-A 95% **credible** interval of $[0.02,\ 0.08]$ does mean there is a 95% probability the parameter lies in that range, given your model and data.
+A 95% **credible** interval *does* mean that, given your model and data.
 
 ::: {.keybox}
-That is not a technicality. It is the difference between a sentence you can say out loud to a decision-maker and one you have to keep correcting.
+One you can say to a decision-maker; the other you keep correcting.
 :::
 
-And because the answer is a full distribution, you can ask questions of it directly: *What is the probability the promotion lifts demand by more than 5%? What is the chance we stock out if we order 400 units?* Those are the questions a planner has, and a point estimate with a standard error does not answer them.
+A full distribution also answers a planner's question: *what is the chance we stock out if we order 400 units?*
 
-[The cost is that you must state a prior, and defend it. That is the rest of this lecture.]{.neutral .smaller}
+[The cost: you must state a prior, and defend it.]{.neutral .smaller}
 
 # Bayes' Theorem
 
@@ -96,17 +96,11 @@ $$\text{posterior} \;\propto\; \text{likelihood} \times \text{prior}$$
 
 ## The Update, in Pictures
 
-Take a concrete case: estimating a conversion rate $\theta$ from 200 trials.
+A conversion rate $\theta$: a $\text{Beta}(5, 45)$ prior, then 30 successes in 200 trials.
 
-| | |
-|---|---|
-| **Prior** | A curve over $\theta$ from 0 to 1, showing what you thought before. Broad if you know little; peaked if you have history. |
-| **Likelihood** | A second curve, from the data alone: 30 successes out of 200 peaks near 0.15. |
-| **Posterior** | Multiply the two curves point by point and rescale. It sits *between* them, closer to whichever was more confident. |
+![](../Figures/Lecture10_BayesianFoundations/bayes_update.svg){fig-align="center" height="370px"}
 
-**Our numbers:** the prior is centered on 0.10, the data say 0.15, and the posterior mean lands at [**0.14**]{.hi} — between them, nearer the data, because 200 observations outweigh a prior worth about 50.
-
-More data sharpens the likelihood, so the posterior moves toward it and the prior matters less. With little data the prior does most of the work — a feature when it is defensible, a problem when it is not.
+[Multiply the curves point by point and rescale: the posterior sits between them. Its mean balances the prior's 0.10, worth 50 observations, against the data's 0.15, worth 200, at [**0.14**]{.hi}. With little data the prior does most of the work: a feature when it is defensible, a problem when it is not.]{.smaller}
 
 # Prior Distributions
 
@@ -150,17 +144,23 @@ Sampling, the code, and how to tell whether the answer is trustworthy.
 
 ## MCMC: The Big Idea
 
-For any model more complicated than a textbook example, the rescaling denominator in Bayes' theorem cannot be computed. So we do not compute the posterior — we **draw samples from it**, and work with the samples.
+Beyond textbook examples, the denominator in Bayes' theorem cannot be computed. So we do not compute the posterior: we **draw samples from it**.
 
-**The picture to hold.** You are exploring a hilly landscape in the dark, where height is posterior probability. You take a step, and if the ground is higher you move; if it is lower you usually move back. Over thousands of steps you spend most of your time on the high ground.
+**The picture to hold.** You walk a hilly landscape in the dark, where height is posterior probability. Take a step: if the ground is higher, move; if it is lower, usually step back. Over thousands of steps you spend most of your time on the high ground.
 
-The record of where you walked *is* the answer. A histogram of your visited positions has the shape of the posterior, without ever having computed it.
+[PyMC's default sampler is NUTS, which takes smarter steps than this random walk. The intuition is unchanged.]{.neutral .smaller}
+
+---
+
+## The Samples Are the Answer
+
+The record of where you walked *is* the answer: a histogram of the visited positions has the shape of the posterior, and nobody ever computed it.
 
 ::: {.keybox}
-**The samples are the answer.** Posterior mean, credible interval, and the probability of any event you care about are all just summaries of that list of visited values — counted, not derived.
+**Every summary is a count.** Posterior mean, credible interval, the probability of any event you care about: each is a summary of the list of visited values — counted, not derived.
 :::
 
-[PyMC's default sampler is NUTS, which takes smarter steps than the random walk above. The intuition is unchanged.]{.neutral .smaller}
+The planner's stock-out question becomes one line: the share of simulated demand draws above 400 units.
 
 ---
 
@@ -237,15 +237,15 @@ Bayesian inference: beliefs in, beliefs out. Data updates your prior into a post
 ## Lecture 10: Key Takeaways
 
 ::: {.keybox}
-1. **Bayesian inference** treats parameters as random variables with probability distributions. The posterior distribution $p(\theta \mid \mathcal{D})$ represents updated beliefs after seeing data.
+1. **Bayesian inference**: the posterior $p(\theta \mid \mathcal{D})$ is what you believe after the data.
 
-2. **Bayes' theorem:** posterior $\propto$ likelihood $\times$ prior. The normalizing constant $p(\mathcal{D})$ is usually intractable, so we sample instead of computing it.
+2. **Bayes' theorem**: posterior $\propto$ likelihood $\times$ prior, landing between the two, nearer the weightier.
 
-3. **Priors** encode prior knowledge. Use weakly informative priors (Beta, Normal, HalfNormal) to constrain parameters to plausible values without overwhelming the data.
+3. **Priors:** match the support first; weakly informative by default.
 
-4. **MCMC** (specifically NUTS in PyMC) draws samples from the posterior. From samples, compute any summary statistic: mean, median, HDI, or the probability that a parameter exceeds a threshold.
+4. **MCMC** (NUTS in PyMC) draws samples; every summary is counted from them.
 
-5. **Prior predictive checks** verify that your model generates plausible data before fitting. Run them every time.
+5. **Check before you trust**: $\hat{R}$, ESS and divergences, and a prior predictive check, every time.
 :::
 
 [Next: Bayesian Statistics II — Bayesian time series models, trend and seasonality, hierarchical models.]{.neutral}

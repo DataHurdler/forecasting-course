@@ -17,24 +17,24 @@ Lab: `Labs/Lecture11_Part2_lab.qmd` (6 steps) · Measured runtime: **~28 minutes
 - **This is the most important lab in the Bayesian block.** It is the only place in the course
   where a model passes every diagnostic, produces a textbook-looking result, and is wrong.
 
-### A correction this script triggered, and it reached the deck
+### Correction (2026-10-13): Step 6's numbers are 43 / 1.003 / 966, as the lab prints
 
-Step 6's diagnostics did not match what Lecture 11 Part 2 claims. The deck's table said the
-centered fit gave **43 divergences with R-hat 1.003 and ESS 966** — both passing — and concluded
-*"on those numbers you would have shipped it; only the divergence count objects."*
+An earlier version of this note (2026-08-31) reported that the centered fit gives **127
+divergences, R-hat 1.044, ESS 413**, and the deck was changed to match. **That run does not
+reproduce.** The lab's own code with seed 42, on the pinned environment (PyMC 6.3.1, ArviZ 1.3.0),
+gives **43 divergences, R-hat 1.003, ESS 966** centered and **0 / 1.003 / 1,719** non-centered —
+which is also what the published lab page shows (rendered 2026-09-01).
+`scripts/figures/lecture11_part2_figures.py` reproduces it and caches it in
+`Figures/Lecture11_Part2/measured.json`. The same goes for the other 2026-08-31 values below (8.2×,
+0.049, `mu_b` 0.077, `sd_b` 0.066, 11.5×): the lab prints 8.1×, 0.048, 0.078, 0.065 and 11.9×, and
+this script now carries those.
 
-Measured from this lab's own code, on the pinned environment with seed 42, the centered fit gives
-**127 divergences, R-hat 1.044, ESS 413.** R-hat *fails*. I could not reproduce 43 / 1.003 / 966
-from any configuration in the repository — the same model on all thirty series gives 792
-divergences and R-hat 1.074.
-
-So the deck's strong claim rested on numbers nothing in the repo produces. **The deck, its mirror,
-the deck narration, both HW06 solution keys and `CLAUDE.md` now carry the measured values**, and
-the claim is reworded to the version the evidence supports — which is still a good argument for
-watching divergences:
-
-> ESS passes at 413. R-hat fails at 1.044 — the sort of near-miss people talk themselves out of.
-> 127 divergences against a threshold of exactly zero admits no such conversation.
+Why two runs of "the same code" can disagree: NUTS trajectories are chaotic in the last bit.
+Reading the training rows back through a CSV (a last-digit change in 343 of 1,425 values) moves
+seed 42 from 43 divergences to 49. Over ten other seeds the centered form gives 15–285 divergences
+and the non-centered form 0–11; R-hat or ESS objected in 2 of those 11 runs, divergences in all 11.
+So the deck's claim is now the one every run supports: **R-hat and ESS pass; only the divergences
+object.**
 
 ### In-room language that needs replacing
 
@@ -117,8 +117,8 @@ enormously.
 
 ```
 Diagnostics
-  unpooled       r_hat 1.004  ess  6637  divergences    0
-  hierarchical   r_hat 1.001  ess  5203  divergences    0
+  unpooled       r_hat 1.003  ess  6100  divergences    0
+  hierarchical   r_hat 1.003  ess  5077  divergences    0
 ```
 
 Both models sampled cleanly. R-hat near one, effective sample sizes in the thousands, not one
@@ -129,16 +129,16 @@ satisfied.
 
 ```
               unpooled spread   after pooling   mean move
-  thin (8w)       0.104           0.000          0.110
-  full (277w)     0.012           0.001          0.010
+  thin (8w)       0.106           0.000          0.111
+  full (277w)     0.012           0.001          0.009
 
-  ratio: thin series moved 11.5x further
-  mu_b 0.011   sd_b 0.008
+  ratio: thin series moved 11.9x further
+  mu_b 0.011   sd_b 0.007
 ```
 
 **[pause]**
 
-And this is textbook. The thin series — 8 weeks each — moved **11.5 times further** toward the
+And this is textbook. The thin series — 8 weeks each — moved **11.9 times further** toward the
 group mean than the full series did. Nobody told the model which series were starved. It worked
 that out from how much each one had to say.
 
@@ -154,9 +154,9 @@ Keep it where you can see it. Step 3 is going to ask whether it was right.
 
 *(Resume — but plant this before moving on.)*
 
-Before we grade it, look at one number I have not commented on. **`sd_b` is 0.008.**
+Before we grade it, look at one number I have not commented on. **`sd_b` is 0.007.**
 
-That is the model's estimate of how much stores differ from one another. Eight thousandths of a
+That is the model's estimate of how much stores differ from one another. Seven thousandths of a
 log unit — which is to say, the model has concluded that all thirty of these series respond to
 SNAP **essentially identically**.
 
@@ -174,18 +174,18 @@ the world can be sanity-checked in a way that R-hat cannot.
 
 ```
     series  unpooled  hierarchical  held_out_truth
-CA_1_FOODS     0.294         0.011           0.087
-CA_2_FOODS     0.017         0.011           0.011
-CA_3_FOODS     0.035         0.011           0.105
-CA_4_FOODS     0.132         0.011           0.039
-TX_1_FOODS     0.089         0.011           0.082
-TX_2_FOODS     0.171         0.011           0.067
-TX_3_FOODS     0.132         0.011           0.074
-WI_1_FOODS    -0.015         0.011           0.033
-WI_2_FOODS     0.289         0.011           0.209
-WI_3_FOODS     0.015         0.011           0.177
+CA_1_FOODS     0.298         0.011           0.087
+CA_2_FOODS     0.014         0.011           0.011
+CA_3_FOODS     0.037         0.011           0.105
+CA_4_FOODS     0.126         0.011           0.039
+TX_1_FOODS     0.092         0.011           0.082
+TX_2_FOODS     0.172         0.011           0.067
+TX_3_FOODS     0.133         0.011           0.074
+WI_1_FOODS    -0.016         0.011           0.033
+WI_2_FOODS     0.292         0.011           0.209
+WI_3_FOODS     0.017         0.011           0.177
 
-  RMSE vs truth:  unpooled 0.102   hierarchical 0.097
+  RMSE vs truth:  unpooled 0.103   hierarchical 0.098
   mean held-out effect across these series: 0.089
 ```
 
@@ -202,8 +202,8 @@ small**, and reported tight intervals around it.
 
 **[pause]**
 
-And look at the RMSE line, because it takes away the last consolation. Unpooled 0.102,
-hierarchical 0.097. All of that shrinkage — the beautiful collapsing lines, the 11.5× ratio —
+And look at the RMSE line, because it takes away the last consolation. Unpooled 0.103,
+hierarchical 0.098. All of that shrinkage — the beautiful collapsing lines, the 11.9× ratio —
 bought a **five percent** improvement over just fitting each series separately.
 
 *(Screen: the callout.)*
@@ -252,7 +252,7 @@ dominated by the twenty. And then — the second error — we starved **precisel
 had something to say**, so those ten had almost no data with which to resist being pulled toward a
 mean built from series unlike them.
 
-That is why `sd_b` came out at 0.008. Averaged across a group where two thirds genuinely have no
+That is why `sd_b` came out at 0.007. Averaged across a group where two thirds genuinely have no
 effect, "stores are all the same" is the best summary of a badly-posed question.
 
 *(Screen: the exchangeability warning box.)*
@@ -292,17 +292,17 @@ change is which series are allowed into the hierarchy.
 
 ```
        mean     sd hdi94_lb hdi94_ub ess_bulk ess_tail r_hat
-mu_b  0.077  0.035    0.016     0.15     1315     1619  1.00
-sd_b  0.066  0.038    0.012     0.15      756     1016  1.00
+mu_b  0.078  0.035    0.017     0.15     1544     1588  1.00
+sd_b  0.065  0.038   0.0097     0.16     1027     1153  1.00
 ```
 
 **[pause]** — *the comparison to make out loud.*
 
-`mu_b` is **0.077** — a real SNAP effect, where before it was 0.011. And `sd_b` is **0.066**, where
-before it was 0.008. Eight times larger.
+`mu_b` is **0.078** — a real SNAP effect, where before it was 0.011. And `sd_b` is **0.065**, where
+before it was 0.007. Nine times larger.
 
 That second number is the interesting one. The model now says stores genuinely differ from one
-another, because on a defensible group they do. The earlier 0.008 was not a finding about stores;
+another, because on a defensible group they do. The earlier 0.007 was not a finding about stores;
 it was an artifact of asking about the wrong group.
 
 *(Run the shrinkage table.)*
@@ -310,14 +310,14 @@ it was an artifact of asking about the wrong group.
 ```
               unpooled spread   after pooling   mean move
   thin (8w)       0.108           0.010          0.120
-  full (277w)     0.055           0.038          0.015
+  full (277w)     0.055           0.037          0.015
 
-  ratio: thin moved 8.2x further
+  ratio: thin moved 8.1x further
 ```
 
 Compare the middle column with Step 2's. There, **everything** collapsed — thin spread went to
 0.000, full to 0.001. Here the thin series collapse to 0.010 but the full series **keep most of
-their spread**: 0.055 down to 0.038, about seventy percent retained.
+their spread**: 0.055 down to 0.037, about two-thirds retained.
 
 That is what partial pooling is supposed to look like. The model discarded variation that 8 weeks
 could not support, and kept variation that 277 weeks could. In Step 2 it discarded everything,
@@ -327,21 +327,21 @@ which should have been the tell.
 
 ```
     series  unpooled  hierarchical  held_out_truth
-CA_1_FOODS     0.292         0.097           0.087
-CA_3_FOODS     0.103         0.080           0.102
-TX_1_FOODS     0.052         0.074           0.082
-TX_3_FOODS     0.211         0.090           0.072
-WI_2_FOODS     0.338         0.101           0.207
+CA_1_FOODS     0.286         0.097           0.087
+CA_3_FOODS     0.105         0.082           0.102
+TX_1_FOODS     0.052         0.075           0.082
+TX_3_FOODS     0.219         0.091           0.072
+WI_2_FOODS     0.338         0.103           0.207
 
-  RMSE vs truth:  unpooled 0.126   hierarchical 0.049   (2.6x better)
+  RMSE vs truth:  unpooled 0.126   hierarchical 0.048   (2.6x better)
 ```
 
 **[pause]**
 
-Now read the middle column against the last one. 0.097 against 0.087. 0.080 against 0.102. 0.090
+Now read the middle column against the last one. 0.097 against 0.087. 0.082 against 0.102. 0.091
 against 0.072. These are *close*, and each one came from a series with **eight weeks of data.**
 
-RMSE against the truth: 0.126 unpooled, **0.049** hierarchical. Two and a half times better.
+RMSE against the truth: 0.126 unpooled, **0.048** hierarchical. An error 2.6 times smaller.
 
 **That is borrowing strength, and now it is real.** Same code, same priors, same diagnostics — and
 the thin series are estimated well because the other five exist. The only thing that changed was
@@ -366,8 +366,8 @@ centered form.
 
 ```
 Diagnostics
-  centered        r_hat 1.044  ess   413  divergences  127
-  non-centered    r_hat 1.002  ess  1728  divergences    1
+  centered       r_hat 1.003  ess   966  divergences   43
+  non-centered   r_hat 1.003  ess  1719  divergences    0
 ```
 
 **[pause]**
@@ -378,16 +378,22 @@ neck, and a sampler tuned for the wide part of the funnel cannot get into the ne
 
 *(Screen: the callout.)*
 
-Now read the three numbers as three different *kinds* of warning, because that is the lesson.
+Now read the three numbers, because only one of them objects — and that is the lesson.
 
-**ESS passes.** 413, thirteen over the threshold. You would not look twice.
+**ESS passes.** 966, more than twice the threshold. You would not look twice.
 
-**R-hat fails** — 1.044 against 1.01. But be honest about what happens in practice when a number
-is a little over a line: people rerun it, or call it close enough, or decide the threshold is
-conservative.
+**R-hat passes** — 1.003 against 1.01. On those two numbers alone, the two Lecture 10 taught you to
+check, you would have shipped this model.
 
-**127 divergences against a threshold of exactly zero.** There is no version of "close to zero"
-that gets you to a hundred and twenty-seven. It admits no conversation.
+**43 divergences against a threshold of exactly zero.** There is no version of "close to zero"
+that gets you to forty-three. It admits no conversation.
+
+*(Screen: the second paragraph of the callout.)*
+
+If your number differs from this one, that is expected: divergence counts move with the seed and
+even the machine. Over ten other seeds we saw 15 to 285 centered and 0 to 11 non-centered. What
+held every time was the pattern — the centered form diverged on all eleven runs, and R-hat or ESS
+caught it on only two.
 
 So the rule: on hierarchical models, **divergences fire first and least ambiguously.** Do not wait
 for R-hat to decide for you.
@@ -414,8 +420,8 @@ category did here — and say how you would handle it **without** abandoning the
 **[pause]** — *the good answer is a level the hierarchy can absorb: put the offending variable in
 as a predictor, or nest the hierarchy — stores within regions — rather than giving up on pooling.*
 
-**The judgment.** In Step 5, `sd_b` came out around 0.066, so stores genuinely differ. The
-unpooled fit put the range at roughly 5% to 33%. Given both numbers, what do you actually
+**The judgment.** In Step 5, `sd_b` came out around 0.065, so stores genuinely differ. The
+unpooled fit put the thin stores' range at roughly 5% to 40%. Given both numbers, what do you actually
 recommend the business do for the next SNAP week?
 
 **The thread.** This is the sixth time this semester a model improved by pulling estimates toward
@@ -439,18 +445,18 @@ answer.
 |---|---|
 | Panel | 30 series · 8,310 rows · **22.1%** high-SNAP weeks |
 | Split | train 5,620 · held-out 2,690 · 10 thin (8 wks) + 20 full |
-| **Step 2** diagnostics | unpooled 1.004 / 6,637 / 0 · hierarchical 1.001 / 5,203 / **0** — all clean |
-| Step 2 shrinkage | thin 0.104 → **0.000** (move 0.110) · full 0.012 → 0.001 (move 0.010) · ratio **11.5×** |
-| Step 2 hierarchy | `mu_b` **0.011** · `sd_b` **0.008** ← implausibly small; the substantive tell |
+| **Step 2** diagnostics | unpooled 1.003 / 6,100 / 0 · hierarchical 1.003 / 5,077 / **0** — all clean |
+| Step 2 shrinkage | thin 0.106 → **0.000** (move 0.111) · full 0.012 → 0.001 (move 0.009) · ratio **11.9×** |
+| Step 2 hierarchy | `mu_b` **0.011** · `sd_b` **0.007** ← implausibly small; the substantive tell |
 | **Step 3** grading | hierarchical reports **0.011 for all ten**; held-out truth averages **0.089** |
-| Step 3 RMSE | unpooled 0.102 · hierarchical 0.097 — pooling bought **~5%** |
+| Step 3 RMSE | unpooled 0.103 · hierarchical 0.098 — pooling bought **~5%** |
 | **Step 4** by category | FOODS **+0.089** (sd 0.058) · HOBBIES +0.006 · HOUSEHOLD +0.011 |
 | Step 4 thinning | `j % 3 == 0` selects **all ten FOODS series** |
-| **Step 5** hierarchy | `mu_b` **0.077** [0.016, 0.150] · `sd_b` **0.066** — 8× Step 2's |
-| Step 5 shrinkage | thin 0.108 → 0.010 · full 0.055 → **0.038** (70% retained) · ratio **8.2×** |
-| Step 5 grading | unpooled 0.126 · hierarchical **0.049** — **2.6× better** |
-| **Step 6** centered | R-hat **1.044** · ESS 413 · divergences **127** |
-| Step 6 non-centered | R-hat 1.002 · ESS 1,728 · divergences **1** |
+| **Step 5** hierarchy | `mu_b` **0.078** [0.02, 0.15] · `sd_b` **0.065** — 9× Step 2's |
+| Step 5 shrinkage | thin 0.108 → 0.010 · full 0.055 → **0.037** (two-thirds retained) · ratio **8.1×** |
+| Step 5 grading | unpooled 0.126 · hierarchical **0.048** — **2.6× better** |
+| **Step 6** centered | R-hat 1.003 · ESS 966 · divergences **43** (seed-dependent: 15–285 over ten other seeds) |
+| Step 6 non-centered | R-hat 1.003 · ESS 1,719 · divergences **0** (0–11 over ten other seeds) |
 
 **Three things to know before recording.**
 
@@ -458,7 +464,7 @@ answer.
 ranging 0.011 to 0.209 is the single most persuasive exhibit in the Bayesian block. Do not narrate
 over it.
 
-*Plant `sd_b = 0.008` at the end of Step 2, before the grading.* It is the one clue available
+*Plant `sd_b = 0.007` at the end of Step 2, before the grading.* It is the one clue available
 *before* the answer key, and it is not a diagnostic — it is a claim about the world ("all thirty
 stores respond identically") that a modeller can reject on subject-matter grounds. Students who
 learn to read it have learned something no threshold gives them.

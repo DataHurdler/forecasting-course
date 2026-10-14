@@ -213,8 +213,11 @@ def _is_linear(name: str) -> bool:
 
 
 def _ranks_match(rows, g) -> bool:
+    # The preface names the PAIR's places ("finish fifth and sixth"), not which model took which,
+    # so compare as a set. On 52-week windows the Transformer (990) edges the LSTM (998).
     want = (num(g[0]), num(g[1]))
-    return want == (rank_of(rows, "lstm"), rank_of(rows, "transformer")) and None not in want
+    got = (rank_of(rows, "lstm"), rank_of(rows, "transformer"))
+    return None not in want and None not in got and sorted(want) == sorted(got)
 
 
 def panel_size() -> int | None:

@@ -41,19 +41,19 @@ The same regression you already know — returning a distribution for every coef
 
 ## OLS vs. Bayesian Regression: What Changes?
 
-You have fitted linear models since Lecture 2, and regularized them in Lecture 6. OLS solves for a single best coefficient vector:
+OLS, which you have fitted since Lecture 2, solves for one best coefficient vector:
 
 $$\hat{\boldsymbol{\beta}} = (\mathbf{X}^{\top}\mathbf{X})^{-1}\mathbf{X}^{\top}\mathbf{y}$$
 
-One number per predictor, with a standard error resting on large-sample theory. The Bayesian version replaces that with the update rule from Lecture 10:
+The Bayesian version uses Lecture 10's update rule instead:
 
 $$p(\boldsymbol{\beta} \mid \mathbf{y}) \;\propto\; p(\mathbf{y} \mid \boldsymbol{\beta}) \cdot p(\boldsymbol{\beta})$$
 
 ::: {.keybox}
-**Every coefficient comes back as a distribution.** Not an estimate plus an error bar computed from an asymptotic formula — a full posterior you can ask questions of directly.
+**Every coefficient comes back as a distribution**: not an estimate plus an asymptotic error bar, but a full posterior you can ask questions of.
 :::
 
-And one thing you know reappears: **regularization is a prior**. A Normal prior on $\beta$ is Ridge; a Laplace prior is LASSO. Lecture 6's penalty is, here, a statement of belief.
+And Lecture 6 reappears: **regularization is a prior**. The posterior *mode* under a Normal prior is the Ridge estimate; under a Laplace prior, it is the LASSO estimate.
 
 ---
 
@@ -61,22 +61,23 @@ And one thing you know reappears: **regularization is a prior**. A Normal prior 
 
 ::: {.examplebox}
 ::: {.examplebox-title}
-Log units on log price, SNAP and events
+Log units on log price, SNAP, events, series and trend
 :::
 ```python
 with pm.Model() as model:
-    a       = pm.Normal("a", y.mean(), 1)
+    a       = pm.Normal("a", y.mean(), 1, shape=J)  # one per series
     b_price = pm.Normal("b_price", 0, 1)      # weakly informative
     b_snap  = pm.Normal("b_snap",  0, 1)
     b_event = pm.Normal("b_event", 0, 1)
+    b_trend = pm.Normal("b_trend", 0, 1)
     sigma   = pm.Exponential("sigma", 1.0)
-    mu = a + b_price*lpc + b_snap*snap + b_event*event
+    mu = a[idx] + b_price*lpc + b_snap*snap + b_event*event + b_trend*yr
     pm.Normal("obs", mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(1000, tune=1500, chains=4)
 ```
 :::
 
-**Do not standardize log price** — with both in logs `b_price` is an **elasticity**, percent change in demand per percent change in price. Standardizing rescales it to "per SD" and destroys that reading. `lpc` is log price centered within series, which fixed ESS 184 $\rightarrow$ 3,097.
+**Do not standardize log price** — with both in logs `b_price` is an **elasticity**, percent change in demand per percent change in price. `lpc` is log price centered within series, which fixed ESS 184 $\rightarrow$ 3,097.
 
 # Reading the Posterior
 
@@ -90,20 +91,20 @@ Fitted on the weekly panel, controlling for series and trend:
 
 | Coefficient | Mean | 94% HDI | Reading |
 |---|---:|---|---|
-| `b_price` | $-0.493$ | $[-0.596,\ -0.387]$ | Near the elastic boundary |
+| `b_price` | $-0.493$ | $[-0.596,\ -0.387]$ | Inelastic: all of it above $-1$ |
 | `b_trend` | $0.110$ | $[0.107,\ 0.113]$ | About 11% growth per year |
 | `b_snap` | $0.036$ | $[0.027,\ 0.046]$ | About a 3.7% SNAP-week lift |
 | `b_event` | $-0.003$ | $[-0.011,\ 0.004]$ | **Spans zero** |
 
-The **HDI** — highest density interval — is the shortest interval containing 94% of the posterior. Unlike a confidence interval it says what everyone wants it to say: there is a 94% probability the coefficient lies in there.
+The **HDI** — highest density interval — is the shortest interval holding 94% of the posterior, and it means what everyone wants: a 94% probability the coefficient is inside.
 
-**The last row is the useful one.** `b_event`'s interval spans zero, so the data do not establish a direction. That is a more honest report than "not significant," because it also shows the effect is *small* — at most about half a percent either way.
+**The last row is the useful one.** `b_event`'s interval spans zero, so the data do not establish a direction — but it also shows the effect is *small*, between about $-1.1\%$ and $+0.4\%$. That is more honest than "not significant."
 
 ---
 
 ## Asking the Posterior a Direct Question
 
-The posterior is a set of samples, so any question about $\beta$ is answered by counting.
+Any question about $\beta$ is answered by counting samples.
 
 ::: {.examplebox}
 ::: {.examplebox-title}
@@ -112,16 +113,16 @@ One line each
 ```python
 b = idata.posterior["b_price"].values.ravel()
 
-(b < 0).mean()               # P(demand falls when price rises)
-(b < -0.5).mean()            # P(elasticity beyond -0.5)
-((b > -0.5) & (b < 0)).mean()  # P(inelastic but negative)
+(b < 0).mean()       # P(demand falls when price rises)
+(b < -1).mean()      # P(elastic: a price rise loses revenue)
+(b < -0.5).mean()    # P(a 1% rise costs over 0.5% of volume)
 ```
 :::
 
-On our fit, $P(\text{elasticity} < 0) = \mathbf{1.00}$ — the direction is not in doubt. But $P(\text{elasticity} < -0.5) = \mathbf{0.446}$: the data cannot settle whether demand is elastic or inelastic.
+On our fit, $P(\text{elasticity} < 0) = \mathbf{1.00}$ and $P(\text{elasticity} < -1) = \mathbf{0.00}$: demand falls when price rises, and is **inelastic** in every draw. Whether a 1% rise costs over half a percent of volume stays open: $P(\text{elasticity} < -0.5) = \mathbf{0.46}$.
 
 ::: {.keybox}
-**Two findings, and a p-value conflates them.** "Significant" reports only the direction. The question the business asks — *how big?* — gets the answer 46/54.
+**A p-value reports only the direction.** The posterior also answers *how big* — and shows which size questions are still open.
 :::
 
 [Posterior mass inside a range of negligible values is a **ROPE** — region of practical equivalence.]{.neutral .smaller}
@@ -134,43 +135,36 @@ Which coefficients mean what you think they mean.
 
 ## Directed Acyclic Graphs
 
-A **DAG** is a picture of what you believe causes what: **nodes** are variables, **arrows** run from cause to effect, and **acyclic** means nothing causes itself.
-
-It is drawn before the model, from domain knowledge, and its purpose is to tell you *which variables belong in the regression*.
+A **DAG** is a picture of what you believe causes what: **nodes** are variables, **arrows** run from cause to effect, and nothing causes itself. You draw it before the model, from domain knowledge, to decide *which variables belong in the regression*.
 
 | | |
 |---|---|
 | **Confounder** | Causes both your predictor and your outcome. **Must** be controlled for, or its influence is absorbed into your coefficient. |
 | **Collider** | Is caused by both. Controlling for it **creates** a spurious association that was not there. |
 
-**That second row is why "add every control you have" is bad advice.** Which variables to include is a question about causal structure, and no amount of model fit will answer it.
+**So "add every control you have" is bad advice.** Which variables to include is a question about causal structure, and no model fit will answer it.
 
-[Whether a given DAG is right is a substantive question about your business, not a statistical one. This course uses DAGs to reason about what a coefficient means — estimating causal effects credibly is a separate subject.]{.neutral .smaller}
+[Whether a DAG is right is a business question, not a statistical one. Estimating causal effects credibly is a separate subject.]{.neutral .smaller}
 
 ---
 
 ## Confounding, Measured
 
-Our panel has thirty store-category series. Categories differ in *both* typical price and typical volume — so series identity is an arrow into price *and* into units. A textbook confounder.
+Two confounders move price and units together: the **category** and **time**.
 
-Fit the same elasticity twice:
+![](../Figures/Lecture12_BayesianRegression/confounding.svg){fig-align="center" height="285px"}
 
-| Model | Elasticity | 94% HDI |
-|---|---:|---|
-| Price, SNAP, events only | $-2.805$ | $[-2.856,\ -2.756]$ |
-| $+$ series effects and trend | $\mathbf{-0.493}$ | $[-0.596,\ -0.387]$ |
-
-[**The uncontrolled estimate is nearly six times too large**]{.key-result} — it claims demand collapses when price rises. It is not noisier either: its interval is *half the width*. It is confidently, precisely wrong.
+[Food is cheap and sells in volume; prices and volumes both rose, 2011–2016. Removing the series means alone flips the sign. With both removed: $-0.493$, HDI $[-0.596, -0.387]$. The naive $-2.805$, HDI $[-2.856, -2.756]$, is nearly six times too large, at half the width.]{.smaller}
 
 ::: {.warningbox}
-A tight credible interval says the model is sure. It says nothing about whether the model is answering your question. Bayesian machinery does not protect you from omitting a confounder — only the DAG does.
+[**Confidently, precisely wrong**]{.key-result}: a tight interval says the model is sure, not that it answers your question. Only the DAG protects you from an omitted confounder.
 :::
 
 ---
 
 ## Scenario Analysis with Posterior Samples
 
-Because the posterior is samples, you can push a business scenario through it and get a **distribution of outcomes** rather than a single projected number.
+Push a scenario through the draws to get a **distribution of outcomes**, not one number.
 
 ::: {.examplebox}
 ::: {.examplebox-title}
@@ -184,9 +178,9 @@ pct_change.mean(), np.percentile(pct_change, [3, 97])
 ```
 :::
 
-With an elasticity near $-0.493$, a 5% price rise implies roughly a **2.4% fall in units**, 94% of the posterior between $-2.9\%$ and $-1.9\%$ — so you can report the pessimistic end too.
+With an elasticity near $-0.493$, a 5% price rise implies roughly a **2.4% fall in units**, 94% of the posterior between $-2.9\%$ and $-1.9\%$.
 
-**Then the decision follows.** Revenue rises if the volume loss is smaller than the price gain: here $+2.5\%$ on average, and $P(\text{revenue rises}) = 1.00$ across every posterior sample. Note this holds *even though* the elasticity might be past $-0.5$.
+**The decision follows.** Revenue changes by a factor $1.05^{\,1+b}$, which rises exactly when $b > -1$. Every draw is above $-1$, so $P(\text{revenue rises}) = 1.00$: about $+2.5\%$ on average.
 
 [Valid only to the extent the DAG is — this is a causal claim about intervening on price.]{.neutral .smaller}
 
@@ -198,19 +192,22 @@ From classical time series to Bayesian hierarchical models: a complete forecasti
 
 ## Course Method Map
 
+::: {.smaller}
 | Method | Data | Uncertainty | Interpretable | Strengths |
 |---|---|---|---|---|
 | ETS / ARIMA (L01–02) | Univariate TS | CI | High | Fast, automatic |
 | GAM / Prophet (L03) | TS + predictors | Limited | High | Nonlinear + interpretable |
 | Decision Tree (L04) | Tabular | No | High | Rule-based explanation |
-| Random Forest (L05) | Tabular | OOB CI | Medium | Robust, minimal tuning |
-| XGBoost (L06) | Tabular | No | Low | Best tabular accuracy |
-| FFN / 1D CNN (L07–08) | Tabular / TS | No | Low | Smooth functions, fast |
+| Random Forest (L05) | Tabular | OOB error only | Medium | Robust, minimal tuning |
+| XGBoost (L05) | Tabular | No | Low | Interactions; 781 on our board |
+| Ridge / LASSO (L06) | Tabular | No | High | Best on our board: 744 |
+| FFN / 1D CNN (L07–08) | Tabular / TS | No | Low | Flexible nonlinear fits |
 | LSTM / Transformer (L09) | Sequences | No | Very low | Long-range dependencies |
 | Bayesian (L10–12) | Any | Full posterior | High | Uncertainty, small samples |
+:::
 
-::: {.keybox}
-No single method dominates. Choose based on: (1) data type and size, (2) need for uncertainty quantification, (3) need for interpretability, (4) time to deploy. In practice, combine: use XGBoost for the point forecast and a Bayesian model for uncertainty intervals.
+::: {.keybox .smaller}
+No single method dominates. Choose based on: (1) data type and size, (2) need for uncertainty quantification, (3) need for interpretability, (4) time to deploy. In practice, combine: your scoreboard's winner for the point forecast (here, LASSO) and a Bayesian model for the intervals.
 :::
 
 ---
@@ -218,15 +215,15 @@ No single method dominates. Choose based on: (1) data type and size, (2) need fo
 ## Lecture 12: Key Takeaways
 
 ::: {.keybox}
-1. **Bayesian linear regression** places priors on coefficients and returns a full posterior distribution for each $\beta_j$. A Normal prior is equivalent to Ridge regularization; a Laplace prior is equivalent to LASSO.
+1. **Bayesian regression**: a posterior per $\beta$, whose mode is Ridge (Normal) or LASSO (Laplace).
 
-2. Posterior coefficient plots give: posterior mean, HDI, and $P(\beta_j > 0)$ — richer information than a single $p$-value.
+2. **Ask the posterior directly**: mean, HDI, $P(\beta_j$ past any threshold$)$.
 
-3. **DAGs** make the causal structure explicit, helping identify confounders (must include) and colliders (must exclude). Always draw the DAG before specifying a regression model.
+3. **Draw the DAG first**: control confounders (here, series *and* time), never colliders.
 
-4. **Scenario analysis** with posterior samples: plug any counterfactual $\mathbf{x}^*$ into posterior draws to get a full predictive distribution for that scenario.
+4. **Scenarios**: push a counterfactual through the draws to get a distribution of outcomes.
 
-5. **No single method is best for all forecasting problems.** Build intuition for when to use each tool in this course's toolkit, and combine methods (e.g., point forecast + Bayesian uncertainty) when the decision stakes are high.
+5. **No single method is best**: pair an accurate point forecast with Bayesian intervals.
 :::
 
 ---

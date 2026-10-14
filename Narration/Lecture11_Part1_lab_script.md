@@ -29,11 +29,11 @@ The lab now computes the point forecast from the deterministic part — no simul
 rows report **1,589**, identically, and the callout says why. Simulation is used for the interval
 only, which is the one thing it is needed for.
 
-*(Note for the record: the deck and the HW06 Part 1 solution key both report **1,587**, from
-noisier simulated estimates of the same quantity. 1,589 is the cleaner number — it carries no
-forecast-simulation error at all. The gap is 2 units, 0.13%, and the deck's headline claim
-"beat seasonal naive by 4%" is *more* exact at 1,589 (4.28%) than it was at 1,587 (4.40%).
-Aligning deck and solution key to 1,589 is pending owner approval.)*
+*(Note for the record: the HW06 Part 1 solution key reports **1,587**, from a noisier simulated
+estimate of the same quantity, as the deck's narration once did. 1,589 is the cleaner number — it
+carries no forecast-simulation error at all. The gap is 2 units, 0.13%, and the deck's headline
+claim "beat seasonal naive by 4%" is *more* exact at 1,589 (4.28%) than at 1,587 (4.40%). The deck
+and its narration now read 1,589; aligning the solution key is pending owner approval.)*
 
 ### In-room language that needs replacing
 
@@ -274,10 +274,10 @@ overconfident. Conservative.
 
 **[pause]**
 
-The interval is **11,667 units wide on a series averaging about 19,700** — call it plus or minus
-thirty percent. Now say that out loud as a business sentence: *"I am 94% confident that next
-week's demand is somewhere between roughly thirty percent below and thirty percent above
-average."*
+The interval is **11,667 units wide on average, on a series averaging about 19,700** — call it plus
+or minus thirty percent, *on average*: about twenty percent in the first quarter, thirty-seven in the
+last. Now say that out loud as a business sentence: *"I am 94% confident that demand six months
+from now is somewhere between roughly thirty percent below and thirty percent above average."*
 
 Nobody places an inventory order against that. It is honest and it is useless, and those are not
 the same axis.
@@ -350,7 +350,7 @@ one, and what happens when some of them barely have any data.
 | Level propagated | RMSE **1,589** (identical by construction) · coverage **100%** · mean width **11,667** |
 | By horizon — frozen | 100% / 6,255 · **92%** / 6,537 · 100% / 6,027 (*narrower* a year out) |
 | By horizon — propagated | 100% / 8,081 · 100% / 11,974 · 100% / 14,637 (**1.8× widening**) |
-| Interval width in context | 11,667 on a mean of ~19,700 → about **±30%** |
+| Interval width in context | 11,667 on a mean of ~19,700 → about **±30% on average** (±20% in weeks 1–13, ±37% in weeks 40–52) |
 | Seasonal naive | **1,660** → the model is about **4%** better (4.28%) |
 
 **Three things to know before recording.**

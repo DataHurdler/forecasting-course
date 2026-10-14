@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Synthesis — What the Semester Measured**
 
-Deck: `Slides/Lecture13_Synthesis.pdf` (20 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture13_Synthesis.pdf` (21 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -73,15 +73,34 @@ what it will fail at.
 
 # ▶ SLIDE 5 — The Scoreboard
 
-*(Walk the table. Take your time — this slide is the evidence for everything after it.)*
+*(Picture first, then the table. Take your time — this is the evidence for everything after it.)*
 
 Every model in this course, on the same M5 weekly panel. Same thirty series, same held-out block.
 
-LASSO with forty-six engineered features: **seven forty-four**. XGBoost, tuned: seven eighty-one.
-Vanilla RNN on four raw channels: eight forty-two. Random forest: eight ninety-nine. LSTM: nine
-eighty-seven. Transformer encoder: nine ninety. 1D CNN: one thousand thirty-two.
+*(Point at the dots.)*
 
-And seasonal naive, at the bottom: twenty-one fifty-two.
+One axis, starting at zero. Each dot is one model's test RMSE. Blue dots came from Lectures 4 to
+6 — trees and regularization. Red dots came from Lectures 7 to 9 — the neural networks. And the
+dashed line on the right is the seasonal-naive benchmark: same week last year, twenty-one
+fifty-two.
+
+**[pause]**
+
+Look at the shape before you read a single number. Seven models, built over nine weeks with four
+completely different philosophies, all land inside that gray band — between seven forty-four and
+ten thirty-two. A spread of under three hundred. And every one of them sits more than eleven
+hundred away from the benchmark.
+
+*(Now the table — it says where each number came from.)*
+
+LASSO with forty-six engineered features: **seven forty-four**, from Homework 4. XGBoost: seven
+eighty-one, also Homework 4. Vanilla RNN: eight-oh-five. Random forest: eight ninety-nine.
+Transformer encoder: nine ninety. LSTM: nine ninety-eight. 1D CNN: one thousand thirty-two.
+
+One honest footnote on that list. The three recurrent and attention models all read fifty-two
+weeks of history. The CNN number comes from Lab 8, where it read twenty-six weeks, so the table
+says so. Lab 8 also found that handing the CNN a longer window made it worse, not better, so
+the label is a caveat, not an excuse.
 
 **[pause]**
 
@@ -92,16 +111,21 @@ That ordering is not the one anyone predicts in Week 1.
 A **forty-six-coefficient linear model** is at the top. Above gradient boosting, above every
 neural architecture we built.
 
-And the two architectures with the most attention and money behind them — the LSTM and the
-Transformer — finished **fifth and sixth of eight**, behind a plain RNN with a fraction of their
+And the two architectures with the most attention and money behind them — the Transformer and the
+LSTM — finished **fifth and sixth of eight**, behind a plain RNN with a fraction of their
 parameters.
 
 *(Beat.)*
 
-I want to be careful about what that does and doesn't mean, because the wrong lesson is easy to
-take. It does not mean Transformers are overrated in general — they reorganized an entire field.
-It means they are **mismatched to this problem**, and the rest of this lecture is about learning to
-see that mismatch in advance rather than after nine hours of fitting.
+Notice the last clause on the slide: at the training budget each was measured at. Lecture 9 Part
+1 showed why that matters. At twenty-six-week windows, give the LSTM a hundred epochs instead of
+thirty and it catches the RNN — the two tie. So the RNN's real edge is speed. That's a different
+claim from "the RNN is a better model," and the slide is careful to make only the first one.
+
+I want to be careful about what the rest of it does and doesn't mean, too, because the wrong
+lesson is easy to take. It does not mean Transformers are overrated in general — they reorganized
+an entire field. It means they are **mismatched to this problem**, and the rest of this lecture is
+about learning to see that mismatch in advance rather than after nine hours of fitting.
 
 ---
 
@@ -119,7 +143,13 @@ In Homework 1, the seasonal-naive benchmark — same week last year, one line of
 exponential smoothing and ARIMA model you fitted.**
 
 That was not a trick question or a rigged setup. It is simply what the data supports at that
-horizon.
+horizon — and the reason is countable. Holt-Winters had to estimate fifty-two seasonal indices from
+four point three annual cycles of training data: about four observations per parameter. Seasonal
+naive estimates nothing. And the level it carries barely moves: calendar year on calendar year,
+plus three point seven percent, plus one point three, minus four point four, plus two point nine.
+That's since 2012. The year before, 2011 to 2012, the series jumped almost twenty-nine percent,
+which is why the slide says "since 2012" — the claim is about the years the benchmark actually
+had to copy.
 
 **[pause]**
 
@@ -138,7 +168,7 @@ So: **compute the benchmark first, every time.**
 It costs one line. It is often close. And it is the only number that tells you whether the rest of
 your work was worth doing.
 
-*(Point at the last paragraph, and make it about them.)*
+*(Then make it about them.)*
 
 This is also the cheapest professional habit you can carry out of this course, and the one most
 likely to distinguish you early in a job. A forecast presented without a benchmark is a number
@@ -155,12 +185,15 @@ reason** — which is the part that matters.
 
 *(Walk the table.)*
 
-The **LSTM lost to a plain RNN**, at three window lengths. Gating fixes long-range forgetting; a
-twenty-six-week window does not suffer from long-range forgetting. Four times the parameters, no
-gain.
+The **LSTM lost to a plain RNN**, at three window lengths, at a fixed thirty-epoch budget. At
+twenty-six weeks, given a hundred epochs, the two tie — so even the honest version of this result
+is "no gain," not "the LSTM is worse." Gating fixes long-range forgetting, and ninety-one percent
+of this panel's variance is between series: there is very little to forget. Four times the
+parameters, no gain.
 
 The **Transformer lost to an RNN**, with fifteen times the parameters. Its advantages are
-advantages *at scale*, and five thousand nine hundred forty windows is not scale.
+advantages *at scale*, and five thousand one hundred sixty overlapping fifty-two-week windows —
+roughly a hundred genuinely independent years of data — is not scale.
 
 **CNNs lost to LASSO**, because a seven-week receptive field cannot see an annual lag.
 
@@ -359,7 +392,7 @@ weeks of this course have been aimed at the second one.
 
 # ▶ SLIDE 15 — The Day Every Model in This Course Fails
 
-*(Table up. This is the last new result of the course — give it room.)*
+*(Figure up. This is the last new result of the course — give it room.)*
 
 One more failure, and it is not on the previous slide's list because it is not a mistake anybody
 made. It is a limit.
@@ -367,18 +400,39 @@ made. It is a limit.
 Every twenty-fifth of December, the stores close. Recorded sales are **exactly zero** — five times
 in our sample, against a daily average near twenty-eight hundred.
 
-*(Walk the row.)*
+*(Point at the left panel.)*
 
-And the seasonal-naive benchmark, on those four evaluable days, predicts twenty-two thirty,
-twenty forty-five, twenty-four eighty-five, twenty-three sixty-five. Wrong by a hundred percent of
-the true value, every time, on a date known years in advance.
+This is CA_1 FOODS, daily, from the eighteenth of December to the first of January, four
+Christmases laid on top of each other. Black lines are what actually sold. Every one of them dives
+to zero on the twenty-fifth — that black dot at the bottom.
+
+The dashed lines are the seasonal-naive forecast: the same weekday, one year earlier. On the
+twenty-fifth they sit at twenty-two thirty, twenty forty-five, twenty-four eighty-five,
+twenty-three sixty-five. The red bars are the errors — a hundred percent of the forecast, every
+time, on a date known years in advance.
+
+*(Point at the hollow circles.)*
+
+And look what the dashed lines do the day before. They dive to zero too. That's last year's
+closure, replayed: fifty-two weeks back from the twenty-fourth lands on last year's Christmas. In
+2012 it lands on the twenty-third, because 2012 was a leap year. So the benchmark pays twice — once
+for not knowing the store is closed, and once for thinking it is closed when it isn't. That echo
+costs another seven percent of the squared error on its own.
 
 **[pause]**
 
-Now the number that makes this more than an anecdote. Those four days are **one quarter of one
-percent** of the evaluation window, and they carry **four point six percent** of its squared
-error. Eighteen times their share. Drop four days out of fifteen hundred and the benchmark's RMSE
-falls from 537 to 525 — without changing a single thing about the model.
+*(Point at the right panel.)*
+
+Now the picture that makes this more than an anecdote. A squared error is an area. The small gray
+square is an average day: its side is the benchmark's RMSE over the whole evaluation window,
+five thirty-seven. Each red square's side is one Christmas error. Count the gray squares that fit
+inside: seventeen, fifteen, twenty-one, nineteen. On average, **one closed day weighs eighteen
+ordinary days**.
+
+Which is why four days — **one quarter of one percent** of the evaluation window — carry **four
+point six percent** of its squared error. Eighteen times their share. Drop those four days out of
+fifteen hundred and the benchmark's RMSE falls from 537 to 525 without changing a single thing
+about the model.
 
 *(Beat.)*
 
@@ -536,7 +590,7 @@ One. **Compute the benchmark first.** It's often close, and it's the only number
 your work was worth doing.
 
 Two. **Match the method to the problem**, not to the paper's publication date. The most advanced
-model on our data finished sixth.
+model on our data, the Transformer, finished fifth.
 
 Three. **One idea recurs**: fit against complexity, with a parameter setting the rate. Six times,
 under six names.

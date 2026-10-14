@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics I — Foundations**
 
-Deck: `Slides/Lecture10_BayesianFoundations.pdf` (19 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture10_BayesianFoundations.pdf` (20 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -13,7 +13,7 @@ Deck: `Slides/Lecture10_BayesianFoundations.pdf` (19 pages) · Measured runtime:
 - This lecture changes the *question*, not the accuracy. Slide 5 is where students decide whether
   Bayesian methods are worth their attention — spend time there and use the meeting framing, not
   the philosophy.
-- Slide 15 introduces the three diagnostics that every remaining assignment requires. Be explicit
+- Slide 16 introduces the three diagnostics that every remaining assignment requires. Be explicit
   that they are non-negotiable.
 
 ---
@@ -203,32 +203,51 @@ change; the feasibility did.
 # ▶ SLIDE 8 — The Update, in Pictures
 
 Let's make it concrete with a case you could actually meet. Estimating a conversion rate — theta —
-from two hundred trials.
+with a Beta five, forty-five prior, and then thirty successes in two hundred trials.
 
-*(Walk the three rows.)*
+*(Point at the blue curve.)*
 
-The **prior** is a curve over theta, from zero to one, showing what you thought before you looked.
-Broad if you know little; peaked if you have history.
+The **prior**, in blue, is what you thought before you looked. Its mean is point-one-zero — that's
+the dotted line. Notice the peak sits a little left of the mean, at about point-oh-eight, because
+the curve has a long right tail. When I say this prior is centered on point-one, I mean its mean.
 
-The **likelihood** is a second curve, coming from the data alone. Thirty successes out of two
-hundred peaks near point-one-five.
+*(Point at the dashed curve.)*
 
-The **posterior** is what you get when you multiply those two curves point by point and rescale.
-And it lands *between* them — closer to whichever one was more confident.
+The **likelihood**, dashed, comes from the data alone. Thirty out of two hundred, so it peaks at
+point-one-five.
+
+*(Point at the red curve.)*
+
+The **posterior**, in red, is what you get when you multiply those two curves point by point and
+rescale. It lands *between* them, and it is taller and narrower than either, because it carries the
+information of both.
 
 **[pause]**
 
-*(Point at the numbers.)*
+*(Point at the lever.)*
 
-Our numbers. The prior is centered on point-one-zero. The data say point-one-five. And the
-posterior mean comes out at **point-one-four**.
+Now the lever underneath, because it is the whole mechanism in one picture. The posterior mean is a
+balance point. Put the prior's point-one-zero on one side with a weight of fifty — that's how many
+observations the prior is worth. Put the data's point-one-five on the other with a weight of two
+hundred. The beam balances at **point-one-four**. Exactly: fifty times point-one, plus two hundred
+times point-one-five, over two hundred fifty.
 
-Between the two, much nearer the data — because two hundred observations outweigh a prior worth
-about fifty.
+The squares are drawn with area proportional to weight, so the data's square is four times the
+prior's. Between the two, much nearer the data — because two hundred observations outweigh a prior
+worth fifty.
 
-That's the whole mechanism, and it behaves the way you'd want. More data sharpens the likelihood,
-so the posterior moves toward it and the prior matters less. With very little data the prior does
-most of the work — which is a feature when the prior is defensible, and a problem when it isn't.
+**[pause]**
+
+*(Point at the right-hand panel.)*
+
+And the panel on the right shows what happens as data accumulates. Keep the same fifteen percent
+rate and change only how many trials it came from. Three out of twenty barely moves you:
+point-one-one-four. Thirty out of two hundred gets you to point-one-four. Three hundred out of two
+thousand, point-one-four-nine — the prior has almost vanished.
+
+That's the whole mechanism, and it behaves the way you'd want. More data, and the posterior moves
+toward it. Little data, and the prior does most of the work — which is a feature when the prior is
+defensible, and a problem when it isn't.
 
 ---
 
@@ -339,7 +358,7 @@ computed — it's an integral over every possible parameter combination.
 So we don't compute the posterior. We **draw samples from it**, and then work entirely with the
 samples.
 
-*(Point at the landscape image and tell it as a story.)*
+*(Tell the picture as a story.)*
 
 Here's the picture I want you to hold. You are exploring a hilly landscape in the dark, where
 height corresponds to posterior probability. You take a step. If the ground is higher, you move
@@ -347,22 +366,6 @@ there. If it's lower, you usually move back — usually, not always.
 
 Do that thousands of times and you spend most of your time on the high ground, proportionally to
 how high it is.
-
-**[pause]**
-
-And here is the trick that makes it all work: **the record of where you walked is the answer.**
-
-A histogram of the positions you visited has the shape of the posterior. You never computed the
-posterior. You just wandered around in it and wrote down where you'd been.
-
-*(Point at the key box.)*
-
-So everything downstream is counting. Posterior mean is the average of your visited values.
-Credible interval is a percentile of them. The probability that a parameter exceeds a threshold is
-the fraction of samples above it.
-
-**Counted, not derived.** That's why Bayesian output can answer arbitrary questions — you're just
-querying a list of numbers.
 
 *(Point at the footnote.)*
 
@@ -387,7 +390,31 @@ minutes into sampling is a genuinely miserable experience, and one you can avoid
 
 ---
 
-# ▶ SLIDE 14 — PyMC: A First Model
+# ▶ SLIDE 14 — The Samples Are the Answer
+
+And here is the trick that makes it all work: **the record of where you walked is the answer.**
+
+A histogram of the positions you visited has the shape of the posterior. You never computed the
+posterior. You just wandered around in it and wrote down where you'd been.
+
+*(Point at the key box.)*
+
+So everything downstream is counting. Posterior mean is the average of your visited values.
+Credible interval is a percentile of them. The probability that a parameter exceeds a threshold is
+the fraction of samples above it.
+
+**Counted, not derived.** That's why Bayesian output can answer arbitrary questions — you're just
+querying a list of numbers.
+
+*(Point at the last line.)*
+
+Remember the planner from slide 5, asking about stocking out at four hundred units? Simulate demand
+from the posterior draws, and that question becomes one line of code: the share of simulated demand
+above four hundred.
+
+---
+
+# ▶ SLIDE 15 — PyMC: A First Model
 
 Here's the conversion-rate problem, in six lines.
 
@@ -429,7 +456,7 @@ independent attempts agreeing is evidence; a single confident attempt is not.
 
 ---
 
-# ▶ SLIDE 15 — Did the Sampler Actually Work?
+# ▶ SLIDE 16 — Did the Sampler Actually Work?
 
 *(Emphasize this slide. Every remaining assignment requires these three numbers.)*
 
@@ -469,7 +496,7 @@ result.
 
 ---
 
-# ▶ SLIDE 16 — Prior Predictive Checks
+# ▶ SLIDE 17 — Prior Predictive Checks
 
 One more habit, and it's the one most often skipped.
 
@@ -506,30 +533,29 @@ silently be wrong, before it costs you.
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Key Takeaways
+# ▶ SLIDE 18 — Section divider: Key Takeaways
 
 Bayesian inference: beliefs in, beliefs out. Data updates your prior into a posterior.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 10: Key Takeaways
+# ▶ SLIDE 19 — Lecture 10: Key Takeaways
 
-One. Bayesian inference treats parameters as random variables with probability distributions. The
-posterior represents your updated beliefs after seeing the data.
+One. Bayesian inference treats parameters as uncertain. The posterior is what you believe after
+seeing the data.
 
-Two. Bayes' theorem: posterior is proportional to likelihood times prior. The normalizing constant
-is usually intractable, so we sample instead of computing it.
+Two. Bayes' theorem: posterior is proportional to likelihood times prior. It lands between the two,
+nearer whichever carries more weight — the lever from slide 8.
 
-Three. Priors encode knowledge. Use weakly informative ones — Beta, Normal, HalfNormal — to
-constrain parameters to plausible values without overwhelming the data. And match the support to
-the parameter.
+Three. Priors: match the support to the parameter first, and use weakly informative ones by
+default.
 
-Four. MCMC, specifically NUTS in PyMC, draws samples from the posterior. From samples you can
-compute any summary you like: mean, median, HDI, or the probability a parameter exceeds a
-threshold. Counted, not derived.
+Four. MCMC, specifically NUTS in PyMC, draws samples from the posterior, and every summary you want
+— mean, HDI, the probability a parameter exceeds a threshold — is counted from them. Counted, not
+derived.
 
-Five. Prior predictive checks verify your model generates plausible data before you fit. Run them
-every time.
+Five. Check before you trust: R-hat, effective sample size and divergences after you sample, and a
+prior predictive check before you fit. Every time.
 
 **[pause]**
 
@@ -542,6 +568,6 @@ failure that looks exactly like success.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 20 — References
 
 *(Advance and close. No narration needed.)*

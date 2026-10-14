@@ -123,9 +123,10 @@ difference between two product categories.
 
 # Step 2 — Control for the confounder
 
-Add per-series intercepts and a trend. Center log price within each series, so the model uses
-only price variation *inside* a series over time — which is the variation a manager could
-actually create.
+Add per-series intercepts and a trend. The trend is there because time is a second confounder:
+prices and volumes both rose over 2011–2016, so later weeks are dearer *and* busier. Center log
+price within each series, so the model uses only price variation *inside* a series over time —
+which is the variation a manager could actually create.
 
 ```{python}
 df["lpc"] = df.lp - df.groupby("series").lp.transform("mean")
@@ -236,23 +237,29 @@ The posterior is samples, so any question is answered by counting. Use the corre
 
 ```{python}
 print(f"  P(elasticity < 0)     = {(b_ctrl < 0).mean():.3f}")
+print(f"  P(elasticity < -1)    = {(b_ctrl < -1).mean():.3f}")
 print(f"  P(elasticity < -0.5)  = {(b_ctrl < -0.5).mean():.3f}")
-print(f"  P(-0.5 < e < 0)       = {((b_ctrl > -0.5) & (b_ctrl < 0)).mean():.3f}")
 ```
 
 The first number settles the direction: every posterior sample is negative, so demand falls when
 price rises. There is no doubt at all.
 
-The second is the interesting one. Elasticity $-0.5$ is a meaningful business threshold, and the
-posterior puts us within a few points of a coin flip. **The data cannot settle whether demand is
-elastic or inelastic**, and that is the honest report. A significance test would have announced
-the direction and said nothing about the question the manager actually asked.
+The second settles the question a pricing manager asks first. An elasticity of $-1$ is the
+boundary between **elastic** demand (below it, a price rise loses revenue) and **inelastic**
+demand (above it, a price rise gains revenue). Not one posterior sample is below $-1$: **demand is
+inelastic in every draw.**
+
+The third is a finer question about size: does a 1% price rise cost more than half a percent of
+volume? Here the posterior is within a few points of a coin flip, and that is the honest report. A
+significance test would have announced the direction and said nothing about either size
+question.
 
 ```{python}
-#| fig-cap: "The full posterior, with the business threshold marked."
+#| fig-cap: "The full posterior, with the elastic / inelastic boundary and the finer threshold marked."
 fig, ax = plt.subplots(figsize=(7, 3.6))
 ax.hist(b_ctrl, bins=60, color="steelblue", alpha=0.8)
-ax.axvline(-0.5, color="crimson", ls="--", lw=1.5, label="elastic / inelastic boundary")
+ax.axvline(-1, color="crimson", ls="--", lw=1.5, label="elastic / inelastic boundary (-1)")
+ax.axvline(-0.5, color="gray", ls="--", lw=1.2, label="a 1% rise costs 0.5% of volume (-0.5)")
 ax.axvline(0, color="gray", ls=":", lw=1)
 ax.set_xlabel("price elasticity"); ax.set_yticks([])
 ax.legend(); plt.tight_layout(); plt.show()
@@ -269,8 +276,10 @@ print(f"                  revenue {r5.mean():+.2f}%  "
 print(f"  P(revenue rises) = {(r5 > 0).mean():.3f}")
 ```
 
-Revenue rises with probability 1.00 across every posterior sample — *even though* the elasticity
-might well be past $-0.5$. Both facts are true at once, and only the posterior lets you say so.
+Revenue rises with probability 1.00 across every posterior sample, and the second probability
+above says why: a 5% rise multiplies revenue by $1.05^{\,1+b}$, which is above one exactly when the
+elasticity $b$ is above $-1$, and every draw is. The finer size question stays open while the
+decision is settled. Only the posterior lets you say both.
 
 ```{python}
 # ---- your turn: uncomment and answer in the strings ----
@@ -283,9 +292,9 @@ might well be past $-0.5$. Both facts are true at once, and only the posterior l
 
 # Before you leave
 
-> **Discuss (the three failures):** This lab produced a wrong elasticity three ways — an omitted
-> confounder, a rescaled coefficient, and a threshold question the data cannot answer. Which of
-> the three would any ArviZ diagnostic have caught? What does your answer imply about what
+> **Discuss (the three failures):** This lab met three ways an elasticity analysis goes wrong —
+> an omitted confounder, a rescaled coefficient, and a size question the data cannot settle. Which
+> of the three would any ArviZ diagnostic have caught? What does your answer imply about what
 > diagnostics are for?
 >
 > **Discuss (the habit):** Standardizing is genuinely good practice and you should keep doing it.

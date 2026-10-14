@@ -34,25 +34,21 @@
 
 % --- Slide: what we have already -----------------------------------------------
 \begin{frame}{What Every Model So Far Gave You}
-  Ten weeks of forecasting, and almost every model returned the same object: \textbf{one number
-  per period}. ETS, ARIMA, random forests, XGBoost, LSTMs --- a point forecast, and at best an
-  interval derived from asymptotic theory that nobody checked.
+  Almost every model so far returned \textbf{one number per period}, with at best an interval
+  nobody checked.
 
   \vspace{0.15cm}
-  For a planner that is often not enough. \emph{How much stock do I need so the chance of a
-  stockout is under 5\%?} is a question about a distribution, and a point forecast cannot answer
-  it however accurate it is.
+  \emph{How much stock keeps the chance of a stockout under 5\%?} is a question about a
+  distribution. A point forecast cannot answer it, however accurate.
 
   \begin{keybox}
     A Bayesian time series model returns a \textbf{full predictive distribution for every future
-    period}, plus a distribution over each component --- the trend, the seasonality, and the
-    noise, each with its own uncertainty.
+    period}, and a distribution for each component: trend, seasonality, noise.
   \end{keybox}
 
   \vspace{0.1cm}
-  \textbf{Set expectations now.} This will not beat XGBoost on RMSE, and on our data it barely
-  beats the seasonal-naive benchmark. The argument for it is what it hands you, not where it
-  ranks --- and we will hold it to that standard at the end of this lecture.
+  \textbf{Set expectations now.} It will not beat XGBoost on RMSE, and it barely beats seasonal
+  naive. Judge it by what it hands you.
 \end{frame}
 
 % --- Slide: what changes -------------------------------------------------------
@@ -92,8 +88,7 @@
 
 % --- Slide: decomposition -------------------------------------------------------
 \begin{frame}{Structural Time Series: One Equation}
-  The whole idea is additive, and you have seen the shape before --- it is the GAM decomposition
-  from Lecture 3, with priors attached.
+  The GAM decomposition from Lecture 3, with priors attached:
   \[
     y_t \;=\; \underbrace{\mu_t}_{\text{level}} \;+\; \underbrace{s_t}_{\text{seasonality}}
       \;+\; \underbrace{\varepsilon_t}_{\text{noise}},
@@ -101,19 +96,18 @@
   \]
   \vspace{-0.25cm}
 
-  \textbf{Each piece is a thing a business person can name}, and each gets its own posterior.
-  ``Demand is growing'' is a statement about $\mu_t$; ``December is our peak'' is a statement
-  about $s_t$; ``how noisy is this store?'' is $\sigma$.
+  \textbf{Each piece is something a business person can name}, and each gets its own posterior:
+  ``demand is growing'' is about $\mu_t$, ``December is our peak'' is about $s_t$, ``how noisy is
+  this store?'' is $\sigma$.
 
   \begin{keybox}
-    This is why the approach is called \emph{structural}. You are not fitting a black box to a
-    curve --- you are stating what you believe the series is made of, and asking the data how
-    much of each part there is.
+    That is why it is called \emph{structural}: you state what the series is made of, and ask the
+    data how much of each part there is.
   \end{keybox}
 
   \vspace{0.1cm}
-  Compare ARIMA, where trend and seasonality are handled by differencing and the parameters are
-  correlations rather than quantities anyone can interpret.
+  ARIMA, by contrast, differences trend and seasonality away, and its parameters are
+  correlations, not quantities anyone can name.
 \end{frame}
 
 % --- Slide: local level --------------------------------------------------------
@@ -149,27 +143,24 @@
 
 % --- Slide: Fourier seasonality -------------------------------------------------
 \begin{frame}{Seasonality as Fourier Terms}
-  Fifty-two weekly seasonal parameters would be a lot to estimate. Instead, build seasonality out
-  of a few smooth waves:
+  Fifty-two weekly seasonal parameters would be a lot to estimate. Build the shape from $K$ smooth
+  waves instead, with period $P = 52$:
+  {\small
   \[
-    s_t = \sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
+    s_t = \textstyle\sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
                              + b_k \cos\!\left(\tfrac{2\pi k t}{P}\right)\right]
-  \]
-  \vspace{-0.25cm}
+  \]}
+  \vspace{-0.55cm}
+  \begin{center}
+    \includegraphics[height=4.0cm]{../Figures/Lecture11_Part1/fourier_pairs.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small Because $a\sin x + b\cos x = r\sin(x + \varphi)$, each pair $(a_k, b_k)$ is one arrow:
+  its length $r$ is the wave's size, its angle $\varphi$ the wave's timing. We use $K = 3$: six
+  coefficients for fifty-two weeks.}
 
-  $P$ is the period --- for our weekly data, $P = 52$. $K$ is how many waves you allow: $K=1$ is
-  a single smooth annual cycle, larger $K$ lets the shape get more detailed. Each $a_k, b_k$ is
-  just a coefficient with a Normal prior.
-
-  \begin{keybox}
-    \textbf{You have met this exact device twice.} It is how Prophet encodes seasonality in
-    Lecture 3, and it is the Fourier feature block we engineered by hand for Homework 4. The
-    difference now is that $a_k$ and $b_k$ come back as \emph{distributions}.
-  \end{keybox}
-
-  \vspace{0.1cm}
-  $K$ trades flexibility against overfitting, exactly like spline knots. We use $K = 3$ --- six
-  coefficients standing in for fifty-two.
+  \muted{\footnotesize Same device as Prophet (Lecture 3) and Homework 4; now $a_k$, $b_k$ come back
+  as distributions.}
 \end{frame}
 
 % =============================================================================
@@ -210,7 +201,7 @@
       & \textbf{First attempt} & \textbf{After the fix} & \textbf{Want} \\
       \midrule
       $\hat{R}$ & 1.022 & \textbf{1.002} & $< 1.01$ \\
-      ESS (bulk) & 252 & \textbf{2{,}376} & $> 400$ \\
+      ESS (bulk) & 274 & \textbf{2{,}376} & $> 400$ \\
       Divergences & 0 & 0 & $0$ \\
       \bottomrule
     \end{tabular}
@@ -238,7 +229,7 @@
 
 % --- Slide: results --------------------------------------------------------------
 \begin{frame}{Does It Work? The Point Forecast}
-  CA\_1 FOODS, 52 weeks held out, forecast from the fitted model.
+  CA\_1 FOODS, 52 weeks held out.
   \begin{center}
     {\small
     \begin{tabular}{lr}
@@ -253,14 +244,13 @@
   \end{center}
 
   \vspace{-0.05cm}
-  \textbf{It beats the benchmark by about 4\%.} That is a real improvement and a small one, and
-  after nine weeks of this course you should be suspicious of anyone who reports it as a
-  triumph.
+  \textbf{It beats the benchmark by about 4\%.} Real, and small: be suspicious of anyone who calls
+  it a triumph.
 
   \vspace{0.15cm}
-  It is also worth remembering what this model was given: the series and a calendar. No lag
-  features, no price, no SNAP flags, no store identity. The XGBoost model in Homework 4 had 46
-  engineered predictors and thirty series to learn from.
+  And this model was given only the series and a calendar: no lags, no price, no SNAP flags, no
+  store identity. The XGBoost model in Homework 4 had 46 engineered predictors and thirty series
+  to learn from.
 
   \vspace{0.1cm}
   \textbf{So the point forecast is not the reason to do this.} The next slide is.
@@ -268,32 +258,42 @@
 
 % --- Slide: the interval ----------------------------------------------------------
 \begin{frame}{The Interval Is the Product}
-  Every forecast comes with a 94\% predictive interval. Two questions about it, and they are
-  different questions.
+  Every forecast comes with a 94\% predictive interval. Two different questions about it:
   \begin{center}
-    {\small
-    \begin{tabular}{p{3.0cm}p{4.0cm}p{5.3cm}}
-      \toprule
-      & \textbf{Measured} & \textbf{Reading} \\
-      \midrule
-      \textbf{Calibrated?} & 100\% of weeks fell inside & Not overconfident --- but it should be
-      about 94\%, so it is conservative \\[3pt]
-      \textbf{Useful?} & Width $\approx$ 11{,}700 units, on a mean of 19{,}700 & About $\pm$30\%.
-      Honest, and too wide to order against \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.0cm]{../Figures/Lecture11_Part1/interval_band.pdf}
   \end{center}
+  \vspace{-0.3cm}
+  \textbf{Calibrated?} 52 of 52 held-out weeks fell inside. Not overconfident, but 94\% was
+  promised, so it is conservative.
 
-  \vspace{-0.1cm}
-  \textbf{Passing the first does not excuse failing the second.} A model saying ``somewhere
-  between 14{,}000 and 26{,}000'' is telling the truth and helping nobody. The cause is
-  structural --- a level free to walk for 52 steps drifts, and the model says so. The fix is a
-  model with a stronger opinion: a damped level, or covariates that pin it down.
+  \vspace{0.1cm}
+  \textbf{Useful?} The width averages 11{,}700 units on an average week of 19{,}700: $\pm$30\%
+  \emph{on average}, from $\pm$16\% one week out to $\pm$39\% a year out. Honest, and too wide to
+  order against.
+\end{frame}
 
-  \vspace{0.05cm}
-  \textbf{But notice what just happened.} We could \emph{ask} whether the uncertainty was honest.
-  For every point-forecast model in this course, that question had no answer.
+% --- Slide: why it is so wide ---------------------------------------------------
+\begin{frame}{Honest, and Too Wide to Order Against}
+  \textbf{Passing the first does not excuse failing the second.} ``Between 14{,}000 and 26{,}000''
+  is true, and helps nobody.
+
+  \vspace{0.1cm}
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      Given the parameters and today's level, the forecast $h$ weeks out has variance
+      \[ \sigma^2 + h\,\sigma^2_{\text{level}}. \]
+      The steps add up: once drift outweighs noise (about seven weeks), the band widens like
+      $\sqrt{h}$.
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \includegraphics[height=3.7cm]{../Figures/Lecture11_Part1/band_width.pdf}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.2cm}
+  The fix: a model with a stronger opinion, such as a damped level or covariates.
+  \textbf{But notice:} we could \emph{ask} whether the uncertainty was honest. No point-forecast
+  model so far let us.
 \end{frame}
 
 % =============================================================================
@@ -305,30 +305,20 @@
 
 \begin{frame}{Lecture 11 Part 1: Key Takeaways}
   \begin{keybox}
-    {\footnotesize
+    {\small
     \begin{enumerate}\itemsep2pt
-      \item A \textbf{structural} model writes the series as named parts --- level, seasonality,
-            noise --- and gives each one a prior and a posterior.
-
-      \item The \textbf{local level} is a random walk whose step size $\sigma_{\text{level}}$ you
-            put a prior on. Small means rigid, large means it chases the data --- the same trade
-            as a smoothing parameter or a penalty.
-
-      \item \textbf{Fourier terms} encode seasonality in a few coefficients instead of 52. Same
-            device as Prophet in Lecture 3 and the features you built in Homework 4.
-
-      \item \textbf{Check the sampler before the forecast.} Our first fit had $\hat{R}$ = 1.02
-            and ESS = 252 while returning a plausible-looking answer. Reparameterizing fixed it.
-
+      \item A \textbf{structural} model names the parts of a series and puts a prior on each.
+      \item The \textbf{local level} is a random walk; $\sigma_{\text{level}}$ sets how fast it
+            moves.
+      \item \textbf{Fourier terms} build seasonality from a few waves, each $(a_k, b_k)$ an arrow.
+      \item \textbf{Check the sampler first:} our first fit looked fine and had not converged.
       \item The point forecast beat seasonal naive by \textbf{4\%}. That is not the argument.
-
-      \item The interval was \textbf{calibrated but too wide to act on} --- and being able to
-            establish that is the actual product.
+      \item The interval was \textbf{calibrated but too wide to act on}; establishing that is the
+            product.
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: hierarchical models --- what to do when you have thirty series and some
-  of them barely have data.}
+  \muted{\itshape Next: hierarchical models, for thirty series at once.}
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}

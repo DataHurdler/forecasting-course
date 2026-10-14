@@ -76,35 +76,39 @@ of plausible values, which you can query however you like.
 
 And here's something that should make Lecture 6 click retroactively.
 
-**Regularization is a prior.** A Normal prior on beta is *exactly* Ridge regression. A Laplace
-prior — double-exponential, with that sharp peak at zero — is *exactly* LASSO.
+**Regularization is a prior.** Put a Normal prior on beta, find the single most probable value —
+the peak of the posterior, its *mode* — and you get exactly the Ridge estimate. Do the same with a
+Laplace prior, the double-exponential with a sharp point at zero, and the mode is exactly the LASSO
+estimate.
 
 The penalty you tuned by cross-validation in Lecture 6 was a statement of belief all along. You
 were saying "coefficients are probably small," you just weren't saying it in probability
 notation.
 
-Same estimates, two vocabularies. Which is the seventh time this semester one idea has shown up
-wearing different clothes.
+Same estimates, two vocabularies — with one precision worth keeping. The match is at the posterior
+*mode*. That's where LASSO's zeros come from: the Laplace prior's sharp point puts the peak of the
+posterior exactly at zero for a weak coefficient. The posterior *mean* under the same prior is never
+exactly zero. A Bayesian who uses a Laplace prior and reports posterior means gets shrinkage, not
+sparsity.
 
 **[pause]**
 
 And the equivalence is genuinely useful, not just cute. It tells you what a penalty is *assuming*.
 
-Ridge's Normal prior says coefficients are probably small, and symmetric around zero, with no
-particular preference for exactly zero. LASSO's Laplace prior has a sharp spike at zero — it says
-you believe many coefficients are exactly zero.
+Ridge's Normal prior says coefficients are probably small and symmetric around zero, with no
+particular preference for exactly zero. LASSO's Laplace prior is more peaked at zero and has fatter
+tails — it says most coefficients are tiny and a few are large.
 
-That's why LASSO produces sparse solutions and Ridge doesn't. It's not a quirk of the optimizer.
-It's the prior doing what you asked. Once you see the penalty as a belief, the behavior stops
-being a rule to memorize and becomes something you can reason about.
+Once you see the penalty as a belief, the behavior stops being a rule to memorize and becomes
+something you can reason about.
 
 ---
 
 # ▶ SLIDE 5 — Bayesian Linear Regression in PyMC
 
-Here's the model. Log units regressed on log price, a SNAP indicator, and an event indicator.
-Weakly informative Normal priors on every coefficient, Exponential on sigma. Nothing here is new
-after Lecture 10.
+Here's the model. Log units regressed on log price, a SNAP indicator and an event indicator —
+plus one intercept per series and a trend, which slide 11 will explain. Weakly informative Normal
+priors on every coefficient, Exponential on sigma. Nothing here is new after Lecture 10.
 
 **[pause]**
 
@@ -170,7 +174,8 @@ Here's the fitted model, controlling for series and trend.
 *(Walk the table.)*
 
 `b_price`: minus point-four-nine-three, HDI from minus point-five-nine-six to minus
-point-three-eight-seven. Right near the elastic boundary — we'll come back to that.
+point-three-eight-seven. **Inelastic**: the whole interval sits well above minus one, the line
+between elastic and inelastic demand. We'll come back to what that buys you.
 
 `b_trend`: point-one-one-zero, a tight interval. About eleven percent growth per year.
 
@@ -196,7 +201,8 @@ Now, the last row is the useful one, and I want to be precise about why.
 demand slightly; they might lower it slightly.
 
 That is a **more honest report** than "not statistically significant," and it's more informative
-too. Because it also tells you the effect is **small** — at most about half a percent either way.
+too. Because it also tells you the effect is **small** — somewhere between about minus one point
+one percent and plus point four percent.
 
 "Not significant" conflates two completely different situations: an effect you can't detect
 because it's tiny, and an effect you can't detect because your data is thin. The interval
@@ -223,51 +229,49 @@ Because the posterior is a set of samples, any question about beta is answered b
 *(Point at the code box.)*
 
 Pull the samples into an array. Then: what fraction are below zero? What fraction are below minus
-point-five? What fraction sit between minus point-five and zero?
+one? What fraction are below minus point-five?
 
 Three one-line questions, three direct answers. No test statistic, no null hypothesis, no table.
 
 **[pause]**
 
-*(Now the results — and the second one is the interesting one.)*
+*(Now the results.)*
 
 On our fit, the probability the elasticity is below zero is **one point zero zero**. Every single
-posterior sample is negative. Demand falls when price rises, and there is no doubt about it
-whatsoever.
+posterior sample is negative. Demand falls when price rises, and there is no doubt about it.
 
 Fine. That's the boring question, and a p-value would have told you something similar.
 
-Now the interesting one. The probability the elasticity is below minus point-five — the boundary
-between elastic and inelastic demand, which is a genuine business threshold — is **point four
-six.**
-
-Forty-six percent. Essentially a coin flip.
+Now the one a pricing manager cares about. Minus one is the line between **elastic** and
+**inelastic** demand. Below minus one, a one percent price rise loses more than one percent of
+volume, so revenue falls. Above it, revenue rises. The probability the elasticity is below minus
+one is **zero** — not one draw out of four thousand. Demand here is inelastic, in every draw.
 
 **[pause]**
 
+And then a finer question, which the data do *not* settle. Does a one percent price rise cost more
+than half a percent of volume? That's the probability the elasticity is below minus point-five,
+and it is **point four six**. Essentially a coin flip.
+
 *(Point at the key box.)*
 
-So the data **cannot settle** whether demand is elastic or inelastic. And that is the honest,
-useful, actionable finding — because "should we treat this product as price-sensitive?" is a
-decision that hinges on exactly that threshold.
+So the posterior gives you three answers of different kinds: the direction, settled; the side of
+minus one, settled; the finer size question, honestly open. "Statistically significant" reports
+only the first. The question the business actually asks is *how big*, and the posterior tells you
+which size questions the data can answer and which they can't.
 
-Two different findings, and a p-value conflates them. "Statistically significant" reports only the
-**direction**. The question the business actually asks is *how big*, and the answer is
-forty-six/fifty-four.
-
-No significance test would ever have given you that number.
+No significance test would ever have given you that map.
 
 **[pause]**
 
 *(Worth making concrete, since students will ask what to do with 0.46.)*
 
-And a reasonable question is what a manager actually does with forty-six percent.
+And a reasonable question is what a manager does with forty-six percent.
 
-They do not get a yes or a no, and that's the point — the honest answer is that the evidence is
-balanced. What they get is the ability to reason about the *consequences* of being wrong in each
-direction. If treating the product as elastic and being wrong is cheap, and treating it as
-inelastic and being wrong is expensive, then a forty-six percent probability is more than enough
-to act on the cautious side.
+They do not get a yes or a no on that question, and that's the point — the evidence is balanced.
+What they get is the ability to reason about the *consequences* of being wrong in each direction.
+If planning for the larger volume loss and being wrong is cheap, and planning for the smaller one
+and being wrong is expensive, then forty-six percent is more than enough to plan cautiously.
 
 That's a decision-theoretic argument, and it needs a probability as an input. A significance test
 cannot supply one.
@@ -330,30 +334,44 @@ subject and a separate course.
 
 Let's make that concrete on our own data, because the size of the effect is startling.
 
-Our panel has thirty store-category series. Categories differ in **both** typical price and typical
-volume — hobby items cost more per unit and sell fewer of them. So series identity is an arrow into
-price *and* an arrow into units.
+Two things move price and units together in our panel, and neither of them is price causing
+demand.
 
-That is a textbook confounder.
+*(Point at the left panel.)*
 
-*(Walk the table.)*
+The first is the **category**. Each color is a category, and each is its own cloud. Food is cheap
+and sells in volume; hobby and household items cost more and sell less. Fit one line through all of
+it and you get a slope of about **minus two point eight** — but look at what that line is doing. It
+is joining the clouds. It measures the difference between food and hobbies, not what happens when a
+price changes.
 
-Fit the elasticity with price, SNAP and events only: **minus two point eight zero five.**
+*(Point at the middle panel.)*
 
-Add series effects and a trend: **minus point four nine three.**
+So subtract each series' own mean, which removes the category. And the slope **flips sign**: plus
+one point seven. Higher prices, more units. That's the second confounder, **time**. The shading is
+the year — light is 2011, dark is 2016. Over those five years prices drifted up by a percent or two
+a year, and volumes grew about ten percent a year. Within any one series the later weeks are both
+dearer and busier. So time is an arrow into price *and* into units: a confounder exactly like the
+category.
+
+*(Point at the right panel.)*
+
+Remove the trend as well, and what's left is the price response: a slope of about **minus point
+four nine**. That is what the model with series effects and a trend estimates — minus point four
+nine three, HDI from minus point five nine six to minus point three eight seven.
 
 **[pause]**
 
 *(Now the punchline. Slow down.)*
 
-The uncontrolled estimate is nearly **six times too large**. It claims demand collapses when price
-rises — a one percent price increase costing almost three percent of volume.
+The uncontrolled estimate, minus two point eight zero five, is nearly **six times too large**. It
+claims demand collapses when price rises — a one percent price increase costing almost three
+percent of volume.
 
 And here's the part I want you to remember for the rest of your career.
 
-It is **not noisier**. Look at the intervals. The uncontrolled one runs from minus two
-eight-five-six to minus two seven-five-six — that's a width of about point one. The controlled one
-is roughly point two wide.
+It is **not noisier**. Its interval runs from minus two eight-five-six to minus two
+seven-five-six — a width of about point one. The controlled one is roughly point two wide.
 
 **The wrong answer has an interval half the width of the right one.**
 
@@ -368,7 +386,8 @@ model is answering **your question**.
 
 Bayesian machinery does not protect you from omitting a confounder. Neither does more data — more
 data would tighten that wrong interval further. Only the DAG protects you, and the DAG is drawn
-before you fit anything.
+before you fit anything. And notice that it took both arrows: control for the category but forget
+time, and you get the wrong *sign*.
 
 ---
 
@@ -398,18 +417,20 @@ than three."
 
 **[pause]**
 
-And then the decision follows directly. Revenue rises if the volume loss is smaller than the price
-gain. Compute that for every posterior sample and count.
+And then the decision follows directly. Revenue is price times units, so a five percent price rise
+multiplies revenue by one point oh five to the power one plus the elasticity. That is above one
+exactly when the elasticity is above minus one — when demand is inelastic.
 
-Here: revenue rises by about **two and a half percent** on average, and the probability that
-revenue rises is **one point zero zero** — every single posterior sample.
+And slide 8 already told us every posterior draw is above minus one. So revenue rises in every
+draw: by about **two and a half percent** on average, with probability **one point zero zero**.
 
 *(Beat.)*
 
-Now notice something subtle, because it's the kind of thing that makes this worth doing. That
-conclusion holds **even though** the elasticity might well be past minus point five. Two facts that
-sound contradictory — "we can't tell if demand is elastic" and "raising price definitely increases
-revenue" — are both true, simultaneously, and the posterior lets you say both.
+Notice how the two slides fit together. The elasticity's exact size is uncertain — we couldn't even
+say whether a one percent rise costs more than half a percent of volume. But the revenue question
+only cares which side of minus one we're on, and on that the posterior is unanimous. A decision can
+be settled even when the parameter behind it is not pinned down, and the posterior shows you which
+decisions those are.
 
 *(Muted note.)*
 
@@ -440,11 +461,15 @@ and interpretable together.
 
 Decision trees — tabular, no uncertainty, but a rule-based explanation anyone can read.
 
-Random forests — robust, minimal tuning, OOB gives you something.
+Random forests — robust, minimal tuning, and the out-of-bag error comes free. That is an error
+estimate, not an interval.
 
-XGBoost — best tabular accuracy in this course, and low interpretability.
+XGBoost — also Lecture 5. It captures interactions, and it scored seven eighty-one on our board.
 
-Feedforward nets and CNNs — smooth functions, fast, opaque.
+Ridge and LASSO — Lecture 6. Linear, interpretable, and the best number on our scoreboard: seven
+forty-four. The simplest model in the table beat the boosted trees.
+
+Feedforward nets and CNNs — flexible nonlinear fits, fast, opaque.
 
 LSTMs and Transformers — sequences and long-range dependencies, very low interpretability.
 
@@ -461,29 +486,29 @@ scoreboard has been telling you all semester.
 Choose on four things: your data type and size, whether you need uncertainty quantified, whether
 someone needs to understand the model, and how fast you need it deployed.
 
-And in practice, **combine**. A very common production pattern is XGBoost for the point forecast,
-because it's accurate, plus a Bayesian model for the intervals, because they're honest. You are
-not obliged to pick one column of that table.
+And in practice, **combine**. Use whichever model wins your scoreboard for the point forecast — on
+ours that was LASSO, ahead of XGBoost — plus a Bayesian model for the intervals, because they're
+honest. You are not obliged to pick one row of that table.
 
 ---
 
 # ▶ SLIDE 15 — Lecture 12: Key Takeaways
 
 One. Bayesian linear regression places priors on coefficients and returns a full posterior for
-each one. A Normal prior *is* Ridge; a Laplace prior *is* LASSO.
+each one. Its mode is Ridge under a Normal prior and LASSO under a Laplace prior.
 
 Two. Posterior coefficient plots give you the mean, the HDI, and the probability the coefficient
 exceeds any threshold you care about — richer than a p-value, and answering the question people
 actually ask.
 
-Three. **DAGs** make causal structure explicit, identifying confounders you must include and
-colliders you must exclude. Draw the DAG before specifying the regression.
+Three. Draw the **DAG** before you specify the regression. Control for the confounders — here that
+meant both the series and time — and never for a collider.
 
 Four. Scenario analysis with posterior samples: push any counterfactual through the posterior draws
 and get a full distribution for that scenario, not a point projection.
 
 Five. No single method is best for all forecasting problems. Build intuition for when to reach for
-each one, and combine them when the stakes justify it.
+each one, and pair an accurate point forecast with Bayesian intervals.
 
 **[pause]**
 

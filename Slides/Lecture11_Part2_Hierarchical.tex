@@ -34,13 +34,13 @@
 
 % --- Slide: the problem -----------------------------------------------------
 \begin{frame}{The Question}
-  A concrete one, and you have met it before. \textbf{Does demand rise in weeks when SNAP
-  benefits are disbursed, and by how much --- store by store?} Homework 3's memo had you stock up
-  for SNAP weeks store by store, which assumed those differences are real. Today we check.
+  \textbf{Does demand rise in weeks when SNAP benefits are disbursed, and by how much --- store by
+  store?} Homework 3's memo stocked up store by store, assuming those differences are real. Today
+  we check.
 
   \vspace{0.15cm}
-  \textbf{But one question comes before the model.} SNAP is a \emph{food} assistance program.
-  Measure the raw SNAP-week effect on log units in all thirty series, grouped by category:
+  \textbf{One question comes before the model.} SNAP is a \emph{food} assistance program. The raw
+  SNAP-week effect on log units, all thirty series by category:
 
   \begin{center}
     {\small
@@ -63,23 +63,19 @@
 
 % --- Slide: exchangeability -------------------------------------------------
 \begin{frame}{Exchangeability: the Assumption Under Every Hierarchy}
-  Partial pooling rests on one assumption, worth naming before we use it.
-
-  \begin{definitionbox}[Exchangeable]
+  \begin{definitionbox}{Exchangeable}
     Groups are \textbf{exchangeable} when, before seeing the data, you have no reason to expect
     one to differ from another in a particular direction. Swapping their labels would not change
     what you believe.
   \end{definitionbox}
 
   \vspace{0.1cm}
-  The ten FOODS series qualify: same category, different stores, and you could not say in advance
-  which store's SNAP effect should be largest. FOODS against HOBBIES does \textbf{not} --- you
-  know before looking that a food-assistance program moves food.
+  The ten FOODS stores qualify: nobody could say in advance which store's SNAP effect is largest.
+  FOODS against HOBBIES does \textbf{not}: a food program moves food.
 
   \vspace{0.15cm}
-  \textbf{The setup for today.} We work with the \textbf{ten FOODS series}, and deliberately thin
-  \textbf{five} of them down to \textbf{8 weeks}. Five series are data-rich, five are data-poor.
-  That imbalance is the whole point.
+  \textbf{Today:} the \textbf{ten FOODS series}, five thinned to \textbf{8 weeks}. That imbalance
+  is the point.
 
   \vspace{0.1cm}
   \muted{\footnotesize\itshape The lab pools all thirty anyway, and measures what it costs.}
@@ -153,26 +149,22 @@
 
 % --- Slide: shrinkage intuition ---------------------------------------------
 \begin{frame}{Why This Is the Right Answer, Not a Compromise}
-  Partial pooling sounds like splitting the difference between two bad options. It is better than
-  that, and the reason is worth stating.
+  Partial pooling sounds like splitting the difference. It is better than that.
 
   \vspace{0.15cm}
-  When a series has 8 observations, its unpooled estimate is mostly sampling noise. The
-  hierarchy's pull toward $\mu_b$ is not a fudge --- it is the correct response to a noisy
-  measurement. You already believe this in another form: it is why you would not conclude a coin
-  is biased after three flips.
+  With 8 observations, a series' own estimate is mostly noise. Pulling it toward $\mu_b$ is the
+  right response, not a fudge: you would not call a coin biased after three flips.
 
   \begin{keybox}
-    \textbf{This is regularization again, for the sixth time.} A hierarchical prior shrinks
-    per-group estimates toward a common value exactly as Ridge shrinks coefficients toward zero
-    --- and here the shrinkage strength $\sigma_b$ is \emph{estimated} rather than tuned by
-    cross-validation.
+    \textbf{Regularization, for the sixth time.} The prior shrinks each group toward $\mu_b$ as
+    Ridge shrinks coefficients toward zero --- but the strength, $\sigma_b$, is \emph{estimated},
+    not tuned by cross-validation.
   \end{keybox}
 
   \vspace{0.1cm}
-  \muted{\footnotesize\itshape GAM smoothing penalty (L3) $\rightarrow$ tree pruning (L4)
-  $\rightarrow$ \texttt{reg\_lambda} (L5) $\rightarrow$ Ridge and LASSO (L6) $\rightarrow$ weight
-  decay (L7) $\rightarrow$ hierarchical priors (today).}
+  \muted{\footnotesize\itshape Smoothing penalty (L3) $\rightarrow$ pruning (L4) $\rightarrow$
+  \texttt{reg\_lambda} (L5) $\rightarrow$ Ridge and LASSO (L6) $\rightarrow$ weight decay (L7)
+  $\rightarrow$ hierarchical priors.}
 \end{frame}
 
 % =============================================================================
@@ -216,27 +208,39 @@
       \toprule
       & \textbf{Centered} & \textbf{Non-centered} & \textbf{Want} \\
       \midrule
-      Divergences & \textbf{127} & \textbf{1} & 0 \\
-      $\hat{R}$ & \textbf{1.044} & 1.002 & $< 1.01$ \\
-      ESS (bulk) & 413 & 1{,}728 & $> 400$ \\
+      Divergences & \textbf{43} & \textbf{0} & 0 \\
+      $\hat{R}$ & 1.003 & 1.003 & $< 1.01$ \\
+      ESS (bulk) & 966 & 1{,}719 & $> 400$ \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
 
-  \vspace{-0.05cm}
-  \textbf{Why:} when $\sigma_b$ is small, the $b_j$ must crowd into a narrow band, and the
-  posterior takes on a funnel shape --- wide where $\sigma_b$ is large, pinched where it is
-  small. A sampler tuned for the wide part cannot navigate the neck, and reports divergences.
+  \vspace{0.05cm}
+  \textbf{Only one alarm fires.} $\hat{R}$ and ESS pass; on those alone you would ship it.
+  \textbf{43 divergences against a threshold of zero} is the objection to trust.
+
+  \vspace{0.15cm}
+  \muted{\footnotesize\itshape Counts move with the seed, even the machine. Ten more seeds:
+  15--285 divergences centered, 0--11 non-centered; $\hat{R}$ or ESS objected in 2 of the 11 runs,
+  divergences in all 11.}
+\end{frame}
+
+% --- Slide: the funnel, and the change of coordinates -------------------------
+\begin{frame}{Why It Breaks: a Funnel}
+  Every posterior draw for one thin series (CA\_1), against $\sigma_b$ on a log axis:
+  \begin{center}
+    \includegraphics[height=4.1cm]{../Figures/Lecture11_Part2/funnel.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Given $\sigma_b$, the prior spreads $b_j - \mu_b$ by $\sigma_b$: a funnel, pinched where
+  $\sigma_b$ is small. The divergences sit in the neck (39 of 43 in the bottom tenth of $\sigma_b$),
+  and the chains go no lower. $b_j = \mu_b + \sigma_b z_j$ is a change of coordinates: $z_j$ spreads
+  by 1 at every height, a column the sampler can walk. Exact for the prior; the posterior follows
+  closely.}
 
   \vspace{0.05cm}
-  \textbf{The alarms do not fail alike.} ESS passes at 413; $\hat{R}$ fails at 1.044, the sort of
-  near-miss people talk themselves out of. \textbf{127 divergences against a threshold of zero
-  admits no such conversation.}
-
-  \vspace{0.02cm}
-  \muted{\footnotesize\itshape BMCP §4.6.1, \emph{Posterior Geometry Matters} --- the single most
-  common failure in applied hierarchical modeling.}
+  \muted{\footnotesize\itshape BMCP §4.6.1, \emph{Posterior Geometry Matters}.}
 \end{frame}
 
 % =============================================================================
@@ -249,62 +253,30 @@
 
 % --- Slide: the measurement -------------------------------------------------
 \begin{frame}{Shrinkage, Measured}
-  Fit both models. Compare each series' estimated SNAP effect before and after pooling.
+  Each series' own (unpooled) estimate, and where the hierarchy moved it:
   \begin{center}
-    {\small
-    \begin{tabular}{lrrr}
-      \toprule
-      \textbf{Series group} & \textbf{Unpooled spread} & \textbf{After pooling} & \textbf{Mean move} \\
-      \midrule
-      \textbf{Thin} --- 8 weeks (5 series) & 0.108 & 0.010 & \textbf{0.120} \\
-      \textbf{Full} --- 277 weeks (5 series) & 0.055 & 0.037 & 0.015 \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.1cm]{../Figures/Lecture11_Part2/shrinkage_arrows.pdf}
   \end{center}
+  \vspace{-0.3cm}
+  \textbf{Thin series moved 8.1 times further toward $\mu_b$}, though nobody said which were thin.
+  Full series keep most of their spread ($0.055 \rightarrow 0.037$); thin ones lose it
+  ($0.108 \rightarrow 0.010$).
 
-  \vspace{-0.05cm}
-  \textbf{The data-poor series moved 8.2 times further toward the group mean than the data-rich
-  ones.} Nobody told the model which series were thin. It inferred that from how much each series
-  had to say.
-
-  \vspace{0.15cm}
-  Read the two right-hand columns together. The thin series' apparent spread of $0.108$ nearly
-  vanishes, while the full series \textbf{keep most of theirs} ($0.055 \rightarrow 0.037$). The
-  hierarchy did not flatten everything: it discarded spread that 8 weeks could not support and
-  kept spread that 277 weeks could.
-
-  \vspace{0.1cm}
-  \textbf{That is the claim to be skeptical of, so the next slide tests it.}
+  \vspace{0.05cm}
+  \muted{\footnotesize\itshape Each pooled estimate sits approximately at a precision-weighted
+  point between $\mu_b$ and its own: thin series keep about a tenth of theirs, full series about
+  three-quarters. Only approximately, because $\mu_b$ and $\sigma_b$ are integrated over.}
 \end{frame}
 
 % --- Slide: held-out check --------------------------------------------------
 \begin{frame}{Checked Against Data the Model Never Saw}
-  We thinned those five series ourselves, so the weeks we removed are still there. Compare each
-  estimate against the SNAP effect actually observed in the held-out weeks.
-
+  The weeks we thinned away still exist. Each ring is the SNAP effect observed in them:
   \begin{center}
-    {\small
-    \begin{tabular}{lrrr}
-      \toprule
-      \textbf{Thin series} & \textbf{Unpooled} & \textbf{Hierarchical} & \textbf{Held-out truth} \\
-      \midrule
-      CA\_1\_FOODS & 0.286 & 0.097 & 0.087 \\
-      CA\_3\_FOODS & 0.105 & 0.082 & 0.102 \\
-      TX\_1\_FOODS & 0.052 & 0.075 & 0.082 \\
-      TX\_3\_FOODS & 0.219 & 0.091 & 0.072 \\
-      WI\_2\_FOODS & 0.338 & 0.103 & 0.207 \\
-      \midrule
-      \textbf{RMSE against truth} & \textbf{0.126} & \textbf{0.049} & --- \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.1cm]{../Figures/Lecture11_Part2/shrinkage_heldout.pdf}
   \end{center}
-
-  \vspace{-0.05cm}
-  \textbf{Partial pooling was two and a half times more accurate}, beating the unpooled fit on
-  four series out of five. Those estimates were not just noisy --- they were confidently wrong,
-  and the confidence came from 8 weeks of data.
+  \vspace{-0.3cm}
+  \textbf{RMSE against the truth: 0.126 unpooled, 0.048 pooled --- 2.6 times smaller.} Pooling won
+  on four series of five; WI\_2 shows the cost, pulled past its truth.
 
   \vspace{0.05cm}
   \muted{\footnotesize\itshape Borrowing strength is not a figure of speech: the thin series were
@@ -313,25 +285,22 @@
 
 % --- Slide: the business answer ---------------------------------------------
 \begin{frame}{What the Model Actually Concluded}
-  The estimated hierarchy: $\mu_b = 0.077$ with a 94\% HDI of $[0.016,\ 0.150]$, and
-  $\sigma_b = 0.066$.
+  The estimated hierarchy: $\mu_b = 0.078$ (94\% HDI about $[0.02,\ 0.15]$) and
+  $\sigma_b = 0.065$.
 
   \vspace{0.1cm}
-  In words: a SNAP week lifts FOODS units by roughly \textbf{8\%}, and stores genuinely differ
-  around that by about \textbf{7 percentage points}. Both numbers are answers, and the second one
-  is the one no point estimate would have given you.
+  So a SNAP week lifts FOODS units by about \textbf{8\%}, and stores genuinely differ around that
+  by about \textbf{7 percentage points}.
 
   \begin{warningbox}
-    \textbf{It does not license the store-level policy the unpooled fit suggested.} An analyst
-    reading the unpooled numbers would report uplifts from $5\%$ to $40\%$ and stock accordingly.
-    The held-out weeks say that range was mostly noise --- but $\sigma_b = 0.066$ says it is not
-    \emph{all} noise either.
+    \textbf{Not a license for store-by-store stocking.} The thin stores' own estimates ran from
+    $5\%$ to $40\%$. The held-out weeks say that was mostly noise; $\sigma_b = 0.065$ says not
+    \emph{all} of it.
   \end{warningbox}
 
   \vspace{0.1cm}
-  \textbf{The defensible recommendation:} plan on an 8\% FOODS uplift everywhere, allow real but
-  modest store variation around it, and do not act on a store's own estimate until that store has
-  the weeks to support one.
+  \textbf{The defensible plan:} 8\% everywhere, modest store variation around it, and no store's
+  own estimate until it has the weeks to support one.
 \end{frame}
 
 % =============================================================================
@@ -345,30 +314,26 @@
   \begin{keybox}
     {\footnotesize
     \begin{enumerate}\itemsep2pt
-      \item \textbf{Ask what may be pooled before you pool it.} Groups must be
-            \textbf{exchangeable}. FOODS and HOBBIES are not, and no amount of good sampling
-            fixes a hierarchy built over the wrong set.
+      \item \textbf{Ask what may be pooled first:} groups must be \textbf{exchangeable}. FOODS
+            and HOBBIES are not.
 
-      \item \textbf{Complete pooling} denies groups differ; \textbf{no pooling} lets a group with
-            8 observations report noise as a finding. You have used both without naming them.
+      \item \textbf{Complete pooling} denies groups differ; \textbf{no pooling} reports noise as a
+            finding.
 
-      \item \textbf{Partial pooling} gives each group its own parameter drawn from a shared
-            distribution, and estimates how much groups genuinely differ.
+      \item \textbf{Partial pooling} draws each group's parameter from a shared distribution
+            whose spread is estimated.
 
-      \item \textbf{Shrinkage is automatic and proportionate.} Our thin series moved
-            \textbf{8.1$\times$} further toward the group mean than data-rich ones, with nobody
-            specifying that --- and on held-out weeks it was \textbf{2.6$\times$} more accurate.
+      \item \textbf{Shrinkage is proportionate:} thin series moved \textbf{8.1$\times$} further;
+            held-out error was \textbf{2.6$\times$} smaller.
 
-      \item This is \textbf{regularization for the sixth time} --- and the only version where the
-            shrinkage strength is estimated rather than tuned.
+      \item \textbf{Regularization for the sixth time}, with the strength estimated, not tuned.
 
-      \item \textbf{Write it non-centered.} The obvious form gave 127 divergences, the
-            reparameterized form 1 --- same model, different geometry.
+      \item \textbf{Write it non-centered.} 43 divergences became 0: same model, a change of
+            coordinates.
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: Bayesian linear regression --- coefficients as distributions, and what
-  you can ask them.}
+  \muted{\itshape Next: Bayesian linear regression --- coefficients as distributions.}
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}

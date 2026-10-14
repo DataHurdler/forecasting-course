@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics II — Time Series**
 
-Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (18 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (19 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -10,7 +10,7 @@ Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (18 pages) · Measured runtime: se
 
 - **`▶ SLIDE n — Title`** marks where to advance. The number is the PDF page.
 - *Italic parentheticals* are stage directions. **[pause]** means stop for a beat.
-- Slide 4 sets expectations low on purpose and slide 15 collects on it. The argument of this
+- Slide 4 sets expectations low on purpose and slides 15–16 collect on it. The argument of this
   lecture is that a **calibrated but useless** interval is still a better deliverable than a point
   forecast, because you can *establish* that it's useless. Do not soften that.
 - Slide 12 is the first of two sampler failures in this pair of lectures. Treat it as a rehearsal
@@ -240,9 +240,33 @@ larger K lets the shape get more detailed, with sharper peaks.
 
 And each a-k and b-k is just a coefficient with a Normal prior. Nothing exotic.
 
+*(Point at the left panel.)*
+
+Here is what our fit found, on CA_1 FOODS. The gray dots are the training weeks with the level
+taken out, stacked by where they fall in the year. The blue wave is k equals one, once a year. The
+green and the orange are k equals two and three, twice and three times a year. The red curve is
+their sum — that is the seasonal shape the model uses. It peaks in mid-August, about fifteen
+hundred units above the level, and bottoms out in mid-February.
+
 **[pause]**
 
-*(Point at the key box — this is the third time they've seen this device.)*
+*(Point at the three dials.)*
+
+Now the geometry, because it turns two numbers into one picture. A sine plus a cosine at the same
+frequency is just one wave, shifted: a sine x plus b cosine x equals r sine of x plus phi. So draw
+each pair, a-k and b-k, as an arrow from the origin. **The arrow's length is the wave's size. Its
+angle is the wave's timing** — turn the arrow and the peak slides along the year.
+
+The yearly arrow is about eleven hundred sixty units long. The other two are about two hundred
+twenty and one hundred ninety. Each dial is drawn to its own scale, so read the lengths, not the
+circles.
+
+And here's what the dials don't show: the posterior for those two short arrows is about as wide as
+the arrows themselves. The data pins down the yearly wave. The faster two are barely there.
+
+**[pause]**
+
+*(Point at the muted line — this is the third time they've seen this device.)*
 
 You have met this exact construction **twice already**.
 
@@ -336,9 +360,9 @@ even with `target_accept` raised to point-nine-five.
 *(Walk the table.)*
 
 R-hat: one-point-oh-two-two, against a threshold of one-point-oh-one. Failed. ESS: two hundred
-fifty-two, against four hundred. Failed. Divergences: zero — that one passed.
+seventy-four, against four hundred. Failed. Divergences: zero — that one passed.
 
-After the fix: R-hat one-point-oh-oh-two, ESS two thousand six hundred seventeen.
+After the fix: R-hat one-point-oh-oh-two, ESS two thousand three hundred seventy-six.
 
 **[pause]**
 
@@ -385,7 +409,7 @@ CA_1 FOODS, fifty-two weeks held out.
 
 *(Point at the table.)*
 
-Bayesian structural model: RMSE one thousand five hundred eighty-seven. Seasonal naive — same week
+Bayesian structural model: RMSE one thousand five hundred eighty-nine. Seasonal naive — same week
 last year, one line of code: one thousand six hundred sixty.
 
 So we beat the benchmark by about **four percent**.
@@ -428,31 +452,64 @@ Every forecast comes with a ninety-four percent predictive interval. And there a
 questions you can ask about it, which are different questions, and this is the heart of the
 lecture.
 
-*(Walk the table.)*
+*(Walk the figure, left to right.)*
 
-**Is it calibrated?** Measured: one hundred percent of held-out weeks fell inside the interval.
-Reading: not overconfident. Though it should be about ninety-four percent, so it's actually
-*conservative* — a bit too wide.
-
-**Is it useful?** Measured: the width is roughly eleven thousand seven hundred units, on a mean of
-nineteen thousand seven hundred. That's about **plus or minus thirty percent**. Honest, and far too
-wide to order against.
+On the left, the last sixty training weeks: the gray dots are actual sales, the thin blue line is
+the fit, and the pale band around it is the in-sample interval. At the dashed line we stop
+looking. To the right are the fifty-two weeks we held out: black dots for what actually happened,
+the blue line for the forecast, and the shaded band for the ninety-four percent interval.
 
 **[pause]**
+
+**Is it calibrated?** Count the black dots outside the band. There are none. Fifty-two of fifty-two
+fell inside. So it is not overconfident. But it promised ninety-four percent, and ninety-four
+percent of fifty-two would leave about three weeks outside, so it's actually *conservative* — a
+bit too wide.
+
+**Is it useful?** Look at how wide the band is. On average it's about eleven thousand seven
+hundred units wide, on an average week of nineteen thousand seven hundred. That's plus or minus
+thirty percent — **on average**.
+
+*(Point at the two red arrows.)*
+
+And "on average" is doing work in that sentence. One week out, the band is plus or minus sixteen
+percent. A year out, it's plus or minus thirty-nine. It fans out as the forecast gets further
+from the data. Honest, at every horizon. And too wide to order against at almost all of them.
+
+---
+
+# ▶ SLIDE 16 — Honest, and Too Wide to Order Against
 
 *(This is the sentence of the lecture.)*
 
 **Passing the first does not excuse failing the second.**
 
-A model that says "demand next week will be somewhere between fourteen thousand and twenty-six
-thousand" is telling you the truth and helping nobody. You cannot write a purchase order against
-that.
+A model that says "demand will be somewhere between fourteen thousand and twenty-six thousand" is
+telling you the truth and helping nobody. You cannot write a purchase order against that.
 
-And the cause is structural, not a bug. A level that is free to random-walk for fifty-two steps
-*drifts*, and the accumulated uncertainty is genuinely that large. The model is correctly
+**[pause]**
+
+And the cause is structural, not a bug.
+
+*(Point at the formula.)*
+
+Take the parameters as given, and today's level as given. Then the forecast h weeks out has
+variance sigma-squared plus h times sigma-level-squared. The noise, sigma-squared, is the same
+every week. The level's random-walk steps **add up** — one step of drift for every week you look
+ahead.
+
+*(Walk the figure.)*
+
+The dotted line is the noise alone. The dashed curve is that formula, at the fitted values of the
+parameters. Early on the noise dominates. After about seven weeks the drift term overtakes it,
+and from there the band grows like the square root of h. The blue line is the band we actually
+got. It sits a little above the dashed curve, because the real band also carries our uncertainty
+about the parameters and about today's level.
+
+So a level that is free to random-walk for fifty-two steps *drifts*, and the model is correctly
 reporting the consequence of what we told it to believe.
 
-So the fix is a model with a **stronger opinion**: a damped level that reverts rather than
+The fix is a model with a **stronger opinion**: a damped level that reverts rather than
 wandering, or covariates that pin it down — price, promotions, the things we withheld.
 
 **[pause]**
@@ -473,13 +530,13 @@ you something true about how much you actually know. That is worth paying four p
 
 ---
 
-# ▶ SLIDE 16 — Section divider: Key Takeaways
+# ▶ SLIDE 17 — Section divider: Key Takeaways
 
 What structural models are for.
 
 ---
 
-# ▶ SLIDE 17 — Lecture 11 Part 1: Key Takeaways
+# ▶ SLIDE 18 — Lecture 11 Part 1: Key Takeaways
 
 One. A structural model writes the series as named parts — level, seasonality, noise — and gives
 each one a prior and a posterior.
@@ -487,16 +544,17 @@ each one a prior and a posterior.
 Two. The local level is a random walk whose step size you put a prior on. Small means rigid, large
 means it chases the data. Same trade as a smoothing parameter or a penalty.
 
-Three. Fourier terms encode seasonality in a few coefficients instead of fifty-two. Same device as
-Prophet in Lecture 3 and the features you built in Homework 4 — third appearance.
+Three. Fourier terms build seasonality from a few waves instead of fifty-two parameters, and each
+pair of coefficients is an arrow: its length is the wave's size, its angle the wave's timing. Same
+device as Prophet in Lecture 3 and the features you built in Homework 4 — third appearance.
 
 Four. **Check the sampler before the forecast.** Our first fit had R-hat one-point-oh-two and ESS
-two fifty-two, while returning a perfectly plausible-looking answer. Reparameterizing fixed it.
+two seventy-four, while returning a perfectly plausible-looking answer. Reparameterizing fixed it.
 
 Five. The point forecast beat seasonal naive by four percent. That is not the argument.
 
-And six. The interval was **calibrated but too wide to act on** — and being able to *establish*
-that is the actual product.
+And six. The interval was **calibrated but too wide to act on** — plus or minus thirty percent on
+average, and widening with the horizon — and being able to *establish* that is the actual product.
 
 **[pause]**
 
@@ -505,6 +563,6 @@ have any data — and a question you have to answer *before* you fit anything.
 
 ---
 
-# ▶ SLIDE 18 — References
+# ▶ SLIDE 19 — References
 
 *(Advance and close. No narration needed.)*
