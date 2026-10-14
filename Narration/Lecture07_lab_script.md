@@ -134,8 +134,10 @@ thousand seven hundred and sixty-one parameters**, trained on 5,940 overlapping 
 *(Point at `shuffle=False`.)*
 
 One line deserves attention. `shuffle=False` in the DataLoader. Almost every PyTorch tutorial you
-will find sets it to `True`, because for images it is right. For a time series it destroys the
-ordering, and — this is the theme of the lab — **nothing warns you.** No error, no warning, just a
+will find sets it to `True`. Here it keeps every run identical, so a seed gives the same number
+each time. Shuffling these training windows would not leak anything — each window carries its own
+past, and they all come from before the cutoff. What leaks is a random split *before* the time
+split, and — this is the theme of the lab — **nothing warns you.** No error, no warning, just a
 number that is wrong in a way you cannot see.
 
 **[pause]**

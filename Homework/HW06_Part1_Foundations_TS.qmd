@@ -253,7 +253,7 @@ train, test = ca1.iloc[:-N_TEST], ca1.iloc[-N_TEST:]
 ```
 
 > **Your response:** Report $\hat{R}$, ESS and divergences. Then: the lecture noted that writing
-> the level with `pm.GaussianRandomWalk` gave $\hat{R}$ = 1.022 and ESS = 252 — both failing their
+> the level with `pm.GaussianRandomWalk` gave $\hat{R}$ = 1.022 and ESS = 274 — both failing their
 > thresholds while the forecast still looked reasonable. Explain what the non-centered form
 > changes — not statistically, but about the *shape* the sampler has to explore.
 

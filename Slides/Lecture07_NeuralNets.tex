@@ -248,11 +248,9 @@
     \texttt{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ batch\_size=64, shuffle=False)}
     }
   \end{examplebox}
-  \texttt{Dataset} fetches \emph{one} example; \texttt{DataLoader} handles batching.
-
-  \vspace{0.1cm}
-  \textbf{Note \texttt{shuffle=False}.} Nearly every tutorial sets it \texttt{True} --- right for
-  images, wrong here. It destroys the ordering your lag features depend on.
+  \texttt{Dataset} fetches \emph{one} example; \texttt{DataLoader} batches.
+  \textbf{\texttt{shuffle=False}} keeps runs identical. Shuffling these training windows would not
+  leak the future --- each carries its own past; shuffling \emph{before} the time split would.
 \end{frame}
 
 % --- Slide: model definition -------------------------------------------------
@@ -353,7 +351,7 @@
 
       \item \textbf{Regularization is not new}: weight decay is Ridge.
 
-      \item For time series: \textbf{do not shuffle}, split by time, call
+      \item For time series: split by time, \textbf{never shuffle before the split}, call
             \texttt{zero\_grad()} every batch.
 
       \item An FFN on engineered features competes with XGBoost; it is \textbf{not an upgrade}.

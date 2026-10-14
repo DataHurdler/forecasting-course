@@ -1284,8 +1284,8 @@ Department of Economics
 <span id="cb1-10"><a href></a>loader <span class="op">=</span> DataLoader(ForecastDataset(X_tr, y_tr),</span>
 <span id="cb1-11"><a href></a>                    batch_size<span class="op">=</span><span class="dv">64</span>, shuffle<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><code>Dataset</code> fetches <em>one</em> example; <code>DataLoader</code> handles batching.</p>
-<p><strong>Note <code>shuffle=False</code>.</strong> Nearly every tutorial sets it <code>True</code> — right for images, wrong here. It destroys the ordering your lag features depend on.</p>
+<p><code>Dataset</code> fetches <em>one</em> example; <code>DataLoader</code> batches.</p>
+<p><strong><code>shuffle=False</code></strong> keeps runs identical. Shuffling these training windows would not leak the future — each carries its own past; shuffling <em>before</em> the time split would.</p>
 </section>
 <section id="pytorch-defining-the-model" class="slide level2">
 <h2>PyTorch: Defining the Model</h2>
@@ -1390,7 +1390,7 @@ Department of Economics
 <li><p>Width and depth set an <strong>FFN</strong>’s capacity: 22,657 parameters on 5,000 rows.</p></li>
 <li><p><strong>Training</strong>: loss <span class="math inline">\(\to\)</span> <code>backward()</code> <span class="math inline">\(\to\)</span> <code>step()</code>, per mini-batch.</p></li>
 <li><p><strong>Regularization is not new</strong>: weight decay is Ridge.</p></li>
-<li><p>For time series: <strong>do not shuffle</strong>, split by time, call <code>zero_grad()</code> every batch.</p></li>
+<li><p>For time series: split by time, <strong>never shuffle before the split</strong>, call <code>zero_grad()</code> every batch.</p></li>
 <li><p>An FFN on engineered features competes with XGBoost; it is <strong>not an upgrade</strong>.</p></li>
 </ol>
 </div>

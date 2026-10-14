@@ -407,21 +407,26 @@ You'll write this exact class, or something very close to it, in Homework 5.
 
 Look at `shuffle=False`.
 
-Nearly every PyTorch tutorial you find online sets that to `True`. For image classification that
-is correct — the order of your cat photos is meaningless, and shuffling helps.
+Nearly every PyTorch tutorial you find online sets that to `True`. We set it to `False`, and I
+want to be precise about why, because people get this wrong in both directions.
 
-For us it is **wrong**, and it will quietly damage your model. Our rows are ordered in time, and
-the lag features depend on that ordering. Shuffling destroys it.
+Our reason is reproducibility: with `shuffle=False`, the same seed gives the same model every
+time, so when two runs differ, you know it was the seed.
 
-This is the same discipline as `TimeSeriesSplit` instead of `KFold`, from Lecture 5. The default
-in the tooling assumes your rows are exchangeable. Ours are not.
+What shuffling would **not** do here is leak the future. Each training example is a whole window —
+it carries its own past with it — and every window is from before the cutoff. Shuffling the order
+the windows arrive in changes nothing about what the model can see.
+
+What **does** leak is shuffling *before* the split: a random train/test split, or shuffling rows
+before you build the windows. That is the same discipline as `TimeSeriesSplit` instead of `KFold`,
+from Lecture 5. The default in the tooling assumes your rows are exchangeable. Ours are not.
 
 **[pause]**
 
-And notice the failure mode, because it's the one this course keeps returning to. Setting
-`shuffle=True` does not raise an error. It does not warn you. Your model trains, your loss goes
-down, and you get a number — a number that is better than it should be, because you have quietly
-let the model see the future.
+And notice the failure mode, because it's the one this course keeps returning to. A random split
+does not raise an error. It does not warn you. Your model trains, your loss goes down, and you get
+a number — a number that is better than it should be, because you have quietly let the model see
+the future.
 
 That is the same class of error as `KFold` on a time series, as scaling outside the fold, as an
 unshifted rolling feature. None of them crash. All of them return a better-looking answer than
@@ -548,7 +553,7 @@ differentiate by hand.
 Four. Regularization is not new. Weight decay *is* Ridge; dropout and early stopping do the same
 job by other means. That's the fifth appearance of one idea.
 
-Five. For time series specifically: do not shuffle the DataLoader, split by time, and call
+Five. For time series specifically: split by time, never shuffle before the split, and call
 `zero_grad()` every batch.
 
 And six — the one that matters most. An FFN on engineered features is a **competitor** to

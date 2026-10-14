@@ -147,8 +147,10 @@ print(f"parameters: {sum(p.numel() for p in model.parameters()):,}")
 print(f"test RMSE:  {train(model):,.0f}")
 ```
 
-**Note `shuffle=False`.** Almost every PyTorch tutorial sets it `True`. For a time series it
-destroys the ordering, and nothing warns you.
+**Note `shuffle=False`.** Almost every PyTorch tutorial sets it `True`. Here it keeps every run
+identical, so a seed gives the same number each time. Shuffling these *training* windows would not
+leak the future: each window carries its own past, and the split is by time. What leaks is
+shuffling or splitting at random *before* the time split, and nothing warns you when you do.
 
 **Compare that RMSE against your records.** XGBoost managed 781 on this panel in Homework 4, and
 a 46-coefficient LASSO managed 744. Your network has around 22,000 parameters.

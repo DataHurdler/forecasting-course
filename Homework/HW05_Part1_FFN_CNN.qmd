@@ -121,8 +121,9 @@ if its *target* week falls before the cutoff.
 ::: {.callout-warning}
 ## Two mistakes that will not raise an error
 
-**Do not shuffle.** `DataLoader(..., shuffle=False)` for every model here. Shuffling destroys the
-ordering the sequence models exist to exploit, and it will not warn you.
+**Split by time before anything else.** A random split, or shuffling rows before you build
+windows, puts future weeks into training and will not warn you. Then use
+`DataLoader(..., shuffle=False)` for every model here, so your runs are reproducible.
 
 **Standardize using training statistics only.** Compute the mean and standard deviation on the
 training windows, then apply them to the test windows. Computing them over the full dataset leaks
@@ -237,8 +238,9 @@ class SeriesWindowDataset(Dataset):
 
 > **Your response:** How many training windows do you get? It is *fewer* than the number of
 > store-category-week rows before the cutoff — work out exactly how many you lose and explain
-> where they go. (Hint: what has to exist before a window can start?) Then: why `shuffle=False`
-> here, when almost every PyTorch tutorial you will find sets it to `True`?
+> where they go. (Hint: what has to exist before a window can start?) Then: would `shuffle=True`
+> on the *training* loader leak information from the test weeks? Explain what it would and would
+> not change.
 
 ---
 

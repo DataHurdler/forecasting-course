@@ -159,3 +159,18 @@ All eight builders reported; every deck verified by the coordinator afterwards:
 - **L01 MASE:** now scaled by the training-data seasonal-naive MAE (the standard definition). Say if
   you want the old ratio back.
 - **Instructor repo:** canvas/week-13-summary.md and the README carry the old L11 Part 2 numbers.
+
+## Owner decisions, 2026-10-13 (after review) — all applied
+
+- **Push now:** the four rollout commits pushed (6f7ed77..e2962c3) and confirmed live.
+- **Update the answer keys:** done in forecasting-instructor 53a9edc. The HW06 Part 2 key had been
+  "corrected" on 2026-08-31 to 127 / 1.044 / 413, which never reproduced; it is now back on 43 /
+  1.003 / 966. HW01 Part 1's damped-Holt row is left for the pending HW01 reconciliation: `Holt`
+  and `ExponentialSmoothing` give different damped fits (1,845 at φ = 0.80 vs 1,924 at φ = 0.85).
+- **Fix only assignments not yet due:**
+  - HW05 Part 1: the shuffle note and its written question.
+  - HW06 Part 1: ESS 252 → 274.
+  - Both are fixed here and in Forecasting-Env (f39fe8f). HW04 is past due and unchanged.
+  - L07, Lab 7 and their narrations now make the same correction: shuffling *training* windows
+    after a time split leaks nothing, while a random split, or shuffling before the split, does.
+- **Keep L01's textbook MASE.**

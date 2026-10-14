@@ -186,9 +186,9 @@ loader = DataLoader(ForecastDataset(X_tr, y_tr),
 ```
 :::
 
-`Dataset` fetches *one* example; `DataLoader` handles batching.
+`Dataset` fetches *one* example; `DataLoader` batches.
 
-**Note `shuffle=False`.** Nearly every tutorial sets it `True` — right for images, wrong here. It destroys the ordering your lag features depend on.
+**`shuffle=False`** keeps runs identical. Shuffling these training windows would not leak the future — each carries its own past; shuffling *before* the time split would.
 
 ---
 
@@ -273,7 +273,7 @@ What changes in the next two lectures is the *architecture*: convolutions that s
 
 4. **Regularization is not new**: weight decay is Ridge.
 
-5. For time series: **do not shuffle**, split by time, call `zero_grad()` every batch.
+5. For time series: split by time, **never shuffle before the split**, call `zero_grad()` every batch.
 
 6. An FFN on engineered features competes with XGBoost; it is **not an upgrade**.
 :::
