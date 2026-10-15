@@ -273,57 +273,57 @@ textbooks:
   used_for: Lectures 10&ndash;12. PyMC and ArviZ throughout, which is what we use
 assignments:
 - href: homework/HW01_Part1_ETS.html
-  text: 1 &middot; Part 1
+  text: Assignment&nbsp;1, Part&nbsp;1
   covers: Exponential smoothing, forecast evaluation
   due: Week 2
   prompts: 4
 - href: homework/HW01_Part2_ARIMA_VAR.html
-  text: 1 &middot; Part 2
+  text: Assignment&nbsp;1, Part&nbsp;2
   covers: ARIMA, VAR, Granger causality
   due: Week 3
   prompts: 8
 - href: homework/HW02_GAMs.html
-  text: '2'
+  text: Assignment&nbsp;2
   covers: Prophet, pyGAM, component decomposition
   due: Week 4
   prompts: 10
 - href: homework/HW03_Trees_RF.html
-  text: '3'
+  text: Assignment&nbsp;3
   covers: Decision trees, random forests, feature importance
   due: Week 6
   prompts: 12
 - href: homework/HW04_XGBoost_Regularization.html
-  text: '4'
+  text: Assignment&nbsp;4
   covers: XGBoost tuning, LASSO paths, Elastic Net
   due: Week 7
   prompts: 12
 - href: homework/HW05_Part1_FFN_CNN.html
-  text: 5 &middot; Part 1
+  text: Assignment&nbsp;5, Part&nbsp;1
   covers: Windowing datasets, FFN, 1D CNN
   due: Week 9
   prompts: 9
 - href: homework/HW05_Part2_Sequence.html
-  text: 5 &middot; Part 2
+  text: Assignment&nbsp;5, Part&nbsp;2
   covers: RNN, LSTM, Transformer, positional encoding
   due: Week 11
   prompts: 10
 - href: homework/HW05_Part3_Comparison.html
-  text: 5 &middot; Part 3
+  text: Assignment&nbsp;5, Part&nbsp;3
   covers: Five-architecture comparison and reflection
   due: Week 12
   prompts: 3
 - href: homework/HW06_Part1_Foundations_TS.html
-  text: 6 &middot; Part 1
+  text: Assignment&nbsp;6, Part&nbsp;1
   covers: Beta-Binomial, prior predictive, structural TS
   due: Week 13
   prompts: 10
 - href: homework/HW06_Part2_Hierarchical.html
-  text: 6 &middot; Part 2
+  text: Assignment&nbsp;6, Part&nbsp;2
   covers: Exchangeability, pooling, shrinkage, divergences
   due: Week 14
   prompts: 9
 - href: homework/HW07_Bayesian_Regression.html
-  text: '7'
+  text: Assignment&nbsp;7
   covers: DAGs, Bayesian regression, ROPE, scenarios
   due: Week 15
   prompts: 16
