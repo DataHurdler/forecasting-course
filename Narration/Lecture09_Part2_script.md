@@ -54,27 +54,41 @@ Two constraints that are built into reading a sequence one step at a time.
 # ▶ SLIDE 4 — Two Problems Built Into Recurrence
 
 Part 1 left us with a working recurrent forecaster. Both of its remaining problems come from the
-same source: it reads strictly left to right.
+same source: it reads strictly left to right. So let's follow one week through it — the same week
+last year, week t minus fifty-two — and watch how it reaches the forecast.
 
-**The information bottleneck.** Everything the model knows about step three has to survive being
-squeezed through every hidden state between three and the end of the window. An LSTM's gates make
-that survival more likely — that's what they're for — but the entire history is still being
-compressed into one fixed-size vector, over and over.
+*(Point at the top row. Trace the crimson path from left to right.)*
 
-**The sequential bottleneck.** Step t cannot be computed until step t minus one is finished. That
-is a hard constraint, not an implementation detail. A thousand-step sequence takes a thousand
-sequential operations no matter how many GPUs you own. Convolutions parallelize beautifully;
-recurrence cannot.
+This is the recurrence. Week t minus fifty-two enters the very first hidden state, h-one. Only the
+last state, h-fifty-two, feeds the forecast. So everything the model learned about that week has to
+ride through all fifty-two states, one update at a time.
+
+That's the first problem: **the information bottleneck.** Each of those states is one vector of
+sixty-four numbers, and at every update the new week gets squeezed in with everything that came
+before. Fifty-two squeezes. An LSTM's gates make survival more likely — that's what they're for —
+but the whole history still lives in one fixed-size vector.
+
+And look at the label above the row: each update waits for the one before. That's the second
+problem, **the sequential bottleneck.** Update thirty cannot start until update twenty-nine is
+done. It's a hard constraint, not an implementation detail: however many GPUs you own, those
+fifty-two updates run one after another.
 
 **[pause]**
 
+*(Point at the bottom row.)*
+
+Now attention. Same fifty-two weeks. The forecast is read from the last position, week t minus
+one, and that position scores every week in the window directly. Every gray arc is one of those
+lookups. The crimson one is week t minus fifty-two: one step, not fifty-two. And all fifty-two
+lookups are computed at the same time — nothing waits for anything.
+
 *(Point at the key box.)*
 
-Attention removes both at once, and the idea is almost aggressively simple: let **every position
-look directly at every other position**, in one operation.
+So attention removes both problems at once.
 
-No compression through intermediate states — the last week reads week three directly.
-And no ordering constraint on the computation — all positions are computed simultaneously.
+One honest caveat, and it's in the box. "One step" is a statement about the wiring — how many
+operations sit between two weeks. It says nothing about whether a trained model actually uses that
+path. We'll look at what ours used on slide seven.
 
 ---
 
@@ -145,9 +159,9 @@ It's a numerical fix, not a conceptual one, but leave it out and the model doesn
 Let me make that concrete for our problem.
 
 Attention can put weight on **any** week in the window, in one step. A recurrent model needs
-fifty-two successive state updates to reach the same week last year — and we saw last week what
-survives fifty-two multiplications. A CNN needs a receptive field that wide, which it doesn't have.
-Distance costs attention nothing. That's the headline.
+fifty-two successive state updates to reach the same week last year — that's the top row on slide
+four — and we saw last week what survives fifty-two multiplications. A CNN needs a receptive field
+that wide, which it doesn't have. Distance costs attention nothing. That's the headline.
 
 But "can" is a claim about the architecture. So we looked at what ours actually *did*.
 
@@ -185,14 +199,6 @@ interpretation at all, you can see where the model looked. But where it looked i
 what mattered. A high weight tells you where the model consulted, not why it decided what it
 decided, and there's a real literature arguing about how much to read into them.
 
-*(Point at the warning box.)*
-
-**[pause]**
-
-And here's the price, which is real. Scoring every week against every other week is **quadratic** —
-order T-squared in both time and memory. At T equals fifty-two, that's irrelevant. At T equals ten
-thousand, it is the central engineering constraint of the entire field, and there's a whole
-literature on approximating it.
 ---
 
 # ▶ SLIDE 8 — Multi-Head Attention
@@ -329,14 +335,22 @@ question.
 
 Three properties, in the order they actually mattered commercially.
 
-**Parallelism.** Every position is computed at once. Training scales across hardware in a way
-recurrence never could. And I want to be clear that this — more than accuracy — is why the
-architecture won. It could absorb far more data and far more compute per unit of wall-clock time
-than an RNN. When your competitive advantage is training on more data, the architecture that
-trains faster wins by default.
+**Parallelism.** *(Point at the figure.)* The gray strip on top is the recurrence: fifty-two steps,
+shaded in the order they have to run. The red square is attention: every week scored against every
+other week, fifty-two by fifty-two — two thousand seven hundred and four scores. And no score waits
+for another; they can all be computed at once.
 
-**Direct long-range paths.** Any position reaches any other in one step. There is no distance at
-which information degrades. Compare the ten-to-the-minus-eight we computed last week.
+I want to be clear that this — more than accuracy — is why the architecture won. It could absorb
+far more data and far more compute per unit of wall-clock time than an RNN. When your competitive
+advantage is training on more data, the architecture that trains faster wins by default.
+
+One thing the picture does *not* say. A cell counts an operation, not its cost — one recurrent step
+is a sixty-four by sixty-four matrix product, one score is a sixteen-number dot product. So don't
+read the square as "fifty times more work". Read it as "no waiting".
+
+**Direct long-range paths.** Any position reaches any other in one step — the arcs from slide four.
+Nothing has to survive fifty-two multiplications to arrive. Compare the ten-to-the-minus-eight we
+computed last week.
 
 **Scale.** The architecture kept getting better as parameters and data grew, well past the point
 where earlier architectures plateaued. That property is the entire foundation of the last five
@@ -344,6 +358,15 @@ years of AI. BERT is an encoder stack used for understanding; GPT is a decoder s
 generation. Both are this block, repeated.
 
 **[pause]**
+
+*(Point back at the square, then the line under it.)*
+
+And here's the price, which is real. The square's area is the cost: order T-squared in both time
+and memory, for every head in every layer. Look at the dashed corner — a twenty-six-week window is
+a quarter of the square, six hundred seventy-six scores. Double the window and the recurrence takes
+twice the steps, but attention computes four times the scores. At T equals fifty-two, that's
+irrelevant. At T equals ten thousand, it's a hundred million scores per head, per layer, and it is the central
+engineering constraint of the entire field — there's a whole literature on approximating it.
 
 *(Now plant the doubt.)*
 
@@ -538,7 +561,7 @@ that understanding transfers well beyond this course.
 # ▶ SLIDE 19 — Lecture 9 Part 2: Key Takeaways
 
 One. Attention is a learned soft lookup: score every query against every key, softmax the scores,
-average the values. Distance in the sequence costs nothing.
+average the values. Every week in the window is one step away.
 
 Two. The price is quadratic in sequence length — irrelevant at fifty-two steps, the central
 constraint at ten thousand.

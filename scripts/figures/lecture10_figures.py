@@ -3,16 +3,25 @@
 
     .venv/bin/python scripts/figures/lecture10_figures.py                 # all
     .venv/bin/python scripts/figures/lecture10_figures.py bayes_update    # one, by name
+    .venv/bin/python scripts/figures/lecture10_figures.py --retrain       # re-run the sampler
 
 Writes Figures/Lecture10_BayesianFoundations/<name>.pdf (Beamer) and <name>.svg (Quarto).
 
-Nothing here is sampled. The deck's conversion-rate example is conjugate, so every curve and every
-number is exact: a Beta(5, 45) prior and 30 successes in 200 trials give a Beta(35, 215)
-posterior. The script asserts the deck's printed numbers (0.10, 0.15, 0.14) before drawing them.
+The deck's conversion-rate example is conjugate: a Beta(5, 45) prior and 30 successes in 200
+trials give a Beta(35, 215) posterior, so every curve is exact. The script asserts the deck's
+printed numbers (0.10, 0.15, 0.14) before drawing them.
+
+One thing is sampled: the two MCMC figures run four seeded random-walk Metropolis chains on that
+posterior, with PyMC's budget from the deck (tune=1000, draws=2000, chains=4). The chains and their
+summaries go to Figures/Lecture10_BayesianFoundations/measured.json; later runs redraw from that
+file, and --retrain re-runs the sampler. The prior-predictive counts are exact Beta-Binomial
+probabilities, not simulated draws.
 """
 from __future__ import annotations
 
+import json
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 import matplotlib
@@ -22,9 +31,11 @@ from matplotlib import font_manager
 from matplotlib.patches import Polygon, Rectangle
 import numpy as np
 from scipy.stats import beta as beta_dist
+from scipy.stats import betabinom, expon, halfnorm, norm
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "Figures" / "Lecture10_BayesianFoundations"
+MEASURED = OUT / "measured.json"
 
 # The deck's palette — Preambles/header.tex and Quarto/uno-clean.scss.
 CRIMSON, BLACK, GRAY = "#D71920", "#1A1A1A", "#525252"
@@ -170,10 +181,272 @@ def bayes_update() -> None:
           f"posterior mean {post_mean:.4f}; 3/20 -> {small:.4f}, 300/2000 -> {large:.4f}")
 
 
-FIGURES = {"bayes_update": bayes_update}
+# ================================================================== MCMC: four random walks
+# The deck's PyMC call is pm.sample(2000, tune=1000, chains=4). The figures use the same budget, but
+# with the textbook sampler the deck describes ("take a step; if higher, move; if lower, usually step
+# back"): random-walk Metropolis. PyMC's NUTS takes smarter steps; the picture is the same.
+SEED, STEP = 42, 0.02                  # numpy default_rng seed; proposal sd on theta
+TUNE, DRAWS = 1000, 2000
+STARTS = (0.01, 0.30, 0.55, 0.80)      # scattered on purpose, far from the posterior
+THRESH = 0.15                          # the event counted on "The Samples Are the Answer"
+
+
+def log_height(t):
+    """log of likelihood x prior, theta^(30+5-1) (1-theta)^(170+45-1), WITHOUT p(D): the
+    unnormalized posterior. Zero height (log = -inf) outside (0, 1)."""
+    t = np.asarray(t, dtype=float)
+    inside = (t > 0) & (t < 1)
+    tt = np.where(inside, t, 0.5)
+    return np.where(inside, (A0 + K - 1) * np.log(tt) + (B0 + N - K - 1) * np.log1p(-tt), -np.inf)
+
+
+def measure() -> dict:
+    """Run the four chains, summarize them, and cache both in measured.json."""
+    import arviz as az
+    rng = np.random.default_rng(SEED)
+    chains = np.empty((len(STARTS), TUNE + DRAWS))
+    accepted = np.zeros(len(STARTS))
+    for c, x in enumerate(STARTS):
+        lx = log_height(x)
+        for t in range(TUNE + DRAWS):
+            y = x + rng.normal(0.0, STEP)
+            ly = log_height(y)
+            if np.log(rng.uniform()) < ly - lx:      # accept with probability min(1, h(y)/h(x))
+                x, lx = y, ly
+                accepted[c] += 1
+            chains[c, t] = x
+    kept = chains[:, TUNE:]
+    s = az.summary(kept, ci_kind="hdi", ci_prob=0.94)
+    m = {"seed": SEED, "step": STEP, "tune": TUNE, "draws": DRAWS, "starts": list(STARTS),
+         "acceptance": (accepted / (TUNE + DRAWS)).round(3).tolist(),
+         # first step at which each chain is within 0.05 of the posterior mean
+         "steps_to_band": [int(np.argmax(np.abs(ch - 0.14) < 0.05)) for ch in chains],
+         "mean_counted": float(kept.mean()),
+         "p_above_counted": float((kept > THRESH).mean()),
+         "hdi94_counted": [float(v) for v in az.hdi(kept.ravel(), prob=0.94)],
+         "ess_bulk": float(s["ess_bulk"].iloc[0]), "r_hat": float(s["r_hat"].iloc[0]),
+         "chains": np.round(chains, 5).tolist()}
+    OUT.mkdir(parents=True, exist_ok=True)
+    MEASURED.write_text(json.dumps(m) + "\n")
+    print(f"  measured.json written: acceptance {m['acceptance']}, ESS {m['ess_bulk']:.0f}, "
+          f"R-hat {m['r_hat']:.3f}")
+    return m
+
+
+@lru_cache(maxsize=None)
+def measured() -> dict:
+    if "--retrain" in sys.argv or not MEASURED.exists():
+        return measure()
+    return json.loads(MEASURED.read_text())
+
+
+CHAIN_COLORS = (BLUE, AMBER, GREEN, GRAY)
+
+
+def mcmc_walk() -> None:
+    """Left: one Metropolis step on the unnormalized posterior, as two heights. Right: four chains
+    from scattered starts, warm-up shaded."""
+    m = measured()
+    chains = np.array(m["chains"])
+    fig = plt.figure(figsize=sz(13.6, 4.5))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1, 2.25], wspace=0.16,
+                          left=0.02, right=0.99, top=0.88, bottom=0.17)
+
+    # ---- one step, two heights
+    ax = fig.add_subplot(gs[0, 0])
+    x = np.linspace(0.04, 0.26, 600)
+    peak = log_height((A0 + K - 1) / (A0 + B0 + N - 2))
+    h = np.exp(log_height(x) - peak)                           # rescaled to peak 1: shape only
+    ax.fill_between(x, h, color=LIGHT_CRIMSON, zorder=1)
+    ax.plot(x, h, color=CRIMSON, lw=2.2, zorder=3)
+    now, prop = 0.150, 0.180
+    h_now, h_prop = (float(np.exp(log_height(v) - peak)) for v in (now, prop))
+    ratio = h_prop / h_now
+    for v, hv, c in [(now, h_now, BLACK), (prop, h_prop, BLUE)]:
+        ax.plot([v, v], [0, hv], color=c, lw=2.4, solid_capstyle="butt", zorder=4)
+        ax.plot([v], [hv], "o", ms=5.5, color=c, zorder=5)
+    ax.text(now - 0.005, 0.22, "now", ha="right", va="center", fontsize=11, color=BLACK)
+    ax.text(prop + 0.004, h_prop + 0.04, "proposed", ha="left", va="bottom", fontsize=11, color=BLUE)
+    ax.text(0.04, 1.6, f"lower: move with\nprobability {ratio:.2f},\nthe ratio of heights",
+            ha="left", va="top", fontsize=11, color=GRAY)
+    ax.set_xlim(0.04, 0.26); ax.set_ylim(0, 1.62)
+    ax.set_yticks([]); ax.spines["left"].set_visible(False)
+    ax.set_xticks([0.10, 0.15, 0.20]); ax.set_xticklabels(["0.10", "0.15", "0.20"])
+    ax.tick_params(labelsize=11)
+    ax.set_xlabel("θ", fontsize=12, style="italic", labelpad=1)
+    ax.set_title("height = likelihood × prior", fontsize=12, pad=4)
+
+    # ---- four chains
+    ax = fig.add_subplot(gs[0, 1])
+    T = chains.shape[1]
+    ax.axvspan(0, m["tune"], color=LIGHT_GRAY, zorder=0)
+    steps = np.arange(T)
+    for c, col in zip(chains, CHAIN_COLORS):
+        ax.plot(steps, c, color=col, lw=0.55, alpha=0.85, zorder=2)
+    for st, col in zip(m["starts"], CHAIN_COLORS):
+        ax.plot([0], [st], "o", ms=6, color=col, zorder=5, clip_on=False)
+    ax.text(m["tune"] / 2, 0.83, "warm-up: discarded", ha="center", va="top", fontsize=11,
+            color=GRAY)
+    ax.text(m["tune"] + m["draws"] / 2, 0.83, f"kept: 4 × {m['draws']:,} draws", ha="center",
+            va="top", fontsize=11, color=GRAY)
+    ax.text(T * 0.995, 0.40, "every chain ends\nup in one band", ha="right", va="bottom",
+            fontsize=11, color=BLACK)
+    ax.set_xlim(0, T); ax.set_ylim(0, 0.86)
+    ax.set_xticks([0, 1000, 2000, 3000]); ax.set_xticklabels(["0", "1,000", "2,000", "3,000"])
+    ax.set_yticks([0, 0.14, 0.4, 0.8]); ax.set_yticklabels(["0", "0.14", "0.4", "0.8"])
+    ax.tick_params(labelsize=11)
+    ax.set_xlabel("step", fontsize=12, labelpad=1)
+    ax.set_ylabel("θ", fontsize=12, style="italic", rotation=0, labelpad=8)
+    ax.set_title("four walks from scattered starts", fontsize=12, pad=4)
+
+    save(fig, "mcmc_walk")
+    print(f"    one step: h(0.18)/h(0.15) = {ratio:.3f}; steps to the band {m['steps_to_band']}; "
+          f"acceptance {m['acceptance']}")
+
+
+def mcmc_histogram() -> None:
+    """The kept draws as a histogram against the exact Beta(35, 215), with one event counted."""
+    m = measured()
+    kept = np.array(m["chains"])[:, m["tune"]:].ravel()
+    a, b = A0 + K, B0 + N - K
+    exact_mean, exact_p = a / (a + b), float(beta_dist.sf(THRESH, a, b))
+    # what the figure prints, checked against the exact answer
+    assert round(m["mean_counted"], 2) == round(exact_mean, 2) == 0.14
+    assert abs(m["p_above_counted"] - exact_p) < 0.03
+
+    fig, ax = plt.subplots(figsize=sz(9.4, 3.4))
+    fig.subplots_adjust(left=0.02, right=0.99, top=0.97, bottom=0.2)
+    edges = np.arange(0.06, 0.2401, 0.005)
+    dens, _ = np.histogram(kept, bins=edges, density=True)
+    for lo, d in zip(edges[:-1], dens):
+        above = lo >= THRESH - 1e-9
+        ax.add_patch(Rectangle((lo, 0), 0.005, d, facecolor=LIGHT_CRIMSON if above else LIGHT_GRAY,
+                               edgecolor=CRIMSON if above else "#A1A1AA", lw=0.6, zorder=2))
+    x = np.linspace(0.06, 0.24, 600)
+    ax.plot(x, beta_dist.pdf(x, a, b), color=BLACK, lw=2.0, zorder=4)
+    ax.axvline(THRESH, color=CRIMSON, lw=1.2, ls=(0, (3, 2)), zorder=3)
+    ax.text(0.063, 19.0, "8,000 kept draws", ha="left", va="center", fontsize=11, color=GRAY)
+    ax.text(0.063, 16.5, "exact Beta(35, 215)", ha="left", va="center", fontsize=11, color=BLACK)
+    ax.text(0.181, 14.6, f"share of draws above 0.15:\n{m['p_above_counted']:.2f} counted,"
+            f" {exact_p:.2f} exact", ha="left", va="center", fontsize=11, color=CRIMSON)
+    ax.set_xlim(0.06, 0.24); ax.set_ylim(0, 20.5)
+    ax.set_yticks([]); ax.spines["left"].set_visible(False)
+    ax.set_xticks([0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22])
+    ax.set_xticklabels(["0.08", "0.10", "0.12", "0.14", "0.16", "0.18", "0.20", "0.22"])
+    ax.tick_params(labelsize=11)
+    ax.set_xlabel("θ", fontsize=12, style="italic", labelpad=1)
+    save(fig, "mcmc_histogram")
+    print(f"    counted mean {m['mean_counted']:.4f} vs exact {exact_mean:.4f}; P(theta > 0.15) "
+          f"counted {m['p_above_counted']:.3f} vs exact {exact_p:.3f}; 94% HDI counted "
+          f"{m['hdi94_counted'][0]:.3f}-{m['hdi94_counted'][1]:.3f}; Metropolis ESS "
+          f"{m['ess_bulk']:.0f}, R-hat {m['r_hat']:.3f}")
+
+
+# ================================================================== priors by support
+def priors_support() -> None:
+    """Each prior over the values its parameter can take; then N(0, 1) on a sigma, with its
+    impossible half shaded, folded onto sigma >= 0 as the HalfNormal."""
+    fig = plt.figure(figsize=sz(13.6, 3.7))
+    gs = fig.add_gridspec(1, 4, width_ratios=[1, 1, 1, 1.75], wspace=0.13,
+                          left=0.01, right=0.99, top=0.78, bottom=0.2)
+
+    def panel(i, title, sub):
+        ax = fig.add_subplot(gs[0, i])
+        ax.set_yticks([]); ax.spines["left"].set_visible(False)
+        ax.tick_params(labelsize=11)
+        ax.set_title(f"{title}\n", fontsize=12, pad=2, loc="center")
+        ax.text(0.5, 1.03, sub, transform=ax.transAxes, ha="center", va="bottom", fontsize=11,
+                color=GRAY)
+        return ax
+
+    ax = panel(0, "Beta(5, 45)", "rates: [0, 1]")
+    x = np.linspace(0, 1, 800)
+    ax.fill_between(x, beta_dist.pdf(x, A0, B0), color=LIGHT_BLUE)
+    ax.plot(x, beta_dist.pdf(x, A0, B0), color=BLUE, lw=2.0)
+    ax.set_xlim(0, 1); ax.set_ylim(0, None)
+    ax.set_xticks([0, 0.5, 1]); ax.set_xticklabels(["0", "0.5", "1"])
+
+    ax = panel(1, "Normal(0, 1)", "coefficients: all reals")
+    x = np.linspace(-3.5, 3.5, 800)
+    ax.fill_between(x, norm.pdf(x), color=LIGHT_BLUE)
+    ax.plot(x, norm.pdf(x), color=BLUE, lw=2.0)
+    ax.set_xlim(-3.5, 3.5); ax.set_ylim(0, 0.5)
+    ax.set_xticks([-3, 0, 3])
+
+    ax = panel(2, "Exponential(1)", "scales: [0, ∞)")
+    x = np.linspace(0, 4.5, 800)
+    ax.fill_between(x, expon.pdf(x), color=LIGHT_BLUE)
+    ax.plot(x, expon.pdf(x), color=BLUE, lw=2.0)
+    ax.set_xlim(-0.6, 4.5); ax.set_ylim(0, 1.15)
+    ax.set_xticks([0, 2, 4])
+
+    # ---- a sigma: the wrong prior, and the fold that fixes it
+    ax = panel(3, "a standard deviation σ", "N(0, 1) vs HalfNormal(1)")
+    xn, xp = np.linspace(-3.2, 0, 400), np.linspace(0, 3.2, 400)
+    neg_mass = float(norm.cdf(0))
+    assert neg_mass == 0.5 and np.allclose(halfnorm.pdf(xp), 2 * norm.pdf(xp))   # the fold, exactly
+    ax.fill_between(xn, norm.pdf(xn), color=LIGHT_CRIMSON, zorder=1)
+    ax.plot(np.r_[xn, xp], norm.pdf(np.r_[xn, xp]), color=GRAY, lw=1.6, ls=(0, (4, 2)), zorder=3)
+    ax.plot(xp, halfnorm.pdf(xp), color=BLUE, lw=2.2, zorder=4)
+    ax.axvline(0, color=BLACK, lw=0.8, zorder=2)
+    ax.text(-3.2, 0.99, f"σ < 0:\nimpossible, yet\n{neg_mass:.0%} of N(0, 1)",
+            ha="left", va="top", fontsize=11, color=CRIMSON)
+    ax.text(0.95, 0.99, "HalfNormal:\nfolded onto\nσ ≥ 0", ha="left", va="top",
+            fontsize=11, color=BLUE)
+    ax.annotate("", xy=(1.05, 0.05), xytext=(-1.05, 0.05),     # the fold, under both curves
+                arrowprops=dict(arrowstyle="-|>", color=GRAY, lw=1.1,
+                                connectionstyle="arc3,rad=-0.3", mutation_scale=11))
+    ax.set_xlim(-3.2, 3.2); ax.set_ylim(0, 1.0)
+    ax.set_xticks([-3, 0, 3])
+    save(fig, "priors_support")
+    print(f"    N(0,1) mass below 0: {neg_mass:.2f}; HalfNormal(1) = 2 x N(0,1) density on sigma >= 0")
+
+
+# ================================================================== prior predictive counts
+PRIORS_PP = [((1, 1), "flat Beta(1, 1)"), ((5, 45), "Beta(5, 45)"), ((500, 4500), "Beta(500, 4500)")]
+
+
+def prior_predictive() -> None:
+    """What each prior predicts for successes out of 200 before any data: the exact Beta-Binomial
+    probabilities that pm.sample_prior_predictive approximates by simulation."""
+    k = np.arange(N + 1)
+    fig, axes = plt.subplots(3, 1, figsize=sz(12.4, 4.6), sharex=True)
+    fig.subplots_adjust(left=0.02, right=0.99, top=0.98, bottom=0.17, hspace=0.18)
+    YMAX = 0.1
+    notes = []
+    for ax, ((a, b), name), col in zip(axes, PRIORS_PP, (GRAY, BLUE, CRIMSON)):
+        d = betabinom(N, a, b)
+        lo, hi = int(d.ppf(0.05)), int(d.ppf(0.95))
+        notes.append((name, lo, hi, float(d.pmf(k).max())))
+        ax.bar(k, d.pmf(k), width=1.0, color=col, edgecolor="none", alpha=0.9)
+        ax.set_ylim(0, YMAX); ax.set_yticks([]); ax.spines["left"].set_visible(False)
+        ax.text(1.0, 0.92, name, transform=ax.transAxes, ha="right", va="top", fontsize=12,
+                color=col)
+        ax.tick_params(labelsize=11)
+    assert notes[0][3] == 1 / 201                                    # flat: every count 1 in 201
+    (_, lo1, hi1, _), (_, lo2, hi2, _) = notes[1], notes[2]
+    assert (lo1, hi1, lo2, hi2) == (7, 37, 13, 27)
+    axes[0].text(1.0, 0.45, "every count from 0 to 200 equally likely", transform=axes[0].transAxes,
+                 ha="right", va="top", fontsize=11, color=GRAY)
+    axes[1].text(1.0, 0.45, f"90% between {lo1} and {hi1}", transform=axes[1].transAxes,
+                 ha="right", va="top", fontsize=11, color=BLUE)
+    axes[2].text(1.0, 0.45, f"90% between {lo2} and {hi2}: θ is all but fixed at 0.10",
+                 transform=axes[2].transAxes, ha="right", va="top", fontsize=11, color=CRIMSON)
+    axes[-1].set_xlim(-1, N + 1)
+    axes[-1].set_xticks([0, 50, 100, 150, 200])
+    axes[-1].set_xlabel("successes out of 200, predicted before any data", fontsize=12, labelpad=2)
+    save(fig, "prior_predictive")
+    for name, lo, hi, mx in notes:
+        print(f"    {name}: 90% {lo}-{hi}, tallest bar {mx:.4f}")
+
+
+FIGURES = {"bayes_update": bayes_update, "mcmc_walk": mcmc_walk, "mcmc_histogram": mcmc_histogram,
+           "priors_support": priors_support, "prior_predictive": prior_predictive}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)
     print(f"Lecture 10 figures -> {OUT.relative_to(ROOT)}   (font: {FONT})")
+    if "--retrain" in sys.argv:
+        measured()
     for name in pick:
         FIGURES[name]()

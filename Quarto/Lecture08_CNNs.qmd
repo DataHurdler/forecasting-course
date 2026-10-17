@@ -256,7 +256,7 @@ And swapping average pooling for `Flatten`, which keeps *where* each pattern occ
 
 3. Three ideas outlived the architectures: **small filters stacked deep**, **skip connections**, **learned features**.
 
-4. A **1D CNN** reads a window across channels. Its limit is the **receptive field**: seven weeks cannot see an annual lag.
+4. A **1D CNN**'s limit is its **receptive field**: seven weeks cannot see an annual lag.
 
 5. Every CNN variant **lost to a 46-coefficient LASSO**. Fit the architecture to the problem.
 :::

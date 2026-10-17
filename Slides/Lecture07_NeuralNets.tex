@@ -62,26 +62,13 @@
   \[
     a = \sigma(\mathbf{w}^\top \mathbf{x} + b)
   \]
-  \vspace{-0.35cm}
+  \vspace{-0.45cm}
   \begin{center}
-    {\footnotesize
-    \begin{tabular}{lll}
-      \toprule
-      \textbf{Activation} & \textbf{Formula} & \textbf{Where it is used} \\
-      \midrule
-      ReLU    & $\max(0,z)$       & Hidden layers --- the default \\
-      Sigmoid & $1/(1+e^{-z})$    & Binary outputs, and LSTM gates (Lecture 9) \\
-      Tanh    & $\tanh(z)$        & Sequence states \\
-      Linear  & $z$               & The output layer, for regression \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=3.7cm]{../Figures/Lecture07_NeuralNets/activation_slopes.pdf}
   \end{center}
-
-  \vspace{0.1cm}
-  ReLU makes the intuition literal: the neuron asks \emph{``is this pattern present?''} If the
-  evidence is positive it passes a signal through; if not it outputs exactly zero and stays
-  silent.
+  \vspace{-0.3cm}
+  {\small The slopes matter in Lecture 9: each sigmoid scales a gradient passing back through it
+  by at most $\frac{1}{4}$. A regression's output layer has no squashing at all: $\sigma(z) = z$.}
 \end{frame}
 
 % --- Slide: why nonlinearity ---------------------------------------------------
@@ -146,27 +133,14 @@
   Capacity is easy to add by accident, so count it once: a layer mapping $m$ inputs to $n$ outputs
   holds $m \times n$ weights plus $n$ biases. Our weekly panel, 46 engineered features in, two
   hidden layers of 128, one output:
+  \vspace{-0.2cm}
   \begin{center}
-    {\small
-    \begin{tabular}{lrr}
-      \toprule
-      \textbf{Layer} & \textbf{Shape} & \textbf{Parameters} \\
-      \midrule
-      Input $\rightarrow$ hidden 1 & $46 \times 128$ & 6{,}016 \\
-      Hidden 1 $\rightarrow$ hidden 2 & $128 \times 128$ & 16{,}512 \\
-      Hidden 2 $\rightarrow$ output & $128 \times 1$ & 129 \\
-      \midrule
-      \textbf{Total} & & \textbf{22{,}657} \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=3.9cm]{../Figures/Lecture07_NeuralNets/weight_blocks.pdf}
   \end{center}
-
-  \textbf{Twenty-two thousand parameters on five thousand rows} --- four per observation.
-
-  \vspace{0.1cm}
-  Lecture 6 called sixty predictors on a hundred and fifty observations a crisis. Networks train
-  far past that ratio routinely; what makes it survivable is the regularization, next.
+  \vspace{-0.3cm}
+  \textbf{Twenty-two thousand parameters on five thousand rows} --- four per observation, and
+  the one $128 \times 128$ block holds 73\% of them. Lecture 6 called sixty predictors on 150
+  rows a crisis; what makes this survivable is the regularization, next.
 \end{frame}
 
 % =============================================================================
@@ -197,6 +171,19 @@
   \texttt{torch.optim.Adam(lr=1e-3)} adapts the step size per parameter.
 \end{frame}
 
+% --- Slide: the learning rate on a real bowl ------------------------------------
+\begin{frame}{The Learning Rate, on a Real Bowl}
+  Gradient descent on Lecture 6's regression of daily units on lags 7 and 14, standardized:
+  the same start, three learning rates.
+  \begin{center}
+    \includegraphics[height=4.6cm]{../Figures/Lecture07_NeuralNets/gd_bowl.pdf}
+  \end{center}
+  \vspace{-0.2cm}
+  {\small The bowl is exact only because this model is linear: its curvature is the same
+  everywhere, so $2/\lambda_{\max}$ is a hard limit. A network's loss surface curves differently
+  in different places, one reason Adam adapts its step per parameter as it goes.}
+\end{frame}
+
 % --- Slide: Overfitting and regularization ------------------------------------
 \begin{frame}{Preventing Overfitting --- Where Lecture 6 Returns}
   Twenty-two thousand parameters on five thousand rows will memorize the training set unless
@@ -224,6 +211,18 @@
   cost-complexity pruning in Lecture 4, \texttt{reg\_lambda} on leaf weights in Lecture 5,
   Ridge and LASSO in Lecture 6 --- and now weight decay. Fit against complexity, one parameter
   setting the exchange rate, chosen by validation.
+\end{frame}
+
+% --- Slide: early stopping, measured ---------------------------------------------
+\begin{frame}{Early Stopping, on Lab 7's Network}
+  Lab 7's network, trained for 200 epochs instead of 60, three seeds:
+  \begin{center}
+    \includegraphics[height=4.7cm]{../Figures/Lecture07_NeuralNets/overfit_epochs.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Training error keeps falling. Held-out error improves little after epoch 60 and jumps
+  by about 100 from one epoch to the next, so \textbf{keep the best epoch, not the last}. Choose
+  it on a validation slice cut from the training period, never on the test weeks drawn here.}
 \end{frame}
 
 % =============================================================================
@@ -264,8 +263,8 @@
     \texttt{\ \ \ \ nn.Linear(128, 1))}
     }
   \end{examplebox}
-  Read it top to bottom and it is the diagram: a linear map, a nonlinearity, some dropout,
-  again, then a linear output with no activation because this is regression.
+  Read it top to bottom and it is the block diagram from \emph{How Big Is This Model?}: a linear
+  map, a nonlinearity, some dropout, again, then a linear output with no activation.
 
   \vspace{0.15cm}
   \texttt{nn.Sequential} chains layers in order and is enough for anything in this lecture. When
@@ -340,14 +339,14 @@
   \begin{keybox}
     {\footnotesize
     \begin{enumerate}\itemsep2pt
-      \item A \textbf{neuron} is regression inside a nonlinearity. Without it, layers collapse to
-            one line; with ReLU, each unit adds a kink.
+      \item A \textbf{neuron} is regression inside a nonlinearity; with ReLU, each unit adds a
+            kink.
 
       \item Width and depth set an \textbf{FFN}'s capacity: 22{,}657 parameters on 5{,}000
             rows.
 
       \item \textbf{Training}: loss $\to$ \texttt{backward()} $\to$ \texttt{step()}, per
-            mini-batch.
+            mini-batch; keep the best epoch.
 
       \item \textbf{Regularization is not new}: weight decay is Ridge.
 

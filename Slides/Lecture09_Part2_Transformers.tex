@@ -37,20 +37,18 @@
 
 % --- Slide: limits of recurrence ---------------------------------------------
 \begin{frame}{Two Problems Built Into Recurrence}
-  Part 1's recurrent forecaster has two problems left, both from reading strictly left to right.
-
-  \vspace{0.15cm}
-  \textbf{The information bottleneck.} Everything about step 3 must squeeze through every hidden
-  state between 3 and $T$. Gates help, but the whole history still lives in one fixed-size vector.
-
-  \vspace{0.15cm}
-  \textbf{The sequential bottleneck.} Step $t$ waits for step $t-1$: a 1{,}000-step sequence takes
-  1{,}000 sequential operations, however many GPUs you own.
+  Part 1's forecaster reads strictly left to right. Follow one week, $t-52$, to the forecast:
+  \begin{center}
+    \includegraphics[height=3.8cm]{../Figures/Lecture09_Part2/recurrence_paths.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small\textbf{The information bottleneck:} week $t-52$ must survive 52 squeezes through one
+  64-number state. \textbf{The sequential bottleneck:} each update waits for the last, however
+  many GPUs you own.}
 
   \begin{keybox}
-    \textbf{Attention removes both at once.} Every position looks directly at every other, in one
-    operation: no compression through intermediate states, no ordering constraint on the
-    computation.
+    \small\textbf{Attention removes both at once:} every week reads every other directly, and all
+    are computed together. Path length counts operations, not what a trained model uses.
   \end{keybox}
 \end{frame}
 
@@ -84,16 +82,12 @@
   Attention can weight any week in the window in one step; an RNN needs 52 updates to reach last
   year. Where our trained model actually looked, over the test year:
   \begin{center}
-    \includegraphics[height=3.6cm]{../Figures/Lecture09_Part2/attention_heatmap.pdf}
+    \includegraphics[height=4.2cm]{../Figures/Lecture09_Part2/attention_heatmap.pdf}
   \end{center}
   \vspace{-0.3cm}
   {\small Mostly the last two to seven weeks; in one of two training runs, one head found last
   year's week. The weights are \textbf{learned, not specified} --- and they show where the model
   looked, not what mattered.}
-  \begin{warningbox}
-    \small The price is quadratic: $O(T^2)$ in time and memory --- fine at $T = 52$, painful at
-    $T = 10{,}000$.
-  \end{warningbox}
 \end{frame}
 
 % --- Slide: multi-head -------------------------------------------------------
@@ -110,8 +104,8 @@
   evenly, and in one run one found the annual lag.
 
   \vspace{0.15cm}
-  \textbf{The cost is not what you would guess.} Each head works in $d_{\text{model}}/h$
-  dimensions, so eight heads cost about the same as one full-width head.
+  \textbf{The cost is a surprise.} Each head works in $d_{\text{model}}/h$ dimensions, so eight
+  heads cost about the same as one full-width head.
 
   \vspace{0.1cm}
   \muted{\footnotesize\itshape Our model: \texttt{nhead=4}, \texttt{d\_model=64} --- four heads of
@@ -159,23 +153,30 @@
 
 % --- Slide: why they took over ------------------------------------------------
 \begin{frame}{Why Transformers Took Over}
-  Three properties, in the order they mattered commercially.
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \textbf{Parallelism.} No score waits for another. More than accuracy, this is why it
+      won.
+
+      \vspace{0.15cm}
+      \textbf{Direct long-range paths.} One step, any distance.
+
+      \vspace{0.15cm}
+      \textbf{Scale.} It kept improving as parameters and data grew. BERT
+      \parencite{Devlin2019} and GPT are this block, repeated.
+    \end{column}
+    \begin{column}{0.51\textwidth}
+      \centering
+      \includegraphics[height=4.4cm]{../Figures/Lecture09_Part2/attention_cost.pdf}
+    \end{column}
+  \end{columns}
 
   \vspace{0.1cm}
-  \textbf{Parallelism.} Every position is computed at once, so training scales across hardware.
-  More than accuracy, this is why it won.
-
-  \vspace{0.15cm}
-  \textbf{Direct long-range paths.} Any position reaches any other in one step.
-
-  \vspace{0.15cm}
-  \textbf{Scale.} It kept improving as parameters and data grew. BERT \parencite{Devlin2019} is an
-  encoder stack for understanding, GPT a decoder stack for generation --- both this block,
-  repeated.
-
+  {\small The price is the square's area, $O(T^2)$ in time and memory: fine at $T = 52$, painful
+  at $T = 10{,}000$.}
   \begin{warningbox}
-    Every one of those advantages is about \textbf{large data and long sequences}. Hold that
-    thought against a 52-week window and 5{,}160 training examples.
+    \small Every advantage here is about \textbf{large data and long sequences}. Hold that
+    against a 52-week window and 5{,}160 training examples.
   \end{warningbox}
 \end{frame}
 
@@ -313,17 +314,15 @@
     {\small
     \begin{enumerate}\itemsep3pt
       \item \textbf{Attention}: score queries against keys, softmax, average the values.
-            Distance costs nothing.
-      \item The price is \textbf{quadratic} in sequence length: fine at 52 steps, the central
-            constraint at 10{,}000.
-      \item \textbf{Multi-head} attention runs several notions of relevance at roughly the cost
-            of one.
+      \item Its price is \textbf{quadratic}: fine at 52 steps, the central constraint at
+            10{,}000.
+      \item \textbf{Multi-head}: several notions of relevance for about the cost of one.
       \item An encoder block: attention, \textbf{skips}, LayerNorm, feed-forward. Only
             attention is new.
-      \item \textbf{Attention is permutation-invariant}: add position yourself --- PyTorch will
-            not, and forgetting fails silently.
-      \item Here it \textbf{tied the LSTM} and lost to an RNN with \textbf{one-fifteenth} the
-            parameters: its advantages are advantages at scale.
+      \item \textbf{Attention is permutation-invariant}: add position yourself; PyTorch will
+            not.
+      \item Here it \textbf{tied the LSTM} and lost to an RNN \textbf{one-fifteenth} its size:
+            it needs scale.
     \end{enumerate}
     }
   \end{keybox}

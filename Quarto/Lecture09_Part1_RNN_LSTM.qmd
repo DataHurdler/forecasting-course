@@ -90,7 +90,7 @@ Training is ordinary backpropagation on an unusual graph. **Unroll** the recurre
 **This is where it breaks.** Going back $k$ steps multiplies by roughly $\mathbf{W}_h$, $k$ times. Below 1, the gradient shrinks *exponentially*; above 1, it can explode.
 :::
 
-Exploding has an easy fix, `clip_grad_norm_`, and we use it. Vanishing does not — that is the next section.
+Exploding is fixed by `clip_grad_norm_`; vanishing is not — the next section.
 
 ---
 
@@ -237,9 +237,11 @@ At 30 epochs the RNN wins by a wide margin. By 100 the two **tie**, and the LSTM
 
 Gating pays when a value must survive many steps that would otherwise overwrite it. Does this panel have that?
 
-**1. Most variance is not sequential.** **91%** of the variation in weekly units is *between* series — which store, which category. The main task is reading the level, and the last few weeks give you that.
+![](../Figures/Lecture09_Part1/panel_variance.svg){fig-align="center" height="320px"}
 
-**2. The series are smooth.** Autocorrelation is **0.83** at lag 1 and **0.43** at lag 52: the recent past is a *sufficient statistic* for the distant past. Nothing needs carrying across a gap; the gap is filled in continuously.
+**1. Most variance is not sequential.** **91%** is *between* series: the task is reading the level, and the last few weeks give you that.
+
+**2. The series are smooth.** The recent past is a *sufficient statistic* for the distant past: nothing needs carrying across a gap.
 
 ---
 
@@ -286,7 +288,7 @@ An LSTM holds about **four times** an RNN's parameters at the same hidden size: 
 
 5. Both **beat every CNN**; both lose to a 46-coefficient LASSO.
 
-6. The LSTM **lost at 30 epochs and tied by 100**. Check that a margin survives the budget it was measured at.
+6. The LSTM **lost at 30 epochs and tied by 100**. Check a margin survives the training budget.
 :::
 
 ---

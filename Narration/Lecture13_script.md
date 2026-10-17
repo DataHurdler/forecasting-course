@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Synthesis — What the Semester Measured**
 
-Deck: `Slides/Lecture13_Synthesis.pdf` (21 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture13_Synthesis.pdf` (22 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -12,7 +12,7 @@ Deck: `Slides/Lecture13_Synthesis.pdf` (21 pages) · Measured runtime: see the t
 - *Italic parentheticals* are stage directions. **[pause]** means stop for a beat.
 - Week 16 on the syllabus. **Deliberately has no lab** — the session is this synthesis followed
   by project work time, so budget for questions about their projects.
-- Slides 13 and 14 are the heart of it. The split — bugs in the code versus a correct program
+- Slides 14 and 15 are the heart of it. The split — bugs in the code versus a correct program
   answering the wrong question — is the most durable thing in the hour.
 
 ---
@@ -218,7 +218,36 @@ None of these means the losing method is bad. Every one of them solves a problem
 have. LSTMs earn their gates on long dependency chains. Transformers earn their parameters on
 large corpora. Those are real capabilities that simply were not needed here.
 
-*(Beat.)*
+---
+
+# ▶ SLIDE 9 — Lesson 2, Continued: A Problem This Data Does Not Have
+
+*(Two panels. You saw them in Lecture 9; same data, same numbers.)*
+
+Take the first row of that table and look at it, because "a problem this data does not have" is a
+claim you can draw.
+
+*(Point at the left panel.)*
+
+That's the panel the recurrent networks were trained on — all thirty store-and-category series on
+one axis. Foods up top, household in the middle, hobbies along the bottom, and the dashed grand
+mean at about eight thousand units a week. The big differences are between the lines, not along
+them.
+
+*(Point at the triangle.)*
+
+And the triangle says how big. Each week's distance from the grand mean splits into the series'
+own level and that week's wiggle around it, and the squares add exactly — Pythagoras, for
+variances. Between series, about six thousand eight hundred; within, about two thousand one
+hundred; total, about seven thousand one hundred. Between squared over total squared is
+**ninety-one percent.**
+
+So what does this panel ask a model to remember? Mostly, which series it is looking at — and the
+last few weeks tell it that. There is very little for a gate to keep. The Transformer's version of
+the same story is the data size: its parameters pay off on large corpora, and we had about a
+hundred independent years.
+
+*(Beat. Point at the key box.)*
 
 **Match the method to the structure of the problem, not to the recency of the paper.**
 
@@ -228,7 +257,7 @@ didn't apply." That second statement is worth something. The first is just cynic
 
 ---
 
-# ▶ SLIDE 9 — Lesson 3: One Idea Appeared Six Times
+# ▶ SLIDE 10 — Lesson 3: One Idea Appeared Six Times
 
 *(This is the intellectual spine of the course. Deliver it slowly.)*
 
@@ -268,11 +297,11 @@ yet, one of the first useful questions is: where is its complexity penalty, and 
 
 ---
 
-# ▶ SLIDE 10 — Section divider: Choosing a Method
+# ▶ SLIDE 11 — Section divider: Choosing a Method
 
 ---
 
-# ▶ SLIDE 11 — Which Method, When
+# ▶ SLIDE 12 — Which Method, When
 
 *(A practical slide. Walk it briskly — students will photograph it.)*
 
@@ -306,21 +335,33 @@ Everything above it is a horse race on RMSE. That row is about needing a differe
 
 ---
 
-# ▶ SLIDE 12 — Section divider: Doing It Honestly
+# ▶ SLIDE 13 — Section divider: Doing It Honestly
 
 The errors that do not announce themselves.
 
 ---
 
-# ▶ SLIDE 13 — Errors That Fail Silently I: the Pipeline
+# ▶ SLIDE 14 — Errors That Fail Silently I: the Pipeline
 
 Every error on this slide produces a confident, plausible, **wrong** answer with no error message.
 And every one of them is a **bug in the code**.
 
-*(Walk the table.)*
+*(Point at the picture. Left half first.)*
 
-`KFold` on a time series. Random folds put the future into training. Your CV error looks
-excellent, and your forecast fails.
+Start with the first one, because it's the one you can see. On the left is walk-forward
+validation — `TimeSeriesSplit`, the Lecture 1 picture three times over. Gray is training, red is
+the test block, and every fold trains only on weeks *before* the block it is scored on. The dotted
+boxes are weeks that fold never touches.
+
+*(Right half.)*
+
+On the right is plain `KFold`. It cuts the timeline into folds and holds each one out in turn.
+Look at the hatched boxes: those are weeks *after* the test block, sitting in the training set.
+The model learns from the future and is then graded on the past. Your CV error looks excellent,
+and your forecast fails. And notice the bottom row: the last fold happens to be honest. One clean
+fold proves nothing about the others.
+
+*(Walk the rest of the table.)*
 
 Scaling outside the fold. Validation statistics leak into training. Smaller effect, same class of
 error.
@@ -333,7 +374,7 @@ real feature — purely because it had many distinct values.
 
 **[pause]**
 
-*(Point at the common thread.)*
+*(Point at the last line.)*
 
 The common thread is that the failure is not a crash. It's a number that looks fine.
 
@@ -345,7 +386,7 @@ ever going to break.
 
 ---
 
-# ▶ SLIDE 14 — Errors That Fail Silently II: the Code Was Fine
+# ▶ SLIDE 15 — Errors That Fail Silently II: the Code Was Fine
 
 *(This is the most important slide in the deck. Slow right down.)*
 
@@ -390,7 +431,7 @@ weeks of this course have been aimed at the second one.
 
 ---
 
-# ▶ SLIDE 15 — The Day Every Model in This Course Fails
+# ▶ SLIDE 16 — The Day Every Model in This Course Fails
 
 *(Figure up. This is the last new result of the course — give it room.)*
 
@@ -471,7 +512,7 @@ Knowing where the whole toolkit stops working is part of knowing how to use it.
 
 ---
 
-# ▶ SLIDE 16 — What a Defensible Forecast Report Contains
+# ▶ SLIDE 17 — What a Defensible Forecast Report Contains
 
 So what does good work actually look like when you hand it to someone?
 
@@ -508,7 +549,7 @@ not for getting the flattering number.
 
 ---
 
-# ▶ SLIDE 17 — Where You Do This Yourself
+# ▶ SLIDE 18 — Where You Do This Yourself
 
 Which brings us to the final project, because it asks for exactly the report on the previous slide,
 on data of your choosing.
@@ -541,11 +582,11 @@ A project that reports a ranking without a reason has done the computation but n
 
 ---
 
-# ▶ SLIDE 18 — Section divider: Where to Go Next
+# ▶ SLIDE 19 — Section divider: Where to Go Next
 
 ---
 
-# ▶ SLIDE 19 — What This Course Did Not Cover
+# ▶ SLIDE 20 — What This Course Did Not Cover
 
 Some honest gaps, so you know what you don't know.
 
@@ -567,6 +608,14 @@ a starting point.
 
 **[pause]**
 
+*(Point at the photo.)*
+
+You have seen this photo before — it was the input image for the convolution filters in Lecture
+8. A grocery aisle in Washington, DC, on the eighteenth of March 2020, five days after the national
+emergency was declared. Lecture 8 promised we'd come back to it. The shelves are empty because
+demand jumped overnight, and every forecast for that aisle was built on weeks that had stopped
+being any guide.
+
 *(Point at the third row and close hard on it.)*
 
 The third row is the one most likely to matter in your career, so let me be explicit about why.
@@ -582,7 +631,7 @@ Detecting that early is its own field, and it's worth knowing that field exists.
 
 ---
 
-# ▶ SLIDE 20 — Closing
+# ▶ SLIDE 21 — Closing
 
 *(Seven points. Steady pace. This is the last thing they hear.)*
 
@@ -616,6 +665,6 @@ Thank you — and good luck with the project.
 
 ---
 
-# ▶ SLIDE 21 — References
+# ▶ SLIDE 22 — References
 
 *(Advance and close. No narration needed.)*

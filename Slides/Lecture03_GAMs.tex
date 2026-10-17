@@ -72,21 +72,18 @@
 \end{frame}
 
 % --- Slide: The nonlinear marginal effect problem ----------------------------
+% Figure: scripts/figures/lecture03_figures.py (additivity_gap); numbers in measured.json
+% ("additivity"): Lab 3's rows from 2013, weekday minus weekend 4,063 MW in July, 2,006 in December.
 \begin{frame}{Why Additivity Matters for Interpretation}
-  In a non-additive model the effect of one variable depends on the value of another, so you
-  cannot describe them separately.
-
-  \vspace{0.15cm}
-  \textbf{Concretely.} Suppose the truth is $y = x_1^2 x_2^2 + \varepsilon$. Then
-  $\partial y / \partial x_1 = 2x_1 x_2^{2}$ --- it depends on \emph{both} variables. There
-  is no answer to ``what does $x_1$ do to $y$?'' that does not begin with ``it depends
-  on $x_2$.''
-  \begin{examplebox}{GAM Marginal Effects Are Simple}
-    In a GAM, $y = f_1(x_1) + f_2(x_2) + \varepsilon$, so the marginal effect of $x_1$ is
-    just $f_1'(x_1)$ --- a function of $x_1$ alone, whatever $x_2$ happens to be.\\[3pt]
-    \textbf{That is why you can plot each variable's effect separately and hand the plot to
-    a stakeholder.}
-  \end{examplebox}
+  In an additive model, each variable's effect is the same whatever the others are doing. Lab 3's
+  electricity load, by month:
+  \begin{center}
+    \includegraphics[height=4.3cm]{../Figures/Lecture03_GAMs/additivity_gap.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small An additive model, month $+$ weekend, can only draw parallel curves: one weekend effect
+  for every month. The real gap is twice as big in July as in December. Parallel is the price, and
+  also the gift: each effect becomes one curve you can hand to a stakeholder.}
 \end{frame}
 
 % =============================================================================
@@ -187,34 +184,50 @@
           + \underbrace{h(t)}_{\text{holidays}} + \varepsilon_t
   \]
   \textbf{Trend $g(t)$}: piecewise linear or logistic, with \emph{changepoints} where the
-  slope may shift. \textbf{Seasonality $s(t)$}: a Fourier series, so weekly and yearly cycles
-  fit at once. \textbf{Holidays $h(t)$}: irregular events you supply --- Black Friday, a
-  launch, a lockdown.
+  slope may shift. \textbf{Seasonality $s(t)$}: a sum of sine waves (a Fourier series), so weekly
+  and yearly cycles fit at once. \textbf{Holidays $h(t)$}: irregular events you supply ---
+  Black Friday, a launch, a lockdown.
 
   \vspace{0.2cm}
   Built for analysts, not statisticians: one fit-and-forecast call, robust to gaps and
   outliers, and every component plots on its own.
 \end{frame}
 
+% --- Slide: Prophet seasonality, drawn -------------------------------------
+% Figure: scripts/figures/lecture03_figures.py (fourier_order) -- Lab 3 Step 2's own fit:
+% in-sample RMSE 3,428 MW with one Fourier pair, 1,348 with two (measured.json, "fourier").
+\begin{frame}{Prophet's Seasonality: How Many Waves?}
+  $s(t)$ is a sum of sine waves. Lab 3's average load for each day of the year, fitted with one
+  wave and then with two:
+  \begin{center}
+    \includegraphics[height=4.6cm]{../Figures/Lecture03_GAMs/fourier_order.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small A 365-day wave has one peak a year. Heating in January and cooling in July need the
+  182.5-day wave too, and adding it cuts the error by a factor of 2.5. Prophet's yearly term uses
+  10 such pairs by default.}
+\end{frame}
+
 % --- Slide: Prophet code -----------------------------------------------------
+% Figure: scripts/figures/lecture03_figures.py (prophet_components) -- Lab 3 Step 3's own fit,
+% trained 2013 to July 2017; the shaded strip is the lab's test year.
 \begin{frame}{Prophet: Code and Workflow}
-  \begin{examplebox}{Prophet on Retail Sales}
+  \begin{examplebox}{Prophet on Lab 3's Electricity Data}
     {\scriptsize
     \texttt{from prophet import Prophet}\\
-    \texttt{df = pd.DataFrame(\{'ds': dates, 'y': sales\})}\\
-    \texttt{m = Prophet(changepoint\_prior\_scale=0.05, yearly\_seasonality=True).fit(df)}\\
-    \texttt{future = m.make\_future\_dataframe(periods=12, freq='M')}\\
-    \texttt{forecast = m.predict(future);\ \ m.plot\_components(forecast)}
+    \texttt{m = Prophet(yearly\_seasonality=True, weekly\_seasonality=True, daily\_seasonality=False)}\\
+    \texttt{m.fit(train)\ \ \ \ \# a DataFrame with columns ds and y}\\
+    \texttt{fc = m.predict(test);\ \ m.plot\_components(fc)}
     }
   \end{examplebox}
-  \texttt{plot\_components} is the call that matters here: it draws the trend with its
-  changepoints, the yearly wave, and the day-of-week pattern as separate panels --- the
-  additive structure made visible.
-
-  \vspace{0.15cm}
-  \textbf{Reach for Prophet} on seasonal series with known holiday effects, especially when
-  someone will ask you to explain the forecast. \textbf{Reach for pyGAM} when you have many
-  correlated external predictors instead.
+  \vspace{-0.25cm}
+  \begin{center}
+    \includegraphics[height=3.1cm]{../Figures/Lecture03_GAMs/prophet_components.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small \texttt{plot\_components} draws one panel per additive term. \textbf{Reach for
+  Prophet} when someone will ask you to explain the forecast; \textbf{reach for pyGAM} when you
+  have many correlated external predictors.}
 \end{frame}
 
 % =============================================================================

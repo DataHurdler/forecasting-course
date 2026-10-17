@@ -432,7 +432,73 @@ def christmas_squares() -> None:
     save(fig, "christmas_squares")
 
 
-FIGURES = {"scoreboard": scoreboard, "christmas_squares": christmas_squares}
+# ================================================================== walk-forward vs KFold
+def cv_splits() -> None:
+    """The pipeline frame's first row: three walk-forward folds against three KFold folds.
+
+    A schematic, not data: ten equal blocks of weeks, drawn in Lecture 1's train/test style
+    (light-gray training box, light-crimson test box, black and crimson borders). In KFold, every
+    training block that sits after the test block is future data the model learns from; those are
+    hatched. The last KFold fold has none, which is why one honest-looking fold proves nothing.
+    """
+    n = 10
+    walk = [(6, 7), (7, 8), (8, 9)]                 # (test start, test end); train = [0, start)
+    kfold = [(0, 2), (4, 6), (8, 10)]               # folds 1, 3 and 5 of a five-fold split
+    fig, axes = plt.subplots(1, 2, figsize=sz(14.5, 3.3), gridspec_kw={"wspace": 0.12})
+    H, gap = 0.62, 0.38
+
+    def block(ax, x0, x1, y, kind):
+        style = {"train": dict(facecolor=LIGHT_GRAY, edgecolor=BLACK, lw=1.0),
+                 "test": dict(facecolor=LIGHT_CRIMSON, edgecolor=CRIMSON, lw=1.4),
+                 "future": dict(facecolor=LIGHT_GRAY, edgecolor=BLACK, lw=1.0,
+                                hatch="////"),
+                 "unused": dict(facecolor="none", edgecolor="#A1A1AA", lw=0.8,
+                                ls=(0, (2, 2)))}[kind]
+        ax.add_patch(Rectangle((x0, y), x1 - x0, H, zorder=2, **style))
+
+    saved = {k: plt.rcParams[k] for k in ("hatch.color", "hatch.linewidth")}
+    plt.rcParams.update({"hatch.color": CRIMSON, "hatch.linewidth": 1.0})
+    for ax, title, folds in ((axes[0], "walk-forward (TimeSeriesSplit)", walk),
+                             (axes[1], "KFold", kfold)):
+        for r, (a, b) in enumerate(folds):
+            y = (len(folds) - 1 - r) * (H + gap)
+            if ax is axes[0]:
+                block(ax, 0, a, y, "train"); block(ax, a, b, y, "test")
+                if b < n:
+                    block(ax, b, n, y, "unused")
+            else:
+                if a > 0:
+                    block(ax, 0, a, y, "train")
+                block(ax, a, b, y, "test")
+                if b < n:
+                    block(ax, b, n, y, "future")
+        top = (len(folds) - 1) * (H + gap) + H
+        ax.text(0, top + 0.28, title, ha="left", va="bottom", fontsize=12, fontweight="bold")
+        ax.annotate("", xy=(n + 0.55, -0.32), xytext=(0, -0.32),
+                    arrowprops=dict(arrowstyle="-|>", color=BLACK, lw=1.0, mutation_scale=9,
+                                    shrinkA=0, shrinkB=0))
+        ax.text(n + 0.7, -0.32, "$t$", ha="left", va="center", fontsize=12)
+        ax.set_xlim(-0.1, n + 1.2); ax.set_ylim(-1.75, top + 1.0)
+        ax.axis("off")
+    # keys under each panel
+    ax = axes[0]
+    for x, kind, lab in ((0, "train", "train"), (2.6, "test", "test")):
+        ax.add_patch(Rectangle((x, -1.45), 0.7, 0.45, zorder=2,
+                               **({"facecolor": LIGHT_GRAY, "edgecolor": BLACK, "lw": 1.0}
+                                  if kind == "train" else
+                                  {"facecolor": LIGHT_CRIMSON, "edgecolor": CRIMSON, "lw": 1.4})))
+        ax.text(x + 0.9, -1.225, lab, ha="left", va="center", fontsize=11)
+    ax = axes[1]
+    ax.add_patch(Rectangle((0, -1.45), 0.7, 0.45, facecolor=LIGHT_GRAY, edgecolor=BLACK, lw=1.0,
+                           hatch="////", zorder=2))
+    ax.text(0.9, -1.225, "future weeks in training", ha="left", va="center", fontsize=11,
+            color=CRIMSON)
+    save(fig, "cv_splits")
+    plt.rcParams.update(saved)
+
+
+FIGURES = {"scoreboard": scoreboard, "christmas_squares": christmas_squares,
+           "cv_splits": cv_splits}
 
 
 if __name__ == "__main__":

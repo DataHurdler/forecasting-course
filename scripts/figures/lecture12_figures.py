@@ -17,6 +17,10 @@ The confounding figure itself needs no sampling: each panel's line is the least-
 points drawn in it, which is what the eye fits. By Frisch-Waugh-Lovell, the third panel's slope is
 the coefficient on log price in the regression with series intercepts and a trend; the posterior
 means in measured.json agree with each drawn slope to two decimals, and the script asserts that.
+
+posterior_area and rope_event draw the controlled model's posterior from the densities cached in
+measured.json (a KDE of the 4,000 draws) and print the probabilities counted on the draws
+themselves. dag is a diagram: no data.
 """
 from __future__ import annotations
 
@@ -138,6 +142,21 @@ def fit_series_only(seed=RANDOM_STATE):
 
 
 # ================================================================== measurement
+# The ROPE on b_event. Neither the deck nor the lab defines one; Homework 7 Q5 uses |beta| < 0.05,
+# and the deck adopts that width as a stated choice. 0.01 is recorded for the narration's
+# "a narrower ROPE would say" sentence.
+ROPE = 0.05
+ROPE_WIDTHS = (0.05, 0.01)
+
+
+def _kde(draws, lo, hi, n=400) -> dict:
+    """Gaussian KDE of the draws on [lo, hi] (Scott's rule), rounded for the JSON cache."""
+    from scipy.stats import gaussian_kde
+    x = np.linspace(lo, hi, n)
+    y = gaussian_kde(draws)(x)
+    return {"x": [round(float(v), 6) for v in x], "y": [round(float(v), 6) for v in y]}
+
+
 def _summary(idata, names):
     import arviz as az
     su = az.summary(idata, var_names=names, ci_kind="hdi", ci_prob=0.94, round_to=6)
@@ -170,6 +189,12 @@ def measure() -> dict:
                 "P(revenue rises)": float((rev > 0).mean())}
             be = idata.posterior["b_event"].values.ravel()
             m[key]["b_event_pct_hdi"] = [100 * (np.exp(v) - 1) for v in m[key]["b_event"]["hdi"]]
+            # what the posterior-area and ROPE figures draw: a density on a grid, and the masses
+            m[key]["n_draws"] = int(b.size)
+            m[key]["b_price_kde"] = _kde(b, -1.15, 0.10)
+            m[key]["b_event_kde"] = _kde(be, -0.065, 0.065)
+            for w in ROPE_WIDTHS:
+                m[key][f"P(|b_event|<{w})"] = float((np.abs(be) < w).mean())
         print(f"  {key:12s} b_price {m[key]['b_price']['mean']:+.4f} "
               f"HDI [{m[key]['b_price']['hdi'][0]:+.4f}, {m[key]['b_price']['hdi'][1]:+.4f}]")
     OUT.mkdir(parents=True, exist_ok=True)
@@ -287,7 +312,165 @@ def confounding() -> None:
     save(fig, "confounding")
 
 
-FIGURES = {"confounding": confounding}
+# ================================================================== posterior as an area
+MINUS = "−"
+
+
+def _num(v: float, fmt: str = ".2f") -> str:
+    return f"{v:{fmt}}".replace("-", MINUS)
+
+
+def posterior_area() -> None:
+    """The b_price posterior as an area: every question on the 'Asking the Posterior' frame is the
+    share of this area on one side of a line. The line at -1 is where a price rise stops raising
+    revenue (revenue x 1.05^(1+b)); the whole posterior sits to its right."""
+    m = measured()["controlled"]
+    x = np.array(m["b_price_kde"]["x"]); y = np.array(m["b_price_kde"]["y"])
+    lo, hi = m["b_price"]["hdi"]
+    p05, p1, p0 = m["P(b<-0.5)"], m["P(b<-1)"], m["P(b<0)"]
+    # the drawn area left of -0.5 must be the number printed on it
+    dx = x[1] - x[0]
+    assert abs(y[x < -0.5].sum() * dx - p05) < 0.01, "KDE area vs draws"
+    assert (round(lo, 3), round(hi, 3), round(p05, 2)) == (-0.596, -0.387, 0.46), (lo, hi, p05)
+
+    fig, ax = plt.subplots(figsize=sz(11.6, 3.3))
+    top = y.max()
+    ax.fill_between(x, 0, y, color=LIGHT_BLUE, lw=0, zorder=1)
+    left = x <= -0.5
+    ax.fill_between(x[left], 0, y[left], color=CRIMSON, alpha=0.55, lw=0, zorder=2)
+    on = y > 2e-3 * top
+    ax.plot(x[on], y[on], color=BLUE, lw=1.8, zorder=3)
+    ax.axhline(0, color=GRAY, lw=0.8, zorder=0)
+
+    # revenue break-even: the posterior's mass on each side of it
+    ax.plot([-1, -1], [0, top * 1.22], color=BLACK, lw=1.3, ls=(0, (4, 2.5)), zorder=4)
+    ax.text(-1.03, top * 1.12, "revenue break-even", ha="right", va="center", fontsize=11,
+            color=BLACK)
+    ax.text(-1.03, top * 0.55, "elastic:\nrevenue falls", ha="right", va="center", fontsize=11,
+            color=GRAY, linespacing=1.1)
+    ax.text(-0.97, top * 0.50, "inelastic:\nrevenue rises", ha="left", va="center", fontsize=11,
+            color=GRAY, linespacing=1.1)
+    ax.text(-1.03, top * 0.12, f"P(b < {MINUS}1) = {p1:.2f}", ha="right", va="center",
+            fontsize=12, color=BLACK)
+    ax.annotate(f"P(b < {MINUS}0.5) = {p05:.2f}", xy=(-0.56, top * 0.30),
+                xytext=(-0.97, top * 1.12), ha="left", va="center", fontsize=12,
+                fontweight="bold", color=CRIMSON,
+                arrowprops=dict(arrowstyle="-|>", color=CRIMSON, lw=1.2, shrinkA=0, shrinkB=0,
+                                mutation_scale=10, relpos=(0.9, 0.0)))
+    # zero
+    ax.plot([0, 0], [0, top * 0.7], color=GRAY, lw=1.0, ls=":", zorder=0)
+    ax.text(-0.025, top * 0.66, f"P(b < 0) = {p0:.2f}", ha="right", va="center", fontsize=12,
+            color=BLACK)
+
+    # the HDI, as a bar under the curve
+    yb = -top * 0.13
+    ax.plot([lo, hi], [yb, yb], color=BLACK, lw=3.4, solid_capstyle="butt", zorder=5)
+    ax.text(lo - 0.02, yb, f"94% HDI [{_num(lo, '.3f')}, {_num(hi, '.3f')}]", ha="right",
+            va="center", fontsize=11, color=BLACK)
+
+    ax.set_xlim(-1.45, 0.10); ax.set_ylim(yb * 1.9, top * 1.42)
+    ax.set_xticks([-1, -0.5, 0]); ax.set_xticklabels([f"{MINUS}1", f"{MINUS}0.5", "0"])
+    ax.tick_params(labelsize=11)
+    ax.set_yticks([]); ax.spines["left"].set_visible(False)
+    ax.set_xlabel("price elasticity, b_price", fontsize=11)
+    save(fig, "posterior_area")
+
+
+# ================================================================== ROPE on b_event
+def rope_event() -> None:
+    """b_event's posterior against a region of practical equivalence. Drawn in percent (the
+    exp(b) - 1 transform the deck uses for -1.1% and +0.4%); the ROPE edges are |b| = 0.05 and
+    |b| = 0.01 transformed exactly, so the bands are very slightly asymmetric, as they should be."""
+    m = measured()["controlled"]
+    b = np.array(m["b_event_kde"]["x"]); yb_ = np.array(m["b_event_kde"]["y"])
+    pct = 100 * (np.exp(b) - 1)
+    dens = yb_ / (100 * np.exp(b))                       # density per percentage point
+    lo, hi = m["b_event_pct_hdi"]
+    p5, p1 = m["P(|b_event|<0.05)"], m["P(|b_event|<0.01)"]
+    assert (round(lo, 1), round(hi, 1)) == (-1.1, 0.4), (lo, hi)
+    e5 = [100 * (np.exp(-ROPE) - 1), 100 * (np.exp(ROPE) - 1)]
+    e1 = [100 * (np.exp(-0.01) - 1), 100 * (np.exp(0.01) - 1)]
+
+    fig, ax = plt.subplots(figsize=sz(11.6, 3.3))
+    top = dens.max()
+    band = top * 1.14
+    ax.fill_between(e5, 0, band, color=LIGHT_GRAY, lw=0, zorder=0)
+    ax.fill_between(e1, 0, band, color="#E4E4E7", lw=0, zorder=0)
+    for e in e5:
+        ax.plot([e, e], [0, band], color=GRAY, lw=1.0, ls=(0, (4, 2.5)), zorder=1)
+    ax.fill_between(pct, 0, dens, color=LIGHT_BLUE, lw=0, zorder=2)
+    on = dens > 2e-3 * top
+    ax.plot(pct[on], dens[on], color=BLUE, lw=1.8, zorder=3)
+    ax.axhline(0, color=GRAY, lw=0.8, zorder=1)
+
+    ax.text(0, top * 1.22, f"ROPE ≈ ±5%: {100 * p5:.0f}% of the posterior inside",
+            ha="center", va="bottom", fontsize=12, color=BLACK, fontweight="bold")
+    ax.annotate(f"≈ ±1%:\n{100 * p1:.0f}% inside", xy=(e1[1], top * 0.62),
+                xytext=(1.9, top * 0.62), ha="left", va="center", fontsize=11, color=GRAY,
+                linespacing=1.05,
+                arrowprops=dict(arrowstyle="-|>", color=GRAY, lw=1.0, shrinkA=2, shrinkB=0,
+                                mutation_scale=9))
+    yb = -top * 0.13
+    ax.plot([lo, hi], [yb, yb], color=BLACK, lw=3.4, solid_capstyle="butt", zorder=5)
+    ax.text(hi + 0.25, yb, f"94% HDI: {_num(lo, '.1f')}% to +{hi:.1f}%", ha="left",
+            va="center", fontsize=11, color=BLACK)
+
+    ax.set_xlim(-6.6, 6.6); ax.set_ylim(yb * 1.9, top * 1.42)
+    ax.set_xticks([-5, 0, 5]); ax.set_xticklabels([f"{MINUS}5%", "0", "+5%"])
+    ax.tick_params(labelsize=11)
+    ax.set_yticks([]); ax.spines["left"].set_visible(False)
+    ax.set_xlabel("event-week effect on units, b_event", fontsize=11)
+    save(fig, "rope_event")
+
+
+# ================================================================== the DAG
+def dag() -> None:
+    """The DAG the 'Directed Acyclic Graphs' and 'Confounding, Measured' frames describe: series
+    identity (store x category) and time both push price and units, so both are confounders and
+    both are in the model (series intercepts, trend); SNAP and events push units only. Every arrow
+    into units is a term in mu. A belief, drawn before the fit -- not something the data proved."""
+    from matplotlib.patches import FancyBboxPatch
+    fig, ax = plt.subplots(figsize=sz(10.6, 4.7))
+    ax.set_xlim(-0.1, 12.3); ax.set_ylim(-2.3, 2.3); ax.axis("off")
+    nodes = {  # name: (x, y, w, h, label, edge colour, fill)
+        "price":  (1.0, 0.0, 1.8, 0.8, "price", BLUE, LIGHT_BLUE),
+        "units":  (7.2, 0.0, 2.4, 0.8, "units sold", BLUE, LIGHT_BLUE),
+        "series": (4.05, 1.6, 3.4, 1.05, "series\n(store × category)", CRIMSON, LIGHT_CRIMSON),
+        "time":   (4.05, -1.6, 1.8, 1.05, "time\n(trend)", CRIMSON, LIGHT_CRIMSON),
+        "other":  (11.2, 0.0, 1.9, 1.05, "SNAP,\nevents", GRAY, LIGHT_GRAY),
+    }
+    patch = {}
+    for k, (x, y, w, h, lab, ec, fc) in nodes.items():
+        ax.add_patch(FancyBboxPatch((x - w / 2, y - h / 2), w, h,
+                                    boxstyle="round,pad=0.02,rounding_size=0.18",
+                                    ec=ec, fc=fc, lw=1.6, zorder=3))
+        ax.text(x, y, lab, ha="center", va="center", fontsize=11, color=BLACK, zorder=4,
+                linespacing=1.05, fontweight="bold" if k in ("price", "units") else "normal")
+        # an invisible, slightly larger twin, so arrows start and stop just off the edge
+        patch[k] = FancyBboxPatch((x - w / 2, y - h / 2), w, h, visible=False,
+                                  boxstyle="round,pad=0.10,rounding_size=0.18")
+        ax.add_patch(patch[k])
+
+    def edge(a, b, color, lw=1.6):
+        ax.annotate("", xy=nodes[b][:2], xytext=nodes[a][:2], zorder=2,
+                    arrowprops=dict(arrowstyle="-|>", color=color, lw=lw, mutation_scale=13,
+                                    shrinkA=0, shrinkB=0, patchA=patch[a], patchB=patch[b]))
+
+    for c in ("series", "time"):
+        edge(c, "price", CRIMSON); edge(c, "units", CRIMSON)
+    edge("other", "units", GRAY)
+    edge("price", "units", BLUE, lw=2.6)
+    ax.text(4.05, 0.12, "b_price", ha="center", va="bottom", fontsize=12, color=BLUE,
+            fontweight="bold")
+    ax.text(4.05, -0.14, "the effect we want", ha="center", va="top", fontsize=11, color=BLUE)
+    ax.text(5.95, 1.6, "confounder", ha="left", va="center", fontsize=11, color=CRIMSON)
+    ax.text(5.15, -1.6, "confounder", ha="left", va="center", fontsize=11, color=CRIMSON)
+    ax.text(11.2, -0.68, "units only:\nnot confounders", ha="center", va="top", fontsize=11,
+            color=GRAY, linespacing=1.05)
+    save(fig, "dag")
+
+FIGURES = {"confounding": confounding, "posterior_area": posterior_area, "dag": dag,
+           "rope_event": rope_event}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

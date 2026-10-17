@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · ARIMA, VAR & Multivariate Models**
 
-Deck: `Slides/Lecture02_ARIMA_VAR.pdf` (22 pages) · Measured runtime: **~30 minutes** (27–33 depending on pace)
+Deck: `Slides/Lecture02_ARIMA_VAR.pdf` (24 pages) · Measured runtime: **~34 minutes** (31–37 depending on pace)
 
 ---
 
@@ -72,6 +72,25 @@ June and July. The gap matters; the location doesn't.
 
 **[pause]**
 
+The first two conditions have a picture, and it's on the right. *(Point at the figure.)* This
+is TX_1 household goods, the series you forecast in Lecture 1. The gray line is the data. The
+thick line is a rolling average over a year, and the shaded band is two standard deviations
+either side of it.
+
+Top panel, the weekly units. Watch the band. It climbs — the average goes from about thirty-one
+hundred units a week to about sixty-five hundred. A constant mean would give you a flat band.
+This one is a ramp.
+
+Bottom panel, the same series as week-to-week changes. Now the band is horizontal, centred on
+zero, and it keeps roughly the same width the whole way across. That's what conditions one and
+two look like: **the series stays inside a horizontal band of fixed width.**
+
+The titles carry a number we'll meet in two slides — the ADF test. Minus one point three eight
+on top: no evidence against a unit root. Minus eight point five one on the bottom: decisively
+stationary. Your eye and the test agree.
+
+**[pause]**
+
 Now, why does the definition earn its keep?
 
 If the mean drifts, there is no single value to forecast toward. Ask "what is the long-run
@@ -86,7 +105,8 @@ just less visible.
 
 The usual culprits are trending series — GDP, prices, sales, almost anything measured in
 dollars over time — and variance that grows with the level. First-differencing removes a
-stochastic trend. A log transform stabilizes variance. Often you need both.
+stochastic trend; you just watched it work. A log transform stabilizes variance. Often you
+need both.
 
 ---
 
@@ -150,8 +170,8 @@ negative autocorrelation that you then have to model away — you've manufacture
 problem you're now solving. Test *after* differencing, and stop at $d$ equals one once the
 result is stationary.
 
-The line at the bottom is what a clean case looks like, on the series you forecast in
-Lecture 1, TX_1 household goods. The ADF statistic on the levels is minus one point three
+The line at the bottom is what a clean case looks like, on the series from the picture on
+slide four, TX_1 household goods. The ADF statistic on the levels is minus one point three
 eight: no evidence against a unit root. After one difference it's minus eight point five one:
 decisively stationary. So $d$ equals one, and you stop there. We'll read that same series'
 ACF in a few slides.
@@ -382,24 +402,48 @@ trust the test.
 
 # ▶ SLIDE 13 — SARIMA: Adding Seasonal Terms
 
-For monthly or quarterly data, autocorrelation shows up not just at lags one and two, but at
-lag $m$, two-$m$, three-$m$ — the seasonal lags. December relates to last December.
+For seasonal data, autocorrelation shows up not just at lags one and two, but at lag $m$,
+two-$m$, three-$m$ — the seasonal lags. December relates to last December.
 
 SARIMA handles this by adding a second set of AR and MA polynomials operating at the seasonal
 frequency. The notation gets heavy — $p$, $d$, $q$ in lowercase, then capital $P$, $D$, $Q$,
 then $m$ in brackets — but the idea is simple.
 
 **Think of it as two ARIMA models running at different time scales.** The lowercase part
-handles the short-run, month-to-month dynamics. The uppercase part handles year-over-year. They're fitted
+handles the short-run dynamics. The uppercase part handles the season. They're fitted
 together.
 
 **[pause]**
 
+Here's what a seasonal lag looks like in real data. *(Point at the left panel.)* This is CA_1
+FOODS again, but daily this time, and its autocorrelation out to five weeks. The red spikes
+are at lags seven, fourteen, twenty-one and twenty-eight, and they're the tallest on the
+chart — about point seven five to point eight. Today looks like the same weekday last week,
+and the week before that. That's the weekly season. So here $m$ is seven, not the twelve
+you'd use for monthly data — same idea, different calendar.
+
+Now the right panel. *(Point at it.)* Same series after one **seasonal difference**: today
+minus the same day last week. That's capital $D$ equals one. The tall weekly peaks are gone.
+What's left at lag seven is a single negative spike, minus point four one. A negative spike
+at one lag is the MA signature you saw on slide nine; at lag $m$, it's a *seasonal* MA term.
+So capital $Q$ equals one.
+
+And the bump near lag thirty? That's not noise. California's SNAP benefits land on the first
+ten days of every month, and food sales jump when they do — a monthly rhythm hiding inside a
+daily series. Take the SNAP days out first and that bump drops from about point three to
+about point one. A seasonal ARIMA with $m$ equals seven isn't built for a monthly calendar;
+that needs a regressor you supply, like the holiday terms in next week's Prophet model.
+
+---
+
+# ▶ SLIDE 14 — SARIMA in Practice: A Four-Step Workflow
+
 The practical workflow is four steps.
 
 ADF and KPSS to choose $d$. A seasonal unit root test to choose capital $D$. Then ACF and
-PACF on the differenced series to guide the four order parameters. Then minimize AIC and
-check the residual ACF with a Ljung-Box test.
+PACF on the differenced series to guide the four order parameters — exactly what we just did
+by eye on the daily series. Then minimize AIC and check the residual ACF with a Ljung-Box
+test.
 
 **[pause]**
 
@@ -424,18 +468,19 @@ Ljung-Box asks whether *this* model is adequate on its own terms. They're differ
 questions, and you want both answered.
 
 For monthly retail data with trend and December seasonality, SARIMA(1,1,1)(0,1,1)[12] is a
-strong starting point. Not because it's optimal, but because it's a good default to beat
-before you try anything more elaborate.
+strong starting point. Notice the seasonal part: one seasonal difference and one seasonal MA
+term — the same zero-one-one you just read off the daily chart. Not because it's optimal,
+but because it's a good default to beat before you try anything more elaborate.
 
 ---
 
-# ▶ SLIDE 14 — Section divider: VAR Models
+# ▶ SLIDE 15 — Section divider: VAR Models
 
 Part three. VAR — when two series influence each other, model them together.
 
 ---
 
-# ▶ SLIDE 15 — Why Use Multiple Series?
+# ▶ SLIDE 16 — Why Use Multiple Series?
 
 Everything so far — all of Lecture 1, everything today — uses only the series' own history.
 $y$ predicted from past $y$.
@@ -457,7 +502,7 @@ VAR.
 
 ---
 
-# ▶ SLIDE 16 — VAR or ARIMAX: Which Way Does Influence Run?
+# ▶ SLIDE 17 — VAR or ARIMAX: Which Way Does Influence Run?
 
 That leaves you a modeling choice, and it turns on whether influence runs one way or both.
 
@@ -474,7 +519,7 @@ drives sales and not the other way round, so that's ARIMAX.
 
 ---
 
-# ▶ SLIDE 17 — The VAR(p) Model
+# ▶ SLIDE 18 — The VAR(p) Model
 
 Here's the structure for two series. Two equations, and each one regresses on the lags of
 *both* variables.
@@ -528,7 +573,7 @@ of thing Lecture 6 gives you the tools for.
 
 ---
 
-# ▶ SLIDE 18 — Granger Causality Test
+# ▶ SLIDE 19 — Granger Causality Test
 
 The formal definition: $x$ **Granger-causes** $y$ if past values of $x$ help predict $y$
 beyond what $y$'s own past already explains.
@@ -539,48 +584,6 @@ once we've already used $y$'s own history?"
 The procedure is a straightforward F-test. Fit the $y$-equation with the $x$-lags and without
 them. Test whether all the $x$-lag coefficients are jointly zero. Reject, and $x$
 Granger-causes $y$.
-
-**[pause]**
-
-Here's a concrete question we run in the lab: does unemployment Granger-cause retail sales?
-The null is that every unemployment lag is zero in the retail equation.
-
-And notice we're using macroeconomic series here rather than store sales. That's deliberate.
-
-Two Walmart stores in the same state absolutely *do* move together — you'll find a
-significant Granger test between them in the homework. The problem is that finding tells you
-almost nothing, because both stores are responding to the same regional promotions and the
-same weather. The test fires, and you still cannot say which one drives the other.
-
-**[pause]**
-
-Now, I ran the unemployment question before writing this slide, and I want to tell you what
-came back, because it is better than the tidy answer I expected.
-
-On the full sample, 1992 to today, the test is significant — and unemployment looks like the
-stronger driver. Exactly the story everyone expects. People lose jobs, people stop spending.
-
-Then drop the COVID window and rerun. The intuitive direction weakens sharply. Restrict to
-before 2020 and it **disappears entirely** — not significant at any lag.
-
-Meanwhile the *reverse* direction — retail sales predicting unemployment — is rock solid in
-every single sample.
-
-**[pause]**
-
-Sit with that, because there are two lessons in it and both are worth more than the tidy
-answer would have been.
-
-The first is economic, and it's obvious in hindsight: retail sales are a coincident-to-leading
-indicator, and unemployment is a lagging one. Spending falls first. Layoffs follow. The data
-was telling us the sequence, and my intuition had it backwards.
-
-The second is methodological, and it's the one I want you to carry into your own work. On the
-full sample you would have reported a strong, intuitive, publishable finding. It was being
-driven by one enormous shared shock. One episode, in a thirty-four-year sample, flipping the
-headline result.
-
-You'll do all three windows yourself in the lab.
 
 **[pause]**
 
@@ -596,6 +599,60 @@ not cause the sunrise.
 
 So report it as "predictive of." Never "causes." Say it the careful way and you will never
 have to walk a claim back in front of a room of executives.
+
+---
+
+# ▶ SLIDE 20 — Granger on Real Data: The COVID Window
+
+Here's a concrete question we run in the lab: does unemployment Granger-cause retail sales?
+The null is that every unemployment lag is zero in the retail equation.
+
+And notice we're using macroeconomic series here rather than store sales. That's deliberate.
+
+Two Walmart stores in the same state absolutely *do* move together — you'll find a
+significant Granger test between them in the homework. The problem is that finding tells you
+almost nothing, because both stores are responding to the same regional promotions and the
+same weather. The test fires, and you still cannot say which one drives the other.
+
+**[pause]**
+
+*(Point at the left panels.)* These are the two series the lab tests: monthly retail sales
+growth on top, the monthly change in the unemployment rate below, from 1992 to today. For
+almost thirty years both wiggle in a narrow band. Then the pink strip — February 2020 to June
+2021. Retail growth swings sixteen times its usual standard deviation. The unemployment rate
+jumps by more than ten points in a single month, April 2020: sixty-eight times its usual
+standard deviation.
+
+Now I ran the test before writing this slide, and what came back is better than the tidy
+answer I expected. *(Point at the right panel.)* Each line is one direction, and the two
+points are the F-statistic with COVID in the sample and with those seventeen months taken
+out. The dashed line is the five percent critical value, about two point four.
+
+On the full sample, both directions are significant — and unemployment looks like the
+stronger driver: eighteen point two against twelve point eight. Exactly the story everyone
+expects. People lose jobs, people stop spending.
+
+Then drop the COVID window and rerun. The intuitive direction collapses to two point nine —
+barely over the line. Meanwhile retail predicting unemployment holds up at six point seven.
+The lines cross. And when you restrict the sample to before 2020 in the lab, you'll see where
+that trend ends.
+
+**[pause]**
+
+Sit with that, because there are two lessons in it and both are worth more than the tidy
+answer would have been.
+
+The first is economic, and it's obvious in hindsight: retail sales are a coincident-to-leading
+indicator, and unemployment is a lagging one. Spending falls first. Layoffs follow. That's a
+story consistent with the data — and notice I'm still saying *predicts*, not *causes*. The
+test tells us about sequence, not mechanism.
+
+The second is methodological, and it's the one I want you to carry into your own work. On the
+full sample you would have reported a strong, intuitive, publishable finding. It was being
+driven by one enormous shared shock. One episode, seventeen months in a thirty-four-year
+sample, flipping the headline result.
+
+You'll do all three windows yourself in the lab.
 
 **[pause]**
 
@@ -622,7 +679,7 @@ we stop treating the interval as an add-on and make the whole distribution the o
 
 ---
 
-# ▶ SLIDE 19 — ARIMAX: Exogenous Variables with ARIMA Errors
+# ▶ SLIDE 21 — ARIMAX: Exogenous Variables with ARIMA Errors
 
 Last model today. When one variable clearly *drives* another rather than the relationship
 being symmetric, use ARIMAX.
@@ -657,13 +714,13 @@ by construction.
 
 ---
 
-# ▶ SLIDE 20 — Section divider: Key Takeaways and Roadmap
+# ▶ SLIDE 22 — Section divider: Key Takeaways and Roadmap
 
 Let's pull it together.
 
 ---
 
-# ▶ SLIDE 21 — Key Takeaways
+# ▶ SLIDE 23 — Key Takeaways
 
 Five things.
 
@@ -691,7 +748,7 @@ to someone reading an ACF they should never have looked at.
 
 ---
 
-# ▶ SLIDE 22 — References
+# ▶ SLIDE 24 — References
 
 Readings are in the syllabus — Chapter 9 for ARIMA, Chapter 10 for dynamic regression, and
 section 12.3 for VAR. Either edition works; the chapter numbers are the same.
@@ -707,11 +764,11 @@ See you then.
 
 | Segment | Slides | Target |
 |---|---|---:|
-| Opening & stationarity | 1–10 | ~16 min |
-| ARIMA & SARIMA | 11–13 | ~6 min |
-| VAR, Granger, ARIMAX | 14–19 | ~15 min |
-| Close | 20–22 | ~3 min |
+| Opening & stationarity | 1–10 | ~17 min |
+| ARIMA & SARIMA | 11–14 | ~8 min |
+| VAR, Granger, ARIMAX | 15–21 | ~16 min |
+| Close | 22–24 | ~3 min |
 
-If you need to compress, slide 13's four-step workflow survives trimming. Do **not** compress
-slides 5, 10, or 18 — the differencing rule, the "difference before you read the ACF" rule,
+If you need to compress, slide 14's four-step workflow survives trimming. Do **not** compress
+slides 5, 10, 19, or 20 — the differencing rule, the "difference before you read the ACF" rule,
 and the Granger caveat are the three things students most reliably get wrong.

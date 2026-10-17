@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Regularization & Model Selection**
 
-Deck: `Slides/Lecture06_Regularization.pdf` (19 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture06_Regularization.pdf` (21 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -60,16 +60,55 @@ decide which ones survive.
 Start with what OLS actually does. It minimizes the sum of squared residuals. Nothing else. It
 has no opinion about how many predictors you handed it or how large the coefficients get.
 
-Now put a realistic number on it. A weekly model with lags, calendar dummies, promotions, and a
-couple of macro series carries sixty predictors easily. And three years of weekly history is a
-hundred and fifty-six observations.
-
-Sixty predictors, a hundred and fifty observations. OLS will fit that sample beautifully. It
-will also forecast badly.
+So let's hand it a lot. Lab 6 builds the feature set an analyst would actually build for daily
+sales — twenty-eight lags, rolling means, Fourier terms, day-of-week dummies — and ends up with
+sixty-two predictors without anyone setting out to. Then it fits OLS on shorter and shorter
+training windows and scores every fit on the same test year.
 
 **[pause]**
 
-Three things go wrong, and they're worth separating because they have different fixes.
+*(Point at the horizontal axis.)*
+
+Across the bottom: training rows per predictor, n over k. On the left, nineteen and a half — twelve
+hundred and ten rows for sixty-two predictors. Moving right, the window shrinks: four hundred rows,
+two hundred, a hundred and twenty, eighty. By the right edge there's barely more than one row per
+predictor.
+
+Up the side, the test RMSE — and notice the scale is logarithmic. Each gridline is ten times the
+one below.
+
+*(Trace the red line.)*
+
+OLS, in red. With plenty of data it's fine: two hundred eighty. At six and a half rows per
+predictor it's already above two thousand. At three, nearly six thousand. And at under two rows
+per predictor it is **three point six million**. On a series that sells nearly three thousand units
+a day.
+
+Nothing about the problem changed. Same features, same target, same test year. Only the ratio of
+rows to parameters.
+
+*(Trace the blue line.)*
+
+Now ridge, in blue — the same features, one line of code changed. It starts at two seventy-eight,
+and at the right edge it's at seven hundred seventy: a little worse than the dashed benchmark,
+same-day-last-year at six twenty-five, but in the same world. It degrades gracefully across the
+whole range.
+
+**[pause]**
+
+That gap, between a red line that leaves the chart and a blue line that barely moves, is what
+this lecture is about. You'll reproduce every point of it yourself in Lab 6.
+
+---
+
+# ▶ SLIDE 5 — Regularization: Fit Plus a Penalty
+
+Why does OLS blow up like that? Three things go wrong, and they're worth separating because they
+have different fixes.
+
+And the situation isn't exotic. A weekly model with lags, calendar dummies, promotions, and a
+couple of macro series carries sixty predictors easily — and three years of weekly history is a
+hundred and fifty-six observations. That's the right-hand side of the chart you just saw.
 
 **First, variance grows with k.** Every predictor you add gives the model another dimension in
 which to chase noise. The coefficients get less precisely estimated, all of them, including the
@@ -103,7 +142,7 @@ that trade is almost always worth making.
 
 ---
 
-# ▶ SLIDE 5 — Subset Selection: The Classical Answer
+# ▶ SLIDE 6 — Subset Selection: The Classical Answer
 
 Before shrinkage, the standard approach was to *count* predictors rather than shrink them. It's
 worth understanding properly, both because you'll meet it and because its failure mode is
@@ -150,7 +189,7 @@ Shrinkage replaces the in-or-out switch with a continuous dial. More stable, and
 
 ---
 
-# ▶ SLIDE 6 — Section divider: Shrinkage Methods
+# ▶ SLIDE 7 — Section divider: Shrinkage Methods
 
 *(Divider.)*
 
@@ -158,7 +197,7 @@ The core idea in one line: keep every predictor, but pull its coefficient toward
 
 ---
 
-# ▶ SLIDE 7 — Ridge Regression (ℓ₂)
+# ▶ SLIDE 8 — Ridge Regression (ℓ₂)
 
 Ridge adds lambda times the sum of squared coefficients.
 
@@ -175,7 +214,7 @@ zero. Everything useful happens in between.
 Ridge shrinks every coefficient toward zero but sets **none** of them exactly to zero. Hold onto
 that, because it's the whole contrast with the next slide.
 
-Its particular strength is exactly the failure I described two slides ago. Remember plus eight
+Its particular strength is exactly the failure I described a few slides ago. Remember plus eight
 hundred and minus seven hundred and forty? Ridge won't do that. Rather than letting two
 collinear variables fight over the same coefficient, it splits the effect between them — you get
 something like plus thirty and plus twenty-eight instead. Far more stable, and far more
@@ -203,7 +242,7 @@ right way to do it in the code slide, and it is not what most people do first.
 
 ---
 
-# ▶ SLIDE 8 — LASSO (ℓ₁)
+# ▶ SLIDE 9 — LASSO (ℓ₁)
 
 Now swap the squared penalty for an absolute one. Sum of absolute values instead of sum of
 squares.
@@ -240,7 +279,7 @@ claims, and only one of them is supported.
 
 ---
 
-# ▶ SLIDE 9 — Why LASSO Zeros Out and Ridge Does Not
+# ▶ SLIDE 10 — Why LASSO Zeros Out and Ridge Does Not
 
 So why does one zero out and the other doesn't? The geometry answers it, and today we draw it on
 our own data rather than on a cartoon.
@@ -313,7 +352,7 @@ section six point two, for any number of predictors.
 
 ---
 
-# ▶ SLIDE 10 — Elastic Net: Both Penalties at Once
+# ▶ SLIDE 11 — Elastic Net: Both Penalties at Once
 
 Elastic Net says: why choose? Use both penalties.
 
@@ -343,7 +382,49 @@ tell you how far toward LASSO or Ridge it wants to sit.
 
 ---
 
-# ▶ SLIDE 11 — Section divider: Choosing the Penalty
+# ▶ SLIDE 12 — The Grouping Effect, Drawn
+
+Here is the grouping effect on the same picture as before.
+
+*(Left panel.)*
+
+On the left, the diamond from a few slides ago, unchanged. Same lag seven and lag fourteen, same
+ellipses, same budget. The ellipse touches the corner, and lag fourteen is exactly zero.
+
+*(Right panel.)*
+
+On the right, the elastic-net ball, with the mix alpha at one half: half LASSO, half Ridge. I've
+drawn it with the same reach along each axis, point one, so the two shapes are directly
+comparable.
+
+It's still pointed where it meets the axes — that's the LASSO half, and it's why elastic net can
+still zero things out. Everywhere else the edge is curved — that's the Ridge half.
+
+**[pause]**
+
+Now be honest about what you can see. At a budget this small, the curve is slight. The ball looks
+almost exactly like the diamond. The squared term is tiny next to the absolute one when the
+coefficients are this small.
+
+And yet look where the ellipse touches it: not the corner, but the face. Point oh seven on lag
+seven, point oh four on lag fourteen. Both kept.
+
+Why does such a small bend matter so much? Because of what we saw on the diamond slide: these two
+lags are nearly interchangeable, so the ellipses run almost parallel to the face. The corner only
+won by a hair. Blunt the corner even slightly and the hair goes the other way.
+
+Follow the green line. The corner still holds for the very smallest budgets — the solution starts
+along the lag-seven axis — but only out to about point oh two, against point one six for LASSO.
+After that, both lags travel together toward OLS.
+
+**[pause]**
+
+That's the grouping effect: correlated predictors enter together, instead of one winning a coin
+toss. And it's why I'd start the homework with elastic net.
+
+---
+
+# ▶ SLIDE 13 — Section divider: Choosing the Penalty
 
 *(Divider.)*
 
@@ -352,22 +433,42 @@ you tune it decides whether the model generalizes.
 
 ---
 
-# ▶ SLIDE 12 — The Regularization Path
+# ▶ SLIDE 14 — The Regularization Path
 
 The regularization path is the best diagnostic these methods give you, and it's underused.
 
 The idea: fit the model across a whole grid of lambda values, and trace each coefficient as it
-moves.
+moves. This is that picture for Lab 6's LASSO — all sixty-two features, every coefficient on a
+standardized scale.
 
-Read it left to right. At **small lambda** the coefficients sit near their OLS values — the model
-is dense, and unstable in the way we discussed. As **lambda grows** they shrink, and under LASSO
-they drop to zero one at a time. At **large lambda** only the most robust predictors are left.
-And in the limit, everything is gone and you're left with the intercept, which is just the mean
-forecast — the naive benchmark from Lecture 1.
+*(Point at the horizontal axis.)*
+
+Penalty strength runs left to right, on a log scale. One warning about the label: scikit-learn
+calls lambda `alpha`. Same thing.
 
 **[pause]**
 
-Now here's the part I actually want you to use.
+*(Sweep left to right.)*
+
+Read it left to right. At **small lambda**, on the left, the coefficients sit near their OLS
+values — fifty-six of the sixty-two are nonzero, and the biggest ones are day-of-week dummies and
+yesterday's sales. As **lambda grows** they shrink, and under LASSO they drop to zero one at a
+time — you can see the gray lines collapsing onto the zero line around one to one and a half. At
+**large lambda** only a few are left. And past about two point seven, everything is gone and
+you're left with the intercept, which is just the mean forecast.
+
+*(Point at the list on the right.)*
+
+Now the colors. Every red line is a lag that's a multiple of seven days: one week back, two, and
+so on out to eight weeks, plus fifty-two weeks. And the list on the right is the order they left in, last
+to leave at the top: lag seven and lag twenty-eight together, then thirty-five, three sixty-four,
+fourteen, then yesterday and lag twenty-one together, then fifty-six.
+
+Seven of the last eight are multiples of seven. Nobody told the model this series has a weekly
+cycle. Under increasing penalty it kept the lags that line up with the day of the week and
+discarded the ones that don't.
+
+**[pause]**
 
 **The order in which predictors leave is the useful output.**
 
@@ -383,14 +484,14 @@ your training window a few weeks and the exact coefficients at your chosen lambd
 The dropout *order* mostly won't.
 
 So when you report — in the homework and in your final project — report the ordering. "Under
-increasing penalty, the last three predictors standing were the four-week lag, the fifty-two-week
-lag, and SNAP days" is a much stronger claim than "the coefficient on lag four was two thousand
-one hundred." It's more honest about what the data supports, and it's the version that survives
-someone rerunning your analysis.
+increasing penalty, the last predictors standing were the weekly lags" is a much stronger claim
+than "the coefficient on lag seven was one hundred twenty-four," a number that moves with every
+choice of lambda. It's more honest about what the
+data supports, and it's the version that survives someone rerunning your analysis.
 
 ---
 
-# ▶ SLIDE 13 — Choosing λ by Cross-Validation
+# ▶ SLIDE 15 — Choosing λ by Cross-Validation
 
 So how do you pick lambda? You tune it. Three steps.
 
@@ -434,7 +535,7 @@ Use `TimeSeriesSplit`, exactly as in Lecture 1's walk-forward evaluation. Every 
 
 ---
 
-# ▶ SLIDE 14 — Section divider: In Practice
+# ▶ SLIDE 16 — Section divider: In Practice
 
 *(Divider.)*
 
@@ -442,7 +543,7 @@ Three things: standardize, tune on a time-aware split, and read the path.
 
 ---
 
-# ▶ SLIDE 15 — Regularization in Python
+# ▶ SLIDE 17 — Regularization in Python
 
 The code is short, and one line of it is doing something important that's easy to miss.
 
@@ -486,7 +587,7 @@ Read the docstring, not your memory.
 
 ---
 
-# ▶ SLIDE 16 — Section divider: Key Takeaways and Roadmap
+# ▶ SLIDE 18 — Section divider: Key Takeaways and Roadmap
 
 *(Divider.)*
 
@@ -495,7 +596,7 @@ linear-model counterpart to what trees do by pruning.
 
 ---
 
-# ▶ SLIDE 17 — Linear Methods: Which One When
+# ▶ SLIDE 19 — Linear Methods: Which One When
 
 The table is your decision guide, and it's the thing to photograph.
 
@@ -542,7 +643,7 @@ underlying ideas don't.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 6: Key Takeaways
+# ▶ SLIDE 20 — Lecture 6: Key Takeaways
 
 Five things.
 
@@ -581,7 +682,7 @@ yourself the two halves of that assignment are the same idea.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 21 — References
 
 References are on the slide. Two I'd single out.
 
@@ -602,15 +703,15 @@ See you next week for neural networks.
 
 | Segment | Slides | Target |
 |---|---|---:|
-| Opening & the problem | 1–5 | ~7 min |
-| Ridge, LASSO, geometry | 6–10 | ~9 min |
-| Choosing lambda | 11–13 | ~5 min |
-| Python & the synthesis | 14–19 | ~6 min |
-| **Total** | | **~27 min** |
+| Opening & the problem | 1–6 | ~8 min |
+| Ridge, LASSO, geometry | 7–12 | ~11 min |
+| Choosing lambda | 13–15 | ~6 min |
+| Python & the synthesis | 16–21 | ~6 min |
+| **Total** | | **~31 min** |
 
-If you must compress, slide 17's method table survives trimming — it's a reference students will
-photograph rather than absorb live. Do **not** compress slides 9 or 12: the ℓ₁-corner figure and
+If you must compress, slide 19's method table survives trimming — it's a reference students will
+photograph rather than absorb live. Do **not** compress slides 10 or 14: the ℓ₁-corner figure and
 the regularization path are the two things that make the rest more than a list of estimators.
 
-Slide 17's XGBoost connection is the payoff for the whole first half of the course. If you are
+Slide 19's XGBoost connection is the payoff for the whole first half of the course. If you are
 running long, cut elsewhere and protect it.

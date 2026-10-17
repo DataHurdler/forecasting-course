@@ -7,7 +7,8 @@
 
 Writes Figures/Lecture11_Part1/<name>.pdf (Beamer) and <name>.svg (Quarto), both vector.
 
-Both figures print numbers from the lab's own fit. Sampling uses the lab's data pipeline, models,
+Every figure prints numbers from the lab's own fits (decomposition and traces were added in
+round 2; traces shows both fits' sigma_level chains). Sampling uses the lab's data pipeline, models,
 seeds and forecasting code verbatim (Labs/Lecture11_Part1_lab.qmd, Setup and Steps 1-4), so the
 figures print the lab's numbers rather than a second set. The two fits (centred, then
 non-centred) take about a minute on a laptop CPU. Everything the figures and the deck print goes
@@ -171,6 +172,21 @@ def measure() -> dict:
     level_mean = lev.mean(0) * y_sd + y_mu
     thin = np.random.default_rng(0).choice(len(b), size=400, replace=False)
 
+    # Decomposition: posterior-mean level and seasonal over every training week, in units.
+    # The residual is what is left: observed - level - seasonal (computed at draw time).
+    seasonal_mean = (b @ X_tr.T).mean(0) * y_sd
+
+    # Traces: every parameter's own R-hat / bulk ESS in both fits, and the raw chains of the
+    # scalar parameters (4 chains x 1500 draws, z scale), rounded to keep the cache small.
+    def per_param(idata_):
+        s_ = az.summary(idata_, var_names=["sigma_level", "sigma", "beta"], ci_kind="hdi",
+                        ci_prob=0.94)
+        return {str(k): {"r_hat": float(r.r_hat), "ess_bulk": float(r.ess_bulk)}
+                for k, r in s_.iterrows()}
+
+    def chains(idata_, var):
+        return np.round(idata_.posterior[var].values, 5).tolist()
+
     m = {
         "note": "Written by scripts/figures/lecture11_part1_figures.py; every number the "
                 "Lecture 11 Part 1 figures and deck print. The lab's fits and seeds, verbatim.",
@@ -204,6 +220,14 @@ def measure() -> dict:
         "beta_draws_units": (b[thin] * y_sd).tolist(),
         "detrended_train": (y - level_mean).tolist(),
         "train_start": str(train.week_start.iloc[0].date()),
+        "train_end": str(train.week_start.iloc[-1].date()),
+        "units_train_all": [float(v) for v in y],
+        "level_mean_train": level_mean.tolist(),
+        "seasonal_mean_train": seasonal_mean.tolist(),
+        "per_param_centred": per_param(idata_c),
+        "per_param_noncentred": per_param(idata),
+        "chains_centred": {v: chains(idata_c, v) for v in ("sigma_level", "sigma")},
+        "chains_noncentred": {v: chains(idata, v) for v in ("sigma_level", "sigma")},
     }
     OUT.mkdir(parents=True, exist_ok=True)
     MEASURED.write_text(json.dumps(m) + "\n")
@@ -405,8 +429,113 @@ def fourier_pairs() -> None:
     save(fig, "fourier_pairs")
 
 
+# ================================================================== the decomposition
+def decomposition() -> None:
+    """Observed = level + seasonal + residual over the 225 training weeks, one shared scale.
+
+    Level and seasonal are posterior means from the lab's non-centred fit; the residual is what is
+    left, so the four panels add up exactly (top = sum of the three below). Every panel has the
+    same units per inch: panel heights are proportional to their y-ranges.
+    """
+    m = measured()
+    y = np.array(m["units_train_all"])
+    lev = np.array(m["level_mean_train"])
+    sea = np.array(m["seasonal_mean_train"])
+    res = y - lev - sea
+    assert np.allclose(lev + sea + res, y)
+    dates = pd.date_range(m["train_start"], periods=len(y), freq="7D")
+    assert str(dates[-1].date()) == m["train_end"]
+    k = 1e-3
+    rows = [  # (series, colour, label, y-limits in thousands, ticks)
+        (y, BLACK, "observed", (11.5, 27.5), [15, 20, 25]),
+        (lev, BLUE, "= level", (13.0, 23.5), [15, 20]),
+        (sea, GREEN, "+ seasonal", (-1.75, 1.75), [0]),
+        (res, GRAY, "+ residual", (-3.5, 3.5), [0]),
+    ]
+    spans = [hi - lo for *_, (lo, hi), _ in rows]
+    fig, axes = plt.subplots(4, 1, figsize=sz(15, 5.6), sharex=True,
+                             gridspec_kw={"height_ratios": spans, "hspace": 0.12})
+    for ax, (v, c, name, (lo, hi), ticks) in zip(axes, rows):
+        ax.plot(dates, v * k, color=c, lw=1.1 if c in (BLACK, GRAY) else 2.0)
+        if lo < 0:
+            ax.axhline(0, color=GRAY, lw=0.6, ls=(0, (2, 2)))
+        ax.set_ylim(lo, hi)
+        ax.set_yticks(ticks)
+        ax.set_yticklabels([f"{t}k" if t else "0" for t in ticks])
+        ax.tick_params(labelsize=11)
+        ax.text(1.012, 0.5, name, transform=ax.transAxes, ha="left", va="center", fontsize=12,
+                color=c, fontweight="bold")
+        if ax is not axes[-1]:
+            ax.spines["bottom"].set_visible(False)
+            ax.tick_params(axis="x", length=0)
+    # one scale bar, valid for every panel (same units per inch throughout)
+    ax = axes[1]
+    xb = pd.Timestamp("2015-03-01")
+    ax.plot([xb, xb], [13.6, 18.6], color=BLACK, lw=2.0, solid_capstyle="butt")
+    ax.text(xb - pd.Timedelta(weeks=3), 16.1, "5,000 units", ha="right", va="center",
+            fontsize=10, color=BLACK)
+    axes[0].text(pd.Timestamp("2011-02-14"), 27.5, "every panel drawn to the same scale",
+                 ha="left", va="top", fontsize=10, color=GRAY)
+    axes[-1].xaxis.set_major_locator(matplotlib.dates.YearLocator())
+    axes[-1].xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%Y"))
+    axes[-1].set_xlim(pd.Timestamp("2011-01-01"), dates[-1] + pd.Timedelta(weeks=2))
+    print(f"    level {lev[0]:,.0f} -> {lev[-1]:,.0f}; seasonal {sea.min():,.0f}..{sea.max():,.0f}; "
+          f"residual {res.min():,.0f}..{res.max():,.0f} (sd {res.std():,.0f})")
+    save(fig, "decomposition")
+
+
+# ================================================================== centred vs non-centred traces
+CHAIN_COLORS = (BLUE, CRIMSON, GREEN, AMBER)
+SHOW_DRAWS = 300         # the first draws of each chain: enough to see the texture at slide size
+
+
+def traces() -> None:
+    """sigma_level's four chains under the centred and the non-centred walk, on the same axes.
+
+    Raw chains from the lab's two fits (random_seed=42), in units a week: the first SHOW_DRAWS
+    draws of each chain, so the texture is visible at slide size. R-hat and bulk ESS are
+    sigma_level's own; they are also the worst over sigma_level, sigma and beta in both fits (the
+    numbers the deck prints). The two fits do not sit at the same height for a second reason:
+    GaussianRandomWalk's default start is Normal(0, 100), while the cumsum walk starts at zero, so
+    the two models differ in the first week's prior (mean sigma_level about 450 vs 520).
+    """
+    m = measured()
+    ysd = m["y_sd"]
+    fits = [("centered  (GaussianRandomWalk)", "chains_centred", "per_param_centred",
+             "diagnostics_centred", CRIMSON),
+            ("non-centered  (cumsum of z)", "chains_noncentred", "per_param_noncentred",
+             "diagnostics_noncentred", GREEN)]
+    fig, axes = plt.subplots(2, 1, figsize=sz(15, 4.2), sharex=True, gridspec_kw={"hspace": 0.5})
+    lo, hi = 230, 870
+    x = np.arange(1, SHOW_DRAWS + 1)
+    for ax, (title, ck, pk, dk, col) in zip(axes, fits):
+        ch = np.array(m[ck]["sigma_level"]) * ysd               # (4, 1500), units a week
+        pp, d = m[pk]["sigma_level"], m[dk]
+        assert abs(pp["ess_bulk"] - d["ess_bulk_min"]) < 1e-9
+        assert abs(pp["r_hat"] - d["r_hat_max"]) < 1e-9
+        for c in range(ch.shape[0]):
+            ax.plot(x, ch[c, :SHOW_DRAWS], color=CHAIN_COLORS[c], lw=0.9, alpha=0.85)
+        ax.set_xlim(0, SHOW_DRAWS)
+        ax.set_ylim(lo, hi)
+        ax.set_yticks([300, 500, 700])
+        ax.tick_params(labelsize=11)
+        ax.set_ylabel(r"$\sigma_{\mathrm{level}}$" "\n(units)", fontsize=11, linespacing=1.0)
+        ax.text(0, hi + 15, title, ha="left", va="bottom", fontsize=12, color=BLACK,
+                fontweight="bold")
+        ax.text(SHOW_DRAWS, hi + 15,
+                rf"$\hat{{R}}$ {pp['r_hat']:.3f}    ESS {pp['ess_bulk']:,.0f}    "
+                f"{d['divergences']} divergences", ha="right", va="bottom", fontsize=12, color=col,
+                fontweight="bold")
+        ac1 = np.mean([np.corrcoef(c_[:-1], c_[1:])[0, 1] for c_ in ch])
+        print(f"    {title}: R-hat {pp['r_hat']:.3f} ESS {pp['ess_bulk']:,.0f} "
+              f"div {d['divergences']}; mean {ch.mean():,.0f}; lag-1 autocorrelation {ac1:.2f}")
+    axes[-1].set_xlabel(f"draw (the first {SHOW_DRAWS} of 1,500; four chains, one color each)",
+                        fontsize=11)
+    save(fig, "traces")
+
+
 FIGURES = {"interval_band": interval_band, "band_width": band_width,
-           "fourier_pairs": fourier_pairs}
+           "fourier_pairs": fourier_pairs, "decomposition": decomposition, "traces": traces}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

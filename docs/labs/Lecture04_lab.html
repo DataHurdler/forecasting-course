@@ -2220,7 +2220,7 @@ vertical-align: -.125em;
 </section>
 <section id="setup" class="level1">
 <h1>Setup</h1>
-<div id="084644ee" class="cell" data-execution_count="1">
+<div id="2342c796" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2273,7 +2273,7 @@ benchmark (same day last year): RMSE 625</code></pre>
 <section id="step-1-fit-a-tree-and-read-it-out-loud" class="level1">
 <h1>Step 1 — Fit a tree and read it out loud</h1>
 <p>Start deliberately shallow, because a depth-3 tree is small enough to read.</p>
-<div id="5e9cdee0" class="cell" data-execution_count="2">
+<div id="c400c862" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tree3 <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span><span class="dv">3</span>, random_state<span class="op">=</span>RANDOM_STATE).fit(X_train, y_train)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(export_text(tree3, feature_names<span class="op">=</span>FEATURES, decimals<span class="op">=</span><span class="dv">0</span>))</span>
@@ -2306,7 +2306,7 @@ benchmark (same day last year): RMSE 625</code></pre>
 test RMSE: 337</code></pre>
 </div>
 </div>
-<div id="392eec80" class="cell" data-execution_count="3">
+<div id="1dbe2042" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">13</span>, <span class="dv">5</span>))</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>plot_tree(tree3, feature_names<span class="op">=</span>FEATURES, filled<span class="op">=</span><span class="va">True</span>, rounded<span class="op">=</span><span class="va">True</span>, fontsize<span class="op">=</span><span class="dv">7</span>, ax<span class="op">=</span>ax)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2325,7 +2325,7 @@ test RMSE: 337</code></pre>
 # I expect the higher-sales side to be dow &lt;= 4.50 / dow &gt; 4.50, because ____</code></pre>
 <p>Then read the two node values off the tree plot above and see whether you were right. A guess you wrote down and checked teaches you more than a split you merely read.</p>
 <p>Then look at the importances:</p>
-<div id="a56fee29" class="cell" data-execution_count="4">
+<div id="02e2311e" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>imp <span class="op">=</span> pd.Series(tree3.feature_importances_, index<span class="op">=</span>FEATURES).sort_values(ascending<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(imp[imp <span class="op">&gt;</span> <span class="dv">0</span>].<span class="bu">round</span>(<span class="dv">3</span>).to_string())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -2354,8 +2354,8 @@ Compare this with the lecture slide
 </section>
 <section id="step-2-watch-the-biasvariance-tradeoff-happen" class="level1">
 <h1>Step 2 — Watch the bias–variance tradeoff happen</h1>
-<p>Lecture 4 summarized this in a table: stump, middle depths, full tree. Now measure it on your own data and draw it as a curve.</p>
-<div id="c5278c9b" class="cell" data-execution_count="5">
+<p>Lecture 4 drew this as a curve for the weekly series. Now measure it on your own daily data and draw the same curve.</p>
+<div id="8ae534e1" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> depth <span class="kw">in</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">12</span>, <span class="va">None</span>]:</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> DecisionTreeRegressor(max_depth<span class="op">=</span>depth, random_state<span class="op">=</span>RANDOM_STATE).fit(X_train, y_train)</span>
@@ -2377,7 +2377,7 @@ Compare this with the lecture slide
  None    1200           0        406</code></pre>
 </div>
 </div>
-<div id="6b4123f8" class="cell" data-execution_count="6">
+<div id="14db2f45" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="fl">3.5</span>))</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>ax.plot(<span class="bu">range</span>(<span class="bu">len</span>(sweep)), sweep.train_RMSE, marker<span class="op">=</span><span class="st">&quot;o&quot;</span>, label<span class="op">=</span><span class="st">&quot;train&quot;</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>ax.plot(<span class="bu">range</span>(<span class="bu">len</span>(sweep)), sweep.test_RMSE,  marker<span class="op">=</span><span class="st">&quot;o&quot;</span>, label<span class="op">=</span><span class="st">&quot;test&quot;</span>)</span>
@@ -2399,7 +2399,7 @@ Compare this with the lecture slide
 <section id="step-3-why-one-tree-is-not-enough" class="level1">
 <h1>Step 3 — Why one tree is not enough</h1>
 <p>Lecture 4 claimed a tree is unstable: change the data slightly and the structure changes. Test it properly, using bootstrap resamples — draw a sample of the same size <em>with replacement</em>, refit, and repeat.</p>
-<div id="c386a2e1" class="cell" data-execution_count="7">
+<div id="2ef2d93d" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.RandomState(RANDOM_STATE)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>roots, preds <span class="op">=</span> {}, []</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2427,7 +2427,7 @@ per-day spread of predictions across the 20 trees:
 </div>
 <p>The root may well be stable — one feature can be dominant enough that every resample finds it first. <strong>That is not the same as the tree being stable.</strong> Look at the spread of predictions: on a typical day the twenty trees disagree by a meaningful margin, and on the worst day they disagree enormously. All that disagreement lives <em>below</em> the root.</p>
 <p>Now the payoff, and it is one line:</p>
-<div id="c24b70f3" class="cell" data-execution_count="8">
+<div id="ca9742b4" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>single <span class="op">=</span> np.mean([rmse(y_test, p) <span class="cf">for</span> p <span class="kw">in</span> P])</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>averaged <span class="op">=</span> rmse(y_test, P.mean(<span class="dv">0</span>))</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2446,7 +2446,7 @@ improvement: 18%</code></pre>
 <section id="step-4-where-trees-reliably-fail" class="level1">
 <h1>Step 4 — Where trees reliably fail</h1>
 <p>A tree predicts the <strong>mean of the training rows in a leaf</strong>. So every prediction it can ever make is an average of values it has already seen.</p>
-<div id="29246bac" class="cell" data-execution_count="9">
+<div id="5294a9b3" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>full <span class="op">=</span> DecisionTreeRegressor(random_state<span class="op">=</span>RANDOM_STATE).fit(X_train, y_train)</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> full.predict(X_test)</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2458,7 +2458,7 @@ prediction range      : [0, 4,527]</code></pre>
 </div>
 </div>
 <p>The predictions cannot leave the training range — not “usually do not,” <em>cannot</em>. Now watch what that does at the extremes.</p>
-<div id="cd171102" class="cell" data-execution_count="10">
+<div id="481157eb" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>hi <span class="op">=</span> y_test <span class="op">&gt;</span> np.percentile(y_test, <span class="dv">90</span>)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>lo <span class="op">=</span> y_test <span class="op">&lt;</span> np.percentile(y_test, <span class="dv">10</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2472,7 +2472,7 @@ quietest 10% of test days (n=37): actual 2,030   predicted 2,237   over by  207<
 </div>
 </div>
 <p><strong>Your turn:</strong> the two errors above point in opposite directions. Plot predicted against actual for the test set, add the 45-degree line, and see the shape this produces.</p>
-<div id="7e89aa08" class="cell" data-execution_count="11">
+<div id="70bbfa72" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in the two blanks ----</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fig, ax = plt.subplots(figsize=(4.5, 4.5))</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ax.scatter(___, ___, s=6, alpha=0.4)          # &lt;- actual on x, predicted on y</span></span>

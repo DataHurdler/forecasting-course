@@ -558,24 +558,44 @@ the same lesson as the seeds in Lecture 7, one level up.
 
 # ▶ SLIDE 19 — Check 2: What in the Data Explains It
 
-*(Three numbered points. This is the transferable slide.)*
+*(Three panels. This is the transferable slide; take the panels left to right.)*
 
 Second check. Gating pays off when a value has to survive many steps that would otherwise
-overwrite it. Does this panel have anything like that? Three measurements say no.
+overwrite it. Does this panel have anything like that? Three measurements say no, and the first
+two are on this slide.
 
-**One. Most of the variance is not sequential at all.** Ninety-one percent of the variation in
-weekly units is *between* series — which store, which category — and nine percent is within a
-series over time. The main thing a model has to get right is the level of the series in front of
-it, and the last few weeks tell you that. No memory mechanism required.
+*(Point at the left panel.)*
+
+**One. Most of the variance is not sequential at all.** That's all thirty series of the lab's
+panel on one axis — ten stores, three categories. Look at what separates them. Foods sit up
+between ten and thirty thousand units a week, household around five, hobbies around two.
+The dashed line is the grand mean, about eight thousand. The big differences are *which series*,
+not *which week*.
+
+*(Point at the triangle.)*
+
+The middle panel puts a number on it, and it is a right triangle — Pythagoras, for variances.
+Every week's distance from the grand mean splits into two pieces: the series' own average minus
+the grand mean, and that week minus the series' average. Square them and add over all eight
+thousand three hundred rows, and the cross term drops out exactly, because deviations from a mean
+sum to zero. So the squares add. The between-series side is about six thousand eight hundred
+units, the within-series side about two thousand one hundred, and the total about seven thousand
+one hundred. Between squared over total squared: **ninety-one percent.** Nine percent is within a
+series over time.
+
+So the main thing a model has to get right is the level of the series in front of it, and the
+last few weeks tell you that. No memory mechanism required.
 
 **[pause]**
 
-**Two. The series are smooth** — and this one is counter-intuitive, so take it slowly.
-Within-series autocorrelation is point eight three at lag one, and still point four three at lag
-fifty-two. That *looks* like long memory, and it is actually the reason long memory is
-unnecessary. Because neighboring weeks are nearly the same number, the recent past is a
-**sufficient statistic** for the distant past. Nothing has to be carried across the gap, because
-the gap was filled in continuously along the way.
+*(Point at the right panel.)*
+
+**Two. The series are smooth** — and this one is counter-intuitive, so take it slowly. That's the
+autocorrelation of each series around its own mean, averaged over the thirty. Point eight three at
+lag one, and still point four three at lag fifty-two. That *looks* like long memory, and it is
+actually the reason long memory is unnecessary. Because neighboring weeks are nearly the same
+number, the recent past is a **sufficient statistic** for the distant past. Nothing has to be
+carried across the gap, because the gap was filled in continuously along the way.
 
 Gating earns its keep when something must survive steps that would overwrite it. Here nothing
 overwrites anything.

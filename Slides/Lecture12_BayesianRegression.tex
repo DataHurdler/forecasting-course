@@ -112,35 +112,41 @@
 
   \vspace{0.15cm}
   \textbf{The last row is the useful one.} \texttt{b\_event}'s interval spans zero, so the data
-  do not establish a direction --- but it also shows the effect is \emph{small}, between about
-  $-1.1\%$ and $+0.4\%$. That is more honest than ``not significant.''
+  do not establish a direction. Two slides on, we ask whether it is also too small to matter.
 \end{frame}
 
 % --- Slide: probability questions ---------------------------------------------------
 \begin{frame}{Asking the Posterior a Direct Question}
-  Any question about $\beta$ is answered by counting samples.
-
-  \begin{examplebox}{One line each}
-    {\scriptsize\linespread{1.05}\selectfont
-    \texttt{b = idata.posterior["b\_price"].values.ravel()}\\[2pt]
-    \texttt{(b < 0).mean()\ \ \ \ \ \# P(demand falls when price rises)}\\
-    \texttt{(b < -1).mean()\ \ \ \ \# P(elastic: a price rise loses revenue)}\\
+  \begin{examplebox}{Any question about $\beta$ is a count of samples: one line each}
+    {\scriptsize\linespread{0.95}\selectfont
+    \texttt{b = idata.posterior["b\_price"].values.ravel()}\\[-1pt]
+    \texttt{(b < 0).mean()\ \ \ \ \ \# P(demand falls when price rises)}\\[-1pt]
+    \texttt{(b < -1).mean()\ \ \ \ \# P(elastic: a price rise loses revenue)}\\[-1pt]
     \texttt{(b < -0.5).mean()\ \ \# P(a 1\% rise costs over 0.5\% of volume)}
     }
   \end{examplebox}
+  \vspace{-0.1cm}
+  {\centering
+    \includegraphics[height=3.2cm]{../Figures/Lecture12_BayesianRegression/posterior_area.pdf}\par}
+  \vspace{-0.05cm}
+  {\small Each answer is the share of the area past a line. Demand is \textbf{inelastic} in every
+  draw; the half-percent question stays open. \textbf{A p-value gives only the direction.}}
+\end{frame}
 
-  On our fit, $P(\text{elasticity} < 0) = \mathbf{1.00}$ and $P(\text{elasticity} < -1) =
-  \mathbf{0.00}$: demand falls when price rises, and is \textbf{inelastic} in every draw. Whether
-  a 1\% rise costs over half a percent of volume stays open: $P(\text{elasticity} < -0.5) =
-  \mathbf{0.46}$.
-
+% --- Slide: ROPE -----------------------------------------------------------------------
+\begin{frame}{Too Small to Matter? A ROPE}
+  \texttt{b\_event}'s HDI spans zero: no direction. A \textbf{ROPE} --- region of practical
+  equivalence --- asks a different question: is the effect too small to act on?
+  \begin{center}
+    \includegraphics[height=3.15cm]{../Figures/Lecture12_BayesianRegression/rope_event.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small The width is a business choice, not a statistic. We use Homework 7's
+  $|\beta| < 0.05$, about $\pm 5\%$ a week; even at $\pm 1\%$, 95\% is inside.}
   \begin{keybox}
-    \textbf{A p-value reports only the direction.} The posterior also answers \emph{how big}
-    --- and shows which size questions are still open.
+    \small Spans zero and inside the ROPE: \textbf{negligible}, stop looking. Spans zero and wide:
+    \textbf{still open}, get more data. ``Not significant'' cannot tell them apart.
   \end{keybox}
-
-  \muted{\footnotesize\itshape Posterior mass inside a range of negligible values is a
-  \textbf{ROPE} --- region of practical equivalence.}
 \end{frame}
 
 % =============================================================================
@@ -152,30 +158,30 @@
 
 % --- Slide: DAGs ----------------------------------------------------------------
 \begin{frame}{Directed Acyclic Graphs}
-  A \textbf{DAG} is a picture of what you believe causes what: \textbf{nodes} are variables,
-  \textbf{arrows} run from cause to effect, and nothing causes itself. You draw it before the
-  model, from domain knowledge, to decide \emph{which variables belong in the regression}.
-
-  \begin{center}
-    {\small
-    \begin{tabular}{p{2.6cm}p{9.6cm}}
-      \toprule
-      \textbf{Confounder} & Causes both your predictor and your outcome. \textbf{Must} be
-      controlled for, or its influence is absorbed into your coefficient. \\[3pt]
-      \textbf{Collider} & Is caused by both. Controlling for it \textbf{creates} a spurious
-      association that was not there. \\
-      \bottomrule
-    \end{tabular}
-    }
-  \end{center}
+  A \textbf{DAG} is a picture of what you believe causes what, drawn from domain knowledge
+  \emph{before} the model. It decides which variables belong in the regression.
 
   \vspace{0.05cm}
-  \textbf{So ``add every control you have'' is bad advice.} Which variables to include is a
-  question about causal structure, and no model fit will answer it.
+  \begin{columns}[T]
+    \begin{column}{0.57\textwidth}
+      \includegraphics[width=\linewidth]{../Figures/Lecture12_BayesianRegression/dag.pdf}
+    \end{column}
+    \begin{column}{0.41\textwidth}
+      {\small
+      \key{Confounder}: causes both predictor and outcome. \textbf{Must} be controlled, or it
+      leaks into your coefficient.
+
+      \vspace{0.15cm}
+      \textbf{Collider}: caused by both. Controlling for it \textbf{creates} a spurious
+      association.\par}
+    \end{column}
+  \end{columns}
 
   \vspace{0.1cm}
+  \textbf{So ``add every control you have'' is bad advice}, and no model fit settles it.
+
   \muted{\footnotesize\itshape Whether a DAG is right is a business question, not a statistical
-  one. Estimating causal effects credibly is a separate subject.}
+  one.}
 \end{frame}
 
 % --- Slide: confounding measured --------------------------------------------------
@@ -263,7 +269,8 @@
     \begin{enumerate}
       \item \textbf{Bayesian regression}: a posterior per $\beta$, whose mode is Ridge (Normal)
             or LASSO (Laplace).
-      \item \textbf{Ask the posterior directly}: mean, HDI, $P(\beta_j$ past any threshold$)$.
+      \item \textbf{Ask the posterior directly}: mean, HDI, $P(\beta_j$ past a threshold$)$, mass in
+            a ROPE.
       \item \textbf{Draw the DAG first}: control confounders (here, series \emph{and} time),
             never colliders.
       \item \textbf{Scenarios}: push a counterfactual through the draws to get a distribution of

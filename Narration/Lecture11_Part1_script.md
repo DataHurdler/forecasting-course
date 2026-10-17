@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics II — Time Series**
 
-Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (19 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (20 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -10,11 +10,11 @@ Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (19 pages) · Measured runtime: se
 
 - **`▶ SLIDE n — Title`** marks where to advance. The number is the PDF page.
 - *Italic parentheticals* are stage directions. **[pause]** means stop for a beat.
-- Slide 4 sets expectations low on purpose and slides 15–16 collect on it. The argument of this
+- Slide 4 sets expectations low on purpose and slides 16–17 collect on it. The argument of this
   lecture is that a **calibrated but useless** interval is still a better deliverable than a point
   forecast, because you can *establish* that it's useless. Do not soften that.
-- Slide 12 is the first of two sampler failures in this pair of lectures. Treat it as a rehearsal
-  for Part 2.
+- Slides 12–13 are the first of two sampler failures in this pair of lectures. Treat them as a
+  rehearsal for Part 2.
 
 ---
 
@@ -153,14 +153,44 @@ named components — now each one is a random variable with a distribution.
 
 **[pause]**
 
-And here's why that matters practically. **Each piece is a thing a business person can name**, and
-each gets its own posterior.
+*(Point at the figure, top row first.)*
 
-"Demand is growing" is a statement about mu-t. "December is our peak" is a statement about s-t.
-"How noisy is this store?" is sigma. Those are three separate questions, and the model answers
-them separately, with uncertainty on each.
+Here is that equation, fitted, on CA_1 FOODS: the training weeks, February 2011 to May 2015. The
+top row is what we observed. Below it are the three pieces the model split it into: the level in
+blue, the seasonal shape in green, and what is left over, the residual, in gray. Add the bottom
+three rows week by week and you get the top row exactly.
 
-*(Point at the key box.)*
+And every row is drawn to the same scale. That little bar is five thousand units in every panel. So
+the heights tell you how much each piece contributes.
+
+**[pause]**
+
+Read them. The level does most of the work. It sinks to about fourteen thousand in the summer of
+2011, climbs to around twenty-one thousand by 2014, and roughly flattens. The seasonal piece is
+small: about a thousand units below the level in February, fifteen hundred above it in August. And
+the residual is bigger than the seasonal piece, with swings of up to three thousand units either
+way.
+
+*(Point at the gray row.)*
+
+Look at the residual closely and it is not shapeless. It rises and falls about once a month: about
+half its variance sits at a period of four and a third weeks, which is a calendar month. The model
+has no term for a monthly rhythm, so it lands in the noise. A likely suspect in California is SNAP,
+whose benefits arrive in the first ten days of each month: the flags you used in Homework 2. It is
+a covariate this model was never given.
+
+*(One honest note on the blue line.)* Its first few weeks, falling steeply from about nineteen
+thousand, partly reflect where this version of the model makes the walk begin. We'll come back to
+that on slide 13.
+
+**[pause]**
+
+And here's why the split matters practically. **Each piece is a thing a business person can
+name**, and each gets its own posterior.
+
+"Demand is growing" is a statement about mu-t. "August is our peak" is a statement about s-t. "How
+noisy is this store?" is sigma. Those are three separate questions, and the model answers them
+separately, with uncertainty on each.
 
 That's why the approach is called **structural**. You are not fitting a flexible curve to data and
 hoping. You are stating what you believe the series is *made of*, and asking the data how much of
@@ -354,56 +384,99 @@ you don't know the magnitudes, you don't know what you've assumed.
 Now something worth your attention.
 
 The obvious way to write this model uses `pm.GaussianRandomWalk`, which is exactly what it sounds
-like and exactly what the equation says. We wrote it that way first. And it sampled **badly** —
+like and exactly what the equation says. We wrote it that way first. And it sampled **badly**,
 even with `target_accept` raised to point-nine-five.
 
-*(Walk the table.)*
+*(Point at the top row of the figure.)*
 
-R-hat: one-point-oh-two-two, against a threshold of one-point-oh-one. Failed. ESS: two hundred
-seventy-four, against four hundred. Failed. Divergences: zero — that one passed.
+This is sigma-level, the one parameter that misbehaved: four chains, one color each, the first
+three hundred draws of fifteen hundred. Look at the texture. Each chain drifts: up for a stretch,
+down for a stretch. A draw is mostly a copy of the one before it.
 
-After the fix: R-hat one-point-oh-oh-two, ESS two thousand three hundred seventy-six.
+The numbers say the same thing, in red. R-hat: one-point-oh-two-two, against a threshold of
+one-point-oh-one. Failed. ESS: two hundred seventy-four, against four hundred. Failed. Divergences:
+zero. That one passed.
+
+*(Point at the bottom row.)*
+
+Now the bottom row, after the fix. Same parameter, same number of draws. This is what healthy
+chains look like: a fuzzy band, each draw nearly independent of the last. R-hat one-point-oh-oh-two,
+ESS two thousand three hundred seventy-six.
 
 **[pause]**
+
+Put a number on the difference. Six thousand draws in the top row carry about as much information
+as two hundred seventy-four independent ones. The bottom row's six thousand are worth about two
+thousand four hundred.
 
 *(Now the important part.)*
 
 Here is what I want you to take from this.
 
 **Nothing crashed.** The model returned a forecast. The forecast, plotted, looked entirely
-reasonable — a sensible level, a sensible seasonal shape, plausible intervals. If we had not run
+reasonable: a sensible level, a sensible seasonal shape, plausible intervals. If we had not run
 the diagnostics, we would have shipped it and never known.
-
-The only thing that told us was R-hat saying the four chains had not agreed with each other.
 
 That is precisely why Lecture 10 made those three numbers non-negotiable. This is the failure mode
 they exist for.
 
-*(Point at the warning box.)*
-
-**[pause]**
-
-And the fix is worth understanding, because you'll meet it again next week.
-
-The fix was **reparameterization**, not more samples. Not a longer run, not a smaller step size —
-a different way of writing the *same model*.
-
-Writing the walk as `cumsum(z * sigma)`, with z a standard Normal, is called the **non-centered**
-form. It gives the sampler a geometry it can actually navigate. Identical model, identical
-posterior in principle, completely different sampling behavior.
-
-BMCP section four-point-six-point-one covers exactly this, and next week we'll see the same fix
-applied to a hierarchy — where it will matter even more.
+*(Point at the muted line.)* And yes, the two rows sit at different heights. Hold that thought for
+one slide.
 
 ---
 
-# ▶ SLIDE 13 — Section divider: Reading the Forecast
+# ▶ SLIDE 13 — The Fix: Reparameterize, Don't Sample More
+
+*(Walk the table, left column, then right.)*
+
+The fix was **reparameterization**, not more samples. Not a longer run, not a smaller step size:
+a different way of writing the walk.
+
+On the left, the centered form. The sampler works directly on all two hundred twenty-five levels,
+and their plausible step size is sigma-level. So every time the sampler wants to try a different
+sigma-level, all two hundred twenty-five levels have to move with it. It can't, in one step, so it
+crawls. That's the drift you saw in the top row.
+
+On the right, the non-centered form. The sampler works on z, independent standard Normals, and the
+level is built from them afterwards: the cumulative sum of z times sigma-level. Now changing
+sigma-level doesn't require moving anything else. The geometry is round, and the sampler can
+navigate it.
+
+*(Point at the warning box.)*
+
+Same data, same six thousand draws. ESS went from two hundred seventy-four to two thousand three
+hundred seventy-six. BMCP section four-point-six-point-one covers exactly this, and next week we'll
+see the same fix applied to a hierarchy, where it will matter even more.
+
+**[pause]**
+
+*(Point at the muted line. This is the answer to the different heights. Don't skip it.)*
+
+Now the honest footnote, because it's a lesson in its own right.
+
+The two versions are *almost* the same model, but not quite. `GaussianRandomWalk` needs to know
+where the walk starts, and if you don't tell it, it lets week one's level start anywhere: a
+Normal with standard deviation one hundred, on a standardized series. PyMC prints a warning saying
+so. The lab switches warnings off, so you never see it. The cumsum version starts the walk at z
+times sigma-level, which is close to zero, the series average.
+
+That one difference moves the answer. With the start pinned near the average, the walk has to fall
+fast in the first weeks, which you saw on the decomposition slide, and sigma-level comes out higher:
+about five hundred twenty units a week, against about four hundred fifty. That's the gap between
+the two rows. It is a slightly different model, not a sampling failure.
+
+So two lessons, not one. Change the coordinates when the sampler crawls. And read the warnings you
+were about to silence: a default you didn't choose is still a prior.
+
+---
+
+# ▶ SLIDE 14 — Section divider: Reading the Forecast
 
 The point estimate, the interval, and whether either is any use.
 
 ---
 
-# ▶ SLIDE 14 — Does It Work? The Point Forecast
+# ▶ SLIDE 15 — Does It Work? The Point Forecast
 
 CA_1 FOODS, fifty-two weeks held out.
 
@@ -446,7 +519,7 @@ So: the point forecast is not the reason to do this. Which brings us to the slid
 
 ---
 
-# ▶ SLIDE 15 — The Interval Is the Product
+# ▶ SLIDE 16 — The Interval Is the Product
 
 Every forecast comes with a ninety-four percent predictive interval. And there are **two**
 questions you can ask about it, which are different questions, and this is the heart of the
@@ -478,7 +551,7 @@ from the data. Honest, at every horizon. And too wide to order against at almost
 
 ---
 
-# ▶ SLIDE 16 — Honest, and Too Wide to Order Against
+# ▶ SLIDE 17 — Honest, and Too Wide to Order Against
 
 *(This is the sentence of the lecture.)*
 
@@ -530,13 +603,13 @@ you something true about how much you actually know. That is worth paying four p
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Key Takeaways
+# ▶ SLIDE 18 — Section divider: Key Takeaways
 
 What structural models are for.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 11 Part 1: Key Takeaways
+# ▶ SLIDE 19 — Lecture 11 Part 1: Key Takeaways
 
 One. A structural model writes the series as named parts — level, seasonality, noise — and gives
 each one a prior and a posterior.
@@ -563,6 +636,6 @@ have any data — and a question you have to answer *before* you fit anything.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 20 — References
 
 *(Advance and close. No narration needed.)*

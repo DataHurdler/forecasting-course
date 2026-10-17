@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics I — Foundations**
 
-Deck: `Slides/Lecture10_BayesianFoundations.pdf` (20 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture10_BayesianFoundations.pdf` (21 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -261,31 +261,39 @@ The part you have to justify, and the part people worry about.
 
 A prior is just a distribution over a parameter, chosen to match what that parameter *can* be.
 
-*(Walk the table.)*
+*(Walk the first three panels, left to right. Each curve is drawn over exactly the values it allows.)*
 
 **Beta**, on the interval zero to one — for rates and proportions. Conversion rates,
-click-through, defect rates.
+click-through, defect rates. This one is our Beta five, forty-five, bunched up near point-one.
 
 **Normal**, on all the reals — for regression coefficients, trends, anything that can legitimately
 be negative.
 
 **Exponential**, on zero to infinity — for standard deviations, waiting times, anything that must
-be positive.
+be positive. Notice it simply stops at zero.
 
 **[pause]**
 
-*(Point at the support paragraph — this is the practical bit.)*
+*(Point at the right-hand panel — this is the practical bit.)*
 
 And the first thing to get right is the **support** — the set of values the distribution allows.
 
-Put a Normal prior on a standard deviation and you have allowed negative standard deviations,
-which are not a modeling approximation, they're impossible. The sampler will struggle, and the
-model isn't so much wrong as **incoherent**.
+The dashed curve is a Normal zero-one, put on a standard deviation, sigma. Everything left of the
+line at zero is shaded red, because a negative standard deviation is not a modeling
+approximation, it's impossible. And that red area is exactly half the prior. Half of what you
+said you believed is about values that cannot exist. The sampler will struggle, and the model
+isn't so much wrong as **incoherent**.
+
+*(Trace the arrow under the curves.)*
+
+The fix is the solid blue curve. Take that impossible half and fold it over onto the positive side.
+Same shape, twice the height, all of it on sigma at least zero. That's the HalfNormal, and you'll
+see it again on the standard deviations of the hierarchical model in Lecture 11.
 
 That's the most common beginner error in Bayesian modeling, and it's entirely avoidable: match
 the support to the parameter.
 
-*(Point at the footnote.)*
+*(Back to the first panel.)*
 
 One arithmetic note worth internalizing. Beta of five and forty-five has a mean of five over fifty
 — point-one. And it carries about as much weight as fifty prior observations. That's a useful way
@@ -364,13 +372,34 @@ Here's the picture I want you to hold. You are exploring a hilly landscape in th
 height corresponds to posterior probability. You take a step. If the ground is higher, you move
 there. If it's lower, you usually move back — usually, not always.
 
-Do that thousands of times and you spend most of your time on the high ground, proportionally to
-how high it is.
+*(Point at the left panel.)*
+
+The left panel is that landscape for our conversion rate: the height is likelihood times prior.
+You're standing at point-one-five — the black stick. Someone proposes a step to point-one-eight —
+the blue stick. It's lower. So you move with probability equal to the ratio of the two heights:
+about point-two-three. Roll the dice; most of the time you stay put.
+
+**[pause]**
+
+And here is why the uncomputable denominator stops mattering. The true posterior height at each
+point is likelihood times prior *divided by p of D*. Both sticks are divided by the same p of D.
+Take their ratio and it cancels. The walk only ever needs heights you *can* compute.
+
+*(Point at the right panel.)*
+
+On the right, four of these walks, started deliberately far apart — one near zero, one at
+point-eight, two in between. Within about sixty-five steps, every one of them has found the same band
+around point-one-four, and from then on they're indistinguishable.
+
+The gray region is the warm-up — the first thousand steps, thrown away, because the early ones
+remember where they started. What's kept is two thousand steps per chain, eight thousand draws.
+
+Do that long enough and you spend time at each height in proportion to how high it is.
 
 *(Point at the footnote.)*
 
-PyMC's actual sampler is NUTS, which takes far smarter steps than the random walk I described. The
-intuition is unchanged.
+This one is the textbook random-walk sampler, called Metropolis. PyMC's actual sampler is NUTS,
+which takes far smarter steps. The intuition is unchanged.
 
 **[pause]**
 
@@ -394,8 +423,23 @@ minutes into sampling is a genuinely miserable experience, and one you can avoid
 
 And here is the trick that makes it all work: **the record of where you walked is the answer.**
 
-A histogram of the positions you visited has the shape of the posterior. You never computed the
-posterior. You just wandered around in it and wrote down where you'd been.
+*(Point at the histogram.)*
+
+These bars are the eight thousand kept draws from the previous slide, nothing more. The black
+curve is the exact Beta thirty-five, two hundred fifteen — the answer we can only write down
+because this example is simple. The bars follow it. You never computed the posterior. You just
+wandered around in it and wrote down where you'd been.
+
+*(Point at the red bars.)*
+
+Now ask a question. What's the probability the conversion rate is above fifteen percent? Count the
+draws to the right of the dashed line: point-three-three. The exact answer is point-three-one.
+Close, and it gets closer with more draws.
+
+Why only close? Because neighboring steps of a random walk are correlated, so eight thousand
+draws here carry about as much information as seven hundred eighty independent ones. NUTS on the
+same model gets more than three thousand. That's what "smarter steps" buys you, and it's the
+effective sample size you'll meet on slide 16.
 
 *(Point at the key box.)*
 
@@ -438,8 +482,8 @@ from everything else in this course, where you chose a fitting algorithm.
 *(Point at the arguments.)*
 
 Two arguments to understand. `tune=1000` discards the first thousand steps, while the sampler is
-still finding the high ground — those steps aren't from the posterior yet. And `chains=4` runs
-four *independent* walks from different starting points.
+still finding the high ground — those steps aren't from the posterior yet. That's the gray band
+on slide 13. And `chains=4` runs four *independent* walks from different starting points.
 
 That second one seems wasteful. It's what makes the next slide possible.
 
@@ -490,7 +534,7 @@ ArviZ now defaults to an eighty-nine percent *equal-tailed* interval, not the HD
 pass those arguments you will get a different interval than the one you think you're reading, and
 than the one on these slides.
 
-On our simple model: R-hat one-point-oh-oh, ESS three thousand six hundred eighty-six, zero
+On our simple model: R-hat one-point-oh-oh, ESS three thousand two hundred ninety, zero
 divergences. **Report all three, every time.** A posterior mean without its diagnostics is not a
 result.
 
@@ -508,18 +552,10 @@ looking at whether those datasets could plausibly have come from your business.
 
 **[pause]**
 
-*(Give the three failure signatures concretely.)*
+*(Point at the paragraph.)*
 
-Three things to look for.
-
-**Impossible values** — negative sales, probabilities above one. That means the prior is
-misspecified, not merely wide. Fix the support.
-
-**Absurd ranges** — simulated weekly demand spanning zero to a billion units. That prior is too
-vague, and vague is not the same as neutral.
-
-**Identical simulations** — every simulated dataset looking the same. Now the prior is too tight
-and the data won't be able to move it.
+The first thing to look for is **impossible values** — negative sales, probabilities above one.
+That means the prior is misspecified, not merely wide. Fix the support, the way we did on slide 10.
 
 *(Point at the key box.)*
 
@@ -533,13 +569,50 @@ silently be wrong, before it costs you.
 
 ---
 
-# ▶ SLIDE 18 — Section divider: Key Takeaways
+# ▶ SLIDE 18 — Three Priors, Three Predictions
+
+Here's what that check looks like on our conversion-rate model. Before any data, each prior makes
+a prediction: out of two hundred trials, how many successes?
+
+*(Point at the top row.)*
+
+The flat prior, Beta one-one. Every count from zero to two hundred gets the same probability, one
+in two hundred one. It thinks a hundred ninety conversions out of two hundred is exactly as
+plausible as twenty. Nobody who has run a website believes that. That's the **too vague**
+signature — the same thing as simulated weekly demand spanning zero to a billion units — and vague
+is not the same as neutral.
+
+*(Point at the bottom row.)*
+
+Now Beta five hundred, forty-five hundred. Same center, point-one, but worth five thousand
+observations. It's already decided theta is point-one before a single trial, so all it predicts is
+thirteen to twenty-seven successes. **Too tight**: two hundred trials of data won't be able to
+move it much.
+
+And notice the bars don't collapse to a single count. Even with theta pinned down exactly, two
+hundred coin flips at ten percent still scatter. That spread is binomial noise, and no prior can
+remove it.
+
+*(Point at the middle row.)*
+
+Beta five, forty-five sits between. Ninety percent of its predictions fall between seven and
+thirty-seven. It rules out the absurd and leaves room for the data to speak.
+
+**[pause]**
+
+One aside, for after the fact. When the thirty successes did arrive, the tight prior had given
+thirty or more less than a two percent chance. The middle prior gave it about fifteen percent. A prior
+predictive check is how you find that out *before* you're embarrassed by it.
+
+---
+
+# ▶ SLIDE 19 — Section divider: Key Takeaways
 
 Bayesian inference: beliefs in, beliefs out. Data updates your prior into a posterior.
 
 ---
 
-# ▶ SLIDE 19 — Lecture 10: Key Takeaways
+# ▶ SLIDE 20 — Lecture 10: Key Takeaways
 
 One. Bayesian inference treats parameters as uncertain. The posterior is what you believe after
 seeing the data.
@@ -568,6 +641,6 @@ failure that looks exactly like success.
 
 ---
 
-# ▶ SLIDE 20 — References
+# ▶ SLIDE 21 — References
 
 *(Advance and close. No narration needed.)*

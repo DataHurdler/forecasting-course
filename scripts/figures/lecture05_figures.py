@@ -20,6 +20,14 @@ What is measured, and on whose pipeline:
   weekly CA_1 FOODS, the eight numeric columns of m5_weekly.csv, the final 52 weeks held out (Lab
   1's test year, whose seasonal naive is the course's 1,660). The forest is the slide's own code
   template; the single deep tree is DecisionTreeRegressor(random_state=42).
+* oob_grid — that same weekly forest's own bootstrap draws (estimators_samples_), training weeks
+  in date order: which trees score a week out-of-bag, and how many later weeks those trees saw.
+* boosting_stages — the gradient boosting algorithm exactly as the slide writes it (F_0 = mean,
+  fit a shallow tree to the residuals, add eta times it), on one feature so the fit can be drawn:
+  weekday electricity load against day of year (data/processed/electricity_daily.csv, the same
+  W-shaped year Lecture 7 uses). Depth-3 trees, eta = 0.3, random_state=42.
+* bagging_floor — a schematic of Var/sigma^2 = rho + (1 - rho)/B. Nothing is measured: rho is a
+  property of the sampling process, and one forest cannot estimate it.
 
 Everything printed goes to measured.json; later runs redraw from it.
 """
@@ -171,17 +179,93 @@ def measure() -> dict:
     print(f"  RSXFS: training max {hi:,.0f}; forest max {pred.max():,.0f}; last actual "
           f"{tst.y.iloc[-1]:,.0f}; {m['rsxfs']['share_above_max']:.0%} of months above the max")
 
+    for k, fn in EXTRA.items():
+        m[k] = fn()
+
     OUT.mkdir(parents=True, exist_ok=True)
     MEASURED.write_text(json.dumps(m, indent=1) + "\n")
     print("  measured.json written")
     return m
 
 
+# ================================================================== OOB, in date order
+def measure_oob() -> dict:
+    """The weekly forest's bootstrap draws: who scores each week, and what those trees saw."""
+    from sklearn.ensemble import RandomForestRegressor
+    tr, _ = weekly_data()
+    n = len(tr)
+    rf = RandomForestRegressor(n_estimators=500, max_features="sqrt", min_samples_leaf=5,
+                               oob_score=True, random_state=SEED, n_jobs=-1)
+    rf.fit(tr[WEEKLY_FEATURES], tr.units)
+    inbag = np.zeros((len(rf.estimators_), n), dtype=bool)
+    for t, idx in enumerate(rf.estimators_samples_):
+        inbag[t, idx] = True
+    # For each week i: the trees that score it (i out of bag), and how many weeks AFTER i each
+    # of those trees trained on. Every week but the last is scored by trees that saw its future.
+    later_seen = []
+    for i in range(n - 1):
+        scorers = ~inbag[:, i]
+        later_seen.append(float(inbag[scorers, i + 1:].sum(1).mean()) / (n - 1 - i))
+    share_scored_by_future = float(np.mean([
+        np.all(inbag[~inbag[:, i], i + 1:].any(1)) for i in range(n - 1)]))
+    print(f"  OOB: {n} weeks; mean OOB share {1 - inbag.mean():.3f}; scorers saw "
+          f"{np.mean(later_seen):.0%} of later weeks on average")
+    return {"n_weeks": n, "n_trees": len(rf.estimators_),
+            "first_week": str(tr.week_start.iloc[0].date()),
+            "last_week": str(tr.week_start.iloc[-1].date()),
+            "inbag_first_24_trees": ["".join("1" if v else "0" for v in row) for row in inbag[:24]],
+            "oob_share": float(1 - inbag.mean()),
+            "scorers_share_of_later_weeks_seen": float(np.mean(later_seen)),
+            "share_weeks_all_scorers_saw_a_later_week": share_scored_by_future}
+
+
+# ================================================================== boosting, stage by stage
+BOOST_ETA, BOOST_DEPTH, BOOST_STAGES = 0.3, 3, (1, 2, 5, 50)
+
+
+def electricity_weekdays() -> tuple[np.ndarray, np.ndarray]:
+    e = pd.read_csv(ROOT / "data" / "processed" / "electricity_daily.csv")
+    wd = e[e.is_weekend == 0]
+    return wd.doy.values.astype(float), wd.mw_mean.values.astype(float) / 1000   # GW
+
+
+def boost_fits() -> dict:
+    """F_b on a day-of-year grid, and the training RMSE, at each drawn stage."""
+    from sklearn.tree import DecisionTreeRegressor
+    x, y = electricity_weekdays()
+    X, grid = x.reshape(-1, 1), np.arange(1, 367, dtype=float).reshape(-1, 1)
+    F, Fg = np.full_like(y, y.mean()), np.full(len(grid), y.mean())
+    out = {"stages": {}}
+    for b in range(1, max(BOOST_STAGES) + 1):
+        tree = DecisionTreeRegressor(max_depth=BOOST_DEPTH, random_state=SEED).fit(X, y - F)
+        F, Fg = F + BOOST_ETA * tree.predict(X), Fg + BOOST_ETA * tree.predict(grid)
+        if b in BOOST_STAGES:
+            # the curve on days 1..366, one string so measured.json stays readable
+            out["stages"][str(b)] = {"rmse": rmse(y, F),
+                                     "curve_days_1_366": " ".join(f"{v:.4f}" for v in Fg)}
+    doy_mean = pd.Series(y).groupby(x).transform("mean").values
+    out.update(n=int(len(y)), mean=float(y.mean()), rmse_mean_only=rmse(y, np.full_like(y, y.mean())),
+               rmse_best_any_doy_function=rmse(y, doy_mean), eta=BOOST_ETA, depth=BOOST_DEPTH)
+    print("  boosting: RMSE " + ", ".join(f"{b} trees {v['rmse']:.2f}"
+                                         for b, v in out["stages"].items()) + " GW")
+    return out
+
+
+EXTRA = {"oob": measure_oob, "boosting": boost_fits}
+
+
 @lru_cache(maxsize=None)
 def measured() -> dict:
     if "--retrain" in sys.argv or not MEASURED.exists():
         return measure()
-    return json.loads(MEASURED.read_text())
+    m = json.loads(MEASURED.read_text())
+    missing = [k for k in EXTRA if k not in m]
+    for k in missing:                      # figures added later measure only what they need
+        m[k] = EXTRA[k]()
+    if missing:
+        MEASURED.write_text(json.dumps(m, indent=1) + "\n")
+        print(f"  measured.json: added {', '.join(missing)}")
+    return m
 
 
 # ================================================================== root splits
@@ -251,7 +335,114 @@ def extrapolation() -> None:
     save(fig, "extrapolation")
 
 
-FIGURES = {"root_splits": root_splits, "extrapolation": extrapolation}
+# ================================================================== bagging's floor
+def bagging_floor() -> None:
+    """Schematic: Var/sigma^2 = rho + (1 - rho)/B for three correlations, floors dashed."""
+    B = np.logspace(0, np.log10(500), 300)
+    fig, ax = plt.subplots(figsize=sz(9.6, 4.4))
+    cols = {0.9: GRAY, 0.5: AMBER, 0.1: BLUE}
+    for rho, col in cols.items():
+        ax.plot(B, rho + (1 - rho) / B, color=col, lw=2.2, zorder=3)
+        ax.axhline(rho, color=col, lw=1.0, ls=(0, (4, 3)), zorder=1)
+        ax.text(560, rho, f"ρ = {rho}", ha="left", va="center", fontsize=12, color=col,
+                fontweight="bold")
+    # move 1: more trees slides along a curve (drawn just above the rho = 0.5 curve)
+    bb = np.logspace(np.log10(2.2), np.log10(70), 60)
+    ax.plot(bb, 0.5 + 0.5 / bb + 0.045, color=BLACK, lw=1.3, zorder=4)
+    ax.annotate("", xy=(bb[-1] * 1.25, 0.5 + 0.5 / (bb[-1] * 1.25) + 0.045),
+                xytext=(bb[-1], 0.5 + 0.5 / bb[-1] + 0.045),
+                arrowprops=dict(arrowstyle="-|>", color=BLACK, lw=1.3, shrinkA=0, shrinkB=0))
+    ax.text(8, 0.70, "more trees: along the curve", ha="left", va="bottom", fontsize=12)
+    # move 2: less alike trees drop to a lower curve
+    ax.annotate("", xy=(260, 0.1 + 0.9 / 260 + 0.025), xytext=(260, 0.9 + 0.1 / 260 - 0.025),
+                arrowprops=dict(arrowstyle="-|>", color=CRIMSON, lw=1.6))
+    ax.text(230, 0.32, "less alike trees:\na lower curve", ha="right", va="center",
+            fontsize=12, color=CRIMSON)
+    ax.set_xscale("log")
+    ax.set_xlim(1, 500); ax.set_ylim(0, 1.04)
+    ax.set_xticks([1, 10, 100, 500]); ax.set_xticklabels(["1", "10", "100", "500"])
+    ax.set_yticks([0, 0.5, 1]); ax.set_yticklabels(["0", "½", "1"])
+    ax.tick_params(labelsize=11.5)
+    ax.set_xlabel("trees averaged, B (log scale)", fontsize=12)
+    ax.set_ylabel("variance of the average\n(one tree = 1)", fontsize=12)
+    ax.set_title("schematic: ρ is assumed, not measured", loc="left", fontsize=11,
+                 color=GRAY, style="italic", pad=6)
+    save(fig, "bagging_floor")
+
+
+# ================================================================== the OOB grid
+def oob_grid() -> None:
+    """Training weeks in date order x 24 trees: the trees that score one week saw its future."""
+    m = measured()["oob"]
+    inbag = np.array([[c == "1" for c in row] for row in m["inbag_first_24_trees"]])
+    T, n = inbag.shape
+    target = 100                                    # week 101 of 173 (0-based index 100)
+    scorers = ~inbag[:, target]
+    # 0 out of bag, 1 in bag, 2 in bag and later than the target, for a tree that scores it
+    code = inbag.astype(int)
+    later = np.zeros_like(inbag)
+    later[:, target + 1:] = True
+    code[scorers[:, None] & inbag & later] = 2
+    fills = {1: "#C9C9CE", 2: CRIMSON}               # 0 (out of bag) stays blank
+    fig, ax = plt.subplots(figsize=sz(10.2, 3.3))
+    for t in range(T):                                # vector runs, not a raster: crisp at any size
+        row, j = code[t], 0
+        while j < n:
+            k = j
+            while k < n and row[k] == row[j]:
+                k += 1
+            if row[j]:
+                ax.add_patch(plt.Rectangle((j, t + 0.08), k - j, 0.84, facecolor=fills[row[j]],
+                                           edgecolor="none", zorder=2))
+            j = k
+    ax.add_patch(plt.Rectangle((target, 0), 1, T, fill=False, ec=BLACK, lw=1.4, zorder=4))
+    for t in np.where(scorers)[0]:
+        ax.plot([-1.2], [t + 0.5], marker=">", ms=5, color=CRIMSON, clip_on=False)
+    ax.set_xlim(0, n); ax.set_ylim(T, 0)
+    years = pd.date_range(m["first_week"], periods=n, freq="7D")
+    ticks = [i for i in range(n) if years[i].month == 1 and years[i].day <= 7]
+    ax.set_xticks(ticks); ax.set_xticklabels([str(years[i].year) for i in ticks])
+    ax.set_yticks([])
+    ax.tick_params(labelsize=11)
+    for sp in ("left", "bottom"):
+        ax.spines[sp].set_visible(False)
+    ax.set_ylabel(f"{T} of the {m['n_trees']} trees", fontsize=12, labelpad=12)
+    ax.set_xlabel(f"the {n} training weeks, in date order", fontsize=12)
+    k = int(scorers.sum())
+    wk = years[target]
+    ax.text(0, -5.3, f"week of {wk.day} {wk:%b %Y} (boxed): out of bag for the {k} marked trees",
+            ha="left", va="bottom", fontsize=11.5)
+    ax.text(0, -2.6, "red: the later weeks those trees trained on", ha="left", va="bottom",
+            fontsize=11.5, color=CRIMSON)
+    save(fig, "oob_grid")
+
+
+# ================================================================== boosting stages
+def boosting_stages() -> None:
+    """The fitted curve after 1, 2, 5 and 50 trees, against the data it is chasing."""
+    m = measured()["boosting"]
+    x, y = electricity_weekdays()
+    grid = np.arange(1, 367)
+    fig, axes = plt.subplots(1, 4, figsize=sz(12.4, 3.6), sharey=True,
+                             gridspec_kw=dict(wspace=0.08))
+    for ax, b in zip(axes, BOOST_STAGES):
+        st = m["stages"][str(b)]
+        ax.scatter(x, y, s=1.2, color="#BDBDC2", lw=0, rasterized=True, zorder=1)
+        ax.axhline(m["mean"], color=GRAY, lw=0.9, ls=(0, (3, 3)), zorder=2)
+        ax.step(grid, [float(v) for v in st["curve_days_1_366"].split()], where="mid", color=CRIMSON, lw=2.0, zorder=3)
+        ax.set_title(f"{b} tree{'s' if b > 1 else ''}", fontsize=12.5, pad=3)
+        ax.text(360, 21.5, f"RMSE {st['rmse']:.2f}", ha="right", va="bottom", fontsize=11.5)
+        ax.set_xlim(1, 366); ax.set_ylim(21, 47)
+        ax.set_xticks([1, 182]); ax.set_xticklabels(["Jan", "Jul"])
+        ax.tick_params(labelsize=11)
+    axes[0].set_ylabel("load (GW)", fontsize=12)
+    axes[0].set_yticks([25, 35, 45])
+    save(fig, "boosting_stages")
+
+
+FIGURES = {"root_splits": root_splits, "extrapolation": extrapolation,
+           "bagging_floor": bagging_floor, "oob_grid": oob_grid,
+           "boosting_stages": boosting_stages}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

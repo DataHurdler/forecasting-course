@@ -67,26 +67,9 @@ Bias--Variance Decomposition
 $$\text{Expected MSE} = \underbrace{\text{Bias}^2}_{\text{systematic error}} + \underbrace{\text{Variance}}_{\text{sensitivity to data}} + \underbrace{\sigma^2}_{\text{irreducible noise}}$$
 :::
 
-:::: {.columns}
-::: {.column width="48%"}
-**High bias (underfitting):**
+![](../Figures/Lecture04_DecisionTrees/stumps_vs_deep.svg){fig-align="center" height="230px"}
 
-- Model is too simple
-- Misses real patterns in the data
-- Bad on both training AND test sets
-- Example: linear model on a curved relationship
-:::
-::: {.column width="48%"}
-**High variance (overfitting):**
-
-- Model is too complex
-- Memorizes training data noise
-- Great on training, bad on test set
-- Example: a very deep decision tree
-:::
-::::
-
-**Goal:** find the complexity that balances the two — which you can only see *out-of-sample*.
+[Each model refitted on 20 bootstrap resamples. **Stumps** (one-question trees) agree and miss: bias. **Deep trees** center on the truth but scatter: variance. (The miss includes this week's noise, so it is not pure bias.) **Goal:** the complexity that balances the two, visible only *out-of-sample*.]{.smaller}
 
 # How Decision Trees Work
 
@@ -103,6 +86,16 @@ A flowchart of yes/no questions about the features, ending in a prediction. Here
 **Non-parametric** · **nonlinear** (captures thresholds) · **interpretable** · **scale-invariant**. A single *deep* tree **overfits severely**; ensembles, the next lecture, are the fix.
 
 [$y_{t-4}$: units four weeks earlier; $y_{t-52}$: the same week last year. Fitted on the 173 weeks before the test year.]{.neutral .smaller}
+
+---
+
+## The Same Tree, Drawn as Rectangles
+
+Each question is a straight cut parallel to an axis. Each leaf is a rectangle, shaded by its mean; every week inside it gets that forecast.
+
+![](../Figures/Lecture04_DecisionTrees/tree_partition.svg){fig-align="center" height="370px"}
+
+[Last year's sales cut only the right half: they matter only when recent demand is already high. That is an **interaction**, and nobody specified it.]{.smaller}
 
 ---
 
@@ -144,17 +137,11 @@ So a fitted tree is a sequence of locally best choices, **not the optimal tree**
 
 ## Depth Controls the Bias--Variance Tradeoff
 
-A **depth-1 stump** asks one question: high bias, low variance. A **full tree** with one observation per leaf memorizes the sample: zero bias, extreme variance.
+A **stump** asks one question: high bias, low variance. A **full tree**, one week per leaf, memorizes the sample: zero *training* error, high variance.
 
-| Depth | Bias | Variance | Behavior |
-|-------|------|----------|----------|
-| 1 (stump) | High | Low | One question; underfits |
-| 5–10 | Balanced | Balanced | Usually the useful range |
-| Full tree | Zero | Extreme | Memorizes the training sample |
+![](../Figures/Lecture04_DecisionTrees/depth_curve.svg){fig-align="center" height="340px"}
 
-**Why trees are unstable:** one changed observation can flip the split at the root, and every prediction below it changes with it.
-
-Tune `max_depth` and `min_samples_leaf` by `TimeSeriesSplit` cross-validation.
+[Training error falls to zero; test error stops improving after depth 3, since 173 weeks leave little to split. Read the shape, not the minimum: picking depth from the test year is a leak. **Unstable, too:** one changed week can flip the root split, and everything below it. Tune by `TimeSeriesSplit`.]{.smaller}
 
 ---
 

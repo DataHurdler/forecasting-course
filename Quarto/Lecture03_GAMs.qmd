@@ -67,18 +67,11 @@ We want flexibility to capture nonlinear relationships while still being able to
 
 ## Why Additivity Matters for Interpretation
 
-In a non-additive model the effect of one variable depends on the value of another, so you cannot describe them separately.
+In an additive model, each variable's effect is the same whatever the others are doing. Lab 3's electricity load, by month:
 
-**Concretely.** Suppose the truth is $y = x_1^2 x_2^2 + \varepsilon$. Then $\partial y / \partial x_1 = 2x_1 x_2^{2}$ — it depends on *both* variables. There is no answer to "what does $x_1$ do to $y$?" that does not begin with "it depends on $x_2$."
+![](../Figures/Lecture03_GAMs/additivity_gap.svg){fig-align="center" height="300px"}
 
-::: {.examplebox}
-::: {.examplebox-title}
-GAM Marginal Effects Are Simple
-:::
-In a GAM, $y = f_1(x_1) + f_2(x_2) + \varepsilon$, so the marginal effect of $x_1$ is just $f_1'(x_1)$ — a function of $x_1$ alone, whatever $x_2$ happens to be.
-
-**That is why you can plot each variable's effect separately and hand the plot to a stakeholder.**
-:::
+[An additive model, month $+$ weekend, can only draw parallel curves: one weekend effect for every month. The real gap is twice as big in July as in December. Parallel is the price, and also the gift: each effect becomes one curve you can hand to a stakeholder.]{.smaller}
 
 # GAM Structure and Smoothing
 
@@ -148,9 +141,19 @@ Facebook's Prophet decomposes a time series into trend, seasonality, and holiday
 
 $$y(t) = \underbrace{g(t)}_{\text{trend}} + \underbrace{s(t)}_{\text{seasonality}} + \underbrace{h(t)}_{\text{holidays}} + \varepsilon_t$$
 
-**Trend $g(t)$**: piecewise linear or logistic, with *changepoints* where the slope may shift. **Seasonality $s(t)$**: a Fourier series, so weekly and yearly cycles fit at once. **Holidays $h(t)$**: irregular events you supply — Black Friday, a launch, a lockdown.
+**Trend $g(t)$**: piecewise linear or logistic, with *changepoints* where the slope may shift. **Seasonality $s(t)$**: a sum of sine waves (a Fourier series), so weekly and yearly cycles fit at once. **Holidays $h(t)$**: irregular events you supply — Black Friday, a launch, a lockdown.
 
 Built for analysts, not statisticians: one fit-and-forecast call, robust to gaps and outliers, and every component plots on its own.
+
+---
+
+## Prophet's Seasonality: How Many Waves?
+
+$s(t)$ is a sum of sine waves. Lab 3's average load for each day of the year, fitted with one wave and then with two:
+
+![](../Figures/Lecture03_GAMs/fourier_order.svg){fig-align="center" height="330px"}
+
+[A 365-day wave has one peak a year. Heating in January and cooling in July need the 182.5-day wave too, and adding it cuts the error by a factor of 2.5. Prophet's yearly term uses 10 such pairs by default.]{.smaller}
 
 ---
 
@@ -158,23 +161,20 @@ Built for analysts, not statisticians: one fit-and-forecast call, robust to gaps
 
 ::: {.examplebox}
 ::: {.examplebox-title}
-Prophet on Retail Sales
+Prophet on Lab 3's Electricity Data
 :::
 ```python
 from prophet import Prophet
-
-df = pd.DataFrame({'ds': dates, 'y': sales})
-m = Prophet(changepoint_prior_scale=0.05, yearly_seasonality=True).fit(df)
-
-future = m.make_future_dataframe(periods=12, freq='M')
-forecast = m.predict(future)
-m.plot_components(forecast)
+m = Prophet(yearly_seasonality=True, weekly_seasonality=True,
+            daily_seasonality=False)
+m.fit(train)    # a DataFrame with columns ds and y
+fc = m.predict(test);  m.plot_components(fc)
 ```
 :::
 
-`plot_components` is the call that matters here: it draws the trend with its changepoints, the yearly wave, and the day-of-week pattern as separate panels — the additive structure made visible.
+![](../Figures/Lecture03_GAMs/prophet_components.svg){fig-align="center" height="205px"}
 
-**Reach for Prophet** on seasonal series with known holiday effects, especially when someone will ask you to explain the forecast. **Reach for pyGAM** when you have many correlated external predictors instead.
+[`plot_components` draws one panel per additive term. **Reach for Prophet** when someone will ask you to explain the forecast; **reach for pyGAM** when you have many correlated external predictors.]{.smaller}
 
 # pyGAM for General Additive Modeling
 

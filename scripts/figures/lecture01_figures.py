@@ -122,6 +122,17 @@ def measure() -> dict:
     assert abs(l_t - (l_prev + alpha * (y_t - l_prev))) < 1e-6, "SES update does not reproduce"
 
     holt = Holt(tr).fit()
+
+    # ---- the four benchmarks (FPP3 section 5.2), the same 52 test weeks
+    hh = np.arange(1, N_TEST + 1)
+    slope = (tr.values[-1] - tr.values[0]) / (len(tr) - 1)   # drift: the first-to-last chord
+    bench = {"seasonal_naive": sn, "drift": tr.values[-1] + hh * slope,
+             "naive": np.repeat(tr.values[-1], N_TEST), "mean": np.repeat(tr.mean(), N_TEST)}
+    m["bench_rmse"] = {k: rmse(te, v) for k, v in bench.items()}
+    m["bench_mean"], m["bench_slope"], m["bench_last"] = float(tr.mean()), float(slope), float(tr.values[-1])
+    m["bench_first"] = float(tr.values[0])
+    m["ca1_all_dates"] = [d.strftime("%Y-%m-%d") for d in y.index]
+    m["ca1_all_units"] = y.values.tolist()
     m.update({
         "ca1_dates": [d.strftime("%Y-%m-%d") for d in y.index[len(tr) - 104:]],
         "ca1_units": y.values[len(tr) - 104:].tolist(),
@@ -162,7 +173,9 @@ def measure() -> dict:
               (round(m["holt_test_rmse"]), 3428), (round(alpha, 2), 0.32),
               (round(m["alpha_tx1_household"], 3), 0.621), (round(m["ses_rmse_tx1_household"]), 427),
               (round(m["alpha_tx1_foods"], 2), 0.21), (round(m["ses_rmse_tx1_foods"]), 1474),
-              (len(tr), 225)]
+              (len(tr), 225), (round(m["bench_rmse"]["seasonal_naive"]), 1660),
+              (round(m["bench_rmse"]["drift"]), 1764), (round(m["bench_rmse"]["naive"]), 1794),
+              (round(m["bench_rmse"]["mean"]), 1881)]
     for got, want in checks:
         assert got == want, f"does not reproduce: got {got}, expected {want}"
 
@@ -363,8 +376,137 @@ def error_squares() -> None:
     save(fig, "error_squares")
 
 
+# ================================================================== the four benchmarks, as shapes
+def benchmarks() -> None:
+    """CA_1 FOODS, all 277 weeks, once per benchmark, best RMSE first. Each forecast (crimson) is
+    drawn with the construction it comes from (blue): the last value held flat; the last training
+    year copied 52 weeks to the right; the training average held flat; the chord from the first
+    to the last training week, extended. RMSEs are over the 52 test weeks."""
+    m = measured()
+    d = pd.to_datetime(m["ca1_all_dates"]); u = np.array(m["ca1_all_units"])
+    T = m["n_train"]
+    d_tr, d_te = d[:T], d[T:]
+    r = m["bench_rmse"]
+    panels = [("seasonal_naive", "Seasonal naïve", "$\\hat{y}_{T+h|T} = y_{T+h-52}$",
+               "last year, shifted right"),
+              ("drift", "Drift", "$\\hat{y}_{T+h|T} = y_T + h\\hat{c}$",
+               "first-to-last chord, extended"),
+              ("naive", "Naïve", "$\\hat{y}_{T+h|T} = y_T$", "flat at the last value"),
+              ("mean", "Mean", "$\\hat{y}_{T+h|T} = \\bar{y}$", "flat at the average")]
+    fig, axes = plt.subplots(2, 2, figsize=sz(12.6, 5.5), sharex=True, sharey=True,
+                             gridspec_kw={"hspace": 0.42, "wspace": 0.06})
+    for ax, (key, name, formula, how) in zip(axes.flat, panels):
+        ax.axvspan(d_te[0] - pd.Timedelta(days=3.5), d_te[-1] + pd.Timedelta(days=3.5),
+                   color=LIGHT_GRAY, zorder=0, lw=0)
+        ax.plot(d, u, color=MID_GRAY, lw=0.8, zorder=1)
+        if key == "seasonal_naive":
+            src = u[T - 52:T]
+            ax.plot(d_tr[-52:], src, color=BLUE, lw=1.1, zorder=2)
+            fc = src
+            ax.annotate("", xy=(d_te[26], 27000), xytext=(d_tr[-26], 27000),
+                        arrowprops=dict(arrowstyle="-|>", color=BLUE, lw=1.2, mutation_scale=10))
+            ax.text(d_te[0], 28200, "+52 weeks", ha="center", va="bottom", fontsize=11, color=BLUE)
+        elif key == "drift":
+            ax.plot([d_tr[0], d_tr[-1]], [m["bench_first"], m["bench_last"]], color=BLUE, lw=1.2,
+                    ls=(0, (4, 2)), zorder=2)
+            ax.plot([d_tr[0], d_tr[-1]], [m["bench_first"], m["bench_last"]], "o", color=BLUE,
+                    ms=4.5, zorder=4)
+            fc = m["bench_last"] + np.arange(1, len(d_te) + 1) * m["bench_slope"]
+        elif key == "naive":
+            ax.plot([d_tr[-1]], [m["bench_last"]], "o", color=BLUE, ms=4.5, zorder=4)
+            fc = np.repeat(m["bench_last"], len(d_te))
+        else:
+            ax.plot([d_tr[0], d_tr[-1]], [m["bench_mean"]] * 2, color=BLUE, lw=1.2,
+                    ls=(0, (4, 2)), zorder=2)
+            fc = np.repeat(m["bench_mean"], len(d_te))
+        ax.plot(d_te, fc, color=CRIMSON, lw=2.0, zorder=3)
+        assert abs(rmse(u[T:], fc) - r[key]) < 1e-6, key
+        ax.set_title(name, fontsize=12, loc="left", pad=4, fontweight="bold")
+        ax.text(1.0, 1.0 + 0.045, f"RMSE {r[key]:,.0f}", transform=ax.transAxes, ha="right",
+                va="bottom", fontsize=12, color=CRIMSON, fontweight="bold")
+        ax.text(0.015, 0.97, formula, transform=ax.transAxes, ha="left", va="top", fontsize=12)
+        ax.text(0.015, 0.04, how, transform=ax.transAxes, ha="left", va="bottom", fontsize=11,
+                color=BLUE)
+        ax.set_ylim(5000, 31500)
+        ax.set_yticks([10000, 20000, 30000])
+        ax.set_yticklabels(["10k", "20k", "30k"], fontsize=10)
+        ax.xaxis.set_major_locator(mdates.YearLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+        ax.tick_params(axis="x", labelsize=10)
+        ax.set_xlim(d[0] - pd.Timedelta(days=10), d[-1] + pd.Timedelta(days=10))
+    save(fig, "benchmarks")
+
+
+# ================================================================== the ETS taxonomy, as shapes
+def ets_grid() -> None:
+    """The nine trend x season combinations of FPP3's ETS taxonomy (Hyndman & Athanasopoulos,
+    Forecasting: Principles and Practice, 3rd ed., section 8.4) as forecast shapes. Schematic, not
+    data: a quarterly toy series (m = 4) with a fixed level, slope and seasonal pattern; the
+    forecast is each method's point-forecast formula, exactly. The error letter (A or M) does not
+    change these shapes, only the intervals; additive error with multiplicative season is the
+    unstable trio FPP3 drops, so that column admits error M only (9 x 2 - 3 = 15)."""
+    m4, n_hist, H = 4, 16, 12
+    level0, slope, phi = 10.0, 0.45, 0.8
+    s_add = np.array([1.6, -0.4, -2.0, 0.8])
+    s_mul = 1 + s_add / 10.0                                  # the same pattern, as ratios
+    rng = np.random.default_rng(42)
+    noise = rng.normal(0, 0.35, n_hist)
+    t_h, t_f = np.arange(n_hist), np.arange(n_hist, n_hist + H)
+    ours = {("N", "N"): "SES", ("A", "N"): "Holt", ("Ad", "N"): "Holt damped",
+            ("A", "A"): "Holt-Winters", ("A", "M"): "Holt-Winters"}   # the column says which
+    trends, seasons = ("N", "A", "Ad"), ("N", "A", "M")
+    fig, axes = plt.subplots(3, 3, figsize=sz(10.6, 5.4), sharex=True, sharey=True,
+                             gridspec_kw={"hspace": 0.12, "wspace": 0.06})
+    for i, tr_ in enumerate(trends):
+        for j, se in enumerate(seasons):
+            ax = axes[i, j]
+            b = 0.0 if tr_ == "N" else slope
+            # history: the level grows by b a period (the A and A_d rows share one history;
+            # damping is a statement about the forecast)
+            lev_h = level0 + b * t_h
+            lT = lev_h[-1]
+            hh = np.arange(1, H + 1)
+            if tr_ == "N":
+                lev_f = np.repeat(lT, H)
+            elif tr_ == "A":
+                lev_f = lT + hh * b
+            else:
+                lev_f = lT + b * np.cumsum(phi ** hh)
+            idx_h, idx_f = t_h % m4, t_f % m4
+            if se == "N":
+                yh, yf = lev_h, lev_f
+            elif se == "A":
+                yh, yf = lev_h + s_add[idx_h], lev_f + s_add[idx_f]
+            else:
+                yh, yf = lev_h * s_mul[idx_h], lev_f * s_mul[idx_f]
+            yh = yh + noise
+            ax.plot(t_h, yh, color=MID_GRAY, lw=1.3, zorder=2)
+            ax.plot(np.r_[t_h[-1], t_f], np.r_[yh[-1], yf], color=CRIMSON, lw=2.0, zorder=3)
+            ax.axvline(n_hist - 0.5, color=LIGHT_GRAY, lw=1.0, zorder=1)
+            name = ours.get((tr_, se))
+            if name and tr_ == "N":             # flat rows: the empty space is on top
+                ax.text(0.03, 0.95, name, transform=ax.transAxes, ha="left", va="top",
+                        fontsize=11, color=BLUE, fontweight="bold", linespacing=1.0)
+            elif name:                          # rising rows: the empty space is bottom right
+                ax.text(0.97, 0.04, name, transform=ax.transAxes, ha="right", va="bottom",
+                        fontsize=11, color=BLUE, fontweight="bold", linespacing=1.0)
+            ax.set_xticks([]); ax.set_yticks([])
+            for sp in ("left", "bottom"):
+                ax.spines[sp].set_color(MID_GRAY)
+            ax.set_ylim(2.5, 28)
+            ax.set_xlim(-0.5, n_hist + H - 0.5)
+    for j, (se, head) in enumerate(zip(seasons, ("Season N\n(none)", "Season A\n(additive)",
+                                                   "Season M\n(multiplicative)"))):
+        axes[0, j].set_title(head, fontsize=12, pad=4)
+    for j, sub in enumerate(("error A or M", "error A or M", "error M only")):
+        axes[2, j].set_xlabel(sub, fontsize=11, color=GREEN if j < 2 else CRIMSON, labelpad=3)
+    for i, head in enumerate(("Trend N", "Trend A", "Trend A$_d$")):
+        axes[i, 0].set_ylabel(head, fontsize=12, labelpad=4)
+    save(fig, "ets_grid")
+
+
 FIGURES = {"ses_levels": ses_levels, "ses_weights": ses_weights, "damped_trend": damped_trend,
-           "error_squares": error_squares}
+           "error_squares": error_squares, "benchmarks": benchmarks, "ets_grid": ets_grid}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

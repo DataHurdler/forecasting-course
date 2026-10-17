@@ -104,24 +104,13 @@
 
 % --- Slide: Naive benchmarks -------------------------------------------------
 \begin{frame}{Always Beat a Benchmark First}
-  Before presenting any forecast model, check that it beats a \textbf{naive
-  benchmark}. A model that cannot beat the baseline has zero value.
+  Before presenting any model, check that it beats a \textbf{naive benchmark}: a model
+  that cannot beat the baseline has zero value. Each forecast (red) is built from a line (blue):
   \begin{center}
-    {\small
-    \begin{tabular}{llp{6.2cm}}
-      \toprule
-      \textbf{Benchmark} & \textbf{Forecast} & \textbf{Use when} \\
-      \midrule
-      Na\"{i}ve          & $\hat{y}_{t+h|t} = y_t$            & Asset prices, random walks \\
-      Seasonal na\"{i}ve & $\hat{y}_{t+h|t} = y_{t+h-m}$      & Any series with a season \\
-      Mean               & $\hat{y}_{t+h|t} = \bar{y}_t$      & No trend, no season \\
-      Drift              & $\hat{y}_{t+h|t} = y_t + h\hat{c}$ & Trend, no season \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=5.0cm]{../Figures/Lecture01_ETS_Eval/benchmarks.pdf}
   \end{center}
-  \vspace{0.1cm}
-  \muted{\small This is not a formality. In the M4 Competition many machine
+  \vspace{-0.35cm}
+  \muted{\small CA\_1 FOODS; RMSE over the 52 shaded test weeks. In the M4 Competition many machine
   learning models \emph{failed} to beat simple exponential smoothing
   \parencite{Makridakis2020}.}
 \end{frame}
@@ -233,29 +222,16 @@
 % --- Slide: ETS framework -----------------------------------------------------
 \begin{frame}{The ETS Framework: A Unified View}
   \textcite{Hyndman2021} unify every exponential smoothing method as a
-  \textbf{state space model}: Error $\times$ Trend $\times$ Seasonal.
+  \textbf{state space model}: Error $\times$ Trend $\times$ Seasonal. Trend and season
+  set the forecast's shape:
   \begin{center}
-    {\small
-    \begin{tabular}{lll}
-      \toprule
-      \textbf{Component} & \textbf{Options} & \textbf{Meaning} \\
-      \midrule
-      Error ($E$)    & A, M & Additive / Multiplicative \\
-      Trend ($T$)    & N, A, A\textsubscript{d} & None / Additive / Damped \\
-      Seasonal ($S$) & N, A, M & None / Additive / Multiplicative \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.7cm]{../Figures/Lecture01_ETS_Eval/ets_grid.pdf}
   \end{center}
-  That is 18 combinations; three are numerically unstable, which leaves 15.
-  Ours are among them: \textbf{ETS(A,N,N)} is SES, \textbf{ETS(A,A,N)} is Holt
-  linear, \textbf{ETS(A,A\textsubscript{d},N)} is Holt damped,
-  \textbf{ETS(A,A,A)} is Holt-Winters additive, and \textbf{ETS(M,A,M)} is
-  Holt-Winters multiplicative.
-
-  \vspace{0.15cm}
-  \textbf{Automatic selection:} fit all 15 and pick the minimum AIC. In Python,
-  \texttt{statsmodels.tsa.exponential\_smoothing.ets.ETSModel}.
+  \vspace{-0.3cm}
+  {\small The error, A or M, changes the intervals, not the shape. Additive error with a
+  multiplicative season is unstable, so $9 \times 2 - 3 = 15$ models. \textbf{Automatic
+  selection:} fit all 15, keep the minimum AIC (\texttt{ETSModel} in statsmodels).}
+  \muted{\footnotesize Schematic shapes, not data.}
 \end{frame}
 
 % =============================================================================

@@ -73,24 +73,38 @@
   \end{enumerate}
 
   \vspace{0.1cm}
-  \textbf{Why it works.} With $\rho$ the correlation between two trees' predictions,
+  \textbf{Why it works, and where it stops.} With $\sigma^2$ one tree's variance and $\rho$ the
+  correlation between two trees' predictions,
   \[
     \Var(\bar{f}) = \rho\sigma^2 + \tfrac{1-\rho}{B}\sigma^2 .
   \]
-  More trees shrink the second term; the first never moves. \textbf{That floor, $\rho\sigma^2$,
-  is set by how alike the trees are}, not by how many you grow.
+  More trees shrink the second term; the first never moves.
+\end{frame}
+
+% --- Slide: the variance floor -------------------------------------------------
+% Figure: scripts/figures/lecture05_figures.py bagging_floor (a schematic: nothing is measured).
+\begin{frame}{More Trees, or Less Alike Trees}
+  Divide by $\sigma^2$ and each $\rho$ draws its own curve, flattening onto a floor at $\rho$:
+  \begin{center}
+    \includegraphics[height=4.4cm]{../Figures/Lecture05_TreeEnsembles/bagging_floor.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Growing more trees only slides you along a curve. \textbf{The floor is set by how alike
+  the trees are}, not by how many you grow: to get below it, make them less alike.}
 \end{frame}
 
 % --- Slide: Out-of-bag error --------------------------------------------------
+% Figure: scripts/figures/lecture05_figures.py oob_grid (the weekly forest's own bootstrap draws).
 \begin{frame}{Out-of-Bag (OOB) Error: Free Cross-Validation}
-  A bootstrap sample holds about \textbf{63\%} of the distinct rows; the rest are
-  \textbf{out-of-bag} for that tree. Score each row with only the trees that never saw it: an
-  out-of-sample RMSE, no refitting (\texttt{oob\_score=True}).
+  A bootstrap sample holds about \textbf{63\%} of the distinct rows. Score each row with only the
+  trees that never saw it (\texttt{oob\_score=True}): no refitting. But look at who scores it:
+  \begin{center}
+    \includegraphics[height=3.9cm]{../Figures/Lecture05_TreeEnsembles/oob_grid.pdf}
+  \end{center}
+  \vspace{-0.35cm}
   \begin{warningbox}
-    \textbf{On a time series it is not a forecast test.} Each row is out-of-bag for about $0.37B$
-    trees whatever $n$ is; small $n$ is noisy only because there are few rows to average. Worse,
-    those trees trained on the weeks \emph{after} the row: OOB scores filling a gap, not
-    forecasting. Use walk-forward CV.
+    \textbf{On a time series it is not a forecast test.} The trees that score a week trained on
+    about 64\% of the weeks after it: OOB fills gaps. Use walk-forward CV.
   \end{warningbox}
 \end{frame}
 
@@ -244,8 +258,8 @@
 
   \vspace{0.2cm}
   \textbf{The intuition.} Forecast 1 says \$50,000 against an actual \$60,000; forecast 2
-  predicts the \emph{error}, $+$\$10,000, and the sum is right. Each stage corrects what
-  remains, fixing a bias that averaging never touches.
+  predicts the \emph{error}, $+$\$10,000, and the sum is right. Averaging never fixes a bias
+  like that.
 \end{frame}
 
 % --- Slide: Boosting algorithm -----------------------------------------------
@@ -267,6 +281,20 @@
   \textbf{The learning rate $\eta$ is the main dial:} 0.01--0.1 is slow and robust, above 0.3
   risks overshooting. Use a small $\eta$, many trees and \textbf{early stopping}, or boosting
   fits your noise.
+\end{frame}
+
+% --- Slide: boosting stage by stage ------------------------------------------
+% Figure: scripts/figures/lecture05_figures.py boosting_stages (numbers in measured.json, "boosting").
+\begin{frame}{Boosting, Tree by Tree}
+  The algorithm on one feature, so the fit can be drawn: weekday electricity load against day of
+  the year (Lecture 3's data). Depth-3 trees, $\eta = 0.3$, starting from the mean (dashed):
+  \begin{center}
+    \includegraphics[height=3.4cm]{../Figures/Lecture05_TreeEnsembles/boosting_stages.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Each tree fits what the curve still misses, so the year's W emerges a piece at a time.
+  By 50 trees the training RMSE is 2.89~GW, against 2.86 for the best any day-of-year curve can
+  do: what remains is noise this feature cannot explain.}
 \end{frame}
 
 % =============================================================================

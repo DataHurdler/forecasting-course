@@ -41,20 +41,27 @@ Before fitting any model, the series must have a stable mean and variance.
 
 ## What Is Stationarity?
 
+:::: {.columns}
+::: {.column width="47%"}
 ::: {.definitionbox}
 ::: {.definitionbox-title}
 Weak (Covariance) Stationarity
 :::
-A time series $\{y_t\}$ is **weakly stationary** if:
+$\{y_t\}$ is **weakly stationary** if:
 
-1. $\mathbb{E}[y_t] = \mu$ — constant mean over time
-2. $\mathrm{Var}(y_t) = \sigma^2 < \infty$ — constant, bounded variance
+1. constant mean: $\mathbb{E}[y_t] = \mu$
+2. constant variance: $\mathrm{Var}(y_t) = \sigma^2 < \infty$
 3. $\mathrm{Cov}(y_t, y_{t-k}) = \gamma_k$ depends only on lag $k$, not on $t$
 :::
 
-**Why it matters:** a drifting mean leaves no single value to forecast, and a growing variance widens prediction intervals without bound. Every model in this lecture assumes it.
+[Conditions 1–2, pictured: the series stays inside a **horizontal band of fixed width**. TX_1 HOUSEHOLD fails; its weekly change passes.]{.smaller}
+:::
+::: {.column width="51%"}
+![](../Figures/Lecture02_ARIMA_VAR/stationarity_band.svg){fig-align="center" height="400px"}
+:::
+::::
 
-**The usual culprits:** a trend, and variance that grows with the level. Differencing removes a stochastic trend; a log stabilizes the variance.
+[A drifting mean leaves no single value to forecast; a growing variance widens intervals without bound. Differencing removes a stochastic trend; a log stabilizes the variance.]{.smaller}
 
 ---
 
@@ -163,7 +170,15 @@ Familiar models are corners of this space: **ARIMA(0,1,0)** is a random walk, **
 
 ## SARIMA: Adding Seasonal Terms
 
-Seasonal data also correlate at lags $m, 2m, 3m, \ldots$, and SARIMA adds AR and MA terms there: **two ARIMA models at different time scales**, $(p,d,q)$ for the short run and $(P,D,Q)[m]$ year over year.
+Seasonal data also correlate at lags $m, 2m, 3m, \ldots$, and SARIMA adds AR and MA terms there: **two ARIMA models at different time scales**, $(p,d,q)$ for the short run and $(P,D,Q)[m]$ for the season.
+
+![](../Figures/Lecture02_ARIMA_VAR/sarima_acf.svg){fig-align="center" height="330px"}
+
+[CA_1 FOODS is daily, so $m = 7$ here (monthly data use $m = 12$). One seasonal difference, $D = 1$, removes the peaks; the spike left at lag 7 points to one seasonal MA term, $Q = 1$.]{.smaller}
+
+---
+
+## SARIMA in Practice: A Four-Step Workflow
 
 **Practical workflow:**
 
@@ -171,6 +186,8 @@ Seasonal data also correlate at lags $m, 2m, 3m, \ldots$, and SARIMA adds AR and
 2. Seasonal unit root test → choose $D$
 3. ACF / PACF on the differenced series → guide $p, q, P, Q$
 4. Minimize AIC, then check the residual ACF with a Ljung-Box test
+
+**Ljung-Box** ($H_0$: the residuals are white noise) is the one people skip. Here a *large* $p$-value is the good outcome: nothing left to model.
 
 [Monthly retail: start from SARIMA(1,1,1)(0,1,1)[12] and make anything fancier beat it.]{.neutral .smaller}
 
@@ -244,9 +261,17 @@ $x_t$ **Granger-causes** $y_t$ if past values of $x_t$ help predict $y_t$ *beyon
 
 **The test:** fit the $y$-equation with and without the $x$-lags; an $F$-test of $H_0$: all $x$-lag coefficients are zero.
 
-**In the lab:** does unemployment Granger-cause retail sales? It fires *both* ways, and which direction looks stronger depends on whether COVID is in the sample.
-
 **Not structural causality.** It tests predictive content: a rooster reliably predicts sunrise. Say "predictive of," never "causes."
+
+---
+
+## Granger on Real Data: The COVID Window
+
+**Does unemployment Granger-cause retail sales?** Lab 2's monthly FRED data:
+
+![](../Figures/Lecture02_ARIMA_VAR/granger_covid.svg){fig-align="center" height="390px"}
+
+[Both directions are significant in both samples; one shock decides which looks stronger. With COVID: unemployment → retail. Without its 17 months: retail → unemployment.]{.smaller}
 
 ---
 

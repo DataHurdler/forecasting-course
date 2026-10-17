@@ -81,13 +81,9 @@ y_t \;=\; \underbrace{\mu_t}_{\text{level}} \;+\; \underbrace{s_t}_{\text{season
 \;+\; \underbrace{\varepsilon_t}_{\text{noise}}, \qquad \varepsilon_t \sim \mathcal{N}(0, \sigma^2)
 $$
 
-**Each piece is something a business person can name**, and each gets its own posterior: "demand is growing" is about $\mu_t$, "December is our peak" is about $s_t$, "how noisy is this store?" is $\sigma$.
+![](../Figures/Lecture11_Part1/decomposition.svg){fig-align="center" height="300px"}
 
-::: {.keybox}
-That is why it is called *structural*: you state what the series is made of, and ask the data how much of each part there is.
-:::
-
-ARIMA, by contrast, differences trend and seasonality away, and its parameters are correlations, not quantities anyone can name.
+**Each piece is something a business person can name**, and each gets its own posterior: "demand is growing" is about $\mu_t$, "August is our peak" is about $s_t$, "how noisy is this store?" is $\sigma$. That is why it is called *structural*.
 
 ---
 
@@ -159,19 +155,28 @@ Line for line this is the equations above — `cumsum` of scaled Normal draws *i
 
 ## The First Fit Failed — Here Is What That Looks Like
 
-Written the obvious way, with `pm.GaussianRandomWalk`, this model samples badly — even at `target_accept=0.95`. Lecture 10's checks caught it:
+Written the obvious way, with `pm.GaussianRandomWalk`, the model fails Lecture 10's checks (want $\hat{R} < 1.01$, ESS $> 400$), even at `target_accept=0.95`:
 
-| | First attempt | After the fix | Want |
-|---|---:|---:|---|
-| $\hat{R}$ | 1.022 | **1.002** | $< 1.01$ |
-| ESS (bulk) | 274 | **2,376** | $> 400$ |
-| Divergences | 0 | 0 | $0$ |
+![](../Figures/Lecture11_Part1/traces.svg){fig-align="center" height="300px"}
 
-Nothing crashed. The model returned a forecast, and the forecast looked reasonable. Only the diagnostics said the chains had not agreed with each other.
+**Nothing crashed**, and the forecast looked reasonable. But the top chains wander: 6,000 draws, worth about 274 independent ones. Only the diagnostics objected.
+
+[The two rows also sit at different heights. The next slide says why.]{.neutral}
+
+---
+
+## The Fix: Reparameterize, Don't Sample More
+
+| **Centered** (the first fit) | **Non-centered** (the fix) |
+|---|---|
+| `level = pm.GaussianRandomWalk("level", sigma=sigma_level, shape=n)` | `z = pm.Normal("z", 0, 1, shape=n)`<br>`level = pm.math.cumsum(z * sigma_level)` |
+| Resize $\sigma_{\text{level}}$ and all 225 levels must move with it: the sampler crawls. | The sampler moves independent standard Normals; the level is built afterwards. |
 
 ::: {.warningbox}
-**The fix was reparameterization, not more samples.** Writing the walk as `cumsum(z * sigma)` with $z \sim \mathcal{N}(0,1)$ — the *non-centered* form — gives the sampler a geometry it can navigate. BMCP §4.6.1 covers exactly this, and you will meet it again next week.
+**Same data, same 6,000 draws: ESS 274 $\to$ 2,376.** BMCP §4.6.1 covers exactly this, and you will meet it again next week.
 :::
+
+[Almost the same model. `GaussianRandomWalk` lets week 1's level start anywhere (its default start, $\mathcal{N}(0, 100)$, raises a warning the lab silences); the `cumsum` starts it near zero. That, not sampling, is why the trace heights differ.]{.neutral}
 
 # Reading the Forecast
 
@@ -236,11 +241,11 @@ What structural models are for.
 ## Lecture 11 Part 1: Key Takeaways
 
 ::: {.keybox}
-1. A **structural** model names the parts of a series and puts a prior on each.
-2. The **local level** is a random walk; $\sigma_{\text{level}}$ sets how fast it moves.
+1. A **structural** model names a series' parts and puts a prior on each.
+2. The **local level** is a random walk; $\sigma_{\text{level}}$ sets its speed.
 3. **Fourier terms** build seasonality from a few waves, each $(a_k, b_k)$ an arrow.
 4. **Check the sampler first:** our first fit looked fine and had not converged.
-5. The point forecast beat seasonal naive by **4%**. That is not the argument.
+5. The point forecast beat seasonal naive by **4%**. Not the argument.
 6. The interval was **calibrated but too wide to act on**; establishing that is the product.
 :::
 

@@ -35,30 +35,18 @@
 % --- Slide: the problem -----------------------------------------------------
 \begin{frame}{The Question}
   \textbf{Does demand rise in weeks when SNAP benefits are disbursed, and by how much --- store by
-  store?} Homework 3's memo stocked up store by store, assuming those differences are real. Today
-  we check.
-
-  \vspace{0.15cm}
-  \textbf{One question comes before the model.} SNAP is a \emph{food} assistance program. The raw
-  SNAP-week effect on log units, all thirty series by category:
-
+  store?} Homework 3's memo assumed those differences were real. First, a check that needs no
+  model: SNAP is a \emph{food} program.
   \begin{center}
-    {\small
-    \begin{tabular}{lrr}
-      \toprule
-      \textbf{Category} & \textbf{Mean effect} & \textbf{Spread across stores} \\
-      \midrule
-      \textbf{FOODS} (10 series) & $+0.089$ & 0.058 \\
-      HOBBIES (10 series) & $+0.006$ & 0.010 \\
-      HOUSEHOLD (10 series) & $+0.011$ & 0.014 \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=3.75cm]{../Figures/Lecture11_Part2/question_strip.pdf}
   \end{center}
-
-  \vspace{0.05cm}
+  \vspace{-0.3cm}
   \textbf{These are not thirty versions of the same thing.} FOODS responds; the other two barely
   move. Pooling all thirty would tell the model they are interchangeable.
+
+  \vspace{0.05cm}
+  \muted{\footnotesize\itshape Each dot: one series, high-SNAP weeks minus the rest, mean log
+  units, 277 weeks. Spread: SD across stores.}
 \end{frame}
 
 % --- Slide: exchangeability -------------------------------------------------

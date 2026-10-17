@@ -35,21 +35,30 @@
   Before fitting any model, the series must have a stable mean and variance.}
 
 % --- Slide: Weak stationarity -------------------------------------------------
+% Figure: scripts/figures/lecture02_figures.py (stationarity_band); ADF as in Lab 2.
 \begin{frame}{What Is Stationarity?}
-  \begin{definitionbox}{Weak (Covariance) Stationarity}
-    A time series $\{y_t\}$ is \textbf{weakly stationary} if:
-    \begin{enumerate}\small\itemsep1pt
-      \item $\E[y_t] = \mu$ \quad (constant mean over time)
-      \item $\Var(y_t) = \sigma^2 < \infty$ \quad (constant, bounded variance)
-      \item $\Cov(y_t, y_{t-k}) = \gamma_k$ depends only on lag $k$, not on $t$
-    \end{enumerate}
-  \end{definitionbox}
-  \textbf{Why it matters:} a drifting mean leaves no single value to forecast, and a growing
-  variance widens prediction intervals without bound. Every model in this lecture assumes it.
-
-  \vspace{0.15cm}
-  \textbf{The usual culprits:} a trend, and variance that grows with the level. Differencing
-  removes a stochastic trend; a log stabilizes the variance.
+  \begin{columns}[c]
+    \begin{column}{0.47\textwidth}
+      \begin{definitionbox}{Weak (Covariance) Stationarity}
+        $\{y_t\}$ is \textbf{weakly stationary} if:
+        \begin{enumerate}\small\itemsep1pt
+          \item constant mean: $\E[y_t] = \mu$
+          \item constant variance: $\Var(y_t) = \sigma^2 < \infty$
+          \item $\Cov(y_t, y_{t-k}) = \gamma_k$ depends only on lag $k$, not on $t$
+        \end{enumerate}
+      \end{definitionbox}
+      {\small Conditions 1--2, pictured: the series stays inside a \textbf{horizontal band
+      of fixed width}. TX\_1 HOUSEHOLD fails; its weekly change passes.}
+    \end{column}
+    \begin{column}{0.51\textwidth}
+      \centering
+      \includegraphics[height=5.1cm]{../Figures/Lecture02_ARIMA_VAR/stationarity_band.pdf}
+    \end{column}
+  \end{columns}
+  \vspace{0.1cm}
+  {\small A drifting mean leaves no single value to forecast; a growing variance widens
+  intervals without bound. Differencing removes a stochastic trend; a log stabilizes the
+  variance.}
 \end{frame}
 
 % --- Slide: Unit root + differencing ------------------------------------------
@@ -190,20 +199,34 @@
 \end{frame}
 
 % --- Slide: SARIMA ------------------------------------------------------------
+% Figure: scripts/figures/lecture02_figures.py (sarima_acf). CA_1 FOODS daily, the only daily series.
 \begin{frame}{SARIMA: Adding Seasonal Terms}
   Seasonal data also correlate at lags $m, 2m, 3m, \ldots$, and SARIMA adds AR and MA terms
   there: \textbf{two ARIMA models at different time scales}, $(p,d,q)$ for the short run and
-  $(P,D,Q)[m]$ year over year.
+  $(P,D,Q)[m]$ for the season.
+  \begin{center}
+    \includegraphics[height=4.25cm]{../Figures/Lecture02_ARIMA_VAR/sarima_acf.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small CA\_1 FOODS is daily, so $m = 7$ here (monthly data use $m = 12$). One seasonal
+  difference, $D = 1$, removes the peaks; the spike left at lag 7 points to one seasonal MA
+  term, $Q = 1$.}
+\end{frame}
 
-  \vspace{0.15cm}
+% --- Slide: SARIMA workflow ----------------------------------------------------
+\begin{frame}{SARIMA in Practice: A Four-Step Workflow}
   \textbf{Practical workflow:}
-  \begin{enumerate}\small\itemsep1pt
+  \begin{enumerate}\itemsep4pt
     \item ADF / KPSS $\to$ choose $d$
     \item Seasonal unit root test $\to$ choose $D$
     \item ACF / PACF on the differenced series $\to$ guide $p, q, P, Q$
     \item Minimize AIC, then check the residual ACF with a Ljung-Box test
   \end{enumerate}
-  \vspace{0.1cm}
+  \vspace{0.3cm}
+  \textbf{Ljung-Box} ($H_0$: the residuals are white noise) is the one people skip. Here a
+  \emph{large} $p$-value is the good outcome: nothing left to model.
+
+  \vspace{0.2cm}
   \muted{\small Monthly retail: start from SARIMA(1,1,1)(0,1,1)[12] and make anything
   fancier beat it.}
 \end{frame}
@@ -285,13 +308,23 @@
   \textbf{The test:} fit the $y$-equation with and without the $x$-lags; an $F$-test of
   $H_0$: all $x$-lag coefficients are zero.
 
-  \vspace{0.1cm}
-  \textbf{In the lab:} does unemployment Granger-cause retail sales? It fires \emph{both}
-  ways, and which direction looks stronger depends on whether COVID is in the sample.
-
-  \vspace{0.1cm}
+  \vspace{0.2cm}
   \textbf{Not structural causality.} It tests predictive content: a rooster reliably predicts
   sunrise. Say ``predictive of,'' never ``causes.''
+\end{frame}
+
+% --- Slide: Granger on the lab's macro data -----------------------------------
+% Figure: scripts/figures/lecture02_figures.py (granger_covid); Lab 2 Step 6's numbers. The
+% pre-2020 cut is a lab exercise, so it is not shown.
+\begin{frame}{Granger on Real Data: The COVID Window}
+  \textbf{Does unemployment Granger-cause retail sales?} Lab 2's monthly FRED data:
+  \begin{center}
+    \includegraphics[height=5.0cm]{../Figures/Lecture02_ARIMA_VAR/granger_covid.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small Both directions are significant in both samples; one shock decides which looks
+  stronger. With COVID: unemployment $\to$ retail. Without its 17 months: retail $\to$
+  unemployment.}
 \end{frame}
 
 % --- Slide: ARIMAX -----------------------------------------------------------

@@ -42,17 +42,13 @@ Before you pool anything, ask what the groups have in common.
 
 ## The Question
 
-**Does demand rise in weeks when SNAP benefits are disbursed, and by how much — store by store?** Homework 3's memo stocked up store by store, assuming those differences are real. Today we check.
+**Does demand rise in weeks when SNAP benefits are disbursed, and by how much — store by store?** Homework 3's memo assumed those differences were real. First, a check that needs no model: SNAP is a *food* program.
 
-**One question comes before the model.** SNAP is a *food* assistance program. The raw SNAP-week effect on log units, all thirty series by category:
-
-| Category | Mean effect | Spread across stores |
-|---|---:|---:|
-| **FOODS** (10 series) | $+0.089$ | 0.058 |
-| HOBBIES (10 series) | $+0.006$ | 0.010 |
-| HOUSEHOLD (10 series) | $+0.011$ | 0.014 |
+![](../Figures/Lecture11_Part2/question_strip.svg){fig-align="center" height="290px"}
 
 **These are not thirty versions of the same thing.** FOODS responds; the other two barely move. Pooling all thirty would tell the model they are interchangeable.
+
+[Each dot: one series, high-SNAP weeks minus the rest, mean log units, 277 weeks. Spread: SD across stores.]{.neutral .smaller}
 
 ---
 

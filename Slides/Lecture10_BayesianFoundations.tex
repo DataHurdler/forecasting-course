@@ -138,33 +138,13 @@
 % --- Slide: common priors ----------------------------------------------------
 \begin{frame}{Priors You Will Actually Use}
   A prior is a distribution over a parameter, chosen to match what that parameter \emph{can} be.
-
-  \vspace{0.1cm}
   \begin{center}
-    {\small
-    \begin{tabular}{p{2.9cm}p{3.0cm}p{6.4cm}}
-      \toprule
-      \textbf{Prior} & \textbf{Support} & \textbf{Use it for} \\
-      \midrule
-      $\theta \sim \text{Beta}(\alpha, \beta)$ & $[0, 1]$ & Rates and proportions --- conversion,
-      click-through, defect rate \\[3pt]
-      $\theta \sim \mathcal{N}(\mu_0, \sigma_0^2)$ & all reals & Regression coefficients, trends,
-      anything that can be negative \\[3pt]
-      $\theta \sim \text{Exp}(\lambda)$ & $[0, \infty)$ & Standard deviations, waiting times,
-      anything that must be positive \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[width=\textwidth]{../Figures/Lecture10_BayesianFoundations/priors_support.pdf}
   \end{center}
-
-  \vspace{0.1cm}
-  \textbf{The support is the first thing to get right.} Putting a Normal prior on a standard
-  deviation allows negative values, which are impossible --- the sampler will struggle and the
-  model may not be wrong so much as incoherent.
-
-  \vspace{0.1cm}
-  \muted{\footnotesize\itshape $\text{Beta}(5, 45)$ has mean $5/50 = 0.1$ --- a prior centered on
-  a 10\% rate, worth about 50 observations of prior evidence.}
+  \vspace{-0.2cm}
+  \textbf{The support is the first thing to get right.} A Normal prior on a standard deviation
+  puts half its mass on negative values, which are impossible: the model is not wrong so much as
+  incoherent. Fold that half onto $\sigma \ge 0$ and you have the HalfNormal.
 \end{frame}
 
 % --- Slide: choosing a defensible prior --------------------------------------
@@ -202,31 +182,32 @@
 
 % --- Slide: MCMC -------------------------------------------------------------
 \begin{frame}{MCMC: The Big Idea}
-  Beyond textbook examples, the denominator in Bayes' theorem cannot be computed. So we do not
+  Beyond textbook examples, the denominator $p(\mathcal{D})$ cannot be computed. So we do not
   compute the posterior: we \textbf{draw samples from it}.
+  \begin{center}
+    \includegraphics[height=4.4cm]{../Figures/Lecture10_BayesianFoundations/mcmc_walk.pdf}
+  \end{center}
+  \vspace{-0.25cm}
+  {\small Each step compares two heights of likelihood $\times$ prior: higher, move; lower, move
+  with probability equal to their ratio. Both heights carry the same $p(\mathcal{D})$, so it
+  cancels.}
 
-  \vspace{0.15cm}
-  \textbf{The picture to hold.} You walk a hilly landscape in the dark, where height is posterior
-  probability. Take a step: if the ground is higher, move; if it is lower, usually step back.
-  Over thousands of steps you spend most of your time on the high ground.
-
-  \vspace{0.15cm}
-  \muted{\footnotesize\itshape PyMC's default sampler is NUTS, which takes smarter steps than this
-  random walk. The intuition is unchanged.}
+  \muted{\footnotesize\itshape This is random-walk Metropolis. PyMC's default, NUTS, takes smarter
+  steps; the intuition is unchanged.}
 \end{frame}
 
 % --- Slide: the samples are the answer ----------------------------------------
 \begin{frame}{The Samples Are the Answer}
-  The record of where you walked \emph{is} the answer: a histogram of the visited positions has
-  the shape of the posterior, and nobody ever computed it.
-
+  The record of where you walked \emph{is} the answer: a histogram of the kept draws has the shape
+  of the posterior, and nobody ever computed it.
+  \begin{center}
+    \includegraphics[height=3.4cm]{../Figures/Lecture10_BayesianFoundations/mcmc_histogram.pdf}
+  \end{center}
+  \vspace{-0.3cm}
   \begin{keybox}
     \textbf{Every summary is a count.} Posterior mean, credible interval, the probability of any
-    event you care about: each is a summary of the list of visited values --- counted, not
-    derived.
+    event: each is counted from the draws, not derived.
   \end{keybox}
-
-  \vspace{0.1cm}
   The planner's stock-out question becomes one line: the share of simulated demand draws above
   400 units.
 \end{frame}
@@ -240,7 +221,7 @@
     \texttt{\mbox{}\ \ \ \ theta = pm.Beta("theta", alpha=5, beta=45)\ \ \ \ \ \ \ \# prior}\\
     \texttt{\mbox{}\ \ \ \ obs\ \ = pm.Binomial("obs", n=200, p=theta,\ \ \ \ \ \ \ \# likelihood}\\
     \texttt{\mbox{}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ observed=30)}\\
-    \texttt{\mbox{}\ \ \ \ idata = pm.sample(2000, tune=1000, chains=4)\ \ \ \ \ \# posterior}\\[3pt]
+    \texttt{\mbox{}\ \ \ \ idata = pm.sample(2000, tune=1000, chains=4, random\_seed=42)}\\[3pt]
     \texttt{import arviz as az}\\
     \texttt{az.plot\_posterior(idata)}
     }
@@ -277,7 +258,7 @@
   \texttt{az.summary(idata, ci\_kind="hdi", ci\_prob=0.94)} prints the interval, $\hat{R}$ and ESS.
   \textbf{Pass both arguments} --- ArviZ now defaults to an 89\% equal-tailed interval, not the HDI.
 
-  On the model above: $\hat{R} = 1.00$, ESS 3{,}686, zero divergences. \textbf{Report all three.}
+  On the model above: $\hat{R} = 1.00$, ESS 3{,}290, zero divergences. \textbf{Report all three.}
 \end{frame}
 
 % --- Slide: prior predictive checks -----------------------------------------
@@ -294,13 +275,24 @@
 
   \textbf{Ask whether the simulated data could plausibly have come from your business.}
   Impossible values --- negative sales, probabilities above one --- mean the prior is
-  misspecified, not merely wide. Data spanning a billion units means it is too vague; identical
-  simulations mean it is too tight.
+  misspecified, not merely wide.
 
   \begin{keybox}
     A prior predictive check is \textbf{model debugging} that costs two lines --- and the habit
     most often skipped.
   \end{keybox}
+\end{frame}
+
+% --- Slide: three priors, three predictions ----------------------------------
+\begin{frame}{Three Priors, Three Predictions}
+  The conversion-rate model before any data: successes out of 200 under each prior.
+  \begin{center}
+    \includegraphics[height=4.4cm]{../Figures/Lecture10_BayesianFoundations/prior_predictive.pdf}
+  \end{center}
+  \vspace{-0.25cm}
+  {\small \textbf{Flat} is too vague: 190 successes is as likely as 20. \textbf{Beta(500, 4500)}
+  is too tight: worth 5{,}000 observations, it has fixed $\theta$ before the data arrive, and the
+  spread left is binomial noise. \textbf{Beta(5, 45)} rules out the absurd and leaves room.}
 \end{frame}
 
 % =============================================================================

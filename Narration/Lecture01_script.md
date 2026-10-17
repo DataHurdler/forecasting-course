@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Introduction, Exponential Smoothing & Forecast Evaluation**
 
-Deck: `Slides/Lecture01_ETS_Eval.pdf` (22 pages) · Measured runtime: **~33 minutes** (31–38 depending on pace)
+Deck: `Slides/Lecture01_ETS_Eval.pdf` (22 pages) · Measured runtime: **~36 minutes** (33–41 depending on pace)
 
 ---
 
@@ -192,19 +192,33 @@ This slide is a professional standard, and I want to be blunt about it.
 Before you present any forecast model to anyone, check that it beats a naive benchmark. A
 model that can't beat the baseline has zero value. Not "a little value." Zero.
 
-Four standard benchmarks in the table.
+Four standard benchmarks, all on the same series — CA_1 FOODS, the store you'll forecast in
+the homework. *(Point at the figure.)* The gray line is the data. The shaded strip on the
+right is the test year, the fifty-two weeks we hold back. In each panel the red line is the
+forecast, and the blue line is what it's built from. Every one of these is a shape you can
+draw with a ruler.
 
-The **naive** forecast: tomorrow equals today. y-hat equals y-sub-t. Sounds stupid. It is
-extremely hard to beat for asset prices, because if you could reliably beat it, you'd be
-rich rather than in this class.
+Bottom left, the **naive** forecast: tomorrow equals today. Take the last training week —
+the blue dot — and hold it flat for a year. Sounds stupid. It is extremely hard to beat for
+asset prices, because if you could reliably beat it, you'd be rich rather than in this class.
 
-The **seasonal naive**: this December equals last December. Use it for any series with a
-season, and it is a genuinely tough benchmark for retail.
+Bottom right, the **mean**: the average of every training week, the dashed blue line, held
+flat. Use it when there's no trend and no season.
 
-The **mean**: forecast the historical average. Use when there's no trend and no season.
+Top right, **drift**: draw a chord from the very first training week to the last — the two
+blue dots — and keep going at the same slope. That's the average historical change, extended.
+Use it when there's trend but no season.
 
-And **drift**: take the last value and extend the average historical slope. Use when there's
-trend but no season.
+And top left, the **seasonal naive**: take last year — the blue stretch — and slide it right
+by fifty-two weeks. This December equals last December. Use it for any series with a season.
+
+**[pause]**
+
+Now read the red numbers. Seasonal naive wins, at sixteen sixty. Then drift at seventeen
+sixty-four, naive at seventeen ninety-four, and the mean last at eighteen eighty-one. On a
+series with a season, the benchmark that copies the season wins — and it is a genuinely tough
+benchmark for retail. Hold on to that sixteen sixty: it's the number every model in this
+course has to beat on this series, all the way to Lecture 11.
 
 **[pause]**
 
@@ -414,26 +428,39 @@ techniques. We haven't. They're one family.
 Hyndman and Athanasopoulos — the authors of our textbook — unify every exponential smoothing
 method as a **state space model**, described by three letters: Error, Trend, Seasonal.
 
-The **Error** can be additive or multiplicative. The **Trend** can be none, additive, or
-damped. The **Seasonal** can be none, additive, or multiplicative.
+The **Trend** can be none, additive, or damped. The **Seasonal** can be none, additive, or
+multiplicative. Three times three is nine, and the grid shows all nine as forecast shapes.
+*(Point at the figure.)* These are drawings, not data: gray is a made-up history, red is
+each method's forecast.
 
-Two times three times three is eighteen combinations. Three of them — additive errors with
-multiplicative seasonality — are numerically unstable, because the state equations end up
-dividing by numbers that can get close to zero. So the textbook drops them, which leaves
-fifteen. And every method from the last three slides is one of them.
+Read down the first column. No trend: flat — that's SES. Additive trend: a straight line up —
+Holt. Damped: the line bends over and levels off — Holt damped, the ceiling from two slides
+ago.
 
-ETS(A,N,N) — additive error, no trend, no season — that's simple exponential smoothing.
-
-ETS(A,A,N) is Holt linear. ETS(A,A-damped,N) is Holt with a damped trend.
-
-ETS(A,A,A) is Holt-Winters additive. And Holt-Winters multiplicative is ETS(M,A,M) —
-multiplicative errors to go with the multiplicative season, which keeps it out of the
-unstable three.
+Now across. An additive season repeats the same swing on top of the trend — Holt-Winters
+additive. A multiplicative season scales the swing with the level, so as the trend climbs,
+the swings grow — Holt-Winters multiplicative. And look at the top row: with no trend the
+level never moves, so additive and multiplicative look the same. Multiplicative only shows
+itself once the level changes.
 
 **[pause]**
 
-So they weren't three tricks. They were four points in a structured space, and now you can
-see the whole space at once — including combinations we never discussed.
+Where's the **Error** letter? It isn't in the picture, because it doesn't change the shape.
+With the same parameters, additive and multiplicative errors give the same point forecast;
+what changes is the prediction interval around it. So each of the nine cells is really two models — eighteen.
+
+Three of them — additive errors with a multiplicative season, the right-hand column — are
+numerically unstable, because the state equations end up dividing by numbers that can get
+close to zero. That's why that column says "error M only." Eighteen minus three is fifteen.
+Which is why Holt-Winters multiplicative is ETS(M,A,M) — multiplicative errors to go with the
+multiplicative season. And every method from the last three slides is one of the fifteen:
+ETS(A,N,N) is SES, ETS(A,A,N) is Holt, ETS(A,A-damped,N) is damped, ETS(A,A,A) is
+Holt-Winters additive.
+
+**[pause]**
+
+So they weren't separate tricks. They were points in a structured space, and now you can see
+the whole space at once — including combinations we never discussed.
 
 And here's the practical payoff. **Automatic selection.** You don't have to agonize over
 which of the fifteen to use. Fit all fifteen, and pick the one with the minimum AIC. In
@@ -442,7 +469,7 @@ loop over the fifteen that you write, and the AIC comes back with every fit.
 
 Which raises a fair question: if the computer picks the model, why did we walk through the
 equations? Because when the automatic selection returns something strange — a multiplicative
-trend on a series that shouldn't have one — you need to recognize that and know why it's
+season on a series whose swings don't grow — you need to recognize that and know why it's
 wrong. Automation is a labor-saving device, not a substitute for judgment.
 
 ---
@@ -670,17 +697,17 @@ See you then.
 
 ## Timing guide
 
-Measured from the script (2026-10-13, after the figures were added): **4,646 spoken words**.
-At 140 wpm — a normal lecture pace — that is **~33 minutes**; 38 if you read deliberately, 31
-if you push.
+Measured from the script (2026-10-16, after the benchmark and ETS figures were added):
+**4,985 spoken words**. At 140 wpm — a normal lecture pace — that is **~36 minutes**; 41 if you
+read deliberately, 33 if you push.
 
 | Segment | Slides | Words | Runtime |
 |---|---|---:|---:|
-| Opening & why forecasting matters | 1–7 | 1,391 | ~10 min |
-| Exponential smoothing | 8–13 | 1,685 | ~12 min |
+| Opening & why forecasting matters | 1–7 | 1,583 | ~11 min |
+| Exponential smoothing | 8–13 | 1,832 | ~13 min |
 | Forecast evaluation | 14–17 | 973 | ~7 min |
 | Roadmap & close | 18–22 | 597 | ~4 min |
-| **Total** | | **4,646** | **~33 min** |
+| **Total** | | **4,985** | **~36 min** |
 
 Content slides run 65–165 seconds each; section dividers 4–17 seconds.
 

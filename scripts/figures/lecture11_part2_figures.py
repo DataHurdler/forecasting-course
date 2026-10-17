@@ -403,8 +403,90 @@ def funnel() -> None:
     save(fig, "funnel")
 
 
+# ================================================================== the question: raw effects
+CATEGORIES = ("FOODS", "HOBBIES", "HOUSEHOLD")
+
+
+@lru_cache(maxsize=None)
+def raw_effects() -> dict:
+    """The raw SNAP-week effect of every one of the thirty series, on all its weeks, no model:
+    the lab's empirical_effect() on the full Setup frame (Step 4's category table, per series).
+    Deterministic and fast, so it is recomputed rather than cached in measured.json.
+    """
+    weekly = pd.read_csv(ROOT / "data" / "processed" / "m5_weekly.csv", parse_dates=["week_start"])
+    weekly["series"] = weekly.store_id + "_" + weekly.cat_id
+    weekly["hi_snap"] = (weekly.snap_days >= 5).astype(int)
+    df = weekly.dropna(subset=["units"]).copy()
+    df["ly"] = np.log(df.units.clip(lower=1))
+    out = {}
+    for cat, grp in df.groupby("cat_id"):
+        out[cat] = {s: float(empirical_effect(grp, s)) for s in grp.series.unique()}
+    return out
+
+
+def _swarm(xs, width: float, step: float) -> list[float]:
+    """Vertical offsets so no two dots closer than `width` in x share a height (a tiny beeswarm).
+    Each dot takes the lowest free slot in the order 0, +step, -step, +2 step, ..."""
+    placed: list[tuple[float, float]] = []
+    offs = []
+    for x in xs:
+        for k in range(12):
+            o = (k + 1) // 2 * step * (1 if k % 2 else -1) if k else 0.0
+            if all(abs(x - px) >= width or abs(o - po) >= step * 0.99 for px, po in placed):
+                break
+        placed.append((x, o))
+        offs.append(o)
+    return offs
+
+
+def question_strip() -> None:
+    """One dot per store-category: its raw SNAP-week effect on log units over all 277 weeks.
+    Three rows, ten stores each; a bar at each category's mean, and the mean and the spread
+    across stores (np.std, as the lab prints it) in the right margin."""
+    eff = raw_effects()
+    fig, ax = plt.subplots(figsize=sz(12.4, 3.9))
+    X0, X1 = -0.03, 0.23
+    ax.set_xlim(X0, X1)
+    ax.set_ylim(0.45, 3.6)
+    ax.axvline(0, color=MID_GRAY, lw=1.1, ls=(0, (4, 3)), zorder=1)
+    # top left, left of the zero line, where no category has a dot (the lowest is -0.013)
+    ax.text(-0.002, 3.42, "no effect", ha="right", va="center", fontsize=11, color=GRAY)
+    ys = {"FOODS": 3, "HOBBIES": 2, "HOUSEHOLD": 1}
+    for cat in CATEGORIES:
+        y, c = ys[cat], (BLUE if cat == "FOODS" else GRAY)
+        names = sorted(eff[cat], key=eff[cat].get)
+        xs = np.array([eff[cat][s] for s in names])
+        offs = _swarm(xs, width=0.0068, step=0.17)
+        ax.scatter(xs, y + np.array(offs), s=46, color=c, alpha=0.8, lw=0, zorder=3)
+        mean, spread = xs.mean(), xs.std()
+        ax.plot([mean, mean], [y - 0.36, y + 0.36], color=BLACK, lw=2.2, zorder=4,
+                solid_capstyle="butt")
+        ax.text(X1 + 0.006, y + 0.03, f"mean {mean:+.3f}", ha="left", va="bottom",
+                fontsize=12, color=c, fontweight="bold", clip_on=False)
+        ax.text(X1 + 0.006, y - 0.03, f"spread {spread:.3f}", ha="left", va="top",
+                fontsize=11, color=c, clip_on=False)
+        print(f"    {cat:<9s} mean {mean:+.3f}  spread {spread:.3f}  "
+              f"range {xs.min():+.3f} .. {xs.max():+.3f}")
+        if cat == "FOODS":
+            for s in (names[0], names[-1]):
+                ax.text(eff[cat][s], y + 0.22, _short(s), ha="center", va="bottom",
+                        fontsize=11, color=c)
+    ax.set_yticks([ys[c] for c in CATEGORIES])
+    ax.set_yticklabels([f"{c}" for c in CATEGORIES], fontsize=12)
+    for lab, cat in zip(ax.get_yticklabels(), CATEGORIES):
+        lab.set_color(BLUE if cat == "FOODS" else GRAY)
+        lab.set_fontweight("bold" if cat == "FOODS" else "normal")
+    ax.tick_params(axis="y", length=0, pad=6)
+    ax.spines["left"].set_visible(False)
+    ax.set_xticks([0, 0.05, 0.1, 0.15, 0.2])
+    ax.set_xticklabels(["0", "+0.05", "+0.10", "+0.15", "+0.20"])
+    ax.tick_params(axis="x", labelsize=11)
+    ax.set_xlabel("raw SNAP-week effect on log units (one dot per store)", fontsize=12)
+    save(fig, "question_strip")
+
+
 FIGURES = {"shrinkage_arrows": shrinkage_arrows, "shrinkage_heldout": shrinkage_heldout,
-           "funnel": funnel}
+           "funnel": funnel, "question_strip": question_strip}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

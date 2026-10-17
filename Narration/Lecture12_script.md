@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics III — Bayesian Linear Regression**
 
-Deck: `Slides/Lecture12_BayesianRegression.pdf` (16 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture12_BayesianRegression.pdf` (17 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -12,7 +12,7 @@ Deck: `Slides/Lecture12_BayesianRegression.pdf` (16 pages) · Measured runtime: 
 - *Italic parentheticals* are stage directions. **[pause]** means stop for a beat.
 - Slide 5's "do not standardize log price" is not a style note. It is the lecture's second-biggest
   point, and the lab is built around what happens when you ignore it. Give it real weight.
-- Slide 11 is the one students carry into their projects: a *tighter* interval on the wrong model.
+- Slide 12 is the one students carry into their projects: a *tighter* interval on the wrong model.
   Say "confidently, precisely wrong" out loud.
 
 ---
@@ -107,7 +107,7 @@ something you can reason about.
 # ▶ SLIDE 5 — Bayesian Linear Regression in PyMC
 
 Here's the model. Log units regressed on log price, a SNAP indicator and an event indicator —
-plus one intercept per series and a trend, which slide 11 will explain. Weakly informative Normal
+plus one intercept per series and a trend, which slide 12 will explain. Weakly informative Normal
 priors on every coefficient, Exponential on sigma. Nothing here is new after Lecture 10.
 
 **[pause]**
@@ -200,25 +200,9 @@ Now, the last row is the useful one, and I want to be precise about why.
 `b_event`'s interval spans zero, so the data do not establish a direction. Events might raise
 demand slightly; they might lower it slightly.
 
-That is a **more honest report** than "not statistically significant," and it's more informative
-too. Because it also tells you the effect is **small** — somewhere between about minus one point
-one percent and plus point four percent.
-
-"Not significant" conflates two completely different situations: an effect you can't detect
-because it's tiny, and an effect you can't detect because your data is thin. The interval
-distinguishes them. Here it's the first.
-
-**[pause]**
-
-And those two situations call for opposite actions, which is why conflating them is expensive.
-
-An effect that is genuinely tiny means stop investigating — you have your answer, and it's that
-events don't matter much for this series. An effect you cannot detect because the data is thin
-means collect more data, or find a better design, because the question is still open.
-
-A p-value above point-oh-five is compatible with both, and gives you no way to tell which you're
-in. The interval tells you immediately: narrow and centered on zero is the first, wide and spanning
-zero is the second.
+In most courses that's where the story ends: "not statistically significant," move on. Hold onto
+it instead. Two slides from now we'll ask this coefficient a second question — not which way it
+points, but whether it's big enough to matter at all.
 
 ---
 
@@ -235,25 +219,36 @@ Three one-line questions, three direct answers. No test statistic, no null hypot
 
 **[pause]**
 
-*(Now the results.)*
+*(Point at the figure.)*
 
-On our fit, the probability the elasticity is below zero is **one point zero zero**. Every single
-posterior sample is negative. Demand falls when price rises, and there is no doubt about it.
+And here's what that counting looks like. The blue curve is the posterior for the price
+elasticity, and the area under it is one — all four thousand draws. Every question in the box is
+the share of that area on one side of a line.
 
-Fine. That's the boring question, and a p-value would have told you something similar.
+*(Point at the dotted line at zero, on the right.)*
+
+Below zero: the whole curve. The probability is **one point zero zero**. Demand falls when price
+rises, and there is no doubt about it. Fine. That's the boring question, and a p-value would have
+told you something similar.
+
+*(Point at the dashed line at minus one.)*
 
 Now the one a pricing manager cares about. Minus one is the line between **elastic** and
-**inelastic** demand. Below minus one, a one percent price rise loses more than one percent of
-volume, so revenue falls. Above it, revenue rises. The probability the elasticity is below minus
-one is **zero** — not one draw out of four thousand. Demand here is inelastic, in every draw.
+**inelastic** demand, and it's labelled revenue break-even for a reason. To its left, a one percent
+price rise loses more than one percent of volume, so revenue falls. To its right, revenue rises.
+
+Look how far the curve is from that line. The probability the elasticity is below minus one is
+**zero** — not one draw out of four thousand. The black bar under the curve is the ninety-four
+percent HDI, and all of it sits between minus one and zero. Demand here is inelastic, in every
+draw.
 
 **[pause]**
 
-And then a finer question, which the data do *not* settle. Does a one percent price rise cost more
-than half a percent of volume? That's the probability the elasticity is below minus point-five,
-and it is **point four six**. Essentially a coin flip.
+*(Point at the red area.)*
 
-*(Point at the key box.)*
+And then a finer question, which the data do *not* settle. Does a one percent price rise cost more
+than half a percent of volume? That's the red area, everything left of minus point-five, and it is
+**point four six** of the total. The line cuts the curve almost in half. Essentially a coin flip.
 
 So the posterior gives you three answers of different kinds: the direction, settled; the side of
 minus one, settled; the finer size question, honestly open. "Statistically significant" reports
@@ -276,43 +271,118 @@ and being wrong is expensive, then forty-six percent is more than enough to plan
 That's a decision-theoretic argument, and it needs a probability as an input. A significance test
 cannot supply one.
 
-*(Muted note.)*
+---
 
-Asking how much posterior mass falls inside a range of negligible values has a name — a **ROPE**,
-a region of practical equivalence. Homework 7 asks you to compute one.
+# ▶ SLIDE 9 — Too Small to Matter? A ROPE
+
+Back to the event coefficient from two slides ago. Its interval spans zero, so the data give no
+direction.
+
+A **ROPE** — a region of practical equivalence — asks a different question. Not "is it zero?" but
+"is it too small to act on?"
+
+*(Point at the figure.)*
+
+The blue curve is the posterior for the event-week effect, in percent. The black bar is its
+ninety-four percent HDI: minus one point one percent to plus point four.
+
+*(Point at the light gray band and its dashed edges.)*
+
+The wide gray band is the ROPE: every effect between about minus five and plus five percent a
+week, which we are declaring too small to matter. **One hundred percent** of the posterior sits
+inside it. Every draw.
+
+*(Point at the darker band in the middle.)*
+
+The darker band is a much stricter ROPE, about plus or minus one percent. Even there, ninety-five
+percent of the posterior is inside.
+
+**[pause]**
+
+*(Point at the sentence under the figure. Say it plainly — this is a choice, not a result.)*
+
+Where does the width come from? Not from the data. It's a business choice. Neither the lab nor
+this deck has a natural one, so we use the width Homework 7 uses: an absolute coefficient below
+point-oh-five, which is about five percent a week. A manager with thin margins might set it
+narrower — and we've just seen that at one percent the answer barely moves. Homework 7 asks you to
+compute one yourself, for every predictor.
+
+*(Point at the key box.)*
+
+**[pause]**
+
+And this is why it's worth doing. "Not significant" conflates two completely different situations:
+an effect you can't detect because it's tiny, and an effect you can't detect because your data is
+thin.
+
+Those call for opposite actions. An effect that is genuinely tiny means stop investigating — you
+have your answer, and it's that events don't matter much for these series. An effect you cannot
+detect because the data is thin means collect more data, or find a better design, because the
+question is still open.
+
+A p-value above point-oh-five is compatible with both, and gives you no way to tell which you're
+in. The ROPE tells you immediately: narrow and inside the band is the first; wide and spilling out
+of it is the second. Here, it's the first.
 
 ---
 
-# ▶ SLIDE 9 — Section divider: Causal Structure and DAGs
+# ▶ SLIDE 10 — Section divider: Causal Structure and DAGs
 
 Which coefficients mean what you think they mean.
 
 ---
 
-# ▶ SLIDE 10 — Directed Acyclic Graphs
+# ▶ SLIDE 11 — Directed Acyclic Graphs
 
 Everything so far has been about *estimating* a coefficient well. Now: what does it mean?
 
 A **DAG** is a picture of what you believe causes what. Nodes are variables, arrows run from cause
-to effect, and acyclic means nothing causes itself.
+to effect, and acyclic means nothing causes itself — no arrow path ever leads back to where it
+started.
 
 Crucially, you draw it **before** the model, from domain knowledge. And its purpose is specific:
 it tells you **which variables belong in the regression.**
 
-*(Walk the two definitions.)*
+*(Point at the figure. Walk it left to right.)*
 
-A **confounder** causes both your predictor and your outcome. You **must** control for it —
-otherwise its influence gets absorbed into your coefficient and you attribute someone else's
-effect to your variable.
+Here's ours. Price on the left, units sold on the right, and the thick blue arrow between them is
+`b_price` — the one effect we want.
 
-A **collider** is caused by both. And controlling for a collider **creates** a spurious association
-that was not there to begin with.
+*(Point at the two red boxes.)*
+
+Now the two red boxes. The **series** — which store, which category — sets the price level and the
+volume: food is cheap and sells in volume, hobbies cost more and sell less. And **time**: over these
+five years prices drifted up and volumes grew. Each red box has an arrow into price *and* an arrow
+into units.
+
+*(Point at the confounder definition on the right.)*
+
+That's the definition of a **confounder**: it causes both your predictor and your outcome. You
+**must** control for it — otherwise its influence leaks into your coefficient and you attribute
+someone else's effect to your variable. That's why the model on slide 5 has one intercept per
+series and a trend: each red box is a term in the model.
+
+*(Point at the gray box.)*
+
+SNAP and events are in the model too, but look at their arrows: into units only. They explain
+demand, which tightens the estimate, but they aren't confounders. Leave them out and `b_price`
+would be noisier, not wrong.
 
 **[pause]**
 
+*(Point at the collider definition.)*
+
+A **collider** is the opposite shape: caused by both. And controlling for a collider **creates** a
+spurious association that was not there to begin with.
+
+There isn't one in our picture, but it's easy to build one. Revenue is price times units, so both
+arrows point into it. Hold revenue fixed in the regression and price and units are forced to move
+in opposite directions — you'd get an elasticity of exactly minus one, manufactured entirely by the
+control.
+
 *(Point at the consequence.)*
 
-That second row is why "add every control you have" is bad advice, and it surprises people.
+That's why "add every control you have" is bad advice, and it surprises people.
 
 More controls is not safer. Conditioning on a collider actively manufactures a relationship out of
 nothing. So which variables to include is a question about **causal structure** — and no amount of
@@ -330,12 +400,12 @@ subject and a separate course.
 
 ---
 
-# ▶ SLIDE 11 — Confounding, Measured
+# ▶ SLIDE 12 — Confounding, Measured
 
 Let's make that concrete on our own data, because the size of the effect is startling.
 
 Two things move price and units together in our panel, and neither of them is price causing
-demand.
+demand. They're the two red boxes from the DAG.
 
 *(Point at the left panel.)*
 
@@ -391,7 +461,7 @@ time, and you get the wrong *sign*.
 
 ---
 
-# ▶ SLIDE 12 — Scenario Analysis with Posterior Samples
+# ▶ SLIDE 13 — Scenario Analysis with Posterior Samples
 
 Here's the payoff for having a distribution instead of a number.
 
@@ -434,18 +504,18 @@ decisions those are.
 
 *(Muted note.)*
 
-With one caveat, and it's the one from slide 10. This is valid only to the extent the **DAG** is.
+With one caveat, and it's the one from slide 11. This is valid only to the extent the **DAG** is.
 It's a causal claim about intervening on price, and it inherits every assumption in that diagram.
 
 ---
 
-# ▶ SLIDE 13 — Section divider: Course Synthesis and Next Steps
+# ▶ SLIDE 14 — Section divider: Course Synthesis and Next Steps
 
 From classical time series to Bayesian hierarchical models: a complete forecasting toolkit.
 
 ---
 
-# ▶ SLIDE 14 — Course Method Map
+# ▶ SLIDE 15 — Course Method Map
 
 *(Walk the table at a steady pace. Students will photograph this slide.)*
 
@@ -492,14 +562,14 @@ honest. You are not obliged to pick one row of that table.
 
 ---
 
-# ▶ SLIDE 15 — Lecture 12: Key Takeaways
+# ▶ SLIDE 16 — Lecture 12: Key Takeaways
 
 One. Bayesian linear regression places priors on coefficients and returns a full posterior for
 each one. Its mode is Ridge under a Normal prior and LASSO under a Laplace prior.
 
-Two. Posterior coefficient plots give you the mean, the HDI, and the probability the coefficient
-exceeds any threshold you care about — richer than a p-value, and answering the question people
-actually ask.
+Two. Posterior coefficient plots give you the mean, the HDI, the probability the coefficient
+exceeds any threshold you care about, and how much of it sits inside a ROPE — richer than a
+p-value, and answering the question people actually ask.
 
 Three. Draw the **DAG** before you specify the regression. Control for the confounders — here that
 meant both the series and time — and never for a collider.
@@ -525,6 +595,6 @@ That habit is the most transferable thing in this course.
 
 ---
 
-# ▶ SLIDE 16 — References
+# ▶ SLIDE 17 — References
 
 *(Advance and close. No narration needed.)*

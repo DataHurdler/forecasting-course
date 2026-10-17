@@ -91,16 +91,11 @@ Which parts matter depends on the series: retail sales are trend + seasonality, 
 
 ## Always Beat a Benchmark First
 
-Before presenting any forecast model, check that it beats a **naive benchmark**. A model that cannot beat the baseline has zero value.
+Before presenting any model, check that it beats a **naive benchmark**: a model that cannot beat the baseline has zero value. Each forecast (red) is built from a line (blue):
 
-| Benchmark | Forecast | Use when |
-|-----------|----------|----------|
-| Naïve | $\hat{y}_{t+h\|t} = y_t$ | Asset prices, random walks |
-| Seasonal naïve | $\hat{y}_{t+h\|t} = y_{t+h-m}$ | Any series with a season |
-| Mean | $\hat{y}_{t+h\|t} = \bar{y}_t$ | No trend, no season |
-| Drift | $\hat{y}_{t+h\|t} = y_t + h\hat{c}$ | Trend, no season |
+![](../Figures/Lecture01_ETS_Eval/benchmarks.svg){fig-align="center" height="400px"}
 
-[This is not a formality. In the M4 Competition many machine learning models *failed* to beat simple exponential smoothing [@Makridakis2020].]{.neutral .smaller}
+[CA_1 FOODS; RMSE over the 52 shaded test weeks. In the M4 Competition many machine learning models *failed* to beat simple exponential smoothing [@Makridakis2020].]{.neutral .smaller}
 
 # Exponential Smoothing
 
@@ -204,17 +199,11 @@ US retail's December spike grows as overall sales grow: **multiplicative**.
 
 ## The ETS Framework: A Unified View
 
-@Hyndman2021 unify every exponential smoothing method as a **state space model**: Error × Trend × Seasonal.
+@Hyndman2021 unify every exponential smoothing method as a **state space model**: Error × Trend × Seasonal. Trend and season set the forecast's shape:
 
-| Component | Options | Meaning |
-|-----------|---------|---------|
-| Error ($E$) | A, M | Additive / Multiplicative |
-| Trend ($T$) | N, A, A~d~ | None / Additive / Damped |
-| Seasonal ($S$) | N, A, M | None / Additive / Multiplicative |
+![](../Figures/Lecture01_ETS_Eval/ets_grid.svg){fig-align="center" height="380px"}
 
-That is 18 combinations; three are numerically unstable, which leaves 15. Ours are among them: **ETS(A,N,N)** is SES, **ETS(A,A,N)** is Holt linear, **ETS(A,A~d~,N)** is Holt damped, **ETS(A,A,A)** is Holt-Winters additive, and **ETS(M,A,M)** is Holt-Winters multiplicative.
-
-**Automatic selection:** fit all 15 and pick the minimum AIC. In Python, `statsmodels.tsa.exponential_smoothing.ets.ETSModel`.
+[The error, A or M, changes the intervals, not the shape. Additive error with a multiplicative season is unstable, so 9 × 2 − 3 = 15 models. **Automatic selection:** fit all 15, keep the minimum AIC (`ETSModel` in statsmodels).]{.smaller} [Schematic shapes, not data.]{.neutral .smaller}
 
 # Forecast Evaluation
 

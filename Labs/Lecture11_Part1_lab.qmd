@@ -127,8 +127,12 @@ print(f"ESS (bulk)   {s.ess_bulk.min():.0f}    (want > 400)")
 print(f"divergences  {int(idata.sample_stats.diverging.sum())}")
 ```
 
-**Same model, same data, same priors.** `cumsum(z * sigma)` and `GaussianRandomWalk(sigma=sigma)`
-describe the identical distribution — only the coordinates the sampler explores have changed.
+**Same data, same priors on `sigma_level`, `beta` and `sigma`.** `cumsum(z * sigma)` and
+`GaussianRandomWalk(sigma=sigma)` describe the same random walk; what changed is the coordinates the
+sampler explores. One difference is not coordinates: `GaussianRandomWalk` lets the first week's
+level start anywhere (its default start is `Normal(0, 100)`; PyMC warns about it, and the Setup cell
+silences warnings), while the `cumsum` starts the walk near zero. That nudges `sigma_level` up a
+little, so the two fits are *almost* the same model, not exactly.
 
 Look at the components it recovered:
 

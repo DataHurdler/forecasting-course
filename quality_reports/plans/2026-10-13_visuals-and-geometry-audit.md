@@ -15,6 +15,10 @@ source (and the lab where a number was in question). They checked numbers in mem
 ✔ were re-checked by hand against the source. Errors marked ○ were reported by a reviewer but
 not yet re-checked.
 
+**Update 2026-10-16:** every ○ row below was verified and fixed in the
+[round-1 rollout](2026-10-13_figures-rollout.md) on 2026-10-13, so all rows now read ✔. The
+L04/L05 weekly RMSEs did not reproduce and were replaced by the figure script's 1,456 / 1,115.
+
 **Correction to my own brief:** I told the reviewers that Lecture 10 had 16 display equations and
 Lecture 13 had 30. Both counts were wrong because `\\[3pt]` table-row spacing matched the
 pattern. The real counts are 0–5 per deck, and Lecture 13 has none. The algebra in this course
@@ -40,8 +44,13 @@ build plan when its turn comes (as Lecture 9 Part 1 did); this table says where 
 | L09 Part 2 | week 10 | **Built** 2026-10-13 | [L09P2 plan](2026-10-13_lecture09-part2-visuals.md) |
 | L10–L13 | weeks 11–16 | **Built 2026-10-13** (rollout) | [rollout](2026-10-13_figures-rollout.md) |
 
-Still open from the ranked lists: everything below the ★ and the five geometry pictures (e.g. L02
-Granger/COVID, L05 boosting stages, L09P1 Check 2 figure, L12 DAG and ROPE, L13 skill bars).
+**Round 2, 2026-10-16** ([plan](2026-10-16_figures-round2.md)): every remaining non-Low candidate in
+every deck was built, 36 new figures in all, with these exceptions:
+- **Blocked:** L10 Bayes mosaic (owner to define a "strong week"); L13 skill bars (HW01 key first).
+- **Skipped on purpose:** L06 CV curve (it is Lab 6 Step 4's "Your turn"); L11P1 level fans (would
+  redraw `band_width` at another scale); L07 early-stopping-vs-ridge panel (no room).
+- **Still open:** the items ranked Low (L02 #6, L03 #6, L04 #6, L05 #6, L06 #6, L07 #6, L10 #6,
+  L11P2 #4, L12 #5).
 
 ## Recurring geometric ideas (a visual vocabulary for the whole course)
 
@@ -85,18 +94,18 @@ students learn it once:
 | ✔ | L05:328–329 | "`gamma` penalizes complexity the way ℓ1 does" | `gamma` is a per-leaf count penalty (ℓ0-like, like `ccp_alpha`); XGBoost's ℓ1 is `reg_alpha` |
 | ✔ | L03:281 (TikZ) | The PDP "Rising" band runs below the x-axis (−0.37) and above the axis tip (2.02); the keybox describes a falling curve no panel shows | Replace with a real partial dependence plot, or fix the coordinates |
 | ✔ | L06:153 | "Likely to hit a corner first" | True only for small budgets. On lag7/lag14 (ρ = 0.78) the corner wins only for t ≲ 0.18, about ⅕ of the OLS ℓ1 size (checked by hand on the LARS path) |
-| ○ | L01 Holt / Lab 1 Step 5 | Fitted φ = 0.80 on all three series | That is statsmodels' lower bound (0.8–0.995), so the lab's "what does φ < 1 mean?" is answered by the bound |
-| ○ | L07:46 | NN output "smooth, continuous" | With ReLU it is continuous and piecewise linear |
-| ○ | Labs/Lecture07_lab.qmd:246 | Gradients accumulate "in that epoch" | Without `zero_grad`, they accumulate across all 60 epochs |
-| ○ | L05:131 | "Last year's value always dominates" | The deck's own importance tables have lag4 (weekly) or `dow` (daily) on top |
-| ○ | L05:315–317 | Newton step "converges in fewer trees" | Only for non-squared losses; for squared error the Hessian is constant |
-| ○ | L09P1:126 | Singular value > 1 → explodes | It only makes explosion *possible* |
-| ○ | L12:118 | b_event "at most about half a percent either way" | The lower HDI end is about −1.1% |
-| ○ | L12:188–190 | Confounder named as series only | Time is a second confounder: series means alone give +1.70, the wrong sign |
-| ○ | L12:59–60 | Ridge/lasso ↔ prior | Holds at the posterior *mode*; a Laplace posterior mean is not sparse |
-| ○ | L13:102 | Year-over-year growth figures | 2011→2012 was +28.6%; say "since 2012" |
-| ○ | L04:101 | Flowchart numbers invented (≤38,000 → 61,300) | CA_1 FOODS weekly runs 12k–27k; draw the real tree |
-| ○ | L04/L05 numbers | No script found that generates the weekly tree and forest RMSEs (L04:300–304, L05:195–200, 227–229) | The figure script would become their source |
+| ✔ | L01 Holt / Lab 1 Step 5 | Fitted φ = 0.80 on all three series | That is statsmodels' lower bound (0.8–0.995), so the lab's "what does φ < 1 mean?" is answered by the bound |
+| ✔ | L07:46 | NN output "smooth, continuous" | With ReLU it is continuous and piecewise linear |
+| ✔ | Labs/Lecture07_lab.qmd:246 | Gradients accumulate "in that epoch" | Without `zero_grad`, they accumulate across all 60 epochs |
+| ✔ | L05:131 | "Last year's value always dominates" | The deck's own importance tables have lag4 (weekly) or `dow` (daily) on top |
+| ✔ | L05:315–317 | Newton step "converges in fewer trees" | Only for non-squared losses; for squared error the Hessian is constant |
+| ✔ | L09P1:126 | Singular value > 1 → explodes | It only makes explosion *possible* |
+| ✔ | L12:118 | b_event "at most about half a percent either way" | The lower HDI end is about −1.1% |
+| ✔ | L12:188–190 | Confounder named as series only | Time is a second confounder: series means alone give +1.70, the wrong sign |
+| ✔ | L12:59–60 | Ridge/lasso ↔ prior | Holds at the posterior *mode*; a Laplace posterior mean is not sparse |
+| ✔ | L13:102 | Year-over-year growth figures | 2011→2012 was +28.6%; say "since 2012" |
+| ✔ | L04:101 | Flowchart numbers invented (≤38,000 → 61,300) | CA_1 FOODS weekly runs 12k–27k; draw the real tree |
+| ✔ | L04/L05 numbers | No script found that generates the weekly tree and forest RMSEs (L04:300–304, L05:195–200, 227–229) | The figure script would become their source |
 
 ---
 

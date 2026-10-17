@@ -178,8 +178,8 @@ not about the business.** Change the frequency and the ranking inverts.
 
 *(Screen: run the depth sweep.)*
 
-Lecture 4 summarized this as a three-row table on a slide — stump, middle depths, full tree. Here
-it is measured on your own data, and the next cell draws it as a curve.
+Lecture 4 drew this curve for the weekly series. Here it is measured on your own daily data, and
+the next cell draws the same curve.
 
 ```
 depth  leaves  train_RMSE  test_RMSE

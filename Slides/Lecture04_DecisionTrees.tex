@@ -57,6 +57,8 @@
 \end{frame}
 
 % --- Slide: Bias-variance tradeoff overview ----------------------------------
+% Figure: scripts/figures/lecture04_figures.py (stumps_vs_deep); numbers in measured.json
+% ("bootstrap"). One test week, chosen as an illustration; the 52-week averages agree.
 \begin{frame}{The Bias--Variance Tradeoff \parencite{James2021}}
   \begin{definitionbox}{Bias--Variance Decomposition}
     \[
@@ -65,29 +67,15 @@
                            + \underbrace{\sigma^2}_{\text{irreducible noise}}
     \]
   \end{definitionbox}
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \textbf{High bias (underfitting):}
-      \begin{itemize}\small
-        \item Model is too simple
-        \item Misses real patterns in the data
-        \item Bad on both training AND test sets
-        \item Example: linear model on a curved relationship
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \textbf{High variance (overfitting):}
-      \begin{itemize}\small
-        \item Model is too complex
-        \item Memorizes training data noise
-        \item Great on training, bad on test set
-        \item Example: a very deep decision tree
-      \end{itemize}
-    \end{column}
-  \end{columns}
-  \vspace{0.15cm}
-  \textbf{Goal:} find the complexity that balances the two --- which you can
-  only see \emph{out-of-sample}.
+  \vspace{-0.3cm}
+  \begin{center}
+    \includegraphics[height=3.3cm]{../Figures/Lecture04_DecisionTrees/stumps_vs_deep.pdf}
+  \end{center}
+  \vspace{-0.4cm}
+  {\small Each model refitted on 20 bootstrap resamples. \textbf{Stumps} (one-question trees)
+  agree and miss: bias. \textbf{Deep trees} center on the truth but scatter: variance. (The miss
+  includes this week's noise, so it is not pure bias.) \textbf{Goal:} the complexity that
+  balances the two, visible only \emph{out-of-sample}.}
 \end{frame}
 
 % =============================================================================
@@ -146,6 +134,20 @@
   Fitted on the 173 weeks before the test year.}
 \end{frame}
 
+% --- Slide: the tree as rectangles -------------------------------------------
+% Figure: scripts/figures/lecture04_figures.py (tree_partition): the depth-2 tree above, drawn in
+% the plane of the two features it uses; cuts and leaf means read from measured.json ("depth2").
+\begin{frame}{The Same Tree, Drawn as Rectangles}
+  Each question is a straight cut parallel to an axis. Each leaf is a rectangle, shaded by its
+  mean; every week inside it gets that forecast.
+  \begin{center}
+    \includegraphics[height=4.75cm]{../Figures/Lecture04_DecisionTrees/tree_partition.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Last year's sales cut only the right half: they matter only when recent demand is
+  already high. That is an \textbf{interaction}, and nobody specified it.}
+\end{frame}
+
 % --- Slide: CART algorithm ---------------------------------------------------
 % Figure: scripts/figures/lecture04_figures.py cart_split (numbers in measured.json, "root").
 \begin{frame}{The CART Algorithm (Regression) \parencite{Breiman1984}}
@@ -199,31 +201,18 @@
 \end{frame}
 
 % --- Slide: Bias-variance in trees -------------------------------------------
+% Figure: scripts/figures/lecture04_figures.py (depth_curve); numbers in measured.json ("depth_sweep").
 \begin{frame}{Depth Controls the Bias--Variance Tradeoff}
-  A \textbf{depth-1 stump} asks one question: high bias, low variance. A
-  \textbf{full tree} with one observation per leaf memorizes the sample: zero
-  bias, extreme variance.
-
-  \vspace{0.15cm}
+  A \textbf{stump} asks one question: high bias, low variance. A \textbf{full tree}, one week per
+  leaf, memorizes the sample: zero \emph{training} error, high variance.
   \begin{center}
-    {\small
-    \begin{tabular}{llll}
-      \toprule
-      \textbf{Depth} & \textbf{Bias} & \textbf{Variance} & \textbf{Behavior} \\
-      \midrule
-      1 (stump)  & High     & Low      & One question; underfits \\
-      5--10      & Balanced & Balanced & Usually the useful range \\
-      Full tree  & Zero     & Extreme  & Memorizes the training sample \\
-      \bottomrule
-    \end{tabular}
-    }
+    \includegraphics[height=4.1cm]{../Figures/Lecture04_DecisionTrees/depth_curve.pdf}
   \end{center}
-  \vspace{0.1cm}
-  \vspace{-0.2cm}
-  \textbf{Why trees are unstable:} one changed observation can flip the split
-  at the root, and every prediction below it changes with it.
-  Tune \texttt{max\_depth} and \texttt{min\_samples\_leaf} by
-  \texttt{TimeSeriesSplit} cross-validation.
+  \vspace{-0.35cm}
+  {\small Training error falls to zero; test error stops improving after depth 3, since 173 weeks
+  leave little to split. Read the shape, not the minimum: picking depth from the test year is a
+  leak. \textbf{Unstable, too:} one changed week can flip the root split, and everything below
+  it. Tune by \texttt{TimeSeriesSplit}.}
 \end{frame}
 
 % --- Slide: pruning ----------------------------------------------------------

@@ -112,15 +112,9 @@ The part you have to justify, and the part people worry about.
 
 A prior is a distribution over a parameter, chosen to match what that parameter *can* be.
 
-| Prior | Support | Use it for |
-|---|---|---|
-| $\theta \sim \text{Beta}(\alpha, \beta)$ | $[0, 1]$ | Rates and proportions — conversion, click-through, defect rate |
-| $\theta \sim \mathcal{N}(\mu_0, \sigma_0^2)$ | all reals | Regression coefficients, trends, anything that can be negative |
-| $\theta \sim \text{Exp}(\lambda)$ | $[0, \infty)$ | Standard deviations, waiting times, anything that must be positive |
+![](../Figures/Lecture10_BayesianFoundations/priors_support.svg){fig-align="center" height="290px"}
 
-**The support is the first thing to get right.** Putting a Normal prior on a standard deviation allows negative values, which are impossible — the sampler will struggle and the model may not be wrong so much as incoherent.
-
-[$\text{Beta}(5, 45)$ has mean $5/50 = 0.1$ — a prior centered on a 10% rate, worth about 50 observations of prior evidence.]{.neutral .smaller}
+**The support is the first thing to get right.** A Normal prior on a standard deviation puts half its mass on negative values, which are impossible: the model is not wrong so much as incoherent. Fold that half onto $\sigma \ge 0$ and you have the HalfNormal.
 
 ---
 
@@ -144,20 +138,24 @@ Sampling, the code, and how to tell whether the answer is trustworthy.
 
 ## MCMC: The Big Idea
 
-Beyond textbook examples, the denominator in Bayes' theorem cannot be computed. So we do not compute the posterior: we **draw samples from it**.
+Beyond textbook examples, the denominator $p(\mathcal{D})$ cannot be computed. So we do not compute the posterior: we **draw samples from it**.
 
-**The picture to hold.** You walk a hilly landscape in the dark, where height is posterior probability. Take a step: if the ground is higher, move; if it is lower, usually step back. Over thousands of steps you spend most of your time on the high ground.
+![](../Figures/Lecture10_BayesianFoundations/mcmc_walk.svg){fig-align="center" height="330px"}
 
-[PyMC's default sampler is NUTS, which takes smarter steps than this random walk. The intuition is unchanged.]{.neutral .smaller}
+[Each step compares two heights of likelihood $\times$ prior: higher, move; lower, move with probability equal to their ratio. Both heights carry the same $p(\mathcal{D})$, so it cancels.]{.smaller}
+
+[This is random-walk Metropolis. PyMC's default, NUTS, takes smarter steps; the intuition is unchanged.]{.neutral .smaller}
 
 ---
 
 ## The Samples Are the Answer
 
-The record of where you walked *is* the answer: a histogram of the visited positions has the shape of the posterior, and nobody ever computed it.
+The record of where you walked *is* the answer: a histogram of the kept draws has the shape of the posterior, and nobody ever computed it.
+
+![](../Figures/Lecture10_BayesianFoundations/mcmc_histogram.svg){fig-align="center" height="250px"}
 
 ::: {.keybox}
-**Every summary is a count.** Posterior mean, credible interval, the probability of any event you care about: each is a summary of the list of visited values — counted, not derived.
+**Every summary is a count.** Posterior mean, credible interval, the probability of any event: each is counted from the draws, not derived.
 :::
 
 The planner's stock-out question becomes one line: the share of simulated demand draws above 400 units.
@@ -177,7 +175,7 @@ with pm.Model() as model:
     theta = pm.Beta("theta", alpha=5, beta=45)        # prior
     obs   = pm.Binomial("obs", n=200, p=theta,        # likelihood
                         observed=30)
-    idata = pm.sample(2000, tune=1000, chains=4)      # posterior
+    idata = pm.sample(2000, tune=1000, chains=4, random_seed=42)
 
 import arviz as az
 az.plot_posterior(idata)
@@ -202,7 +200,7 @@ MCMC can fail quietly. It always returns samples; whether they came from the pos
 
 `az.summary(idata, ci_kind="hdi", ci_prob=0.94)` prints the interval, $\hat{R}$ and ESS. **Pass both arguments** — ArviZ now defaults to an 89% equal-tailed interval, not the HDI.
 
-On the model above: $\hat{R} = 1.00$, ESS 3,686, zero divergences. **Report all three.**
+On the model above: $\hat{R} = 1.00$, ESS 3,290, zero divergences. **Report all three.**
 
 ---
 
@@ -222,11 +220,21 @@ az.plot_ppc(prior_pred, group="prior")
 ```
 :::
 
-**Ask whether the simulated data could plausibly have come from your business.** Impossible values — negative sales, probabilities above one — mean the prior is misspecified, not merely wide. Data spanning a billion units means it is too vague; identical simulations mean it is too tight.
+**Ask whether the simulated data could plausibly have come from your business.** Impossible values — negative sales, probabilities above one — mean the prior is misspecified, not merely wide.
 
 ::: {.keybox}
 A prior predictive check is **model debugging** that costs two lines — and the habit most often skipped.
 :::
+
+---
+
+## Three Priors, Three Predictions
+
+The conversion-rate model before any data: successes out of 200 under each prior.
+
+![](../Figures/Lecture10_BayesianFoundations/prior_predictive.svg){fig-align="center" height="320px"}
+
+[**Flat** is too vague: 190 successes is as likely as 20. **Beta(500, 4500)** is too tight: worth 5,000 observations, it has fixed $\theta$ before the data arrive, and the spread left is binomial noise. **Beta(5, 45)** rules out the absurd and leaves room.]{.smaller}
 
 # Key Takeaways
 

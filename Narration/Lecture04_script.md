@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Decision Trees**
 
-Deck: `Slides/Lecture04_DecisionTrees.pdf` (20 pages) · Measured runtime: **~19 minutes** (17–21 depending on pace)
+Deck: `Slides/Lecture04_DecisionTrees.pdf` (21 pages) · Measured runtime: **~19 minutes** (17–21 depending on pace)
 
 ---
 
@@ -102,14 +102,37 @@ shrinks sigma squared.
 
 **[pause]**
 
-Now the two columns.
+Now let me show you the two failure modes, on our own data, before we've even defined a tree.
 
-**High bias — underfitting.** Model too simple, misses real patterns, and — this is the
-diagnostic — performs badly on *both* training and test sets. If your model is bad on data
-it has already seen, it's underfitting.
+*(Point at the figure.)*
 
-**High variance — overfitting.** Model too complex, memorizes noise, great on training, bad on
-test. The gap between the two is the tell.
+One test week: the week of the fourteenth of December, twenty fifteen. The store actually sold
+eighteen thousand two hundred seventy-nine units — that's the dashed line.
+
+I took the hundred seventy-three training weeks, drew a bootstrap resample — same size, with
+replacement — and fitted a model. Then again, twenty times. Each dot is what one of those twenty
+models forecast for this one week.
+
+**The red row is twenty stumps** — trees that ask a single question. They agree with each other:
+the spread is about three hundred forty units. But they agree on the wrong answer. Their average,
+the black diamond, misses by about twelve hundred eighty. Too simple to see what's special about
+this week. That's **high bias**: bad even on average, and — this is the diagnostic — bad on the
+training data too.
+
+**The blue row is twenty fully grown trees**, grown until every training week has its own leaf.
+Their average lands almost exactly on the truth — off by twenty-eight units. But look at the
+scatter: from fifteen thousand to twenty-one thousand. A spread of about seventeen hundred
+fifty. Whichever resample you happened to draw decides your forecast. That's **high variance**:
+great on the data it memorized, unreliable on anything new.
+
+**[pause]**
+
+One honest caveat, and it's why the figure says "miss of the average" and not "bias." The
+actual eighteen thousand two hundred seventy-nine includes this week's own noise — the sigma
+squared term. So the miss is bias *plus* one draw of noise. I picked this week because it shows
+the pattern cleanly; across all fifty-two test weeks the ordering is the same — the stumps' average
+misses by more, about fourteen hundred forty against eleven hundred, and the deep trees spread
+more, about twelve hundred against seven hundred sixty.
 
 **[pause]**
 
@@ -157,9 +180,8 @@ Each green box is just an average. The "twenty-seven weeks" under the first one 
 twenty-seven training weeks landed there, and the forecast is their mean. Every prediction is
 the answer at the bottom of one path.
 
-Notice the right branch asks about last year and the left branch doesn't. That's an interaction,
-found without anyone specifying it: last year's level matters, but only when recent demand is
-already high.
+Notice the right branch asks about last year and the left branch doesn't. Hold onto that; the
+next slide draws it.
 
 **[pause]**
 
@@ -178,7 +200,45 @@ overfits severely.
 
 ---
 
-# ▶ SLIDE 8 — The CART Algorithm (Regression)
+# ▶ SLIDE 8 — The Same Tree, Drawn as Rectangles
+
+Same tree, different picture. And this picture is what a tree really is.
+
+*(Point at the axes.)*
+
+The tree used two features, so we can draw every training week as a point in a plane. Across the
+bottom, what the store sold four weeks earlier. Up the side, what it sold the same week last
+year. A hundred seventy-three white dots, one per training week.
+
+*(Trace the cuts.)*
+
+Each question in the flowchart is a straight cut. The root — four weeks ago at or below twenty
+thousand six hundred and three — is the solid vertical line. The left branch's second question,
+eighteen thousand five hundred ninety-eight, is the dashed vertical line on the left. And the
+right branch's question about last year is the dashed horizontal line — but notice it only runs
+across the right half.
+
+**[pause]**
+
+So four rectangles, and they're the four green boxes from the flowchart. The darker the shading,
+the higher the forecast. Every week that falls inside a rectangle gets that rectangle's average:
+eighteen thousand four hundred, twenty thousand one hundred, twenty-one thousand four hundred,
+twenty-three thousand.
+
+Two things to see.
+
+First, the cuts are always parallel to an axis. A tree never draws a diagonal line. It can only
+ask "is this one feature above or below a number?" — so its whole world is rectangles, and its
+forecast is flat inside each one.
+
+Second, the horizontal cut stops at the vertical one. Last year's sales split the right half and
+leave the left half alone. That's an **interaction**: last year matters, but only when recent
+demand is already high. Nobody told the tree to look for that. A linear model would need you to
+write the interaction term yourself; the tree found it by cutting.
+
+---
+
+# ▶ SLIDE 9 — The CART Algorithm (Regression)
 
 How does the tree decide what to ask?
 
@@ -218,7 +278,7 @@ nineteen thousand six hundred; eighty-four on the right, averaging about twenty-
 nine hundred.
 
 The algorithm did this for every feature, not just this one, and the four-week lag won. That's
-the root of the tree on the previous slide.
+the root of the tree two slides back.
 
 Then it repeats the whole search inside each group, and again inside those — until the groups get
 too small or you hit the depth cap. The prediction at a leaf is just the mean of the training
@@ -229,7 +289,7 @@ different measure of how mixed a region is.
 
 ---
 
-# ▶ SLIDE 9 — Greedy Is Not Optimal — and That Matters
+# ▶ SLIDE 10 — Greedy Is Not Optimal — and That Matters
 
 I want to slow down on "greedy," because it is the single most important word on the previous
 slide and it is easy to hear it as a criticism when it is really a description.
@@ -272,17 +332,40 @@ whole greedy sequence down a different path. That is the instability we turn to 
 
 ---
 
-# ▶ SLIDE 10 — Depth Controls the Bias–Variance Tradeoff
+# ▶ SLIDE 11 — Depth Controls the Bias–Variance Tradeoff
 
 Now connect the tree back to slide 5.
 
-A **depth-one stump** asks one question. Massive bias, almost no variance.
+A **depth-one stump** asks one question. High bias, low variance — the red row on slide 5.
 
-A **full tree** with one observation per leaf reproduces the training data exactly. Zero bias,
-extreme variance — it has memorized rather than learned.
+A **full tree** keeps splitting until every training week has its own leaf. It reproduces the
+training data exactly: zero *training* error. That is not zero bias — it's memorization — and
+the variance is high. The blue row on slide 5.
 
-Between them sits the depth that minimizes total error, and the table shows the shape. Five to
-ten is usually the useful range.
+*(Point at the figure.)*
+
+Here's the whole range on our weekly data. Across the bottom, the depth cap, from one up to
+twelve, and then a fully grown tree with a hundred seventy-three leaves. The gray line is the
+error on the training weeks; the red line is the error on the test year.
+
+The gray line does what it must: it falls with every extra level and hits **zero** for the full
+tree. A deeper tree can always fit the sample better.
+
+The red line doesn't follow it. It drops from the stump to depth three — about twelve hundred
+thirteen — and then stops improving. Past depth three it wanders between about thirteen hundred
+fifty and fifteen hundred sixty. The gap between the two lines is overfitting, drawn to scale.
+
+**[pause]**
+
+Why does it stop at three? Because we only have a hundred seventy-three weeks. Every split halves
+the data, and after three levels a leaf holds about twenty weeks. Split further and you're
+fitting the noise in a handful of weeks. With more data, deeper trees pay off — you'll see that in
+the lab, where the daily data has over a thousand rows.
+
+And one warning about how to read this. Do not pick depth three *from this picture*. That red line
+is the test year, and choosing a setting by looking at the test year is exactly the leak we keep
+forbidding. Read the shape — falling training error, flat test error — not the minimum. The depth
+itself gets chosen by `TimeSeriesSplit` on the training weeks.
 
 **[pause]**
 
@@ -299,7 +382,7 @@ Tune with `max_depth` and `min_samples_leaf`, selected by `TimeSeriesSplit` cros
 
 ---
 
-# ▶ SLIDE 11 — Two Ways to Stop a Tree Overfitting
+# ▶ SLIDE 12 — Two Ways to Stop a Tree Overfitting
 
 `max_depth` is the blunt instrument — it caps the tree in advance, before you know how deep it
 needed to go. Two other controls do the job better, and they usually get one line each in a
@@ -318,7 +401,7 @@ and never by looking at the test year.
 
 ---
 
-# ▶ SLIDE 12 — Cost-Complexity Pruning: A Line Touching the Curve
+# ▶ SLIDE 13 — Cost-Complexity Pruning: A Line Touching the Curve
 
 Pruning has a picture, and it's worth two minutes, because the same picture comes back twice in
 this course.
@@ -370,13 +453,13 @@ number is this alpha divided by the number of training rows.
 
 ---
 
-# ▶ SLIDE 13 — Section divider: Implementing Decision Trees in Python
+# ▶ SLIDE 14 — Section divider: Implementing Decision Trees in Python
 
 Part three. One class, a few hyperparameters.
 
 ---
 
-# ▶ SLIDE 14 — Decision Tree Regression in Python
+# ▶ SLIDE 15 — Decision Tree Regression in Python
 
 The code is short.
 
@@ -399,7 +482,7 @@ or a warning — it produces a number that looks better than the truth.
 
 ---
 
-# ▶ SLIDE 15 — Feature Importance
+# ▶ SLIDE 16 — Feature Importance
 
 A tree will tell you which variables it found useful.
 
@@ -443,7 +526,7 @@ properly next week.
 
 ---
 
-# ▶ SLIDE 16 — Interpreting and Communicating Tree Predictions
+# ▶ SLIDE 17 — Interpreting and Communicating Tree Predictions
 
 This is the tree's real advantage, and it's worth dwelling on because you lose it steadily from
 here.
@@ -470,20 +553,20 @@ knowledge you have, and every method after this one makes it harder to access.
 
 ---
 
-# ▶ SLIDE 17 — Section divider: Limitations and Preview
+# ▶ SLIDE 18 — Section divider: Limitations and Preview
 
 Part four. Where a single tree falls short.
 
 ---
 
-# ▶ SLIDE 18 — When a Single Tree Falls Short
+# ▶ SLIDE 19 — When a Single Tree Falls Short
 
 Strengths on the left, and they're real: interpretable, no scaling needed, captures
 nonlinearity, handles missing values, fast to train.
 
 Weaknesses on the right, and the first one is fatal.
 
-**High variance.** We covered the mechanism on slide 9 — small data changes give a very
+**High variance.** We covered the mechanism on slide 10 — small data changes give a very
 different tree.
 
 **Flat predictions within each leaf.** Every observation in a leaf gets the identical forecast.
@@ -516,7 +599,7 @@ survives — typically twenty to forty percent better RMSE than a single tree.
 
 ---
 
-# ▶ SLIDE 19 — Lecture 4: Key Takeaways
+# ▶ SLIDE 20 — Lecture 4: Key Takeaways
 
 Six things.
 
@@ -542,7 +625,7 @@ and everything bad about today follows from that sentence.
 
 ---
 
-# ▶ SLIDE 20 — References
+# ▶ SLIDE 21 — References
 
 Reading is ISLP section 8.1 — the basics of decision trees. That's the chapter we'll live in
 for the next two weeks as well.
@@ -559,12 +642,12 @@ See you then.
 | Segment | Slides | Target |
 |---|---|---:|
 | Opening & why beyond linear | 1–5 | ~5 min |
-| How trees work | 6–12 | ~11 min |
-| Python & interpretation | 13–16 | ~5 min |
-| Limitations & close | 17–20 | ~2 min |
-| **Total** | | **~23 min** |
+| How trees work | 6–13 | ~12 min |
+| Python & interpretation | 14–17 | ~5 min |
+| Limitations & close | 18–21 | ~2 min |
+| **Total** | | **~24 min** |
 
-If you're compressing, slide 14's hyperparameter table survives trimming — slides 11 and 12 have
-already covered the two parameters that matter. Do **not** compress slides 9, 10, or 18: the greedy
+If you're compressing, slide 15's hyperparameter table survives trimming — slides 12 and 13 have
+already covered the two parameters that matter. Do **not** compress slides 10, 11, or 19: the greedy
 approximation, the instability it produces, and the extrapolation limit are the three things
 Lectures 5 and 6 are built on.

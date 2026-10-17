@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Tree Ensembles: Random Forests & Boosted Trees**
 
-Deck: `Slides/Lecture05_TreeEnsembles.pdf` (25 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture05_TreeEnsembles.pdf` (27 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -102,6 +102,7 @@ Then average all B predictions.
 
 Now the equation, which is the most important thing on this slide.
 
+Call one tree's variance sigma squared, and rho the correlation between two trees' predictions.
 The variance of the averaged forecast is **rho sigma squared, plus one-minus-rho over B, sigma
 squared**.
 
@@ -112,22 +113,50 @@ never hurts.
 
 The first term has no B in it at all. It does not move.
 
+---
+
+# ▶ SLIDE 7 — More Trees, or Less Alike Trees
+
+Here is that equation drawn. I've divided through by sigma squared, so one tree sits at one on
+the vertical axis.
+
+*(Point at the axes.)*
+
+Across the bottom, the number of trees you average, on a log scale, from one to five hundred.
+Up the side, the variance of the average.
+
+This is a schematic. Nothing here is measured, because rho is a property of how the trees vary
+across possible training sets, and one forest can't measure its own rho. I picked three values
+to show the shape.
+
 **[pause]**
 
-So you have a **floor at rho sigma squared**, where rho is the pairwise correlation between the
-trees' predictions.
+*(Trace the orange curve.)*
 
-Read what that says. If your trees are highly correlated — rho near one — the floor is near
-sigma squared, and averaging a thousand of them buys you essentially nothing. You have grown a
-thousand trees and reproduced one.
+Each value of rho draws its own curve. Take rho of one half, the orange one. Every curve starts
+at one, because one tree is one tree. Add trees and you slide along the curve — the black arrow
+— fast at first, then flattening onto the dashed line at one half. That dashed line is the
+**floor, rho sigma squared**. Past a hundred trees or so you're buying almost nothing.
 
-That's Galton's crowd overhearing each other.
+*(Point at the gray curve, then the red arrow.)*
 
-And it's exactly the problem the next section solves.
+Now the gray curve, rho of point nine. Highly correlated trees. Its floor is point nine:
+average a thousand of them and you have barely improved on one. You've grown a thousand trees
+and reproduced one. That's Galton's crowd overhearing each other.
+
+The red arrow is the only way down: make the trees **less alike**, and you drop to a lower
+curve with a lower floor. Rho of point one, the blue curve, ends near a tenth of one tree's
+variance.
+
+**[pause]**
+
+So there are two dials, and they do different things. More trees moves you along a curve.
+Decorrelation moves you to a different curve. And it's exactly the second dial that the next
+section turns.
 
 ---
 
-# ▶ SLIDE 7 — Out-of-Bag (OOB) Error: Free Cross-Validation
+# ▶ SLIDE 8 — Out-of-Bag (OOB) Error: Free Cross-Validation
 
 A pleasant side effect of bootstrapping.
 
@@ -161,23 +190,43 @@ them. What a small sample lacks is *rows*: the OOB error is an average over n ro
 on CA_1 food sales trains on a hundred seventy-three weeks. A hundred seventy-three errors make a
 noisy average. That part is ordinary sampling noise.
 
-Second, and this is the one that bites. On a time series, the trees that score week fifty were
-trained on weeks fifty-one, fifty-two, and every week after. So OOB is answering "how well can the
-model fill in a missing week inside the years it has seen?" — not "how well will it forecast next
-month?" Those are different questions, and only the second one is your job.
+**[pause]**
+
+Second, and this is the one that bites. Look at who does the scoring.
+
+*(Point at the figure.)*
+
+This is the real forest from later in the lecture — the weekly CA_1 forest, five hundred trees —
+and these are its actual bootstrap draws. Each row is one tree; I'm showing twenty-four of them.
+Each column is one training week, in date order, from early 2012 to May 2015. Gray means that
+week was in the tree's bootstrap sample. White means it was out of bag.
+
+*(Point at the boxed column.)*
+
+Pick one week: the boxed column, the week of thirty December 2013. Eight of these twenty-four
+trees left it out — the ones marked with red triangles. Those eight trees are the ones that score
+it.
+
+Now look to the right of the box, along those eight rows. Everything red is a week *after*
+thirty December that the scoring tree trained on. Across the whole forest, the trees that score a
+week trained on about sixty-four percent of the weeks that came after it.
+
+So OOB is answering "how well can the model fill in a missing week inside the years it has seen?"
+— not "how well will it forecast next month?" Those are different questions, and only the second
+one is your job.
 
 So on this data, use proper walk-forward cross-validation. Lab 5 shows you the two numbers side by
 side and asks you to account for the gap.
 
 ---
 
-# ▶ SLIDE 8 — Section divider: Random Forests
+# ▶ SLIDE 9 — Section divider: Random Forests
 
 Part three. Decorrelating the trees.
 
 ---
 
-# ▶ SLIDE 9 — The Problem Bagging Does Not Fully Solve
+# ▶ SLIDE 10 — The Problem Bagging Does Not Fully Solve
 
 Back to the floor.
 
@@ -226,7 +275,7 @@ on twenty-seven features where nothing dominates, and you should see the trade f
 
 ---
 
-# ▶ SLIDE 10 — Random Forest Hyperparameters
+# ▶ SLIDE 11 — Random Forest Hyperparameters
 
 Five parameters, and the striking thing is how few need attention.
 
@@ -264,13 +313,13 @@ wondering why.
 
 ---
 
-# ▶ SLIDE 11 — Section divider: Feature Importance
+# ▶ SLIDE 12 — Section divider: Feature Importance
 
 Part four. Which predictors matter?
 
 ---
 
-# ▶ SLIDE 12 — Random Forest Feature Importance
+# ▶ SLIDE 13 — Random Forest Feature Importance
 
 Mean decrease in impurity. For each feature, sum the variance reduction across every split
 where it was used, weighted by how many observations passed through that node. Normalize to one.
@@ -308,7 +357,7 @@ ranking in front of anyone who'll act on it.
 
 ---
 
-# ▶ SLIDE 13 — Random Forest in Python
+# ▶ SLIDE 14 — Random Forest in Python
 
 The code is four lines, and the results table is the interesting part.
 
@@ -342,13 +391,13 @@ lag feature would lose to ARIMA. A random forest with a well-built feature set w
 
 ---
 
-# ▶ SLIDE 14 — Section divider: Gradient Boosting
+# ▶ SLIDE 15 — Section divider: Gradient Boosting
 
 Part five, and we change direction entirely.
 
 ---
 
-# ▶ SLIDE 15 — Boosting vs. Bagging: The Core Difference
+# ▶ SLIDE 16 — Boosting vs. Bagging: The Core Difference
 
 Bagging builds trees **in parallel** and independently. Each tries to predict y directly.
 Averaging reduces variance. And critically — adding more trees never reduces bias. If your
@@ -372,7 +421,7 @@ Add them together: fifty plus ten is sixty.
 
 **[pause]**
 
-Each stage corrects what remains. And notice this fixes something averaging cannot touch — if
+Each stage corrects what remains. And notice this fixes something averaging never touches — if
 every bagged tree under-predicts December by the same amount, the average under-predicts
 December. Boosting sees that residual pattern and builds a tree specifically for it.
 
@@ -380,7 +429,7 @@ Bagging attacks variance. Boosting attacks bias. That sentence is the whole slid
 
 ---
 
-# ▶ SLIDE 16 — The Gradient Boosting Algorithm
+# ▶ SLIDE 17 — The Gradient Boosting Algorithm
 
 Formally, three steps in a loop.
 
@@ -415,13 +464,60 @@ bagging, this method genuinely can overfit — and it will if you let it.
 
 ---
 
-# ▶ SLIDE 17 — Section divider: XGBoost
+# ▶ SLIDE 18 — Boosting, Tree by Tree
+
+Here is that loop running, on data where you can see every step.
+
+To draw a fit you need one feature, so I've borrowed Lecture 3's electricity data: weekday load in
+the eastern US, against the day of the year. Every gray dot is one weekday between 2002 and 2018.
+The shape is the one you met in Lecture 3, a W — high in winter, a dip in spring, the big summer peak
+from air conditioning, a dip in autumn.
+
+The dashed line is where boosting starts: the mean, F zero.
+
+**[pause]**
+
+*(Left panel.)*
+
+After **one tree**. A depth-three tree fitted to the residuals from the mean, and we add
+zero point three of it. The red curve has barely left the dashed line — a step up for summer, a
+step down for spring and autumn. Training RMSE three point nine gigawatts.
+
+*(Second panel.)*
+
+After **two trees**. The second tree was fitted to what the first one left over — the residuals.
+The summer step got taller, the dips got deeper. Three point five three.
+
+*(Third panel.)*
+
+After **five**. You can see the W now. Three point oh seven.
+
+*(Fourth panel.)*
+
+After **fifty**. The curve follows the data closely, and it has started to wiggle. RMSE two
+point eight nine.
+
+**[pause]**
+
+Here is how to read that last number. The best *any* curve in day of the year could do on these
+data — the average load on each calendar day — has an RMSE of two point eight six. Fifty trees
+are within three hundredths of that. Everything left is variation the day of the year cannot
+explain: weather, holidays, one year being hotter than another. Keep adding trees and boosting
+starts fitting that noise — those wiggles near July are the beginning of it.
+
+One honest note. I used a learning rate of zero point three, the top of the range on the
+previous slide, so that four panels would show visible progress. At zero point zero five the
+same picture takes about six times as many trees.
+
+---
+
+# ▶ SLIDE 19 — Section divider: XGBoost
 
 The version that won everything.
 
 ---
 
-# ▶ SLIDE 18 — XGBoost: Three Advances
+# ▶ SLIDE 20 — XGBoost: Three Advances
 
 Three improvements over vanilla gradient boosting.
 
@@ -437,7 +533,7 @@ objective — gamma on the number of leaves, lambda on the magnitude of the leaf
 overfitting is controlled by the loss function itself, not only by stopping early.
 
 **Column subsampling.** Borrowed straight from random forests: sample features per tree and per
-split. The decorrelation idea from slide nine, imported into boosting.
+split. The decorrelation idea from slide ten, imported into boosting.
 
 **[pause]**
 
@@ -461,7 +557,7 @@ data; CatBoost handles categorical features natively. The ideas are the same.
 
 ---
 
-# ▶ SLIDE 19 — XGBoost: Key Hyperparameters
+# ▶ SLIDE 21 — XGBoost: Key Hyperparameters
 
 Six parameters, against the random forest's one that mattered. This is the cost of the extra
 accuracy.
@@ -482,7 +578,7 @@ early stopping on validation RMSE. Then tune depth and subsample by `TimeSeriesS
 
 ---
 
-# ▶ SLIDE 20 — XGBoost in Python
+# ▶ SLIDE 22 — XGBoost in Python
 
 The code, and one argument that matters more than it looks.
 
@@ -508,13 +604,13 @@ it's a system library problem.
 
 ---
 
-# ▶ SLIDE 21 — Section divider: Key Takeaways
+# ▶ SLIDE 23 — Section divider: Key Takeaways
 
 Let's pull it together.
 
 ---
 
-# ▶ SLIDE 22 — Tree Methods: Which One When
+# ▶ SLIDE 24 — Tree Methods: Which One When
 
 Three rows.
 
@@ -537,7 +633,7 @@ weight.
 
 ---
 
-# ▶ SLIDE 23 — Why No Tree Can Extrapolate
+# ▶ SLIDE 25 — Why No Tree Can Extrapolate
 
 One limit applies to every row of that table, and it deserves its own picture.
 
@@ -568,7 +664,7 @@ cannot. Or model the *change* instead of the level, so the target stays inside i
 
 ---
 
-# ▶ SLIDE 24 — Lecture 5: Key Takeaways
+# ▶ SLIDE 26 — Lecture 5: Key Takeaways
 
 Seven things, one line each.
 
@@ -599,11 +695,11 @@ better predictor.
 
 ---
 
-# ▶ SLIDE 25 — References
+# ▶ SLIDE 27 — References
 
 Reading is ISLP section 8.2 — bagging, random forests, and boosting — plus the XGBoost
 "Introduction to Boosted Trees" tutorial, which derives the regularized objective we waved at
-on slide 18.
+on slide 20.
 
 Next week: Regularization and Model Selection. We take the penalty idea that showed up inside
 XGBoost and give it a lecture of its own.
@@ -617,13 +713,13 @@ See you then.
 | Segment | Slides | Target |
 |---|---|---:|
 | Opening & wisdom of crowds | 1–4 | ~4 min |
-| Bagging & OOB | 5–7 | ~6 min |
-| Random forests | 8–10 | ~6 min |
-| Feature importance & Python | 11–13 | ~6 min |
-| Boosting & XGBoost | 14–20 | ~9 min |
-| Close | 21–25 | ~5 min |
+| Bagging & OOB | 5–8 | ~7 min |
+| Random forests | 9–11 | ~6 min |
+| Feature importance & Python | 12–14 | ~6 min |
+| Boosting & XGBoost | 15–22 | ~10 min |
+| Close | 23–27 | ~5 min |
 
-This is the longest deck in the course. If you must compress, slides 10 and 19 — the two
-hyperparameter tables — survive trimming best. Do **not** compress slides 6, 9, or 15: the
+This is the longest deck in the course. If you must compress, slides 11 and 21 — the two
+hyperparameter tables — survive trimming best. Do **not** compress slides 7, 10, or 16: the
 variance floor, the decorrelation fix, and the bagging-versus-boosting distinction are what the
 whole lecture is built on.

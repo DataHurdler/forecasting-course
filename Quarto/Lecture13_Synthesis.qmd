@@ -88,12 +88,12 @@ Three lessons, each paid for with a measurement.
 
 ## Lesson 1: The Benchmark Is a Real Competitor
 
-In Homework 1 the seasonal-naive benchmark **beat every smoothing and ARIMA model** you fitted. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**, and since 2012 the level it carries has moved under 5% a year.
+In Homework 1 the seasonal-naive benchmark **beat every smoothing and ARIMA model**. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**, and since 2012 the level it carries has moved under 5% a year.
 
-The course beat it, but rarely by much: **4%** with the Bayesian structural model, **12%** with Homework 2's GAMs, 65% with the best weekly model and its 46 engineered features.
+The course beat it, rarely by much: **4%** with the Bayesian structural model, **12%** with Homework 2's GAMs, 65% with the best weekly model and its 46 engineered features.
 
 ::: {.keybox}
-**Compute the benchmark first, every time.** It costs one line, it is often close, and it says whether the rest of the work was worth doing.
+**Compute the benchmark first, every time.** It costs one line and says whether the rest of the work was worth doing.
 :::
 
 ---
@@ -111,7 +111,19 @@ Four times this course, the more advanced method failed to win — and each time
 
 **None of these means the losing method is bad** — each solves a problem this data does not have: long dependency chains, large corpora.
 
+---
+
+## Lesson 2, Continued: A Problem This Data Does Not Have
+
+Gates fix forgetting. What does this panel ask a model to remember? Lecture 9's 30 series:
+
+![](../Figures/Lecture09_Part1/panel_between_within.svg){fig-align="center" height="300px"}
+
+**91%** of the variance is *which series*, not *which week*: little for a gate to keep. Transformers, likewise, earn their parameters on large corpora.
+
+::: {.keybox}
 **Match the method to the structure of the problem**, not to the recency of the paper.
+:::
 
 ---
 
@@ -158,16 +170,18 @@ The errors that do not announce themselves.
 
 ## Errors That Fail Silently I: the Pipeline
 
-Every one of these produces a confident, plausible, wrong answer with no error message — and every one is a **bug in the code**.
+Confident, plausible, wrong and silent — and every one a **bug in the code**.
+
+![](../Figures/Lecture13_Synthesis/cv_splits.svg){fig-align="center" height="200px"}
 
 | | |
 |---|---|
-| `KFold` on a time series | Random folds put the future in training. CV error looks excellent; the forecast fails. |
-| Scaling outside the fold | Validation statistics leak into training. Smaller effect, same class of error. |
-| Rolling features unshifted | A window including the current week leaks the target into its own predictor. |
-| Reading MDI importance | Pure noise ranked **17th of 29** in Homework 3 — above a real feature — purely for having many distinct values. |
+| `KFold` on a time series | Future weeks train the model; CV looks great, the forecast fails. |
+| Scaling outside the fold | Validation statistics leak into training. |
+| Rolling features unshifted | The current week leaks the target into its own predictor. |
+| Reading MDI importance | Noise ranked **17th of 29** in Homework 3 on distinct values alone. |
 
-**The common thread:** the failure is not a crash, it is a number that looks fine — which is why the discipline is procedural. Split by time, scale inside the fold, shift the window, plant a control.
+**Not a crash but a number that looks fine**, so the discipline is procedural: split by time, scale inside the fold, shift the window, plant a control.
 
 ---
 
@@ -236,15 +250,24 @@ The final project asks for exactly the report on the previous slide, on data of 
 
 ## What This Course Did Not Cover
 
+:::: {.columns}
+::: {.column width="64%"}
 | | |
 |---|---|
-| **Hierarchical reconciliation** | Making store forecasts add up to regional totals. Different from Lecture 11's hierarchy. FPP Ch. 11. |
-| **Intermittent demand** | Series that are mostly zeros — Croston's method and its relatives. Common in spare parts and slow-moving SKUs. |
-| **Structural breaks** | When the future stops resembling the past. Every method here fails together, and detecting it early is its own field. |
-| **Causal inference** | DAGs told us confounders exist. Estimating causal effects credibly is a separate course. |
-| **Foundation models** | Pretrained forecasters applied zero-shot. Moving quickly — FPP-Py Ch. 15 is a starting point. |
+| **Hierarchical reconciliation** | Store forecasts that add up to regional totals. FPP Ch. 11. |
+| **Intermittent demand** | Mostly-zero series: Croston's method and its relatives. |
+| **Structural breaks** | The future stops resembling the past, and every method fails together. |
+| **Causal inference** | DAGs told us confounders exist; credible causal estimates are a separate course. |
+| **Foundation models** | Pretrained forecasters, zero-shot. FPP-Py Ch. 15 is a start. |
+:::
+::: {.column width="34%"}
+![](../Figures/Lecture08/source/aisle-march-2020.jpg){width="78%"}
 
-**The third row is the one most likely to matter in your career.** Every model in this course assumes the future resembles the past. When that stops being true, the model does not tell you — and the benchmark fails at the same moment.
+[Washington, DC, 18 March 2020. Photo: Kurt Kaiser (CC0).]{.neutral style="font-size: 0.55em; display: block; text-align: center;"}
+:::
+::::
+
+**The third row is the one most likely to matter in your career.** Every model here assumes the future resembles the past. When it stops, the model does not tell you — and the benchmark fails at the same moment.
 
 ---
 
@@ -252,12 +275,12 @@ The final project asks for exactly the report on the previous slide, on data of 
 
 ::: {.keybox}
 1. **Compute the benchmark first.** It says whether the rest was worth doing.
-2. **Match the method to the problem**, not the paper: our most advanced finished fifth.
+2. **Match the method to the problem**: our most advanced finished fifth.
 3. **One idea recurs:** fit against complexity, one parameter setting the rate.
 4. **Split by time, always.** Leakage does not crash; it flatters.
 5. **Diagnostics check the model, not the question.** Held-out data caught our worst two.
-6. **Report what went against you.** It makes the rest credible.
-7. **Know what the forecast is for.** A decision under uncertainty needs a distribution.
+6. **Report what went against you.**
+7. **Know what the forecast is for.** Decisions need a distribution.
 :::
 
 [The libraries will change. The habits are the transferable part.]{.neutral}

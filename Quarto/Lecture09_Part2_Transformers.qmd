@@ -42,14 +42,14 @@ Two constraints that are built into reading a sequence one step at a time.
 
 ## Two Problems Built Into Recurrence
 
-Part 1's recurrent forecaster has two problems left, both from reading strictly left to right.
+Part 1's forecaster reads strictly left to right. Follow one week, $t-52$, to the forecast:
 
-**The information bottleneck.** Everything about step 3 must squeeze through every hidden state between 3 and $T$. Gates help, but the whole history still lives in one fixed-size vector.
+![](../Figures/Lecture09_Part2/recurrence_paths.svg){fig-align="center" height="290px"}
 
-**The sequential bottleneck.** Step $t$ waits for step $t-1$: a 1,000-step sequence takes 1,000 sequential operations, however many GPUs you own.
+[**The information bottleneck:** week $t-52$ must survive 52 squeezes through one 64-number state. **The sequential bottleneck:** each update waits for the last, however many GPUs you own.]{.smaller}
 
 ::: {.keybox}
-**Attention removes both at once.** Every position looks directly at every other, in one operation: no compression through intermediate states, no ordering constraint on the computation.
+**Attention removes both at once:** every week reads every other directly, and all are computed together. Path length counts operations, not what a trained model uses.
 :::
 
 
@@ -75,13 +75,9 @@ A lookup with soft matching [@Vaswani2017]: each week's **query** is scored agai
 
 Attention can weight any week in the window in one step; an RNN needs 52 updates to reach last year. Where our trained model actually looked, over the test year:
 
-![](../Figures/Lecture09_Part2/attention_heatmap.svg){fig-align="center" height="300px"}
+![](../Figures/Lecture09_Part2/attention_heatmap.svg){fig-align="center" height="340px"}
 
 [Mostly the last two to seven weeks; in one of two training runs, one head found last year's week. The weights are **learned, not specified** — and they show where the model looked, not what mattered.]{.smaller}
-
-::: {.warningbox}
-The price is quadratic: $O(T^2)$ in time and memory — fine at $T = 52$, painful at $T = 10{,}000$.
-:::
 
 ---
 
@@ -93,7 +89,7 @@ $$\text{MultiHead}(Q,K,V) = \text{concat}(\text{head}_1, \ldots, \text{head}_h)\
 
 Each head can specialize. Ours did: most watch the last few weeks, one spreads its weight evenly, and in one run one found the annual lag.
 
-**The cost is not what you would guess.** Each head works in $d_{\text{model}}/h$ dimensions, so eight heads cost about the same as one full-width head.
+**The cost is a surprise.** Each head works in $d_{\text{model}}/h$ dimensions, so eight heads cost about the same as one full-width head.
 
 [Our model: `nhead=4`, `d_model=64` — four heads of 16 dimensions.]{.neutral .smaller}
 
@@ -130,16 +126,23 @@ The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{
 
 ## Why Transformers Took Over
 
-Three properties, in the order they mattered commercially.
+:::: {.columns}
+::: {.column width="47%"}
+**Parallelism.** No score waits for another. More than accuracy, this is why it won.
 
-**Parallelism.** Every position is computed at once, so training scales across hardware. More than accuracy, this is why it won.
+**Direct long-range paths.** One step, any distance.
 
-**Direct long-range paths.** Any position reaches any other in one step.
+**Scale.** It kept improving as parameters and data grew. BERT [@Devlin2019] and GPT are this block, repeated.
+:::
+::: {.column width="53%"}
+![](../Figures/Lecture09_Part2/attention_cost.svg){fig-align="center" width="82%"}
+:::
+::::
 
-**Scale.** It kept improving as parameters and data grew. BERT [@Devlin2019] is an encoder stack for understanding, GPT a decoder stack for generation — both this block, repeated.
+[The price is the square's area, $O(T^2)$ in time and memory: fine at $T = 52$, painful at $T = 10{,}000$.]{.smaller}
 
 ::: {.warningbox}
-Every one of those advantages is about **large data and long sequences**. Hold that thought against a 52-week window and 5,160 training examples.
+Every advantage here is about **large data and long sequences**. Hold that against a 52-week window and 5,160 training examples.
 :::
 
 
@@ -236,17 +239,17 @@ That second case is language, which is why this architecture reshaped that field
 ## Lecture 9 Part 2: Key Takeaways
 
 ::: {.keybox}
-1. **Attention**: score queries against keys, softmax, average the values. Distance costs nothing.
+1. **Attention**: score queries against keys, softmax, average the values.
 
-2. The price is **quadratic** in sequence length: fine at 52 steps, the central constraint at 10,000.
+2. Its price is **quadratic**: fine at 52 steps, the central constraint at 10,000.
 
-3. **Multi-head** attention runs several notions of relevance at roughly the cost of one.
+3. **Multi-head**: several notions of relevance for about the cost of one.
 
 4. An encoder block: attention, **skips**, LayerNorm, feed-forward. Only attention is new.
 
-5. **Attention is permutation-invariant**: add position yourself — PyTorch will not, and forgetting fails silently.
+5. **Attention is permutation-invariant**: add position yourself; PyTorch will not.
 
-6. Here it **tied the LSTM** and lost to an RNN with **one-fifteenth** the parameters: its advantages are advantages at scale.
+6. Here it **tied the LSTM** and lost to an RNN **one-fifteenth** its size: it needs scale.
 :::
 
 [Next: Bayesian Statistics I — a different answer to what a forecast should tell you.]{.neutral}

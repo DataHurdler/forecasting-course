@@ -94,20 +94,14 @@
       \;+\; \underbrace{\varepsilon_t}_{\text{noise}},
       \qquad \varepsilon_t \sim \mathcal{N}(0, \sigma^2)
   \]
-  \vspace{-0.25cm}
-
-  \textbf{Each piece is something a business person can name}, and each gets its own posterior:
-  ``demand is growing'' is about $\mu_t$, ``December is our peak'' is about $s_t$, ``how noisy is
-  this store?'' is $\sigma$.
-
-  \begin{keybox}
-    That is why it is called \emph{structural}: you state what the series is made of, and ask the
-    data how much of each part there is.
-  \end{keybox}
-
-  \vspace{0.1cm}
-  ARIMA, by contrast, differences trend and seasonality away, and its parameters are
-  correlations, not quantities anyone can name.
+  \vspace{-0.45cm}
+  \begin{center}
+    \includegraphics[height=4.3cm]{../Figures/Lecture11_Part1/decomposition.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small \textbf{Each piece is something a business person can name}, and each gets its own
+  posterior: ``demand is growing'' is about $\mu_t$, ``August is our peak'' is about $s_t$, ``how
+  noisy is this store?'' is $\sigma$. That is why it is called \emph{structural}.}
 \end{frame}
 
 % --- Slide: local level --------------------------------------------------------
@@ -192,32 +186,46 @@
 
 % --- Slide: diagnostics failure --------------------------------------------------
 \begin{frame}{The First Fit Failed --- Here Is What That Looks Like}
-  Written the obvious way, with \texttt{pm.GaussianRandomWalk}, this model samples badly ---
-  even at \texttt{target\_accept=0.95}. Lecture 10's checks caught it:
+  Written the obvious way, with \texttt{pm.GaussianRandomWalk}, the model fails Lecture 10's checks
+  (want $\hat{R} < 1.01$, ESS $> 400$), even at \texttt{target\_accept=0.95}:
+  \begin{center}
+    \includegraphics[height=4.3cm]{../Figures/Lecture11_Part1/traces.pdf}
+  \end{center}
+  \vspace{-0.2cm}
+  \textbf{Nothing crashed}, and the forecast looked reasonable. But the top chains wander: 6{,}000
+  draws, worth about 274 independent ones. Only the diagnostics objected.
+
+  \vspace{0.1cm}
+  \muted{\footnotesize The two rows also sit at different heights. The next slide says why.}
+\end{frame}
+
+% --- Slide: the fix ----------------------------------------------------------------
+\begin{frame}{The Fix: Reparameterize, Don't Sample More}
   \begin{center}
     {\small
-    \begin{tabular}{lrrl}
+    \begin{tabular}{p{6.3cm}p{6.3cm}}
       \toprule
-      & \textbf{First attempt} & \textbf{After the fix} & \textbf{Want} \\
+      \textbf{Centered} (the first fit) & \textbf{Non-centered} (the fix) \\
       \midrule
-      $\hat{R}$ & 1.022 & \textbf{1.002} & $< 1.01$ \\
-      ESS (bulk) & 274 & \textbf{2{,}376} & $> 400$ \\
-      Divergences & 0 & 0 & $0$ \\
+      {\scriptsize\texttt{level = pm.GaussianRandomWalk("level",}} &
+      {\scriptsize\texttt{z = pm.Normal("z", 0, 1, shape=n)}} \\
+      {\scriptsize\texttt{\ \ \ \ \ \ \ \ sigma=sigma\_level, shape=n)}} &
+      {\scriptsize\texttt{level = pm.math.cumsum(z * sigma\_level)}} \\[4pt]
+      Resize $\sigma_{\text{level}}$ and all 225 levels must move with it: the sampler crawls. &
+      The sampler moves independent standard Normals; the level is built afterwards. \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
 
-  \vspace{-0.05cm}
-  Nothing crashed. The model returned a forecast, and the forecast looked reasonable. Only the
-  diagnostics said the chains had not agreed with each other.
-
   \begin{warningbox}
-    \textbf{The fix was reparameterization, not more samples.} Writing the walk as
-    \texttt{cumsum(z * sigma)} with $z \sim \mathcal{N}(0,1)$ --- the \emph{non-centered} form ---
-    gives the sampler a geometry it can navigate. BMCP §4.6.1 covers exactly this, and you will
-    meet it again next week.
+    \textbf{Same data, same 6{,}000 draws: ESS 274 $\to$ 2{,}376.} BMCP §4.6.1 covers exactly
+    this, and you will meet it again next week.
   \end{warningbox}
+
+  \muted{\footnotesize Almost the same model. \texttt{GaussianRandomWalk} lets week 1's level start
+  anywhere (its default start, $\mathcal{N}(0, 100)$, raises a warning the lab silences); the
+  \texttt{cumsum} starts it near zero. That, not sampling, is why the trace heights differ.}
 \end{frame}
 
 % =============================================================================
@@ -307,12 +315,11 @@
   \begin{keybox}
     {\small
     \begin{enumerate}\itemsep2pt
-      \item A \textbf{structural} model names the parts of a series and puts a prior on each.
-      \item The \textbf{local level} is a random walk; $\sigma_{\text{level}}$ sets how fast it
-            moves.
+      \item A \textbf{structural} model names a series' parts and puts a prior on each.
+      \item The \textbf{local level} is a random walk; $\sigma_{\text{level}}$ sets its speed.
       \item \textbf{Fourier terms} build seasonality from a few waves, each $(a_k, b_k)$ an arrow.
       \item \textbf{Check the sampler first:} our first fit looked fine and had not converged.
-      \item The point forecast beat seasonal naive by \textbf{4\%}. That is not the argument.
+      \item The point forecast beat seasonal naive by \textbf{4\%}. Not the argument.
       \item The interval was \textbf{calibrated but too wide to act on}; establishing that is the
             product.
     \end{enumerate}

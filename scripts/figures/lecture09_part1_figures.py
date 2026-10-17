@@ -440,8 +440,123 @@ def budget_curve() -> None:
     save(fig, "budget_curve")
 
 
+# ================================================================== Check 2: the panel itself
+@lru_cache(maxsize=None)
+def panel_stats() -> dict:
+    """Lab Step 5's diagnostics 1 and 2, computed the lab's way (no training, no seed).
+
+    The between/within split is an exact sum-of-squares identity: every deviation from the grand
+    mean is (series mean - grand mean) + (week - series mean), and the cross term sums to zero
+    inside each series because deviations from a mean sum to zero. So, over all 8,310 rows,
+    total SS = between SS + within SS, and the root-mean-square versions are the sides of a right
+    triangle: total^2 = between^2 + within^2. The assertion below checks that before anything is
+    drawn.
+    """
+    w = weekly().assign(series=lambda d: d.store_id + "_" + d.cat_id)
+    w["level"] = w.groupby("series").units.transform("mean")
+    w["dev"] = w.units - w.level
+    grand = w.units.mean()
+    n = len(w)
+    ss_tot = float(((w.units - grand) ** 2).sum())
+    ss_btw = float(((w.level - grand) ** 2).sum())
+    ss_wth = float((w.dev ** 2).sum())
+    assert abs(ss_tot - ss_btw - ss_wth) < 1e-9 * ss_tot, "between + within != total"
+    lags = list(range(1, 53))
+    acf = [float(w.groupby("series").dev.apply(lambda x: x.autocorr(k)).mean()) for k in lags]
+    return {"n_series": int(w.series.nunique()), "n_rows": n, "grand": float(grand),
+            "share_between": ss_btw / ss_tot,
+            "rms_total": float(np.sqrt(ss_tot / n)), "rms_between": float(np.sqrt(ss_btw / n)),
+            "rms_within": float(np.sqrt(ss_wth / n)), "lags": lags, "acf": acf}
+
+
+def _series_axis(ax, labels: bool = True) -> None:
+    """All 30 store-category series on one axis, coloured by category."""
+    w = weekly()
+    st = panel_stats()
+    colors = {"FOODS": BLUE, "HOUSEHOLD": GREEN, "HOBBIES": AMBER}
+    for (store, cat), g in w.groupby(["store_id", "cat_id"]):
+        ax.plot(g.week_start, g.units / 1000, color=colors[cat], lw=0.7, alpha=0.75, zorder=2)
+    ax.axhline(st["grand"] / 1000, color=BLACK, lw=1.3, ls=(0, (4, 2.5)), zorder=3)
+    end = w.week_start.max()
+    if labels:
+        for cat, x in (("FOODS", 0.03), ("HOUSEHOLD", 0.29), ("HOBBIES", 0.71)):
+            ax.text(x, 0.94, cat.lower(), color=colors[cat], fontsize=11, ha="left",
+                    va="center", fontweight="bold", transform=ax.transAxes)
+        ax.text(end + pd.Timedelta(days=30), st["grand"] / 1000, "grand\nmean", color=BLACK,
+                fontsize=10.5, ha="left", va="center", linespacing=1.0)
+    ax.set_ylim(0, 43)
+    ax.set_yticks([0, 10, 20, 30, 40])
+    ax.set_ylabel("units / week (000s)", fontsize=11)
+    ax.set_xticks(pd.to_datetime([f"{y}-01-01" for y in (2012, 2014, 2016)]))
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%Y"))
+    ax.tick_params(labelsize=11)
+
+
+def _pythagoras_axis(ax) -> None:
+    """The three root-mean-square deviations as the sides of a right triangle, to scale."""
+    st = panel_stats()
+    b, wi, t = st["rms_between"] / 1000, st["rms_within"] / 1000, st["rms_total"] / 1000
+    ax.set_aspect("equal"); ax.axis("off")
+    ax.plot([0, b], [0, 0], color=BLUE, lw=3.2, solid_capstyle="butt")
+    ax.plot([b, b], [0, wi], color=CRIMSON, lw=3.2, solid_capstyle="butt")
+    ax.plot([0, b], [0, wi], color=BLACK, lw=1.6)
+    r = 0.45                                                   # the right-angle mark
+    ax.plot([b - r, b - r, b], [0, r, r], color=GRAY, lw=0.9)
+    ax.text(b / 2, -0.45, f"between series  {st['rms_between']:,.0f}", ha="center", va="top",
+            fontsize=11, color=BLUE, fontweight="bold")
+    ax.text(b + 0.35, wi / 2, f"within\n{st['rms_within']:,.0f}", ha="left", va="center",
+            fontsize=11, color=CRIMSON, fontweight="bold", linespacing=1.05)
+    ang = np.degrees(np.arctan2(wi, b))
+    ax.text(b * 0.42, wi * 0.42 + 0.42, f"total  {st['rms_total']:,.0f}", ha="center",
+            va="bottom", fontsize=11, rotation=ang, rotation_mode="anchor")
+    ax.text(b / 2, -1.75, f"between² / total² = {st['share_between']:.0%}", ha="center",
+            va="top", fontsize=12, fontweight="bold")
+    ax.text(b / 2, -2.75, "sides: RMS deviation from\nthe grand mean, units/week",
+            ha="center", va="top", fontsize=10, color=GRAY, linespacing=1.05)
+    ax.set_xlim(-0.2, b + 1.9); ax.set_ylim(-4.6, wi + 0.4)
+
+
+def panel_variance() -> None:
+    """Check 2: 30 series on one axis, the 91% as Pythagoras, and the mean ACF."""
+    st = panel_stats()
+    print(f"    between-series share {st['share_between']:.4f}   RMS total {st['rms_total']:,.1f}"
+          f" = sqrt({st['rms_between']:,.1f}^2 + {st['rms_within']:,.1f}^2)"
+          f"   ACF lag 1 {st['acf'][0]:.3f}, lag 52 {st['acf'][51]:.3f}")
+    fig = plt.figure(figsize=sz(17, 4.2))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.15, 0.95], wspace=0.36)
+    _series_axis(fig.add_subplot(gs[0]))
+    _pythagoras_axis(fig.add_subplot(gs[1]))
+
+    ax = fig.add_subplot(gs[2])
+    lags, acf = np.array(st["lags"]), np.array(st["acf"])
+    ax.vlines(lags, 0, acf, color=GRAY, lw=1.0)
+    ax.plot(lags, acf, "o", ms=2.6, color=GRAY)
+    for k in (1, 52):
+        ax.plot([k], [acf[k - 1]], "o", ms=5.5, color=CRIMSON, zorder=4)
+    ax.text(3.5, acf[0] + 0.02, f"lag 1: {acf[0]:.2f}", ha="left", va="bottom", fontsize=11,
+            color=CRIMSON)
+    ax.text(50, acf[51] + 0.1, f"lag 52:\n{acf[51]:.2f}", ha="right", va="bottom",
+            fontsize=11, color=CRIMSON, linespacing=1.05)
+    ax.set_xlim(0, 54); ax.set_ylim(0, 1.0)
+    ax.set_xticks([1, 13, 26, 52]); ax.set_yticks([0, 0.5, 1.0])
+    ax.set_xlabel("lag (weeks)", fontsize=11)
+    ax.set_ylabel("mean ACF", fontsize=11)
+    ax.tick_params(labelsize=11)
+    save(fig, "panel_variance")
+
+
+def panel_between_within() -> None:
+    """Lecture 13's Lesson 2 cites the 91%: the first two panels of panel_variance, same numbers."""
+    fig = plt.figure(figsize=sz(11.5, 4.2))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.2, 1.15], wspace=0.36)
+    _series_axis(fig.add_subplot(gs[0]))
+    _pythagoras_axis(fig.add_subplot(gs[1]))
+    save(fig, "panel_between_within")
+
+
 FIGURES = {"unrolled_rnn": unrolled_rnn, "gradient_decay": gradient_decay,
-           "cell_lanes": cell_lanes, "budget_curve": budget_curve}
+           "cell_lanes": cell_lanes, "budget_curve": budget_curve,
+           "panel_variance": panel_variance, "panel_between_within": panel_between_within}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

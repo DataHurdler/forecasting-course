@@ -152,13 +152,20 @@ divergences  0
 R-hat 1.022 to 1.002. Effective sample size 274 to **2,376** — nearly nine times more information
 out of the same number of draws.
 
-And here is the sentence to say slowly: **same model, same data, same priors.**
-`cumsum(z * sigma)` and `GaussianRandomWalk(sigma=sigma)` describe the *identical* distribution.
-Nothing about what we believe has changed. Only the coordinate system the sampler explores.
+And here is the sentence to say slowly: **same data, same random walk, new coordinates.**
+`cumsum(z * sigma)` and `GaussianRandomWalk(sigma=sigma)` describe the same walk. What changed is
+the coordinate system the sampler explores.
 
-That is worth internalising, because it is unlike everything else in this course. This is not a
+That is worth internalizing, because it is unlike everything else in this course. This is not a
 modeling improvement or a bias-variance trade. It is a **computational** fix to a **computational**
-problem, and the give-away is that the posterior it targets is unchanged.
+problem.
+
+*(One honest footnote, and read the callout under the code.)* The two fits are *almost* the same
+model, not exactly. `GaussianRandomWalk` lets week one's level start anywhere, because its default
+start is a Normal with standard deviation one hundred. PyMC warns about that default, and our Setup
+cell silences warnings, so you never saw it. The `cumsum` version starts the walk near zero. That
+one difference nudges sigma-level up, from about four hundred fifty units a week to about five
+hundred twenty. A default you didn't choose is still a prior.
 
 *(Screen: the components figure.)*
 

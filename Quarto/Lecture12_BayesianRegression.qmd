@@ -98,34 +98,41 @@ Fitted on the weekly panel, controlling for series and trend:
 
 The **HDI** — highest density interval — is the shortest interval holding 94% of the posterior, and it means what everyone wants: a 94% probability the coefficient is inside.
 
-**The last row is the useful one.** `b_event`'s interval spans zero, so the data do not establish a direction — but it also shows the effect is *small*, between about $-1.1\%$ and $+0.4\%$. That is more honest than "not significant."
+**The last row is the useful one.** `b_event`'s interval spans zero, so the data do not establish a direction. Two slides on, we ask whether it is also too small to matter.
 
 ---
 
 ## Asking the Posterior a Direct Question
 
-Any question about $\beta$ is answered by counting samples.
-
 ::: {.examplebox}
 ::: {.examplebox-title}
-One line each
+Any question about $\beta$ is a count of samples: one line each
 :::
 ```python
 b = idata.posterior["b_price"].values.ravel()
-
 (b < 0).mean()       # P(demand falls when price rises)
 (b < -1).mean()      # P(elastic: a price rise loses revenue)
 (b < -0.5).mean()    # P(a 1% rise costs over 0.5% of volume)
 ```
 :::
 
-On our fit, $P(\text{elasticity} < 0) = \mathbf{1.00}$ and $P(\text{elasticity} < -1) = \mathbf{0.00}$: demand falls when price rises, and is **inelastic** in every draw. Whether a 1% rise costs over half a percent of volume stays open: $P(\text{elasticity} < -0.5) = \mathbf{0.46}$.
+![](../Figures/Lecture12_BayesianRegression/posterior_area.svg){fig-align="center" height="235px"}
+
+Each answer is the share of the area past a line. Demand is **inelastic** in every draw; the half-percent question stays open. **A p-value gives only the direction.**
+
+---
+
+## Too Small to Matter? A ROPE
+
+`b_event`'s HDI spans zero: no direction. A **ROPE** — region of practical equivalence — asks a different question: is the effect too small to act on?
+
+![](../Figures/Lecture12_BayesianRegression/rope_event.svg){fig-align="center" height="235px"}
+
+The width is a business choice, not a statistic. We use Homework 7's $|\beta| < 0.05$, about $\pm 5\%$ a week; even at $\pm 1\%$, 95% is inside.
 
 ::: {.keybox}
-**A p-value reports only the direction.** The posterior also answers *how big* — and shows which size questions are still open.
+Spans zero and inside the ROPE: **negligible**, stop looking. Spans zero and wide: **still open**, get more data. "Not significant" cannot tell them apart.
 :::
-
-[Posterior mass inside a range of negligible values is a **ROPE** — region of practical equivalence.]{.neutral .smaller}
 
 # Causal Structure and DAGs
 
@@ -135,16 +142,22 @@ Which coefficients mean what you think they mean.
 
 ## Directed Acyclic Graphs
 
-A **DAG** is a picture of what you believe causes what: **nodes** are variables, **arrows** run from cause to effect, and nothing causes itself. You draw it before the model, from domain knowledge, to decide *which variables belong in the regression*.
+A **DAG** is a picture of what you believe causes what, drawn from domain knowledge *before* the model. It decides which variables belong in the regression.
 
-| | |
-|---|---|
-| **Confounder** | Causes both your predictor and your outcome. **Must** be controlled for, or its influence is absorbed into your coefficient. |
-| **Collider** | Is caused by both. Controlling for it **creates** a spurious association that was not there. |
+:::: {.columns}
+::: {.column width="57%"}
+![](../Figures/Lecture12_BayesianRegression/dag.svg){width="100%"}
+:::
+::: {.column width="41%"}
+[**Confounder**]{style="color: #D71920;"}: causes both predictor and outcome. **Must** be controlled, or it leaks into your coefficient.
 
-**So "add every control you have" is bad advice.** Which variables to include is a question about causal structure, and no model fit will answer it.
+**Collider**: caused by both. Controlling for it **creates** a spurious association.
+:::
+::::
 
-[Whether a DAG is right is a business question, not a statistical one. Estimating causal effects credibly is a separate subject.]{.neutral .smaller}
+**So "add every control you have" is bad advice**, and no model fit settles it.
+
+[Whether a DAG is right is a business question, not a statistical one.]{.neutral .smaller}
 
 ---
 
@@ -217,7 +230,7 @@ No single method dominates. Choose based on: (1) data type and size, (2) need fo
 ::: {.keybox}
 1. **Bayesian regression**: a posterior per $\beta$, whose mode is Ridge (Normal) or LASSO (Laplace).
 
-2. **Ask the posterior directly**: mean, HDI, $P(\beta_j$ past any threshold$)$.
+2. **Ask the posterior directly**: mean, HDI, $P(\beta_j$ past a threshold$)$, mass in a ROPE.
 
 3. **Draw the DAG first**: control confounders (here, series *and* time), never colliders.
 

@@ -68,21 +68,36 @@ we check.
 But one question comes before the model, and it costs nothing to ask.
 
 SNAP is a **food** assistance program. So let's measure the raw SNAP-week effect — no model, just
-the difference in mean log units — in all thirty series, grouped by category.
+the mean log units in high-SNAP weeks minus the mean in the other weeks — in all thirty series,
+over all 277 weeks each.
 
-*(Walk the table.)*
+*(Walk the figure. Point at the axis first.)*
 
-FOODS, ten series: plus point-oh-eight-nine, with a spread across stores of point-oh-five-eight.
+Each dot is one series: one store, one category. Three rows, ten stores in each. The dashed line
+at zero is no effect at all, and the black bar in each row is that category's mean.
 
-HOBBIES, ten series: plus point-oh-oh-six.
+*(Point at the two gray rows.)*
 
-HOUSEHOLD, ten series: plus point-oh-one-one.
+Start at the bottom. HOBBIES and HOUSEHOLD sit in a tight huddle right on the zero line: means of
+plus point-oh-oh-six and plus point-oh-one-one, spread across stores of about a hundredth. A few
+stores even come out slightly negative.
+
+*(Point at the blue row.)*
+
+Now FOODS. Every one of the ten dots is to the right of zero, and the mean is plus
+point-oh-eight-nine — roughly a nine percent lift. And look how wide that row is: from California
+2 at about plus point-oh-one to Wisconsin 2 at about plus point-two-one. The spread across stores is
+point-oh-five-eight, four to six times the other two rows.
 
 **[pause]**
 
-Look at that first column. FOODS responds. The other two barely move — and that is not a surprise
-once you say it out loud, because SNAP is food assistance. You could have predicted the sign of
-that table before computing it.
+So FOODS responds, and the other two barely move — and that is not a surprise once you say it out
+loud, because SNAP is food assistance. You could have predicted which row sits apart before
+computing anything.
+
+And notice what that wide blue row is. It is the spread a hierarchy over the FOODS stores has to
+explain. Some of it is stores genuinely differing; some of it is noise, because even 277 weeks is
+a finite sample. Splitting the two is exactly the job we hand the model in a few slides.
 
 **These are not thirty versions of the same thing.** Pooling all thirty would be telling the model
 they are interchangeable, and the model would believe you.

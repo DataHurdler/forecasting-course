@@ -109,18 +109,17 @@
 
 % --- Slide: benchmarks ----------------------------------------------------------
 \begin{frame}{Lesson 1: The Benchmark Is a Real Competitor}
-  In Homework 1 the seasonal-naive benchmark \textbf{beat every smoothing and ARIMA model} you
-  fitted. Holt-Winters estimated \textbf{52 seasonal indices from 4.3 annual cycles}; seasonal
+  In Homework 1 the seasonal-naive benchmark \textbf{beat every smoothing and ARIMA model}. Holt-Winters estimated \textbf{52 seasonal indices from 4.3 annual cycles}; seasonal
   naive estimates \textbf{nothing}, and since 2012 the level it carries has moved under 5\% a year.
 
   \vspace{0.15cm}
-  The course beat it, but rarely by much: \textbf{4\%} with the Bayesian structural model,
+  The course beat it, rarely by much: \textbf{4\%} with the Bayesian structural model,
   \textbf{12\%} with Homework 2's GAMs, 65\% with the best weekly model and its 46 engineered
   features.
 
   \begin{keybox}
-    \textbf{Compute the benchmark first, every time.} It costs one line, it is often close, and
-    it says whether the rest of the work was worth doing.
+    \textbf{Compute the benchmark first, every time.} It costs one line and says whether
+    the rest of the work was worth doing.
   \end{keybox}
 \end{frame}
 
@@ -148,9 +147,21 @@
   \vspace{0.05cm}
   \textbf{None of these means the losing method is bad} --- each solves a problem this data does
   not have: long dependency chains, large corpora.
+\end{frame}
 
-  \vspace{0.05cm}
-  \textbf{Match the method to the structure of the problem}, not to the recency of the paper.
+% --- Slide: sophistication, the picture -----------------------------------------
+\begin{frame}{Lesson 2, Continued: A Problem This Data Does Not Have}
+  Gates fix forgetting. What does this panel ask a model to remember? Lecture 9's 30 series:
+  \begin{center}
+    \includegraphics[height=4.0cm]{../Figures/Lecture09_Part1/panel_between_within.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  \textbf{91\%} of the variance is \emph{which series}, not \emph{which week}: little for a gate
+  to keep. Transformers, likewise, earn their parameters on large corpora.
+
+  \begin{keybox}
+    \textbf{Match the method to the structure of the problem}, not to the recency of the paper.
+  \end{keybox}
 \end{frame}
 
 % --- Slide: the recurring idea ---------------------------------------------------
@@ -227,29 +238,29 @@
 
 % --- Slide: silent errors ----------------------------------------------------------
 \begin{frame}{Errors That Fail Silently I: the Pipeline}
-  Every one of these produces a confident, plausible, wrong answer with no error message ---
-  and every one is a \textbf{bug in the code}.
+  Confident, plausible, wrong and silent --- and every one a \textbf{bug in the code}.
+  \begin{center}
+    \includegraphics[height=2.8cm]{../Figures/Lecture13_Synthesis/cv_splits.pdf}
+  \end{center}
+  \vspace{-0.15cm}
   \begin{center}
     {\small
-    \begin{tabular}{p{3.5cm}p{8.8cm}}
+    \begin{tabular}{p{3.9cm}p{9.6cm}}
       \toprule
-      \texttt{KFold} on a time series & Random folds put the future in training. CV error looks
-      excellent; the forecast fails. \\[2pt]
-      Scaling outside the fold & Validation statistics leak into training. Smaller effect, same
-      class of error. \\[2pt]
-      Rolling features unshifted & A window including the current week leaks the target into its
-      own predictor. \\[2pt]
-      Reading MDI importance & Pure noise ranked \textbf{17th of 29} in Homework 3 --- above a
-      real feature --- purely for having many distinct values. \\
+      \texttt{KFold} on a time series & Future weeks train the model; CV looks great, the
+      forecast fails. \\
+      Scaling outside the fold & Validation statistics leak into training. \\
+      Rolling features unshifted & The current week leaks the target into its own predictor. \\
+      Reading MDI importance & Noise ranked \textbf{17th of 29} in Homework 3 on distinct
+      values alone. \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
 
-  \vspace{0.05cm}
-  \textbf{The common thread:} the failure is not a crash, it is a number that looks fine --- which
-  is why the discipline is procedural. Split by time, scale inside the fold, shift the window,
-  plant a control.
+  \vspace{-0.1cm}
+  \textbf{Not a crash but a number that looks fine}, so the discipline is procedural: split by
+  time, scale inside the fold, shift the window, plant a control.
 \end{frame}
 
 % --- Slide: silent failures II ------------------------------------------------------
@@ -361,29 +372,36 @@
 
 % --- Slide: not covered ------------------------------------------------------------
 \begin{frame}{What This Course Did Not Cover}
-  \begin{center}
-    {\small
-    \begin{tabular}{p{4.0cm}p{8.3cm}}
-      \toprule
-      \textbf{Hierarchical reconciliation} & Making store forecasts add up to regional totals.
-      Different from Lecture 11's hierarchy. FPP Ch. 11. \\[2pt]
-      \textbf{Intermittent demand} & Series that are mostly zeros --- Croston's method and its
-      relatives. Common in spare parts and slow-moving SKUs. \\[2pt]
-      \textbf{Structural breaks} & When the future stops resembling the past. Every method here
-      fails together, and detecting it early is its own field. \\[2pt]
-      \textbf{Causal inference} & DAGs told us confounders exist. Estimating causal effects
-      credibly is a separate course. \\[2pt]
-      \textbf{Foundation models} & Pretrained forecasters applied zero-shot. Moving quickly ---
-      FPP-Py Ch. 15 is a starting point. \\
-      \bottomrule
-    \end{tabular}
-    }
-  \end{center}
+  \begin{columns}[T]
+    \begin{column}{0.64\textwidth}
+      {\small
+      \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+        \toprule
+        \textbf{Hierarchical reconciliation} & Store forecasts that add up to regional totals.
+        FPP Ch.~11. \\[4pt]
+        \textbf{Intermittent demand} & Mostly-zero series: Croston's method and its
+        relatives. \\[4pt]
+        \textbf{Structural breaks} & The future stops resembling the past, and every method
+        fails together. \\[4pt]
+        \textbf{Causal inference} & DAGs told us confounders exist; credible causal estimates
+        are a separate course. \\[4pt]
+        \textbf{Foundation models} & Pretrained forecasters, zero-shot. FPP-Py Ch.~15 is a
+        start. \\
+        \bottomrule
+      \end{tabular}
+      }
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{../Figures/Lecture08/source/aisle-march-2020.jpg}\\[1pt]
+      {\scriptsize\color{unogray} Washington, DC, 18~March 2020. Photo: Kurt Kaiser (CC0).\par}
+    \end{column}
+  \end{columns}
 
-  \vspace{0.05cm}
-  \textbf{The third row is the one most likely to matter in your career.} Every model in this
-  course assumes the future resembles the past. When that stops being true, the model does not
-  tell you --- and the benchmark fails at the same moment.
+  \vspace{0.25cm}
+  \textbf{The third row is the one most likely to matter in your career.} Every model here
+  assumes the future resembles the past. When it stops, the model does not tell you --- and the
+  benchmark fails at the same moment.
 \end{frame}
 
 % --- Slide: closing ------------------------------------------------------------------
@@ -392,12 +410,12 @@
     {\small
     \begin{enumerate}\itemsep3pt
       \item \textbf{Compute the benchmark first.} It says whether the rest was worth doing.
-      \item \textbf{Match the method to the problem}, not the paper: our most advanced finished fifth.
+      \item \textbf{Match the method to the problem}: our most advanced finished fifth.
       \item \textbf{One idea recurs:} fit against complexity, one parameter setting the rate.
       \item \textbf{Split by time, always.} Leakage does not crash; it flatters.
       \item \textbf{Diagnostics check the model, not the question.} Held-out data caught our worst two.
-      \item \textbf{Report what went against you.} It makes the rest credible.
-      \item \textbf{Know what the forecast is for.} A decision under uncertainty needs a distribution.
+      \item \textbf{Report what went against you.}
+      \item \textbf{Know what the forecast is for.} Decisions need a distribution.
     \end{enumerate}
     }
   \end{keybox}

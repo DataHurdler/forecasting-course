@@ -36,14 +36,25 @@
   Something has to decide which ones survive.}
 
 % --- Slide: Why regularize ---------------------------------------------------
+% Figure: scripts/figures/lecture06_figures.py n_over_k (Lab 6, Step 1; numbers in measured.json).
 \begin{frame}{Why Regularize?}
-  OLS minimizes $\sum_{i}(y_i - \mathbf{x}_i'\boldsymbol{\beta})^2$. A weekly model with lags,
-  calendar dummies and promotions easily carries $k = 60$ predictors on $n = 150$ weeks: OLS fits
-  that sample beautifully and forecasts badly.
+  OLS minimizes $\sum_{i}(y_i - \mathbf{x}_i'\boldsymbol{\beta})^2$ and nothing else. Lab 6 hands
+  it $k = 62$ predictors, then shrinks the training window:
+  \begin{center}
+    \includegraphics[height=4.4cm]{../Figures/Lecture06_Regularization/n_over_k.pdf}
+  \end{center}
+  \vspace{-0.3cm}
+  {\small Same features, same test year. OLS goes from 280 to 3.6 million. Ridge, one line
+  changed, ends at 770, a little worse than the benchmark.}
+\end{frame}
+
+% --- Slide: the fix ------------------------------------------------------------
+\begin{frame}{Regularization: Fit Plus a Penalty}
+  Three things go wrong as $k$ approaches $n$. The variance of $\hat{\boldsymbol{\beta}}$ grows
+  with $k$. Correlated predictors get huge coefficients of opposite sign. Past $k > n$ there is no
+  unique solution.
 
   \vspace{0.15cm}
-  Three things go wrong. The variance of $\hat{\boldsymbol{\beta}}$ grows with $k$. Correlated
-  predictors get huge coefficients of opposite sign. Past $k > n$ there is no unique solution.
   \textbf{Regularization} adds a penalty on coefficient size:
   \[
     \underbrace{\textstyle\sum_i (y_i - \hat{y}_i)^2}_{\text{fit}}
@@ -161,6 +172,20 @@
   situation where pure LASSO picks a winner at random and pure Ridge refuses to simplify.
 \end{frame}
 
+% --- Slide: the elastic-net ball ----------------------------------------------
+% Figure: scripts/figures/lecture06_figures.py elastic_net (numbers in measured.json, "elastic_net").
+\begin{frame}{The Grouping Effect, Drawn}
+  The diamond again, beside the elastic-net ball at $\alpha = 0.5$, on the same ellipses and
+  with the same reach along the axes:
+  \begin{center}
+    \includegraphics[height=4.3cm]{../Figures/Lecture06_Regularization/elastic_net.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small The ball is pointed only on the axes and curved everywhere else. At this budget the
+  bend is slight, yet it moves the touch point off the corner. Its corner still zeros lag14, but
+  only while the reach is below 0.02, against LASSO's 0.16.}
+\end{frame}
+
 % =============================================================================
 \section{Choosing the Penalty}
 % =============================================================================
@@ -170,15 +195,17 @@
   tune it decides whether the model generalizes.}
 
 % --- Slide: Regularization path ----------------------------------------------
+% Figure: scripts/figures/lecture06_figures.py lasso_path (Lab 6, Step 3; numbers in measured.json).
 \begin{frame}{The Regularization Path}
-  Fit across a grid of $\lambda$ and trace each coefficient. At small $\lambda$ the coefficients sit near OLS: dense and unstable. As $\lambda$ grows they
-  shrink, and under LASSO they drop to zero one at a time, until only the intercept --- the mean
-  forecast --- is left.
-
-  \vspace{0.15cm}
-  \textbf{The order in which predictors leave is the useful output.} The last survivors held up
-  under the most pressure. Report that ordering, not one model's coefficient table: it is far
-  more stable across resamples, and more honest about what the data support.
+  Fit across a grid of $\lambda$ and trace each coefficient: Lab 6's LASSO, all 62 features.
+  They shrink, then drop to zero one at a time, until only the mean forecast is left.
+  \begin{center}
+    \includegraphics[height=4.2cm]{../Figures/Lecture06_Regularization/lasso_path.pdf}
+  \end{center}
+  \vspace{-0.35cm}
+  {\small \textbf{The order in which predictors leave is the useful output.} Seven of the last
+  eight are multiples of 7: nobody told the model about the week. Report that ordering, not one
+  model's coefficient table.}
 \end{frame}
 
 % --- Slide: Choosing lambda --------------------------------------------------

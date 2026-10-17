@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Generalized Additive Models**
 
-Deck: `Slides/Lecture03_GAMs.pdf` (19 pages) · Measured runtime: **~24 minutes** (22–27 depending on pace)
+Deck: `Slides/Lecture03_GAMs.pdf` (20 pages) · Measured runtime: **~24 minutes** (22–27 depending on pace)
 
 ---
 
@@ -86,35 +86,53 @@ does cost something.
 
 # ▶ SLIDE 5 — Why Additivity Matters for Interpretation
 
-Let me make the additivity point precise, because it's easy to nod along without seeing what's
+Let me make the additivity point concrete, because it's easy to nod along without seeing what's
 at stake.
 
-In a non-additive model, the effect of one variable depends on the value of another. You
-cannot describe them separately.
+In an additive model, each variable's effect is the same whatever the other variables are doing.
+In a non-additive model it isn't, and then you cannot describe the variables separately.
 
 **[pause]**
 
-Concretely. Suppose the truth is $y$ equals $x_1$ squared times $x_2$ squared, plus noise.
+*(Point at the left panel.)*
 
-Take the derivative with respect to $x_1$: you get two $x_1$ $x_2$-squared. That expression
-contains *both* variables.
+This is the electricity data you'll use in the lab. Average daily load, month by month. The red
+line is weekdays, the blue line is weekends. Weekends are lower every month — offices and
+factories are closed.
 
-So there is no answer to "what does $x_1$ do to $y$?" that doesn't begin with "it depends on
-$x_2$." Not because we haven't worked hard enough — because the question has no
-variable-by-variable answer. The model doesn't decompose.
+But look at the size of the gap. In July, weekdays run about four thousand and sixty megawatts
+above weekends. In December, about two thousand. The weekend effect is twice as big in summer
+as in winter. The likely reason, though the data alone can't prove it: office and shop air
+conditioning runs on weekdays and stops at the weekend, while much of the winter load is home
+heating, and homes are occupied every day.
+
+So "what does the weekend do to demand?" has no single answer. It begins with "it depends on
+the month."
 
 **[pause]**
 
-Now the GAM. $y$ equals $f_1$ of $x_1$, plus $f_2$ of $x_2$, plus noise.
+*(Point at the right panel.)*
 
-The marginal effect of $x_1$ is just $f_1$-prime of $x_1$. A function of $x_1$ alone.
-Whatever $x_2$ happens to be doing, the answer is the same.
+Now fit an additive model: a month effect plus a weekend effect. Here is everything it can draw.
+Two curves, exactly parallel. One weekend effect — about two thousand nine hundred and sixty
+megawatts — in every month of the year. Too big in December, too small in July.
 
-**That is why you can plot each variable's effect separately and hand the plot to a
-stakeholder.** One curve per variable, each one true on its own terms.
+That is not a bad fit to blame on the estimator. It's the structure. In an additive model the
+effect of one variable cannot depend on another, so the curves have to be parallel.
 
-And that is also precisely what GAMs give up. If the effect of price genuinely does depend on
-whether it's a holiday week, a GAM cannot represent that. We'll come back to it at the end.
+**[pause]**
+
+And that's the trade, both halves of it. The price: an additive model cannot represent a gap
+that changes with the month. The gift: because the effects don't depend on each other, each one
+is a single curve. One curve for the month, one number for the weekend. You can plot each one
+on its own and hand it to a stakeholder, and every plot is true whatever the other variable is
+doing.
+
+If you want the calculus version: in a GAM the marginal effect of $x_1$ is $f_1$-prime of $x_1$,
+a function of $x_1$ alone. In a model with $x_1$ times $x_2$ in it, the derivative contains
+$x_2$. Same idea as the parallel curves.
+
+We'll come back to the price at the end of the lecture, and next week trees pay it for us.
 
 ---
 
@@ -303,8 +321,9 @@ business time series actually contain.
 slope is allowed to shift. That's important, because real business series do change direction:
 a new competitor arrives, a store is renovated, a pandemic starts.
 
-**Seasonality** is a Fourier series. That's how Prophet handles weekly and yearly cycles
-simultaneously — something none of our Lecture 1 or 2 methods could do.
+**Seasonality** is a Fourier series — a sum of sine waves. That's how Prophet handles weekly and
+yearly cycles simultaneously — something none of our Lecture 1 or 2 methods could do. More on
+how many waves in a moment.
 
 **Holidays** are irregular events you supply yourself. Black Friday. A product launch. A
 lockdown. These aren't periodic, so no seasonal term captures them, and you tell Prophet the
@@ -352,27 +371,78 @@ overfitting. Low means a stable trend. It's the main thing you'll tune.
 
 ---
 
-# ▶ SLIDE 12 — Prophet: Code and Workflow
+# ▶ SLIDE 12 — Prophet's Seasonality: How Many Waves?
 
-The code is genuinely this short.
+What does "a sum of sine waves" actually buy you? Here it is on the lab's electricity data.
 
-Build a dataframe with two columns — `ds` for dates and `y` for values. Prophet insists on
-those names. Instantiate, set the changepoint scale and turn on yearly seasonality, and fit.
+*(Point at the gray dots.)*
 
-Then `make_future_dataframe` to extend the index forward, `predict`, and you have a forecast.
+Each dot is the average load on one day of the year, over the lab's five and a half years. Look
+at the shape. It is not a wave. There's a winter hump in January, from heating. A trough in
+April, when nobody heats or cools. A bigger peak in July, from air conditioning. And a second
+trough in October.
+
+**[pause]**
+
+*(Point at the blue line.)*
+
+The blue line is the best single wave — one sine curve with a period of one year. One wave has
+one peak a year, so it has to choose. It can't be high in January *and* high in July. It ends up
+nearly flat, and its error is about three thousand four hundred megawatts.
+
+*(Point at the red line.)*
+
+The red line adds a second wave with half the period — a hundred and eighty-two and a half days,
+so it repeats twice a year. Now there are two peaks and two troughs, and the fit follows the
+dots. The error falls to about thirteen hundred and fifty. A factor of two and a half.
+
+*(Point at the bottom strip.)*
+
+The strip underneath shows the two waves separately. The solid black one is the slow yearly
+wave. The dashed red one is the fast half-year wave, and it does most of the work. Add them to
+the average and you get the red curve on top.
+
+**[pause]**
+
+That's all Prophet's yearly seasonality is: a sum of these sine-and-cosine pairs. The number of
+pairs is called the Fourier order, and Prophet's default for the yearly term is ten. More pairs,
+more wiggles allowed. The lab has you force it down to one and see what happens on the test year.
+
+---
+
+# ▶ SLIDE 13 — Prophet: Code and Workflow
+
+The code is genuinely this short, and it's exactly what you'll run in the lab.
+
+Prophet wants a dataframe with two columns — `ds` for dates and `y` for values. It insists on
+those names. Instantiate it, say which cycles you want — yearly and weekly on, daily off, because
+we have one row per day — and fit. Then `predict` on the test dates, and you have a forecast.
 
 **[pause]**
 
 But the call that matters for this course is the last one: **`plot_components`**.
 
-That draws the trend with its changepoints, the yearly seasonal wave, and the day-of-week
-pattern as three separate panels. It's the additive structure made visible — you're literally
-looking at the terms of the equation, one at a time.
+*(Point at the three panels.)*
+
+This is what it shows, for the lab's model. Three panels, one per additive term.
+
+On the left, the **trend**: a piecewise straight line, bending at the changepoints. The shaded
+strip at the right is the lab's test year.
+
+In the middle, the **weekly** part of the seasonality: weekdays a little above zero, Saturday
+about eighteen hundred megawatts below, Sunday about twenty-five hundred below.
+
+On the right, the **yearly** part: the winter hump, the April trough, the big summer peak, the
+October trough. The same double-peaked shape you just saw on the previous slide — nobody told
+Prophet about heating and cooling; the ten waves had enough room to find it.
+
+Add the three panels together and you have the forecast. It's the additive structure made
+visible — you're literally looking at the terms of the equation, one at a time.
 
 That plot is what you put in front of a manager. Not the forecast line — the components. It
-lets them check your model against their own knowledge of the business. "Yes, December looks
-right. No, that changepoint in March is wrong, that was the fire." That conversation is worth
-more than a small RMSE improvement.
+lets them check your model against their own knowledge of the business. "Yes, the summer peak
+looks right. No, that changepoint in March is wrong, that was the fire." That conversation is
+worth more than a small RMSE improvement.
 
 **[pause]**
 
@@ -384,13 +454,13 @@ we're going next.
 
 ---
 
-# ▶ SLIDE 13 — Section divider: pyGAM
+# ▶ SLIDE 14 — Section divider: pyGAM
 
 Part four. pyGAM, for when you have several predictors and want a flexible effect for each.
 
 ---
 
-# ▶ SLIDE 14 — pyGAM: Flexible Additive Modeling
+# ▶ SLIDE 15 — pyGAM: Flexible Additive Modeling
 
 Prophet is specialized for time structure. pyGAM is the general case: you specify a smooth
 function per predictor and it fits the whole additive model.
@@ -450,7 +520,7 @@ their shape.
 
 ---
 
-# ▶ SLIDE 15 — Interpreting GAM Results: Partial Dependence Plots
+# ▶ SLIDE 16 — Interpreting GAM Results: Partial Dependence Plots
 
 This is the payoff slide — the thing you actually deliver.
 
@@ -498,13 +568,13 @@ And the last clause on the slide is the point: no straight line in day of year h
 
 ---
 
-# ▶ SLIDE 16 — Section divider: Key Takeaways and Roadmap
+# ▶ SLIDE 17 — Section divider: Key Takeaways and Roadmap
 
 Let's pull it together — and set up where the course goes next.
 
 ---
 
-# ▶ SLIDE 17 — GAMs vs. Other Methods: When to Choose Each
+# ▶ SLIDE 18 — GAMs vs. Other Methods: When to Choose Each
 
 This table is the honest summary of the whole course so far, and it's worth reading down the
 columns rather than across.
@@ -540,7 +610,7 @@ not always the one the reputation predicts.
 
 ---
 
-# ▶ SLIDE 18 — Lecture 3: Key Takeaways
+# ▶ SLIDE 19 — Lecture 3: Key Takeaways
 
 Five things.
 
@@ -567,7 +637,7 @@ forecaster is deciding when that trade is worth making.
 
 ---
 
-# ▶ SLIDE 19 — References
+# ▶ SLIDE 20 — References
 
 Readings are in the syllabus — section 7.7 for regression splines, and 12.1 and 12.2 for
 complex seasonality and Prophet.
@@ -585,10 +655,10 @@ See you then.
 |---|---|---:|
 | Opening & motivation | 1–5 | ~9 min |
 | GAM structure, links & smoothing | 6–9 | ~10 min |
-| Prophet | 10–12 | ~9 min |
-| pyGAM & interpretation | 13–15 | ~9 min |
-| Close | 16–19 | ~5 min |
+| Prophet | 10–13 | ~10 min |
+| pyGAM & interpretation | 14–16 | ~9 min |
+| Close | 17–20 | ~5 min |
 
-If you need to compress, slide 14's term-type list survives trimming. Do **not** compress
-slides 5, 15, or 17 — the additivity argument, the partial dependence plot, and the
+If you need to compress, slide 15's term-type list survives trimming. Do **not** compress
+slides 5, 16, or 18 — the additivity argument, the partial dependence plot, and the
 interactions tradeoff are the three ideas this lecture exists to deliver.

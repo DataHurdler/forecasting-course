@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Introduction to Neural Networks**
 
-Deck: `Slides/Lecture07_NeuralNets.pdf` (21 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture07_NeuralNets.pdf` (23 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -99,13 +99,23 @@ outside. We call that function the **activation**, and we write it sigma.
 
 So: a equals sigma of w-transpose x plus b. That's it. That is the entire unit.
 
-*(Walk the activation table.)*
+*(Walk the three panels, left to right.)*
 
-Four activations you'll meet. **ReLU** — max of zero and z — is the default for hidden layers.
-**Sigmoid** squashes to between zero and one; you'll see it again in Lecture 9 as an LSTM gate.
-**Tanh** squashes to between minus one and one, and shows up in sequence states. And **linear**,
-which is just z — that's your output layer when you're doing regression, because you don't want
-to squash a forecast.
+Three activations you'll meet, each drawn with its slope marked. **ReLU**, on the left — max of
+zero and z — is the default for hidden layers. Its slope is zero on the left and exactly one on
+the right, nothing in between. **Sigmoid**, in the middle, squashes to between zero and one;
+you'll see it again in Lecture 9 as an LSTM gate. Look at the dashed line: its steepest slope,
+right at zero, is one quarter, and everywhere else it is flatter than that. **Tanh**, on the
+right, squashes to between minus one and one and shows up in sequence states; its steepest slope
+is one.
+
+Hold onto that one quarter. When a gradient flows backward through a sigmoid, it gets multiplied
+by that slope, so each sigmoid scales it by a quarter at best. Stack a few and the signal is
+gone. That is the vanishing gradient, and it is the whole story of Lecture 9.
+
+And a fourth one that isn't drawn because there is nothing to draw: **linear**, which is just
+z. That's your output layer when you're doing regression, because you don't want to squash a
+forecast.
 
 **[pause]**
 
@@ -274,16 +284,23 @@ Capacity is easy to add by accident, so let's count it once, properly.
 A layer mapping m inputs to n outputs holds m times n weights, plus n biases. That's it — that's
 the whole formula.
 
-*(Walk the table.)*
+*(Walk the picture left to right.)*
 
 Take a network for our weekly panel. Forty-six engineered features going in — the same features
 you built for Homework 4. Two hidden layers of a hundred twenty-eight. One output.
 
-Input to hidden one: forty-six times one hundred twenty-eight, that's six thousand and sixteen
-parameters. Hidden one to hidden two: one twenty-eight squared, sixteen thousand five hundred
-twelve. Hidden two to output: one hundred twenty-nine.
+Each rectangle is one weight matrix, drawn to scale: one square of area per weight, so the area
+*is* the parameter count. The thin strip beside each one is its biases.
 
-Total: **twenty-two thousand six hundred fifty-seven parameters.**
+Input to hidden one: the tall narrow blue block, forty-six wide and a hundred twenty-eight tall,
+six thousand and sixteen parameters. Hidden one to hidden two: the big red square, one twenty-eight
+by one twenty-eight, sixteen thousand five hundred twelve. Hidden two to output: that thin line
+on the right, one hundred twenty-nine.
+
+Total: **twenty-two thousand six hundred fifty-seven parameters.** And look where they sit:
+**seventy-three percent of them are in the one square in the middle.** Widen the hidden layers
+and that square grows with the width squared; the input and output blocks only grow in
+proportion.
 
 **[pause]**
 
@@ -332,24 +349,63 @@ And here's the practical part: **you never differentiate anything by hand.** Cal
 *is*, fundamentally — it records every operation you performed on the way forward so it can walk
 that record backward and apply the chain rule automatically.
 
-**[pause]**
-
-Two words about the learning rate, because it is the hyperparameter that will waste the most of
-your time if you get it wrong.
-
-Too large, and the loss jumps around or diverges outright — you overshoot the minimum on every
-step. Too small, and training is correct but glacial, and you'll conclude the model doesn't work
-when actually you just didn't wait. If your loss curve is spiky or turns into `nan`, lower the
-learning rate by a factor of ten before you change anything else.
-
 In practice you won't use plain SGD anyway. `torch.optim.Adam` with a learning rate of
 one-e-minus-three adapts the step size separately for each parameter, and it is the sensible
-default for everything in this course. It is more forgiving of a badly chosen learning rate than
-plain SGD, which is most of why it became standard.
+default for everything in this course.
 
 ---
 
-# ▶ SLIDE 13 — Preventing Overfitting — Where Lecture 6 Returns
+# ▶ SLIDE 13 — The Learning Rate, on a Real Bowl
+
+Two words about the learning rate, because it is the hyperparameter that will waste the most of
+your time if you get it wrong. And for once I can show you exactly what it does.
+
+*(Point at the left panel.)*
+
+This is the regression from Lecture 6: daily units on the lag-seven and lag-fourteen columns,
+both standardized. Two weights, so the loss is a surface over a flat plane, and the gray rings are
+its contours — a bowl seen from above, with the minimum at the black cross. Every panel starts
+gradient descent at the same point and takes the same steps of the update rule from the last
+slide. Only eta changes.
+
+On the left, eta is zero point one five. Each step moves a fraction of the way downhill, and the
+path curves smoothly into the bottom of the valley. A little slow near the end, but it gets there.
+
+*(Middle panel.)*
+
+Eta of one half. Now each step overshoots across the narrow direction of the valley and lands
+on the far wall, then overshoots back. That's the zig-zag. It still converges, because every
+overshoot is smaller than the last.
+
+*(Right panel.)*
+
+Eta of zero point six five. Now every overshoot is *bigger* than the last, and the path flies out
+of the bowl. The loss doesn't go down; it explodes. On a real network that's the loss curve
+turning into `nan`.
+
+**[pause]**
+
+*(Point at the caption under the figure.)*
+
+The two boundaries come straight out of the shape of the bowl. Its steepest curvature — lambda
+max, three point five one here — sets them. Above one over lambda max, zero point two eight, you
+zig-zag. Above two over lambda max, zero point five seven, you diverge. Nothing to tune: that is
+arithmetic.
+
+Now the honest caveat at the bottom of the slide. This bowl is exact only because the model is
+linear: a linear model's loss curves the same amount everywhere, so that two-over-lambda limit is
+the same at every point. A network's loss surface bends differently in different places, so no
+single learning rate is right everywhere. That is one reason Adam adapts its step for each
+parameter as it goes, and why it is more forgiving of a badly chosen learning rate than plain SGD.
+
+The practical rule survives the caveat. Too large, and the loss jumps around or diverges. Too
+small, and training is correct but glacial, and you'll conclude the model doesn't work when you
+just didn't wait. If your loss curve is spiky or turns into `nan`, lower the learning rate by a
+factor of ten before you change anything else.
+
+---
+
+# ▶ SLIDE 14 — Preventing Overfitting — Where Lecture 6 Returns
 
 Twenty-two thousand parameters on five thousand rows will memorize the training set unless
 something stops it. Three things do — and **you have already met two of them.**
@@ -385,13 +441,53 @@ You'll see it a sixth time in Lecture 11, and there it will be the cleanest vers
 
 ---
 
-# ▶ SLIDE 14 — Section divider: PyTorch Implementation
+# ▶ SLIDE 15 — Early Stopping, on Lab 7's Network
+
+Here is the third of those tools, early stopping, on the network you'll train in the lab.
+
+*(Point at the figure.)*
+
+Same model, same data, same settings as Lab 7 — the only change is that I let it run for two
+hundred epochs instead of sixty, and recorded the error after every epoch. Three seeds. The thin
+lines are the individual seeds, the bold lines their average. Gray is the error on the training
+windows; red is the error on the held-out test weeks.
+
+Gray keeps going down. The model keeps getting better at the data it's fitting. Red goes down
+for the first sixty epochs or so and then mostly stops: by the end the gap between the two has
+grown from about two hundred sixty to about three hundred forty. That widening gap is the model
+starting to memorize.
+
+**[pause]**
+
+Now look at how jagged the red line is. From one epoch to the next, held-out error jumps by
+about a hundred units, up or down. That is about as large as everything held-out error gains
+after epoch sixty. So the *last* epoch is a lottery ticket. That's why early stopping keeps the weights from
+the **best** epoch, not the last.
+
+The dots are each seed's best epoch: one eighteen, one forty-three and one seventy-six, all well
+after the dashed line where the lab stops at sixty. At sixty, the three seeds score about eleven
+hundred, twelve hundred and nine fifty; their best epochs are all near eight seventy.
+
+**[pause]**
+
+*(This is the caveat. Don't skip it.)*
+
+But I drew those red curves on the *test* weeks, so you could see them. If you picked your epoch
+by looking at that red line, you would be choosing on the test set, and your test number would
+be flattering. Every one of those best epochs is the minimum of a jagged curve, which makes it
+the luckiest point on it, not a fair estimate. In practice you cut a validation slice from the
+end of the training period, watch that, keep the best epoch on it — and touch the test weeks
+once, at the end.
+
+---
+
+# ▶ SLIDE 16 — Section divider: PyTorch Implementation
 
 Four pieces: a Dataset, a DataLoader, a model, and a training loop.
 
 ---
 
-# ▶ SLIDE 15 — PyTorch: Dataset and DataLoader
+# ▶ SLIDE 17 — PyTorch: Dataset and DataLoader
 
 *(This is the first of three code slides. Read the structure, not every character.)*
 
@@ -435,13 +531,14 @@ because they're on a list, not because something broke.
 
 ---
 
-# ▶ SLIDE 16 — PyTorch: Defining the Model
+# ▶ SLIDE 18 — PyTorch: Defining the Model
 
 Here is the network from slide 10, in five lines.
 
-Read it top to bottom and it *is* the diagram. A linear map to a hundred twenty-eight units. A
-ReLU. Some dropout. Then again — linear, ReLU, dropout. Then a final linear layer down to one
-output, with no activation on it, because this is regression and we don't want to squash the
+Read it top to bottom and it *is* the block diagram from slide 10. A linear map to a hundred
+twenty-eight units — the first block. A
+ReLU. Some dropout. Then again — linear, ReLU, dropout — the big square. Then a final linear
+layer down to one output, the thin line, with no activation on it, because this is regression and we don't want to squash the
 forecast.
 
 `nn.Sequential` chains layers in order, and it is enough for anything in this lecture. When you
@@ -455,7 +552,7 @@ those twenty-two thousand six hundred fifty-seven parameters are sitting.
 
 ---
 
-# ▶ SLIDE 17 — PyTorch: The Training Loop
+# ▶ SLIDE 19 — PyTorch: The Training Loop
 
 And here is the loop. Four steps per mini-batch, and every PyTorch training loop you will ever
 read is these four lines with more scaffolding around them.
@@ -484,13 +581,13 @@ deadline.
 
 ---
 
-# ▶ SLIDE 18 — Section divider: Key Takeaways
+# ▶ SLIDE 20 — Section divider: Key Takeaways
 
 Where a network belongs in the toolkit you now have.
 
 ---
 
-# ▶ SLIDE 19 — Neural Networks vs. Tree Methods
+# ▶ SLIDE 21 — Neural Networks vs. Tree Methods
 
 *(Walk the table across, then land on the paragraph below it.)*
 
@@ -536,7 +633,7 @@ thing a DAG in Lecture 12 helps you reason about.
 
 ---
 
-# ▶ SLIDE 20 — Lecture 7: Key Takeaways
+# ▶ SLIDE 22 — Lecture 7: Key Takeaways
 
 *(Six points. Read them at a steady pace; don't rush the last two.)*
 
@@ -548,7 +645,7 @@ Two. An FFN stacks those layers. Width and depth set capacity, and capacity accu
 than you expect. Twenty-two thousand parameters on five thousand rows.
 
 Three. Training is one loop: loss, `backward()`, `step()`, on mini-batches, using Adam. You never
-differentiate by hand.
+differentiate by hand. And keep the weights from the best epoch on validation, not the last one.
 
 Four. Regularization is not new. Weight decay *is* Ridge; dropout and early stopping do the same
 job by other means. That's the fifth appearance of one idea.
@@ -566,6 +663,6 @@ to a time series.
 
 ---
 
-# ▶ SLIDE 21 — References
+# ▶ SLIDE 23 — References
 
 *(Advance and close. No narration needed.)*

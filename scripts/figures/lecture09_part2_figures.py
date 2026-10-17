@@ -11,7 +11,7 @@ The attention heatmap is measured on the trained model. Training uses the lab's 
 model class and loop (Labs/Lecture09_Part2_lab.qmd, Setup and Step 2), so the figure reads the
 lab's model, not a second one. Training takes about two and a half minutes on a laptop CPU; the
 results go to Figures/Lecture09_Part2/measured.json, and later runs redraw from that file. The
-other three figures are exact calculations or diagrams and need no training.
+other five figures are exact calculations or diagrams and need no training.
 """
 from __future__ import annotations
 
@@ -426,8 +426,130 @@ def positional_clocks() -> None:
     save(fig, "positional_clocks")
 
 
+# ================================================================== path length
+def recurrence_paths() -> None:
+    """Week t-52 to the forecast: 52 state updates in a row (recurrence) vs one lookup (attention).
+
+    Exact for what is drawn. Recurrence: week t-52 enters h_1, and only h_52 reaches the linear
+    output, so its information passes through all 52 hidden states, each update waiting for the
+    one before. Attention: the forecast is read from the last position (week t-1), whose lookup
+    scores every week in the window directly, so week t-52 is one lookup away in each layer, and
+    all 52 lookups are computed together. Path length counts operations between two positions;
+    it says nothing about what a trained model actually uses (the heatmap answers that).
+    """
+    T = WINDOW
+    fig, ax = plt.subplots(figsize=sz(15, 4.5))
+    x0, dx = 2.35, 0.195                      # first cell's left edge, cell pitch
+    xs = x0 + dx * np.arange(T) + dx / 2     # cell centres
+    xe = xs[-1]
+    ax.set_xlim(-0.1, 15.35); ax.set_ylim(-1.75, 3.05); ax.axis("off")
+
+    # --- top row: recurrence -------------------------------------------------------------
+    YR, CW, CH = 1.95, dx * 0.72, 0.36
+    for i, x in enumerate(xs):
+        ax.add_patch(FancyBboxPatch((x - CW / 2, YR - CH / 2), CW, CH,
+                                    boxstyle="round,pad=0,rounding_size=0.03",
+                                    facecolor=LIGHT_CRIMSON, edgecolor=CRIMSON, lw=0.9))
+    ax.plot([xs[0] + CW / 2, xe - CW / 2], [YR, YR], color=CRIMSON, lw=1.6, zorder=0)
+    ax.annotate("", xy=(xs[0], YR + CH / 2 + 0.02), xytext=(xs[0], YR + 0.7),
+                arrowprops=dict(arrowstyle="-|>", color=CRIMSON, lw=1.8, mutation_scale=12))
+    ax.text(xs[0], YR + 0.74, "week t−52", ha="center", va="bottom", fontsize=11, color=CRIMSON,
+            fontweight="bold")
+    ax.text(xs[0], YR - CH / 2 - 0.1, "h₁", ha="center", va="top", fontsize=11)
+    ax.text(xe, YR - CH / 2 - 0.1, "h₅₂", ha="center", va="top", fontsize=11)
+    ax.text((xs[0] + xe) / 2 + 0.4, YR + CH / 2 + 0.14,
+            "52 state updates, each waiting for the one before", ha="center", va="bottom",
+            fontsize=11, color=CRIMSON)
+
+    # --- bottom row: attention -----------------------------------------------------------
+    YA = -0.95
+    rows = [(YR, "recurrence"), (YA, "attention")]
+    # every week's lookup from the last position, faint; week t-52's in crimson
+    for i, x in enumerate(xs[:-1]):
+        r = (xe - x) / 2
+        hgt = 0.06 + 1.55 * (r / ((xe - xs[0]) / 2)) ** 0.8
+        th = np.linspace(0, np.pi, 80)
+        ax.plot((x + xe) / 2 + r * np.cos(th), YA + 0.12 + hgt * np.sin(th),
+                color=GRAY if i else CRIMSON, lw=0.45 if i else 2.0, alpha=0.45 if i else 1.0,
+                zorder=1 if i else 3)
+    ax.annotate("", xy=(xe, YA + 0.13), xytext=(xe - 0.06, YA + 0.42),
+                arrowprops=dict(arrowstyle="-|>", color=CRIMSON, lw=1.6, mutation_scale=11),
+                zorder=4)
+    ax.scatter(xs, np.full(T, YA), s=11, color=GRAY, zorder=4)
+    ax.plot([xs[0]], [YA], "o", ms=6.5, color=CRIMSON, zorder=5)
+    ax.plot([xe], [YA], "o", ms=6.5, color=BLACK, zorder=5)
+    ax.text(xs[0], YA - 0.22, "week t−52", ha="center", va="top", fontsize=11, color=CRIMSON,
+            fontweight="bold")
+    ax.text(xe, YA - 0.22, "t−1", ha="center", va="top", fontsize=11)
+    ax.text((xs[0] + xe) / 2, YA + 1.82, "one lookup per layer; all 52 computed at once",
+            ha="center", va="bottom", fontsize=11, color=CRIMSON)
+
+    # --- both rows: readout and the count ------------------------------------------------
+    for y, name in rows:
+        ax.text(0.0, y, name, ha="left", va="center", fontsize=12, fontweight="bold")
+        ax.annotate("", xy=(xe + 0.95, y), xytext=(xe + 0.17, y),
+                    arrowprops=dict(arrowstyle="-|>", color=BLACK, lw=1.4, mutation_scale=12))
+        ax.plot([xe + 1.12], [y], "o", ms=8, color=BLACK)
+        ax.text(xe + 1.12, y - 0.3, "forecast\nweek t", ha="center", va="top", fontsize=10.5)
+    ax.text(15.3, YR, "52\nsteps", ha="right", va="center", fontsize=13, color=CRIMSON,
+            fontweight="bold", linespacing=1.0)
+    ax.text(15.3, YA, "1\nstep", ha="right", va="center", fontsize=13, color=CRIMSON,
+            fontweight="bold", linespacing=1.0)
+    save(fig, "recurrence_paths")
+
+
+# ================================================================== the price, as an area
+def attention_cost() -> None:
+    """T steps in order (recurrence) vs T x T scores at once (attention), at T = 52.
+
+    Cells count operations, not their size: one recurrent step (a 64 x 64 matrix product) does
+    far more arithmetic than one score (a 16-number dot product). What the picture states exactly
+    is the count and how it grows: double the window and the recurrence takes twice the steps,
+    while attention computes four times the scores (one T x T matrix per head, per layer).
+    """
+    T, H = WINDOW, WINDOW // 2
+    fig, ax = plt.subplots(figsize=sz(10.5, 5.6))
+    c = 0.052                                # cell side, in axis units
+    S = T * c
+    sx, sy = 0.0, 0.0                        # square's lower-left corner
+    ax.set_xlim(-0.25, 5.75); ax.set_ylim(-0.55, S + 0.95); ax.set_aspect("equal"); ax.axis("off")
+
+    # attention: the T x T score matrix
+    ax.add_patch(plt.Rectangle((sx, sy), S, S, facecolor=LIGHT_CRIMSON, edgecolor="none"))
+    for k in range(1, T):
+        ax.plot([sx + k * c] * 2, [sy, sy + S], color="white", lw=0.35)
+        ax.plot([sx, sx + S], [sy + k * c] * 2, color="white", lw=0.35)
+    ax.add_patch(plt.Rectangle((sx, sy), S, S, fill=False, edgecolor=CRIMSON, lw=1.4, zorder=3))
+    # half the window: a quarter of the square
+    ax.add_patch(plt.Rectangle((sx, sy + S - H * c), H * c, H * c, fill=False, edgecolor=CRIMSON,
+                               lw=1.4, ls=(0, (4, 2)), zorder=3))
+    ax.text(sx + H * c / 2, sy + S - H * c / 2, "26 weeks:\n676", ha="center", va="center",
+            fontsize=10.5, color=CRIMSON, linespacing=1.05)
+
+    # recurrence: T steps, one row's length, shaded in the order they must run
+    ry = sy + S + 0.22
+    cmap = plt.get_cmap("Greys")
+    for k in range(T):
+        ax.add_patch(plt.Rectangle((sx + k * c, ry), c, c * 2.2, facecolor=cmap(0.25 + 0.6 * k / T),
+                                   edgecolor="white", lw=0.35))
+    ax.annotate("", xy=(sx + S, ry + c * 2.2 + 0.2), xytext=(sx, ry + c * 2.2 + 0.2),
+                arrowprops=dict(arrowstyle="-|>", color=GRAY, lw=1.3, mutation_scale=11))
+
+    tx = S + 0.25
+    ax.text(tx, ry + c * 1.1, "recurrence: 52 steps,\nin order", ha="left", va="center",
+            fontsize=11, color=GRAY, linespacing=1.05)
+    ax.text(tx, sy + S * 0.62, "attention:\n52 × 52 = 2,704\nscores, all at once", ha="left",
+            va="center", fontsize=11, color=CRIMSON, linespacing=1.05)
+    ax.text(tx, sy + S * 0.16, "double the window:\n2× the steps,\n4× the scores", ha="left",
+            va="center", fontsize=11, color=BLACK, linespacing=1.05)
+    ax.text(sx + S / 2, sy - 0.12, "a cell counts an operation, not its cost", ha="center",
+            va="top", fontsize=9.5, color=GRAY)
+    save(fig, "attention_cost")
+
+
 FIGURES = {"attention_geometry": attention_geometry, "attention_heatmap": attention_heatmap,
-           "encoder_block": encoder_block, "positional_clocks": positional_clocks}
+           "encoder_block": encoder_block, "positional_clocks": positional_clocks,
+           "recurrence_paths": recurrence_paths, "attention_cost": attention_cost}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

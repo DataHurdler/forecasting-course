@@ -60,14 +60,9 @@ A **neuron** is that same expression with one addition — a nonlinear **activat
 
 $$a = \sigma(\mathbf{w}^\top \mathbf{x} + b)$$
 
-| Activation | Formula | Where it is used |
-|---|---|---|
-| ReLU | $\max(0,z)$ | Hidden layers — the default |
-| Sigmoid | $1/(1+e^{-z})$ | Binary outputs, and LSTM gates (Lecture 9) |
-| Tanh | $\tanh(z)$ | Sequence states |
-| Linear | $z$ | The output layer, for regression |
+![](../Figures/Lecture07_NeuralNets/activation_slopes.svg){fig-align="center" height="285px"}
 
-ReLU makes the intuition literal: the neuron asks *"is this pattern present?"* If the evidence is positive it passes a signal through; if not it outputs exactly zero and stays silent.
+[The slopes matter in Lecture 9: each sigmoid scales a gradient passing back through it by at most $\frac{1}{4}$. A regression's output layer has no squashing at all: $\sigma(z) = z$.]{.smaller}
 
 ---
 
@@ -113,16 +108,9 @@ Add capacity only when validation error says the model is too simple.
 
 Capacity is easy to add by accident, so count it once: a layer mapping $m$ inputs to $n$ outputs holds $m \times n$ weights plus $n$ biases. Our weekly panel, 46 engineered features in, two hidden layers of 128, one output:
 
-| Layer | Shape | Parameters |
-|---|---:|---:|
-| Input $\rightarrow$ hidden 1 | $46 \times 128$ | 6,016 |
-| Hidden 1 $\rightarrow$ hidden 2 | $128 \times 128$ | 16,512 |
-| Hidden 2 $\rightarrow$ output | $128 \times 1$ | 129 |
-| **Total** | | **22,657** |
+![](../Figures/Lecture07_NeuralNets/weight_blocks.svg){fig-align="center" height="290px"}
 
-[**Twenty-two thousand parameters on five thousand rows** — four per observation.]{.key-result}
-
-Lecture 6 called sixty predictors on a hundred and fifty observations a crisis. Networks train far past that ratio routinely; what makes it survivable is the regularization, next.
+**Twenty-two thousand parameters on five thousand rows** — four per observation, and the one $128 \times 128$ block holds 73% of them. Lecture 6 called sixty predictors on 150 rows a crisis; what makes this survivable is the regularization, next.
 
 # Training: Loss and Backpropagation
 
@@ -147,6 +135,16 @@ Update on a **mini-batch** of 32–256 rows, not the whole dataset: noisier step
 
 ---
 
+## The Learning Rate, on a Real Bowl
+
+Gradient descent on Lecture 6's regression of daily units on lags 7 and 14, standardized: the same start, three learning rates.
+
+![](../Figures/Lecture07_NeuralNets/gd_bowl.svg){fig-align="center" height="360px"}
+
+[The bowl is exact only because this model is linear: its curvature is the same everywhere, so $2/\lambda_{\max}$ is a hard limit. A network's loss surface curves differently in different places, one reason Adam adapts its step per parameter as it goes.]{.smaller}
+
+---
+
 ## Preventing Overfitting — Where Lecture 6 Returns
 
 Twenty-two thousand parameters on five thousand rows will memorize the training set unless something stops it. Three things do, and **you have met two of them already**.
@@ -158,6 +156,16 @@ Twenty-two thousand parameters on five thousand rows will memorize the training 
 | Early stopping | Watch validation loss each epoch; stop when it has not improved for $k$ epochs, and keep the weights from the *best* epoch, not the last. |
 
 [**That is the fifth appearance of one idea.**]{.hi} The GAM smoothing penalty in Lecture 3, cost-complexity pruning in Lecture 4, `reg_lambda` on leaf weights in Lecture 5, Ridge and LASSO in Lecture 6 — and now weight decay. Fit against complexity, one parameter setting the exchange rate, chosen by validation.
+
+---
+
+## Early Stopping, on Lab 7's Network
+
+Lab 7's network, trained for 200 epochs instead of 60, three seeds:
+
+![](../Figures/Lecture07_NeuralNets/overfit_epochs.svg){fig-align="center" height="360px"}
+
+[Training error keeps falling. Held-out error improves little after epoch 60 and jumps by about 100 from one epoch to the next, so **keep the best epoch, not the last**. Choose it on a validation slice cut from the training period, never on the test weeks drawn here.]{.smaller}
 
 # PyTorch Implementation
 
@@ -208,7 +216,7 @@ model = nn.Sequential(
 ```
 :::
 
-Read it top to bottom and it is the diagram: a linear map, a nonlinearity, some dropout, again, then a linear output with no activation because this is regression.
+Read it top to bottom and it is the block diagram from *How Big Is This Model?*: a linear map, a nonlinearity, some dropout, again, then a linear output with no activation.
 
 `nn.Sequential` chains layers in order and is enough for anything in this lecture. When an architecture needs branching or a skip connection — Lecture 8 — you subclass `nn.Module` and write `forward()` yourself.
 
@@ -265,11 +273,11 @@ What changes in the next two lectures is the *architecture*: convolutions that s
 ## Lecture 7: Key Takeaways
 
 ::: {.keybox}
-1. A **neuron** is regression inside a nonlinearity. Without it, layers collapse to one line; with ReLU, each unit adds a kink.
+1. A **neuron** is regression inside a nonlinearity; with ReLU, each unit adds a kink.
 
 2. Width and depth set an **FFN**'s capacity: 22,657 parameters on 5,000 rows.
 
-3. **Training**: loss $\to$ `backward()` $\to$ `step()`, per mini-batch.
+3. **Training**: loss $\to$ `backward()` $\to$ `step()`, per mini-batch; keep the best epoch.
 
 4. **Regularization is not new**: weight decay is Ridge.
 
