@@ -46,7 +46,7 @@ build plan when its turn comes (as Lecture 9 Part 1 did); this table says where 
 
 **Round 2, 2026-10-16** ([plan](2026-10-16_figures-round2.md)): every remaining non-Low candidate in
 every deck was built, 36 new figures in all, with these exceptions:
-- **Blocked:** L10 Bayes mosaic (owner to define a "strong week"); L13 skill bars (HW01 key first).
+- **Unblocked and built 2026-10-18:** L10 Bayes mosaic (strong week = above its own year's median); L13 skill bars (after the HW01 reconciliation).
 - **Skipped on purpose:** L06 CV curve (it is Lab 6 Step 4's "Your turn"); L11P1 level fans (would
   redraw `band_width` at another scale); L07 early-stopping-vs-ridge panel (no room).
 - **Still open:** the items ranked Low (L02 #6, L03 #6, L04 #6, L05 #6, L06 #6, L07 #6, L10 #6,

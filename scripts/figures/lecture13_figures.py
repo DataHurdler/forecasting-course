@@ -17,6 +17,12 @@ Every number either figure prints is recomputed here, from the code that produce
   decks' generators wrote by retraining the labs' own models (52-week windows).
 * The Christmas figure reads data/processed/m5_daily.csv directly: CA_1 FOODS, seasonal naive =
   the same weekday one year (364 days) earlier.
+* The skill bars (Lesson 1) score each model against the seasonal naive on its own series and
+  test period. Homework 1 and Homework 2 rerun the instructor walkthroughs' own statsmodels,
+  Prophet and pyGAM calls (forecasting-instructor/walkthroughs/HW01_Part1, HW01_Part2 and HW02;
+  the walkthroughs are the canonical source, not the answer keys). The Bayesian structural row is
+  read from Figures/Lecture11_Part1/measured.json, which that deck's generator wrote by rerunning
+  Lab 11 Part 1 (seed 42). The weekly-panel rows are the scoreboard's own LASSO and forest.
 
 The CNN takes a couple of minutes on a laptop CPU; everything else takes seconds. Results go to
 Figures/Lecture13_Synthesis/measured.json, and later runs redraw from that file.
@@ -249,6 +255,111 @@ def christmas() -> dict:
     }
 
 
+# ================================================================== skill against the benchmark
+def hw01_rmses() -> dict:
+    """Homework 1, Parts 1 and 2, as the walkthroughs compute them (their Q2 and Q5 tables).
+
+    CA_1 FOODS weekly, the last 52 weeks held out, and every model forecasting all 52 of them from
+    one origin. Damped Holt is `ExponentialSmoothing(damped_trend=True)` (owner decision
+    2026-10-18), the call students made. The last two rows are the walkthrough's backup table:
+    Holt-Winters variants the assignment did not ask for.
+    """
+    import warnings
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    weekly = pd.read_csv(ROOT / "data" / "processed" / "m5_weekly.csv", parse_dates=["week_start"])
+    ca1 = (weekly[(weekly.store_id == "CA_1") & (weekly.cat_id == "FOODS")]
+           .set_index("week_start").sort_index())["units"].asfreq("W-MON")
+    N_TEST = 52
+    train, test = ca1.iloc[:-N_TEST], ca1.iloc[-N_TEST:]
+    specs = {
+        "SES": {},
+        "Holt-Winters (additive)": dict(trend="add", seasonal="add", seasonal_periods=52),
+        "Holt (damped)": dict(trend="add", damped_trend=True),
+        "Holt (undamped)": dict(trend="add"),
+        "Holt-Winters, damped trend (not asked)": dict(trend="add", damped_trend=True,
+                                                       seasonal="add", seasonal_periods=52),
+        "Holt-Winters, no trend (not asked)": dict(seasonal="add", seasonal_periods=52),
+    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        out = {"naive": rmse(test, ca1.shift(52).iloc[-N_TEST:]), "n_train": len(train),
+               "n_test": len(test), "first_test_week": test.index[0].strftime("%Y-%m-%d")}
+        for name, kw in specs.items():
+            out[name] = rmse(test, ExponentialSmoothing(train, **kw).fit().forecast(N_TEST))
+        for o in [(2, 0, 0), (2, 1, 0), (4, 1, 0)]:
+            out[f"ARIMA{o}"] = rmse(test, ARIMA(train, order=o).fit().forecast(N_TEST))
+        # Not drawn; the narration's horizon contrast. Q3(d): ARIMA(2,1,0) refit every week on an
+        # expanding window (at least 104 weeks), one week ahead; its last 52 cover the test year.
+        y = ca1.values
+        wf = np.array([ARIMA(y[:i], order=(2, 1, 0)).fit().forecast(1)[0]
+                       for i in range(104, len(y))])
+        out["ARIMA(2, 1, 0), one week ahead"] = rmse(test, wf[-N_TEST:])
+        out["test_mean"] = float(test.mean())
+    return out
+
+
+def hw02_rmses() -> dict:
+    """Homework 2, as its walkthrough computes it (the Q4 table).
+
+    CA_1 FOODS daily, the last 365 days held out; the seasonal naive is 364 days back, which keeps
+    the weekday aligned. Prophet's fit is not bit-identical across versions (the key's 356 is
+    357 under Prophet 1.4), so the version is recorded.
+    """
+    import logging
+    import warnings
+    import prophet
+    from prophet import Prophet
+    from pygam import LinearGAM, f, l, s
+    logging.getLogger("cmdstanpy").setLevel(logging.ERROR)
+    logging.getLogger("prophet").setLevel(logging.ERROR)
+    daily = (pd.read_csv(ROOT / "data" / "processed" / "m5_daily.csv", parse_dates=["date"])
+             .query("store_id == 'CA_1' and cat_id == 'FOODS'")
+             .sort_values("date").reset_index(drop=True))
+    daily["day_of_year"] = daily["date"].dt.dayofyear
+    daily["day_of_week"] = daily["date"].dt.dayofweek
+    N_TEST = 365
+    train, test = daily.iloc[:-N_TEST], daily.iloc[-N_TEST:]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        m1 = Prophet(yearly_seasonality=True, weekly_seasonality=True, changepoint_prior_scale=0.05)
+        m1.fit(train[["date", "units"]].rename(columns={"date": "ds", "units": "y"}))
+        plain = m1.predict(daily[["date"]].rename(columns={"date": "ds"})).yhat.iloc[-N_TEST:]
+        reg_df = daily[["date", "units", "snap", "is_event"]].rename(columns={"date": "ds",
+                                                                              "units": "y"})
+        m2 = Prophet(yearly_seasonality=True, weekly_seasonality=True, changepoint_prior_scale=0.05)
+        m2.add_regressor("snap")
+        m2.add_regressor("is_event")
+        m2.fit(reg_df.iloc[:-N_TEST])
+        reg = m2.predict(reg_df.iloc[-N_TEST:]).yhat
+        FEATURES = ["day_of_year", "day_of_week", "snap", "is_event"]
+        gam = LinearGAM(s(0, basis="cp") + f(1) + l(2) + l(3)).fit(train[FEATURES].values,
+                                                                   train.units.values)
+    return {"naive": rmse(test.units, daily.units.shift(364).iloc[-N_TEST:]),
+            "Prophet (with regressors)": rmse(test.units, reg),
+            "pyGAM": rmse(test.units, gam.predict(test[FEATURES].values)),
+            "Prophet (no regressors)": rmse(test.units, plain),
+            "first_test_day": test.date.iloc[0].strftime("%Y-%m-%d"),
+            "prophet_version": prophet.__version__}
+
+
+def measure_skill(board: dict) -> dict:
+    """Every RMSE and benchmark the skill bars need, each pair from one series and one test period."""
+    l11 = json.loads((ROOT / "Figures" / "Lecture11_Part1" / "measured.json").read_text())
+    hw01 = hw01_rmses()
+    # Lecture 11 Part 1 forecasts the same CA_1 FOODS test year as Homework 1: same benchmark.
+    assert abs(l11["rmse_seasonal_naive"] - hw01["naive"]) < 1e-6, "L11P1 is not HW1's test year"
+    # Homework 3's forest and Homework 4's LASSO are scored on the same 1,590 rows.
+    _, te3, _ = _hw3_frame()
+    naive3 = rmse(te3["units"], te3["units_lag52"])
+    assert len(te3) == 1590 and abs(naive3 - board["naive"]) < 1e-6, "HW3 and HW4 test rows differ"
+    print("  skill: Homework 1, Homework 2 (Prophet takes a few seconds)", file=sys.stderr)
+    return {"hw01": hw01, "hw02": hw02_rmses(),
+            "l11p1": {"rmse": l11["rmse_point"], "naive": l11["rmse_seasonal_naive"]},
+            "panel": {"lasso": board["lasso"], "rf": board["rf"], "naive": board["naive"],
+                      "test_mean": float(te3["units"].mean())}}
+
+
 # ================================================================== measurement
 def measure() -> dict:
     m: dict = {"note": "Written by scripts/figures/lecture13_figures.py; every number the "
@@ -272,6 +383,7 @@ def measure() -> dict:
     m["board_detail"]["cnn_runs"] = runs
     m["board_detail"]["transformer_runs"] = l9b["test_rmse"]
     m["christmas"] = christmas()
+    m["skill"] = measure_skill(m["board"])
     OUT.mkdir(parents=True, exist_ok=True)
     MEASURED.write_text(json.dumps(m, indent=1) + "\n")
     print("  measured.json written")
@@ -282,7 +394,12 @@ def measure() -> dict:
 def measured() -> dict:
     if "--retrain" in sys.argv or not MEASURED.exists():
         return measure()
-    return json.loads(MEASURED.read_text())
+    m = json.loads(MEASURED.read_text())
+    if "skill" not in m:                  # added after the rest was measured: measure it alone
+        m["skill"] = measure_skill(m["board"])
+        MEASURED.write_text(json.dumps(m, indent=1) + "\n")
+        print("  measured.json: skill added")
+    return m
 
 
 def check_board(m: dict) -> None:
@@ -497,8 +614,103 @@ def cv_splits() -> None:
     plt.rcParams.update(saved)
 
 
+# ================================================================== Lesson 1: skill bars
+# The subset drawn: one or two rows per assignment or lecture, each the model the slide or the
+# narration names. Left out on purpose: damped Holt (-16%) and undamped Holt (-90%, which would
+# squash every other bar), ARIMA(4,1,0) and (2,0,0), Prophet without regressors, and the
+# sequence models (they share the panel's benchmark; the scoreboard already shows them).
+# (group, label, source, (block of measured["skill"], key))
+SKILL = [
+    ("weekly", "Holt-Winters", "HW 1", ("hw01", "Holt-Winters (additive)")),
+    ("weekly", "SES", "HW 1", ("hw01", "SES")),
+    ("weekly", "ARIMA(2,1,0)", "HW 1", ("hw01", "ARIMA(2, 1, 0)")),
+    ("weekly", "Bayesian structural", "L11", ("l11p1", "rmse")),
+    ("daily", "pyGAM", "HW 2", ("hw02", "pyGAM")),
+    ("daily", "Prophet + regressors", "HW 2", ("hw02", "Prophet (with regressors)")),
+    ("panel", "Random forest", "HW 3", ("panel", "rf")),
+    ("panel", "LASSO, 46 features", "HW 4", ("panel", "lasso")),
+]
+# group -> (the block holding its benchmark, header)
+SKILL_GROUPS = {
+    "weekly": ("hw01", "CA_1 FOODS weekly \u00b7 a year ahead \u00b7 benchmark RMSE {:,.0f}"),
+    "daily": ("hw02", "CA_1 FOODS daily \u00b7 a year ahead \u00b7 benchmark RMSE {:,.0f}"),
+    "panel": ("panel", "30 weekly series \u00b7 one week ahead \u00b7 benchmark RMSE {:,.0f}"),
+}
+HW01_ASKED = ["SES", "Holt-Winters (additive)", "Holt (damped)", "Holt (undamped)",
+              "ARIMA(2, 0, 0)", "ARIMA(2, 1, 0)", "ARIMA(4, 1, 0)"]
+
+
+def skill(S: dict, block: str, key: str) -> float:
+    """1 - RMSE / RMSE(seasonal naive), both from the same block: one series, one test period."""
+    return 1 - S[block][key] / S[block]["naive"]
+
+
+def check_skill(S: dict) -> None:
+    """The slide's claims, recomputed: every model Homework 1 asked for loses a year ahead, and the
+    course's wins are 4% (Bayesian structural), 12% (Homework 2's best) and 65% (LASSO)."""
+    for k in HW01_ASKED:
+        assert skill(S, "hw01", k) < 0, f"HW1 {k} beats the benchmark"
+    for k in ("Holt-Winters, damped trend (not asked)", "Holt-Winters, no trend (not asked)"):
+        assert skill(S, "hw01", k) > 0, f"walkthrough backup {k} no longer beats the benchmark"
+    assert round(S["hw01"]["naive"]) == 1660 and round(S["hw02"]["naive"]) == 405
+    assert round(100 * skill(S, "l11p1", "rmse")) == 4
+    best2 = max(("Prophet (with regressors)", "pyGAM", "Prophet (no regressors)"),
+                key=lambda k: skill(S, "hw02", k))
+    assert best2 == "Prophet (with regressors)" and round(100 * skill(S, "hw02", best2)) == 12
+    assert round(100 * skill(S, "panel", "lasso")) == 65
+    assert round(S["panel"]["naive"]) == NAIVE
+    # the narration's horizon contrast: the same ARIMA one week ahead, and how weak each benchmark is
+    assert round(100 * skill(S, "hw01", "ARIMA(2, 1, 0), one week ahead")) == 26
+    assert round(100 * S["hw01"]["naive"] / S["hw01"]["test_mean"]) == 8
+    assert round(100 * S["panel"]["naive"] / S["panel"]["test_mean"]) == 23
+
+
+def skill_bars() -> None:
+    """Skill against the seasonal naive, one bar per model, grouped by the benchmark it faced."""
+    import matplotlib.transforms as mtransforms
+    S = measured()["skill"]
+    check_skill(S)
+    lo, hi = -27, 76
+    fig, ax = plt.subplots(figsize=sz(14.0, 4.85))
+    lab = mtransforms.blended_transform_factory(ax.transAxes, ax.transData)
+    y, BAR = 0.0, 0.62
+    for g, (block, head) in SKILL_GROUPS.items():
+        ax.text(lo, y, head.format(S[block]["naive"]), ha="left", va="center", fontsize=12,
+                color=BLACK, fontweight="bold")
+        y -= 1.0
+        top = y
+        for _, label, src, (blk, key) in [r for r in SKILL if r[0] == g]:
+            v = 100 * skill(S, blk, key)
+            c = GREEN if v > 0 else CRIMSON
+            ax.barh(y, v, height=BAR, color=c, zorder=3, lw=0)
+            ax.text(v + (1.2 if v > 0 else -1.2), y, f"{'+' if v > 0 else '\u2212'}{abs(v):.0f}%",
+                    ha="left" if v > 0 else "right", va="center", fontsize=12, color=c)
+            ax.text(-0.012, y, label, transform=lab, ha="right", va="center", fontsize=12.5,
+                    color=BLACK)
+            ax.text(0.004, y, src, transform=lab, ha="left", va="center", fontsize=11,
+                    color=GRAY)
+            y -= 1.0
+        # each group's own zero line: its own benchmark
+        ax.plot([0, 0], [top + BAR / 2 + 0.12, y + 1 - BAR / 2 - 0.12], color=GRAY, lw=1.4,
+                ls=(0, (4, 2.5)), zorder=4)
+        y -= 0.3
+    ax.text(hi - 1, -0.55, "Each bar against its own group\u2019s benchmark:\n"
+            "right of zero beats it, left of zero loses.\n"
+            "Compare signs and sizes, not RMSEs.", ha="right", va="top", fontsize=11.5,
+            color=GRAY, linespacing=1.15)
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(y + 0.55, 0.6)
+    ax.set_xticks([-20, 0, 20, 40, 60])
+    ax.set_xticklabels(["\u221220%", "0", "+20%", "+40%", "+60%"], fontsize=12)
+    ax.set_xlabel("skill = 1 \u2212 RMSE \u00f7 benchmark RMSE, same series and test period",
+                  fontsize=12)
+    ax.set_yticks([])
+    ax.spines["left"].set_visible(False)
+    save(fig, "skill_bars")
+
+
 FIGURES = {"scoreboard": scoreboard, "christmas_squares": christmas_squares,
-           "cv_splits": cv_splits}
+           "cv_splits": cv_splits, "skill_bars": skill_bars}
 
 
 if __name__ == "__main__":

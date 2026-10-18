@@ -161,11 +161,11 @@ Twenty-two thousand parameters on five thousand rows will memorize the training 
 
 ## Early Stopping, on Lab 7's Network
 
-Lab 7's network, trained for 200 epochs instead of 60, three seeds:
+Lab 7's network for 200 epochs, with the last 52 training weeks held out as a validation slice:
 
 ![](../Figures/Lecture07_NeuralNets/overfit_epochs.svg){fig-align="center" height="360px"}
 
-[Training error keeps falling. Held-out error improves little after epoch 60 and jumps by about 100 from one epoch to the next, so **keep the best epoch, not the last**. Choose it on a validation slice cut from the training period, never on the test weeks drawn here.]{.smaller}
+[Each seed keeps its **best epoch on validation**, not its last. On the test weeks that beats stopping at epoch 60 for all three seeds, by 50 to 460, but misses the best test epoch (×) by 50 to 120: only the test weeks could have shown where that one was.]{.smaller}
 
 # PyTorch Implementation
 

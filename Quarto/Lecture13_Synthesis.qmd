@@ -88,9 +88,10 @@ Three lessons, each paid for with a measurement.
 
 ## Lesson 1: The Benchmark Is a Real Competitor
 
-In Homework 1 the seasonal-naive benchmark **beat every smoothing and ARIMA model**. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**, and since 2012 the level it carries has moved under 5% a year.
+A year ahead, Homework 1's seasonal naive beat **every smoothing and ARIMA model the assignment asked for**. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**.
 
-The course beat it, rarely by much: **4%** with the Bayesian structural model, **12%** with Homework 2's GAMs, 65% with the best weekly model and its 46 engineered features.
+<!-- Figure: scripts/figures/lecture13_figures.py (skill_bars). Each bar against the seasonal naive on its own series and test period. -->
+![](../Figures/Lecture13_Synthesis/skill_bars.svg){fig-align="center" height="360px"}
 
 ::: {.keybox}
 **Compute the benchmark first, every time.** It costs one line and says whether the rest of the work was worth doing.

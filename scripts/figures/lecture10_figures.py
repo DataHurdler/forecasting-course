@@ -16,6 +16,9 @@ posterior, with PyMC's budget from the deck (tune=1000, draws=2000, chains=4). T
 summaries go to Figures/Lecture10_BayesianFoundations/measured.json; later runs redraw from that
 file, and --retrain re-runs the sampler. The prior-predictive counts are exact Beta-Binomial
 probabilities, not simulated draws.
+
+One figure reads data: the Bayes' theorem mosaic counts CA_1 FOODS weeks in
+data/processed/m5_weekly.csv (run scripts/prep_m5.py first) and asserts the slide's numbers.
 """
 from __future__ import annotations
 
@@ -440,8 +443,119 @@ def prior_predictive() -> None:
         print(f"    {name}: 90% {lo}-{hi}, tallest bar {mx:.4f}")
 
 
-FIGURES = {"bayes_update": bayes_update, "mcmc_walk": mcmc_walk, "mcmc_histogram": mcmc_histogram,
-           "priors_support": priors_support, "prior_predictive": prior_predictive}
+# ================================================================== Bayes' theorem as a mosaic
+# Slides/Lecture10_BayesianFoundations.tex, "Bayes' Theorem, Drawn". CA_1 FOODS weekly, as Lab 10 loads
+# it. theta: a high-SNAP week, snap_days >= 5 (Lab 10's definition). D: a "strong" week, one whose
+# units are above its own calendar year's median (the owner's definition, 2026-10-18). 2011 and 2016
+# are partial years (from 31 Jan; to mid-May), so their medians are over fewer weeks.
+def snap_weeks():
+    import pandas as pd
+    w = pd.read_csv(ROOT / "data" / "processed" / "m5_weekly.csv", parse_dates=["week_start"])
+    c = w[(w.store_id == "CA_1") & (w.cat_id == "FOODS")].sort_values("week_start").copy()
+    c["snap"] = c.snap_days >= 5
+    c["year"] = c.week_start.dt.year
+    c["strong"] = c.units > c.groupby("year").units.transform("median")
+    return c
+
+
+def bayes_mosaic() -> None:
+    """A unit square split left/right by P(SNAP), then each column by P(strong | column): areas
+    are joint probabilities. Below it, the strong area laid end to end, read the other way."""
+    c = snap_weeks()
+    n = len(c)
+    n_snap = int(c.snap.sum())
+    n_ss = int((c.snap & c.strong).sum())              # SNAP and strong
+    n_os = int((~c.snap & c.strong).sum())             # other week, strong
+    n_strong = n_ss + n_os
+    p_snap, lik, lik_other = n_snap / n, n_ss / n_snap, n_os / (n - n_snap)
+    evidence, post = n_strong / n, n_ss / n_strong
+    # The numbers the slide prints, checked before anything is drawn.
+    assert (n, n_snap, n_ss, n_os) == (277, 72, 55, 82)
+    assert (round(p_snap, 2), round(lik, 2), round(lik_other, 2)) == (0.26, 0.76, 0.40)
+    assert (round(evidence, 2), round(post, 2)) == (0.49, 0.40)
+    assert abs(post - lik * p_snap / evidence) < 1e-12                       # Bayes, exactly
+    assert abs(evidence - (lik * p_snap + lik_other * (1 - p_snap))) < 1e-12  # the two strong areas
+    assert round(0.76 * 0.26 / 0.49, 2) == 0.40        # the slide's rounded arithmetic still lands
+    # every year, partial or not, SNAP weeks were strong more often than other weeks
+    by_year = c.groupby("year").apply(lambda g: (g[g.snap].strong.mean(), g[~g.snap].strong.mean()))
+    assert all(s > o for s, o in by_year)
+    # the narration's aside: "beats the same week last year" makes SNAP nearly uninformative,
+    # because the same week last year was a SNAP week too
+    c["snap_l52"] = c.snap.shift(52)
+    d = c[c.units_lag52.notna()]
+    beat = d.units > d.units_lag52
+    beat_snap, beat_other = beat[d.snap].mean(), beat[~d.snap].mean()
+    l52_snap, l52_other = d[d.snap].snap_l52.mean(), d[~d.snap].snap_l52.mean()
+    assert (len(d), round(beat_snap, 2), round(beat_other, 2)) == (225, 0.58, 0.57)
+
+    DARK, MID, PALE = CRIMSON, "#F4B4B6", "#E4E4E7"
+    fig, ax = plt.subplots(figsize=sz(4.95, 5.35))
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    ax.set_aspect("equal"); ax.axis("off")
+    ax.set_xlim(-0.27, 1.20); ax.set_ylim(-0.35, 1.24)
+    gap = dict(edgecolor="white", lw=2.0)
+    ax.add_patch(Rectangle((0, 0), p_snap, lik, facecolor=DARK, **gap))
+    ax.add_patch(Rectangle((0, lik), p_snap, 1 - lik, facecolor=PALE, **gap))
+    ax.add_patch(Rectangle((p_snap, 0), 1 - p_snap, lik_other, facecolor=MID, **gap))
+    ax.add_patch(Rectangle((p_snap, lik_other), 1 - p_snap, 1 - lik_other, facecolor=PALE, **gap))
+    # counts of weeks, the areas' numerators (every area is count / 277)
+    ax.text(p_snap / 2, lik / 2, f"{n_ss}", ha="center", va="center", fontsize=13, color="white",
+            fontweight="bold")
+    ax.text(p_snap / 2, (1 + lik) / 2, f"{n_snap - n_ss}", ha="center", va="center", fontsize=12,
+            color=BLACK)
+    xo = (1 + p_snap) / 2
+    ax.text(xo, lik_other / 2, f"{n_os} strong", ha="center", va="center", fontsize=12,
+            color=BLACK)
+    ax.text(xo, (1 + lik_other) / 2, f"{n - n_snap - n_os} not strong", ha="center", va="center",
+            fontsize=12, color=GRAY)
+    # prior: the SNAP column's width (a bracket above it); the rest: the other weeks
+    yb = 1.035
+    b0, b1 = p_snap - 0.012, p_snap + 0.012             # a small gap between the two brackets
+    ax.plot([0, 0, b0, b0], [yb, yb + 0.03, yb + 0.03, yb], color=BLUE, lw=1.4,
+            solid_capstyle="butt")
+    ax.text(p_snap / 2, yb + 0.06, f"SNAP\n{p_snap:.2f}", ha="center", va="bottom", fontsize=12,
+            color=BLUE, linespacing=1.1)
+    ax.plot([b1, b1, 1, 1], [yb, yb + 0.03, yb + 0.03, yb], color=GRAY, lw=1.4,
+            solid_capstyle="butt")
+    ax.text(xo, yb + 0.06, f"other weeks\n{1 - p_snap:.2f}", ha="center", va="bottom",
+            fontsize=12, color=GRAY, linespacing=1.1)
+    # likelihoods: the strong height in each column
+    xl = -0.045
+    ax.annotate("", xy=(xl, 0), xytext=(xl, lik),
+                arrowprops=dict(arrowstyle="<|-|>", color=AMBER, lw=1.3, mutation_scale=9,
+                                shrinkA=0, shrinkB=0))
+    ax.text(xl - 0.025, lik / 2, f"{lik:.2f}", ha="right", va="center", fontsize=12, color=AMBER)
+    xr = 1.045
+    ax.annotate("", xy=(xr, 0), xytext=(xr, lik_other),
+                arrowprops=dict(arrowstyle="<|-|>", color=GRAY, lw=1.3, mutation_scale=9,
+                                shrinkA=0, shrinkB=0))
+    ax.text(xr + 0.025, lik_other / 2, f"{lik_other:.2f}", ha="left", va="center", fontsize=12,
+            color=GRAY)
+    # the other way: the two strong areas end to end (length = area, so the shares are exact)
+    ys, hs = -0.30, 0.13
+    ax.add_patch(Rectangle((0, ys), n_ss / n, hs, facecolor=DARK, **gap))
+    ax.add_patch(Rectangle((n_ss / n, ys), n_os / n, hs, facecolor=MID, **gap))
+    ax.text(n_ss / n / 2, ys + hs / 2, f"{n_ss}", ha="center", va="center", fontsize=12,
+            color="white", fontweight="bold")
+    ax.text(n_ss / n + n_os / n / 2, ys + hs / 2, f"{n_os}", ha="center", va="center", fontsize=12,
+            color=BLACK)
+    ax.text(0, ys + hs + 0.035, "all strong weeks, end to end", ha="left", va="bottom",
+            fontsize=11, color=GRAY)
+    ax.text(evidence + 0.04, ys + hs / 2, f"{n_ss} of {n_strong}:\n{post:.2f} SNAP", ha="left",
+            va="center", fontsize=12, color=CRIMSON, linespacing=1.1)
+    save(fig, "bayes_mosaic")
+    print(f"    {n} weeks, {n_snap} SNAP: P(SNAP) {p_snap:.4f}; P(strong|SNAP) {lik:.4f}, "
+          f"P(strong|other) {lik_other:.4f}; P(strong) {evidence:.4f}; P(SNAP|strong) {post:.4f}")
+    print("    by year, P(strong|SNAP) vs P(strong|other): "
+          + ", ".join(f"{y} {s:.2f}/{o:.2f}" for y, (s, o) in by_year.items()))
+    print(f"    aside, 'beats the same week last year' ({len(d)} weeks): P(beat|SNAP) {beat_snap:.3f} "
+          f"vs P(beat|other) {beat_other:.3f}; last year's week was SNAP {l52_snap:.2f} vs "
+          f"{l52_other:.2f}")
+
+
+FIGURES = {"bayes_update": bayes_update, "bayes_mosaic": bayes_mosaic, "mcmc_walk": mcmc_walk,
+           "mcmc_histogram": mcmc_histogram, "priors_support": priors_support,
+           "prior_predictive": prior_predictive}
 
 if __name__ == "__main__":
     pick = [a for a in sys.argv[1:] if not a.startswith("--")] or list(FIGURES)

@@ -139,8 +139,9 @@ Three lessons, each paid for with a measurement.
 
 Start with the one that should be most uncomfortable.
 
-In Homework 1, the seasonal-naive benchmark — same week last year, one line of code — **beat every
-exponential smoothing and ARIMA model you fitted.**
+In Homework 1, forecasting the whole test year from one starting point, the seasonal-naive
+benchmark — same week last year, one line of code — **beat every exponential smoothing and ARIMA
+model the assignment asked you to fit.**
 
 That was not a trick question or a rigged setup. It is simply what the data supports at that
 horizon — and the reason is countable. Holt-Winters had to estimate fifty-two seasonal indices from
@@ -148,16 +149,44 @@ four point three annual cycles of training data: about four observations per par
 naive estimates nothing. And the level it carries barely moves: calendar year on calendar year,
 plus three point seven percent, plus one point three, minus four point four, plus two point nine.
 That's since 2012. The year before, 2011 to 2012, the series jumped almost twenty-nine percent,
-which is why the slide says "since 2012" — the claim is about the years the benchmark actually
-had to copy.
+which is why I say "since 2012" — the claim is about the years the benchmark actually had to copy.
 
 **[pause]**
 
-And across the whole course, the benchmark was beaten, but rarely by the margin the effort implied.
+*(Point at the figure.)* Every bar is the same calculation: one minus the model's RMSE divided by
+the seasonal naive's RMSE, on the same series and the same test period. Right of zero beats the
+benchmark; left of zero loses to it. And each group has its **own** benchmark — sixteen hundred
+sixty units a week, four hundred five a day, twenty-one fifty-two a week across thirty series — so
+read the signs and the rough sizes, never one group's RMSE against another's.
 
-The Bayesian structural model beat it by **four percent**. The GAMs in Homework 2 beat it by
-**twelve percent**. The best model on the weekly panel beat it by sixty-five percent — after
-forty-six engineered features and a cross-validated penalty.
+*(Top group.)* Homework 1, on CA_1 FOODS. Holt-Winters, minus eight percent. SES, minus six.
+ARIMA two-one-zero, the best of the seven models the assignment asked for, minus three. Only three
+of the seven are drawn. The rest sit further left: damped Holt at minus sixteen, the other two
+ARIMAs at minus seven and minus twelve, and undamped Holt at minus ninety, which would have
+squashed every other bar on the slide.
+
+Under them, the Bayesian structural model from Lecture 11 — same series, same test year, same
+benchmark — at **plus four percent**. It crosses the line, and not by much.
+
+*(Middle group.)* Homework 2: daily data, a whole year ahead. Prophet with the SNAP and event
+regressors, **plus twelve**; pyGAM, plus nine. On the year-ahead questions in this figure, twelve
+percent is the best margin anyone got.
+
+*(Bottom group.)* Then the bars get long: the random forest from Homework 3 at plus fifty-eight,
+and the LASSO with forty-six engineered features from Homework 4 at **plus sixty-five**. Read the
+group's header before you read its bars. These models see last week's sales and forecast **one
+week** ahead, not a year. Ask Homework 1's own ARIMA that easier question — refit every week, as
+in the walk-forward part — and on the same test year it goes from minus three to plus twenty-six.
+And on this panel last year is a weaker guide: the seasonal naive misses by twenty-three percent of
+a typical week, against eight percent on CA_1 FOODS. So the long bars are partly an easier
+question and a weaker benchmark — which is exactly why each group gets its own zero line.
+
+*(If someone asks.)* Two Holt-Winters variants the assignment did not ask for — damped trend, and
+no trend at all — do beat the benchmark, by about six and seven percent. Both stop extrapolating
+the trend and keep the annual pattern: the slowdown from Homework 1 again. A student who fitted one
+and said so was right.
+
+**[pause]**
 
 *(Point at the key box.)*
 

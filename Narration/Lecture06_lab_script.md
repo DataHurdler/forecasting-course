@@ -24,7 +24,7 @@ the lab does not print. See the last section for the one row a sharp student wil
 
 ### In-room language that needs replacing
 
-Three places: Step 3's "find the pattern before reading on," Step 4's "decide whether that trade
+Three places: Step 3's "which survivor is not a multiple of 7," Step 4's "decide whether that trade
 is worth it," and the closing **Discuss** block. All converted below.
 
 ---
@@ -220,13 +220,16 @@ the last 8 features standing, in reverse order of elimination:
    lag56
 ```
 
-**[STOP — learner works]** — *(replaces "find the pattern before reading on")*
+**[STOP — learner works]** — *(replaces "which survivor is not a multiple of 7")*
 
-Pause here. Read those eight lag numbers and find the pattern before I say it.
+Pause here. You saw this path in the lecture, with the weekly lags in red. Find the one survivor
+that is not a multiple of seven, and think about why the LASSO might keep it anyway.
 
 *(Resume.)*
 
-28. 7. 35. 364. 14. 21. 56. Every one of them is a **multiple of seven** except `lag1`.
+28. 7. 35. 364. 14. 21. 56. Every one of them is a **multiple of seven** except `lag1`. And `lag1`
+survives for a different reason: yesterday is the freshest reading of the level the series is at
+right now, which no weekly lag gives you.
 
 **[pause]**
 

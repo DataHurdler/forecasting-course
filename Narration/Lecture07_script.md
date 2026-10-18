@@ -443,40 +443,53 @@ You'll see it a sixth time in Lecture 11, and there it will be the cleanest vers
 
 # ▶ SLIDE 15 — Early Stopping, on Lab 7's Network
 
-Here is the third of those tools, early stopping, on the network you'll train in the lab.
+Here is the third of those tools, early stopping, on the network you'll train in the lab, done
+the way you would do it for real.
 
 *(Point at the figure.)*
 
-Same model, same data, same settings as Lab 7 — the only change is that I let it run for two
-hundred epochs instead of sixty, and recorded the error after every epoch. Three seeds. The thin
-lines are the individual seeds, the bold lines their average. Gray is the error on the training
-windows; red is the error on the held-out test weeks.
+Same model, same settings, same seeds as Lab 7, run for two hundred epochs instead of sixty. One
+change. I held out the last fifty-two weeks of the training period, mid-May 2014 to mid-May 2015,
+as a validation slice. That's a full year, so every season is in it, and it's about as long as
+the fifty-three test weeks. The network trains only on the weeks before that slice, and is
+standardized on them too.
 
-Gray keeps going down. The model keeps getting better at the data it's fitting. Red goes down
-for the first sixty epochs or so and then mostly stops: by the end the gap between the two has
-grown from about two hundred sixty to about three hundred forty. That widening gap is the model
-starting to memorize.
+That is about a quarter fewer training windows than the lab uses, so these are not the lab's
+curves. At epoch sixty this run scores about eleven sixty, fourteen ten and ten fifty on the test
+weeks; the lab's own run, with that extra year to learn from, scores eleven hundred, twelve
+hundred and nine fifty.
 
-**[pause]**
-
-Now look at how jagged the red line is. From one epoch to the next, held-out error jumps by
-about a hundred units, up or down. That is about as large as everything held-out error gains
-after epoch sixty. So the *last* epoch is a lottery ticket. That's why early stopping keeps the weights from
-the **best** epoch, not the last.
-
-The dots are each seed's best epoch: one eighteen, one forty-three and one seventy-six, all well
-after the dashed line where the lab stops at sixty. At sixty, the three seeds score about eleven
-hundred, twelve hundred and nine fifty; their best epochs are all near eight seventy.
+One panel per seed. Gray is the error on the training windows, blue on the validation slice, red
+on the test weeks.
 
 **[pause]**
 
-*(This is the caveat. Don't skip it.)*
+Gray keeps going down: the model keeps getting better at the data it's fitting. Blue drops fast
+and then improves only slowly after about epoch sixty, jumping by about fifty from one epoch to
+the next. Red is jumpier still, about a hundred.
 
-But I drew those red curves on the *test* weeks, so you could see them. If you picked your epoch
-by looking at that red line, you would be choosing on the test set, and your test number would
-be flattering. Every one of those best epochs is the minimum of a jagged curve, which makes it
-the luckiest point on it, not a fair estimate. In practice you cut a validation slice from the
-end of the training period, watch that, keep the best epoch on it — and touch the test weeks
+The blue dot in each panel is the lowest validation error: epoch one oh seven, one thirty-two,
+and eighty. Early stopping keeps the weights from that epoch. Follow the dotted line up to the
+red dot: that is what those weights score on the test weeks. About nine fifty, nine fifty, and a
+thousand.
+
+Now the ring, at epoch sixty, where the lab stops. Keeping validation's best epoch beat it on
+all three seeds: by two hundred ten, by four hundred sixty, and for seed three by only fifty. It
+also beat the last epoch every time, though for seed two by only five.
+
+**[pause]**
+
+*(This is the honest part. Don't skip it.)*
+
+The black cross is the best test epoch: one ninety-five, one sixty-four and one ninety-eight.
+It's better than what validation picked, by fifty to a hundred twenty. And you could not have
+picked it. The only way to find it is to look at the test weeks, and then you'd be choosing on
+the test set, and the number you report would flatter you. Validation's minimum is the luckiest
+point on a jagged curve too, which is why it isn't a perfect guide to the test. But it's an
+honest one.
+
+In practice you'd set a patience and usually stop sooner, perhaps at a different epoch; here I
+ran all two hundred epochs and kept the best. Either way you watch validation, keep the best weights on it — and touch the test weeks
 once, at the end.
 
 ---

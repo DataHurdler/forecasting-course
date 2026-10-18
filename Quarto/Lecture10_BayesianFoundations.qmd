@@ -94,6 +94,40 @@ $$\text{posterior} \;\propto\; \text{likelihood} \times \text{prior}$$
 
 ---
 
+## Bayes' Theorem, Drawn
+
+CA_1 FOODS, 277 weeks. $\theta$: a SNAP week. $\mathcal{D}$: a **strong** week, above its year's median.
+
+:::: {.columns}
+::: {.column width="36%"}
+![](../Figures/Lecture10_BayesianFoundations/bayes_mosaic.svg){fig-align="center" width="64%"}
+:::
+::: {.column width="62%"}
+::: {.smaller}
+$$
+\underbrace{p(\text{SNAP} \mid \text{strong})}_{\text{posterior}}
+= \frac{\overbrace{p(\text{strong} \mid \text{SNAP})}^{\text{likelihood}}
+        \cdot \overbrace{p(\text{SNAP})}^{\text{prior}}}
+       {\underbrace{p(\text{strong})}_{\text{evidence}}}
+$$
+
+| | | |
+|---|---|---|
+| prior | 0.26 | the SNAP column's width |
+| likelihood | 0.76 | the crimson block's height |
+| likelihood $\times$ prior | 0.20 | the crimson block's area |
+| evidence | 0.49 | all strong area, crimson and pink |
+| posterior | 0.40 | crimson's share of that area |
+
+76% of SNAP weeks are strong; only 40% of strong weeks are SNAP. **The prior is the width:** a quarter of all weeks.
+:::
+:::
+::::
+
+[The gray 0.40 is $p(\text{strong} \mid \text{other weeks})$, 82 of 205; that it equals the posterior is a coincidence.]{.neutral .smaller}
+
+---
+
 ## The Update, in Pictures
 
 A conversion rate $\theta$: a $\text{Beta}(5, 45)$ prior, then 30 successes in 200 trials.

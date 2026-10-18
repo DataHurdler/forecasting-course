@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Bayesian Statistics I — Foundations**
 
-Deck: `Slides/Lecture10_BayesianFoundations.pdf` (21 pages) · Measured runtime: see the timing guide
+Deck: `Slides/Lecture10_BayesianFoundations.pdf` (22 pages) · Measured runtime: see the timing guide
 
 ---
 
@@ -13,7 +13,7 @@ Deck: `Slides/Lecture10_BayesianFoundations.pdf` (21 pages) · Measured runtime:
 - This lecture changes the *question*, not the accuracy. Slide 5 is where students decide whether
   Bayesian methods are worth their attention — spend time there and use the meeting framing, not
   the philosophy.
-- Slide 16 introduces the three diagnostics that every remaining assignment requires. Be explicit
+- Slide 17 introduces the three diagnostics that every remaining assignment requires. Be explicit
   that they are non-negotiable.
 
 ---
@@ -169,7 +169,7 @@ the distribution, only its normalization. So in practice people write the workin
 **Posterior is proportional to likelihood times prior.**
 
 That proportionality is what we'll actually use, and it's why the denominator being uncomputable
-turns out not to matter — which is the subject of slide 13.
+turns out not to matter — which is the subject of slide 14.
 
 *(Point at the last paragraph.)*
 
@@ -200,10 +200,102 @@ change; the feasibility did.
 
 ---
 
-# ▶ SLIDE 8 — The Update, in Pictures
+# ▶ SLIDE 8 — Bayes' Theorem, Drawn
 
-Let's make it concrete with a case you could actually meet. Estimating a conversion rate — theta —
-with a Beta five, forty-five prior, and then thirty successes in two hundred trials.
+*(Point at the square before saying anything about the equation.)*
+
+That equation looks abstract, so let me draw it with our own data. Two hundred seventy-seven weeks
+of FOODS sales at store CA_1 — the same weeks you'll use in the lab.
+
+I ask two yes-or-no questions about each week. First: was it a **SNAP week**? SNAP is the federal
+food-assistance program, and in California the benefit days are the first ten of every month. A
+week with five or more of them is what the lab calls a high-SNAP week. Second: was it a **strong
+week**? A strong week is one whose units beat the median for its own calendar year. Comparing each
+week with its own year takes out the growth, so a week in twenty-eleven competes with twenty-eleven,
+not with twenty-fifteen.
+
+**[pause]**
+
+*(Trace the vertical split.)*
+
+The whole square has area one: all two hundred seventy-seven weeks. Split it left and right by how
+common SNAP weeks are. Seventy-two of them are SNAP weeks, about a quarter, so the left column is
+point-two-six wide. That width is the **prior**: how likely a SNAP week is before you know anything
+about sales.
+
+*(Trace the horizontal split in each column.)*
+
+Now split each column by how often its weeks were strong. In the SNAP column, fifty-five of
+seventy-two: point-seven-six of the height. That's the **likelihood**, how probable a strong week
+is if it's a SNAP week. In the other column, eighty-two of two hundred five: point-four-oh.
+
+Every block's area is now a joint probability, width times height. The crimson block is
+point-two-six times point-seven-six, about a fifth of the square, and it holds fifty-five weeks.
+Likelihood times prior is an area.
+
+**[pause]**
+
+*(Point at the strip under the square.)*
+
+Now read the square the other way. I tell you a week was strong, and ask: was it a SNAP week? You
+are now inside the strong area only, crimson plus pink: a hundred thirty-seven of the two hundred
+seventy-seven weeks, point-four-nine of the square. That area is the **evidence**, p of D. The strip
+underneath lays the two blocks end to end, so you can compare them by length instead of guessing
+at areas.
+
+Fifty-five of those hundred thirty-seven are crimson. Point-four-oh. That's the **posterior**.
+
+*(Point at the formula, then down the table.)*
+
+And that is the equation, term by term. Point-seven-six times point-two-six, over point-four-nine,
+is point-four-oh. I said you won't compute Bayes' theorem by hand; with two yes-or-no questions it
+isn't computing, it's counting.
+
+**[pause]**
+
+Here's the part worth remembering. Seventy-six percent of SNAP weeks are strong. Only forty percent
+of strong weeks are SNAP weeks. Those numbers answer different questions, and people swap them all
+the time.
+
+Why are they so different? Look at the widths. The SNAP column is narrow, because SNAP weeks are a
+quarter of all weeks. So even though most of that column is crimson, its block is smaller than the
+pink block sitting in the wide column. **The prior is the width.** Make SNAP weeks rarer and the
+posterior falls, even if the likelihood stays exactly where it is.
+
+*(Point at the muted footnote.)*
+
+One trap on this slide: there are two point-four-ohs. The gray one, on the right edge, is the share
+of other weeks that were strong, eighty-two of two hundred five. The crimson one is the posterior.
+They match by coincidence. Nothing in the theorem makes them equal.
+
+**[pause]**
+
+Notice what the evidence did. It divided fifty-five and eighty-two by the same hundred thirty-seven.
+The ratio between them didn't change; dividing only made them add up to one, point-four and
+point-six. That's the "rescaling, not reshaping" from the last slide. With two yes-or-no answers
+the evidence is one sum you can count. With a parameter that can take any value, like the
+conversion rate on the next slide, it becomes an integral, and that's why the rest of this lecture
+samples instead.
+
+*(If there's time, the two caveats.)*
+
+Two honest caveats about the data. Twenty-eleven and twenty-sixteen are partial years: the data
+start at the end of January twenty-eleven and stop in May twenty-sixteen, so those two medians are
+taken over fewer weeks. The pattern doesn't lean on them. In every one of the six years, SNAP weeks
+were strong more often than other weeks.
+
+And the definition is a choice. If "strong" meant "beat the same week last year," SNAP would tell
+you almost nothing: fifty-eight percent of SNAP weeks beat last year, against fifty-seven percent of
+other weeks. The reason is that last year's same week was usually a SNAP week too, eighty-five
+percent of the time, so the comparison cancels the SNAP lift. Deciding what counts as the event is
+part of the model.
+
+---
+
+# ▶ SLIDE 9 — The Update, in Pictures
+
+The square had a yes-or-no theta. Most parameters are numbers instead, so take one: a conversion
+rate — theta — with a Beta five, forty-five prior, and then thirty successes in two hundred trials.
 
 *(Point at the blue curve.)*
 
@@ -251,13 +343,13 @@ defensible, and a problem when it isn't.
 
 ---
 
-# ▶ SLIDE 9 — Section divider: Prior Distributions
+# ▶ SLIDE 10 — Section divider: Prior Distributions
 
 The part you have to justify, and the part people worry about.
 
 ---
 
-# ▶ SLIDE 10 — Priors You Will Actually Use
+# ▶ SLIDE 11 — Priors You Will Actually Use
 
 A prior is just a distribution over a parameter, chosen to match what that parameter *can* be.
 
@@ -315,7 +407,7 @@ justification.
 
 ---
 
-# ▶ SLIDE 11 — Choosing a Prior You Can Defend
+# ▶ SLIDE 12 — Choosing a Prior You Can Defend
 
 Now the objection. The standard criticism of Bayesian work is that the prior is arbitrary — that
 you can get any answer you like by choosing the right one.
@@ -352,13 +444,13 @@ The Bayesian prior isn't an extra assumption. It's an assumption made visible.
 
 ---
 
-# ▶ SLIDE 12 — Section divider: Posterior Inference with PyMC
+# ▶ SLIDE 13 — Section divider: Posterior Inference with PyMC
 
 Sampling, the code, and how to tell whether the answer is trustworthy.
 
 ---
 
-# ▶ SLIDE 13 — MCMC: The Big Idea
+# ▶ SLIDE 14 — MCMC: The Big Idea
 
 Back to that denominator. For any model more complicated than a textbook example, it cannot be
 computed — it's an integral over every possible parameter combination.
@@ -419,7 +511,7 @@ minutes into sampling is a genuinely miserable experience, and one you can avoid
 
 ---
 
-# ▶ SLIDE 14 — The Samples Are the Answer
+# ▶ SLIDE 15 — The Samples Are the Answer
 
 And here is the trick that makes it all work: **the record of where you walked is the answer.**
 
@@ -439,7 +531,7 @@ Close, and it gets closer with more draws.
 Why only close? Because neighboring steps of a random walk are correlated, so eight thousand
 draws here carry about as much information as seven hundred eighty independent ones. NUTS on the
 same model gets more than three thousand. That's what "smarter steps" buys you, and it's the
-effective sample size you'll meet on slide 16.
+effective sample size you'll meet on slide 17.
 
 *(Point at the key box.)*
 
@@ -458,7 +550,7 @@ above four hundred.
 
 ---
 
-# ▶ SLIDE 15 — PyMC: A First Model
+# ▶ SLIDE 16 — PyMC: A First Model
 
 Here's the conversion-rate problem, in six lines.
 
@@ -483,7 +575,7 @@ from everything else in this course, where you chose a fitting algorithm.
 
 Two arguments to understand. `tune=1000` discards the first thousand steps, while the sampler is
 still finding the high ground — those steps aren't from the posterior yet. That's the gray band
-on slide 13. And `chains=4` runs four *independent* walks from different starting points.
+on slide 14. And `chains=4` runs four *independent* walks from different starting points.
 
 That second one seems wasteful. It's what makes the next slide possible.
 
@@ -500,7 +592,7 @@ independent attempts agreeing is evidence; a single confident attempt is not.
 
 ---
 
-# ▶ SLIDE 16 — Did the Sampler Actually Work?
+# ▶ SLIDE 17 — Did the Sampler Actually Work?
 
 *(Emphasize this slide. Every remaining assignment requires these three numbers.)*
 
@@ -540,7 +632,7 @@ result.
 
 ---
 
-# ▶ SLIDE 17 — Prior Predictive Checks
+# ▶ SLIDE 18 — Prior Predictive Checks
 
 One more habit, and it's the one most often skipped.
 
@@ -555,7 +647,7 @@ looking at whether those datasets could plausibly have come from your business.
 *(Point at the paragraph.)*
 
 The first thing to look for is **impossible values** — negative sales, probabilities above one.
-That means the prior is misspecified, not merely wide. Fix the support, the way we did on slide 10.
+That means the prior is misspecified, not merely wide. Fix the support, the way we did on slide 11.
 
 *(Point at the key box.)*
 
@@ -569,7 +661,7 @@ silently be wrong, before it costs you.
 
 ---
 
-# ▶ SLIDE 18 — Three Priors, Three Predictions
+# ▶ SLIDE 19 — Three Priors, Three Predictions
 
 Here's what that check looks like on our conversion-rate model. Before any data, each prior makes
 a prediction: out of two hundred trials, how many successes?
@@ -606,19 +698,19 @@ predictive check is how you find that out *before* you're embarrassed by it.
 
 ---
 
-# ▶ SLIDE 19 — Section divider: Key Takeaways
+# ▶ SLIDE 20 — Section divider: Key Takeaways
 
 Bayesian inference: beliefs in, beliefs out. Data updates your prior into a posterior.
 
 ---
 
-# ▶ SLIDE 20 — Lecture 10: Key Takeaways
+# ▶ SLIDE 21 — Lecture 10: Key Takeaways
 
 One. Bayesian inference treats parameters as uncertain. The posterior is what you believe after
 seeing the data.
 
 Two. Bayes' theorem: posterior is proportional to likelihood times prior. It lands between the two,
-nearer whichever carries more weight — the lever from slide 8.
+nearer whichever carries more weight — the lever from slide 9.
 
 Three. Priors: match the support to the parameter first, and use weakly informative ones by
 default.
@@ -641,6 +733,6 @@ failure that looks exactly like success.
 
 ---
 
-# ▶ SLIDE 21 — References
+# ▶ SLIDE 22 — References
 
 *(Advance and close. No narration needed.)*

@@ -108,15 +108,16 @@
   not out of anyone's opinion.}
 
 % --- Slide: benchmarks ----------------------------------------------------------
+% Figure: scripts/figures/lecture13_figures.py (skill_bars). Each bar is recomputed there against
+% the seasonal naive on its own series and test period; Homework 1 and 2 rerun the walkthroughs.
 \begin{frame}{Lesson 1: The Benchmark Is a Real Competitor}
-  In Homework 1 the seasonal-naive benchmark \textbf{beat every smoothing and ARIMA model}. Holt-Winters estimated \textbf{52 seasonal indices from 4.3 annual cycles}; seasonal
-  naive estimates \textbf{nothing}, and since 2012 the level it carries has moved under 5\% a year.
-
-  \vspace{0.15cm}
-  The course beat it, rarely by much: \textbf{4\%} with the Bayesian structural model,
-  \textbf{12\%} with Homework 2's GAMs, 65\% with the best weekly model and its 46 engineered
-  features.
-
+  A year ahead, Homework 1's seasonal naive beat \textbf{every smoothing and ARIMA model the
+  assignment asked for}. Holt-Winters estimated \textbf{52 seasonal indices from 4.3 annual
+  cycles}; seasonal naive estimates \textbf{nothing}.
+  \begin{center}
+    \includegraphics[height=4.1cm]{../Figures/Lecture13_Synthesis/skill_bars.pdf}
+  \end{center}
+  \vspace{-0.5cm}
   \begin{keybox}
     \textbf{Compute the benchmark first, every time.} It costs one line and says whether
     the rest of the work was worth doing.

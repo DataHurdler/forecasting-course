@@ -115,6 +115,47 @@
   responsible for choosing the prior, checking the sampler worked, and reading the posterior.
 \end{frame}
 
+% --- Slide: Bayes' theorem as a mosaic ----------------------------------------
+\begin{frame}{Bayes' Theorem, Drawn}
+  CA\_1 FOODS, 277 weeks. $\theta$: a SNAP week. $\mathcal{D}$: a \textbf{strong} week, above its
+  year's median.
+
+  \vspace{0.15cm}
+  \begin{columns}[c]
+    \begin{column}{0.35\textwidth}
+      \centering
+      \includegraphics[height=5.2cm]{../Figures/Lecture10_BayesianFoundations/bayes_mosaic.pdf}
+    \end{column}
+    \begin{column}{0.63\textwidth}
+      {\small
+      \[
+        \underbrace{p(\text{SNAP} \mid \text{strong})}_{\text{posterior}}
+        = \frac{\overbrace{p(\text{strong} \mid \text{SNAP})}^{\text{likelihood}}
+                \cdot \overbrace{p(\text{SNAP})}^{\text{prior}}}
+               {\underbrace{p(\text{strong})}_{\text{evidence}}}
+      \]
+      \begin{tabular}{@{}p{2.7cm}p{0.7cm}p{4.9cm}@{}}
+        \toprule
+        prior & 0.26 & the SNAP column's width \\
+        likelihood & 0.76 & the crimson block's height \\
+        likelihood $\times$ prior & 0.20 & the crimson block's area \\
+        evidence & 0.49 & all strong area, crimson and pink \\
+        posterior & 0.40 & crimson's share of that area \\
+        \bottomrule
+      \end{tabular}
+
+      \vspace{0.15cm}
+      76\% of SNAP weeks are strong; only 40\% of strong weeks are SNAP.
+      \textbf{The prior is the width:} a quarter of all weeks.
+      }
+    \end{column}
+  \end{columns}
+
+  \vspace{0.1cm}
+  \muted{\footnotesize\itshape The gray 0.40 is $p(\text{strong} \mid \text{other weeks})$, 82 of
+  205; that it equals the posterior is a coincidence.}
+\end{frame}
+
 % --- Slide: the update, graphically ------------------------------------------
 \begin{frame}{The Update, in Pictures}
   A conversion rate $\theta$: a $\text{Beta}(5, 45)$ prior, then 30 successes in 200 trials.

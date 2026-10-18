@@ -215,14 +215,14 @@
 
 % --- Slide: early stopping, measured ---------------------------------------------
 \begin{frame}{Early Stopping, on Lab 7's Network}
-  Lab 7's network, trained for 200 epochs instead of 60, three seeds:
+  Lab 7's network for 200 epochs, with the last 52 training weeks held out as a validation slice:
   \begin{center}
-    \includegraphics[height=4.7cm]{../Figures/Lecture07_NeuralNets/overfit_epochs.pdf}
+    \includegraphics[height=4.8cm]{../Figures/Lecture07_NeuralNets/overfit_epochs.pdf}
   \end{center}
   \vspace{-0.3cm}
-  {\small Training error keeps falling. Held-out error improves little after epoch 60 and jumps
-  by about 100 from one epoch to the next, so \textbf{keep the best epoch, not the last}. Choose
-  it on a validation slice cut from the training period, never on the test weeks drawn here.}
+  {\small Each seed keeps its \textbf{best epoch on validation}, not its last. On the test weeks
+  that beats stopping at epoch 60 for all three seeds, by 50 to 460, but misses the best test
+  epoch ($\times$) by 50 to 120: only the test weeks could have shown where that one was.}
 \end{frame}
 
 % =============================================================================

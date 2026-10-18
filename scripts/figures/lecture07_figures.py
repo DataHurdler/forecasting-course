@@ -3,6 +3,7 @@
 
     .venv/bin/python scripts/figures/lecture07_figures.py                       # all
     .venv/bin/python scripts/figures/lecture07_figures.py relu_hinges           # one, by name
+    .venv/bin/python scripts/figures/lecture07_figures.py overfit_epochs --retrain  # re-train (~2 min)
 
 Writes Figures/Lecture07_NeuralNets/<name>.pdf (Beamer) and <name>.svg (Quarto), both vector,
 and Figures/Lecture07_NeuralNets/measured.json with every number the figure prints.
@@ -15,6 +16,9 @@ least squares on the four hinge features. That fit is exact, so nothing is train
 and the figure needs no seed. The knots are the best four on a 10-day grid (searched below, in
 about ten seconds), so the right panel is the best this family can do up to that grid, not a
 lucky draw. A trained network would place its own knots.
+
+overfit_epochs: early stopping chosen on a validation slice (the last 52 training weeks), never
+on the test weeks; trained, seeded as Lab 7 is, and cached in measured.json (see the section).
 """
 from __future__ import annotations
 
@@ -70,7 +74,10 @@ def record(section: str | None, numbers: dict) -> None:
     m = json.loads(MEASURED.read_text()) if MEASURED.exists() else {}
     m["note"] = ("Written by scripts/figures/lecture07_figures.py: every number the Lecture 7 "
                  "figures print. Top-level keys: relu_hinges (weekday days only, x = day of year). "
-                 "Sections: gd_bowl, epochs (trained; --retrain re-measures), weight_blocks.")
+                 "Sections: gd_bowl, weight_blocks, epochs (trained; --retrain re-measures): "
+                 "epochs.full is Lab 7's run on every training window, epochs.validation trains "
+                 "on the weeks before the last 52 training weeks and picks each seed's epoch on "
+                 "those 52.")
     if section is None:
         m.update(numbers)
     else:
@@ -269,13 +276,21 @@ def gd_bowl() -> None:
           f"{d['eta_diverge']:.3f}")
 
 
-# ================================================================== train vs held-out by epoch
+# ================================================================== early stopping on a validation slice
 # Labs/Lecture07_lab.qmd, Steps 1-2, verbatim: 30 M5 weekly series, 26-week windows of four
 # channels flattened to 104 features, split by the target's date at 2015-05-17, standardized on
 # training statistics; make_model (104 -> 128 -> 64 -> 1, dropout 0.2), Adam lr 5e-4, batch 64,
-# shuffle=False, seeds 1-3. The only change: train for EPOCHS instead of 60 and record, after
-# every epoch, RMSE in units on the training windows and on the lab's test weeks (eval mode).
+# shuffle=False, seeds 1-3. Two runs of EPOCHS epochs each, RMSE in units recorded after every
+# epoch in eval mode:
+#   full        the lab exactly (trains on every training window); only its epoch-60 test RMSEs
+#               are used, as the check that this pipeline is the lab's (1,109 / 1,176 / 946).
+#   validation  what the figure draws. The last VAL_WEEKS target weeks before the cut are held
+#               out as a validation slice; the network trains, and is standardized, on the weeks
+#               before them only. Each seed keeps the epoch with the lowest VALIDATION RMSE.
+#               The test weeks choose nothing: their curve is drawn only to show what that
+#               choice gets, and the best test epoch is marked as the one nobody can know.
 EPOCHS = 200
+VAL_WEEKS = 52      # one full year, so every season is in it; the test period is 53 weeks
 
 
 def train_curves() -> dict:
@@ -291,89 +306,122 @@ def train_curves() -> dict:
             X.append(a[i:i + W]); Y.append(a[i + W, 0]); D.append(dates[i + W])
     X, Y, D = np.stack(X), np.array(Y, dtype="float32"), np.array(D)
     tr, te = D < CUT, D >= CUT
-    mu = X[tr].mean(axis=(0, 1), keepdims=True)
-    sd = X[tr].std(axis=(0, 1), keepdims=True) + 1e-8
-    y_mu, y_sd = Y[tr].mean(), Y[tr].std()
-    Xn, Yn = (X - mu) / sd, (Y - y_mu) / y_sd
-    X_tr = torch.tensor(Xn[tr].reshape(tr.sum(), -1)); y_tr = torch.tensor(Yn[tr])
-    X_te = torch.tensor(Xn[te].reshape(te.sum(), -1))
+    v_start = np.unique(D[tr])[-VAL_WEEKS]
+    fit, val = D < v_start, tr & (D >= v_start)
     rmse = lambda a, b: float(np.sqrt(np.mean((np.asarray(a) - np.asarray(b)) ** 2)))
 
-    curves = {}
-    for seed in (1, 2, 3):
-        torch.manual_seed(seed)
-        model = nn.Sequential(nn.Linear(X_tr.shape[1], 128), nn.ReLU(), nn.Dropout(0.2),
-                              nn.Linear(128, 64), nn.ReLU(), nn.Dropout(0.2), nn.Linear(64, 1))
-        opt = torch.optim.Adam(model.parameters(), lr=5e-4, weight_decay=0.0)
-        lossfn = nn.MSELoss()
-        loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(X_tr, y_tr),
-                                             batch_size=64, shuffle=False)
-        trc, tec = [], []
-        for _ in range(EPOCHS):
-            model.train()
-            for xb, yb in loader:
-                opt.zero_grad()
-                lossfn(model(xb).squeeze(-1), yb).backward()
-                opt.step()
-            model.eval()
-            with torch.no_grad():
-                trc.append(rmse(Y[tr], model(X_tr).squeeze(-1).numpy() * y_sd + y_mu))
-                tec.append(rmse(Y[te], model(X_te).squeeze(-1).numpy() * y_sd + y_mu))
-        curves[str(seed)] = dict(train=trc, test=tec)
-    n_params = sum(p.numel() for p in model.parameters())
-    m = dict(epochs=EPOCHS, n_train=int(tr.sum()), n_test=int(te.sum()), n_params=int(n_params),
-             torch=torch.__version__, curves=curves)
-    for s, c in curves.items():
-        m[f"seed{s}"] = dict(test_at_60=c["test"][59], train_at_60=c["train"][59],
-                             best_epoch=int(np.argmin(c["test"])) + 1, best_test=min(c["test"]),
-                             train_at_end=c["train"][-1], test_at_end=c["test"][-1])
+    def run(train_mask: np.ndarray, evals: dict) -> dict:
+        """Train on train_mask (standardized on it), seeds 1-3; RMSE on each eval mask per epoch."""
+        mu = X[train_mask].mean(axis=(0, 1), keepdims=True)
+        sd = X[train_mask].std(axis=(0, 1), keepdims=True) + 1e-8
+        y_mu, y_sd = Y[train_mask].mean(), Y[train_mask].std()
+        Xn, Yn = (X - mu) / sd, (Y - y_mu) / y_sd
+        X_tr, y_tr = torch.tensor(Xn[train_mask].reshape(train_mask.sum(), -1)), torch.tensor(Yn[train_mask])
+        X_ev = {k: torch.tensor(Xn[m].reshape(m.sum(), -1)) for k, m in evals.items()}
+        curves = {}
+        for seed in (1, 2, 3):
+            torch.manual_seed(seed)
+            model = nn.Sequential(nn.Linear(X_tr.shape[1], 128), nn.ReLU(), nn.Dropout(0.2),
+                                  nn.Linear(128, 64), nn.ReLU(), nn.Dropout(0.2), nn.Linear(64, 1))
+            opt = torch.optim.Adam(model.parameters(), lr=5e-4, weight_decay=0.0)
+            lossfn = nn.MSELoss()
+            loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(X_tr, y_tr),
+                                                 batch_size=64, shuffle=False)
+            c = {k: [] for k in evals}
+            for _ in range(EPOCHS):
+                model.train()
+                for xb, yb in loader:
+                    opt.zero_grad()
+                    lossfn(model(xb).squeeze(-1), yb).backward()
+                    opt.step()
+                model.eval()
+                with torch.no_grad():
+                    for k, m in evals.items():
+                        c[k].append(rmse(Y[m], model(X_ev[k]).squeeze(-1).numpy() * y_sd + y_mu))
+            curves[str(seed)] = c
+        return curves, int(sum(p.numel() for p in model.parameters()))
+
+    full, n_params = run(tr, {"train": tr, "test": te})
+    vcur, _ = run(fit, {"train": fit, "val": val, "test": te})
+    day = lambda d: str(np.datetime_as_string(d, unit="D"))
+    m = dict(epochs=EPOCHS, n_params=n_params, torch=torch.__version__,
+             full=dict(n_train=int(tr.sum()), n_test=int(te.sum()), curves=full),
+             validation=dict(val_weeks=VAL_WEEKS, val_first_target=day(v_start),
+                             val_last_target=day(D[val].max()), n_fit=int(fit.sum()),
+                             n_val=int(val.sum()), n_test=int(te.sum()), curves=vcur))
+    for s in ("1", "2", "3"):
+        f, c = full[s], vcur[s]
+        m["full"][f"seed{s}"] = dict(test_at_60=f["test"][59], train_at_60=f["train"][59],
+                                     best_test_epoch=int(np.argmin(f["test"])) + 1,
+                                     best_test=min(f["test"]))
+        e = int(np.argmin(c["val"])) + 1                          # chosen on validation only
+        b = int(np.argmin(c["test"])) + 1                         # shown, never chosen
+        m["validation"][f"seed{s}"] = dict(
+            val_best_epoch=e, val_best=c["val"][e - 1], test_at_val_best=c["test"][e - 1],
+            test_at_60=c["test"][59], val_at_60=c["val"][59], train_at_60=c["train"][59],
+            best_test_epoch=b, best_test=c["test"][b - 1], test_at_end=c["test"][-1],
+            full_run_test_at_val_best=f["test"][e - 1])
     record("epochs", m)
     return m
 
 
 def epochs_measured() -> dict:
     m = json.loads(MEASURED.read_text()) if MEASURED.exists() else {}
-    if "--retrain" in sys.argv or "epochs" not in m:
+    if "--retrain" in sys.argv or "validation" not in m.get("epochs", {}):
         return train_curves()
     return m["epochs"]
 
 
 def overfit_epochs() -> None:
     m = epochs_measured()
-    lab60 = [round(m[f"seed{s}"]["test_at_60"]) for s in (1, 2, 3)]
+    lab60 = [round(m["full"][f"seed{s}"]["test_at_60"]) for s in (1, 2, 3)]
     assert lab60 == [1109, 1176, 946], f"epoch-60 test RMSEs {lab60}; Lab 7 Step 3 prints 1,109 / 1,176 / 946"
+    v = m["validation"]
     ep = np.arange(1, m["epochs"] + 1)
-    fig, ax = plt.subplots(figsize=sz(11.0, 4.6))
-    fig.subplots_adjust(left=0.10, right=0.82, top=0.97, bottom=0.15)
-    for s, c in m["curves"].items():
-        ax.plot(ep, c["train"], color="#A1A1A6", lw=0.8, alpha=0.45, zorder=2)
-        ax.plot(ep, c["test"], color=CRIMSON, lw=0.8, alpha=0.35, zorder=2)
-    mean_tr = np.mean([c["train"] for c in m["curves"].values()], axis=0)
-    mean_te = np.mean([c["test"] for c in m["curves"].values()], axis=0)
-    ax.plot(ep, mean_tr, color=GRAY, lw=2.2, zorder=3)
-    ax.plot(ep, mean_te, color=CRIMSON, lw=2.2, zorder=3)
-    for s, c in m["curves"].items():
-        b = m[f"seed{s}"]["best_epoch"]
-        ax.plot(b, c["test"][b - 1], "o", ms=7, color=CRIMSON, mec="white", mew=1.2, zorder=5)
-    ax.axvline(60, color=BLACK, lw=1.0, ls=(0, (4, 3)), zorder=1)
-    ax.text(63, 1820, "Lab 7 stops at 60", fontsize=12, color=BLACK, va="center", ha="left")
-    ax.set_xlim(0, m["epochs"]); ax.set_ylim(350, 1900)
-    ax.set_yticks([400, 800, 1200, 1600]); ax.set_yticklabels(["400", "800", "1,200", "1,600"])
-    ax.tick_params(labelsize=12)
-    ax.set_xlabel("epoch", fontsize=12); ax.set_ylabel("RMSE (units)", fontsize=12)
-    # direct labels at the right edge, at each family's level over the last 20 epochs
-    last_te = np.mean([np.mean(c["test"][-20:]) for c in m["curves"].values()])
-    last_tr = np.mean([np.mean(c["train"][-20:]) for c in m["curves"].values()])
-    ax.text(m["epochs"] + 4, last_te + 90, "held-out\ntest weeks", color=CRIMSON, fontsize=12,
-            va="center", ha="left", linespacing=1.1, clip_on=False)
-    ax.text(m["epochs"] + 4, last_tr - 60, "training\nwindows", color=GRAY, fontsize=12,
-            va="center", ha="left", linespacing=1.1, clip_on=False)
-    bests = sorted(m[f"seed{s}"]["best_epoch"] for s in (1, 2, 3))
-    fig.text(0.45, -0.08, f"thin: three seeds · bold: their mean · dots: each seed's best "
-             f"held-out epoch ({bests[0]}, {bests[1]}, {bests[2]})", ha="center", va="top", fontsize=12, color=GRAY)
+    fig, axes = plt.subplots(1, 3, figsize=sz(15.5, 4.7), sharey=True)
+    fig.subplots_adjust(wspace=0.10, left=0.07, right=0.88, top=0.88, bottom=0.17)
+    for ax, s in zip(axes, ("1", "2", "3")):
+        c, r = v["curves"][s], v[f"seed{s}"]
+        e, b = r["val_best_epoch"], r["best_test_epoch"]
+        ax.plot(ep, c["train"], color="#A1A1A6", lw=0.9, zorder=2)
+        ax.plot(ep, c["val"], color=BLUE, lw=1.1, zorder=3)
+        ax.plot(ep, c["test"], color=CRIMSON, lw=1.1, zorder=3)
+        ax.axvline(60, color=BLACK, lw=1.0, ls=(0, (4, 3)), zorder=1)
+        ax.plot([e, e], [r["val_best"], r["test_at_val_best"]], color=BLACK, lw=1.0,
+                ls=(0, (1, 1.5)), zorder=4)
+        ax.plot(e, r["val_best"], "o", ms=7, color=BLUE, mec="white", mew=1.2, zorder=5)
+        ax.plot(e, r["test_at_val_best"], "o", ms=7, color=CRIMSON, mec="white", mew=1.2, zorder=5)
+        ax.plot(60, r["test_at_60"], "o", ms=7, mfc="white", mec=CRIMSON, mew=1.6, zorder=5)
+        ax.plot(b, r["best_test"], "x", ms=7, mew=1.8, color=BLACK, zorder=5, clip_on=False)
+        # the two test numbers as a key in the empty band above the curves, not on the lines
+        for y, mk, txt in ((2000, dict(mfc="white", mec=CRIMSON, mew=1.6), f"{r['test_at_60']:,.0f} at epoch 60"),
+                           (1855, dict(color=CRIMSON, mec="white", mew=1.2), f"{r['test_at_val_best']:,.0f} at epoch {e}")):
+            ax.plot(70, y, "o", ms=6.5, zorder=5, **mk)
+            ax.text(77, y, txt, color=CRIMSON, fontsize=11.5, ha="left", va="center", zorder=6)
+        ax.set_title(f"seed {s}", fontsize=12, pad=5, loc="left")
+        ax.set_xlim(0, m["epochs"]); ax.set_ylim(450, 2100)
+        ax.set_xticks([0, 60, 120, 180]); ax.tick_params(labelsize=11)
+    axes[0].set_yticks([600, 1000, 1400, 1800])
+    axes[0].set_yticklabels(["600", "1,000", "1,400", "1,800"])
+    axes[0].set_ylabel("RMSE (units)", fontsize=12)
+    c = v["curves"]["3"]
+    for key, label, col, dy in (("test", "test weeks", CRIMSON, 60), ("val", "validation", BLUE, 0),
+                                ("train", "training", GRAY, -100)):
+        axes[2].text(m["epochs"] + 11, np.mean(c[key][-20:]) + dy, label, color=col, fontsize=12,
+                     va="center", ha="left", clip_on=False)
+    fig.supxlabel("epoch", fontsize=12, x=0.475, y=-0.01)
+    fig.text(0.475, -0.05, "dots: lowest validation error, and test error there · ring: epoch 60, "
+             "where Lab 7 stops · ×: best test epoch", ha="center", va="top", fontsize=12, color=GRAY)
     save(fig, "overfit_epochs")
-    print(f"  epoch-60 held-out {lab60} (Lab 7: 1,109 / 1,176 / 946); best epochs {bests}; "
-          f"best RMSE {[round(m[f'seed{s}']['best_test']) for s in (1, 2, 3)]}")
+    rows = {s: v[f"seed{s}"] for s in ("1", "2", "3")}
+    print(f"  full run epoch-60 test {lab60} (Lab 7: 1,109 / 1,176 / 946)")
+    print(f"  validation slice: last {v['val_weeks']} training weeks, targets {v['val_first_target']}"
+          f" to {v['val_last_target']}; fit {v['n_fit']:,} / val {v['n_val']:,} / test {v['n_test']:,}")
+    for s, r in rows.items():
+        print(f"  seed {s}: validation picks {r['val_best_epoch']} -> test {r['test_at_val_best']:,.0f};"
+              f" epoch 60 -> {r['test_at_60']:,.0f}; best test epoch {r['best_test_epoch']} ->"
+              f" {r['best_test']:,.0f}; full run at {r['val_best_epoch']} ->"
+              f" {r['full_run_test_at_val_best']:,.0f}")
 
 
 # ================================================================== the weight matrices, to scale

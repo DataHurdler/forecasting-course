@@ -69,7 +69,7 @@ All ten builders reported; the coordinator re-verified every deck afterwards.
 - L01 narration: auto-ETS cannot return a "multiplicative trend" (not among the 15).
 
 **Numbers that differed from the audit's estimates (figures print the measured values):** L07
-2/λmax = 0.57 (audit 0.56); L07 best held-out epochs 118 / 143 / 176 (audit 80–132).
+2/λmax = 0.57 (audit 0.56); L07 best held-out epochs 118 / 143 / 176 (audit 80–132) — superseded 2026-10-18: the figure now chooses on a validation slice (see below).
 
 **Owner calls (reported, nothing edited):**
 1. L11P1: make the two lab models identical? Either change moves σ_level, the interval widths,
@@ -81,3 +81,42 @@ All ten builders reported; the coordinator re-verified every deck afterwards.
 4. L09P2: the quadratic-cost warning moved from the heatmap slide to the new cost-square slide.
 5. L10 MCMC shown as two figures on two frames (walk, then histogram), and a new prior-predictive frame.
 6. Lab 6 Step 3 asks students to find the lag pattern "before reading on"; the L06 path slide now shows it.
+
+## Owner decisions, 2026-10-18
+
+The owner reviewed the round, said "Push." (ac5a386 pushed and confirmed live), then decided:
+1. L11P1 models: **keep as they are** (Option A). Done: the HW06 Part 1 key's "Same model, same
+   posterior" became a grader's note (instructor repo + the gitignored local copy).
+2. L12 ROPE: **keep** (Option A); the overlap with HW07 Q5/Q1 is accepted.
+3. Lab 7: **stays at 60 epochs**.
+4. L09P2 cost warning: **keep** on the cost-square slide.
+5. L10 two-slide sampler and prior-predictive split: **keep**.
+6. Lab 6 Step 3: **reword**. Done: the prompt now asks which survivor is not a multiple of 7 and
+   why the LASSO keeps it; the callout answers (`lag1`, the freshest reading of the level); the lab
+   narration matches.
+
+The two blockers, "take actions as you recommend":
+- **L10 Bayes mosaic**: a "strong week" is one **above its own calendar year's median**. Measured on
+  CA_1 FOODS (277 weeks, high-SNAP = `snap_days >= 5` as in Lab 10): P(SNAP) 0.26, P(strong | SNAP)
+  0.76, P(strong | no SNAP) 0.40, P(SNAP | strong) 0.40.
+- **HW01 reconciliation, then the L13 skill bars**: keys and narration scripts reconcile to the
+  walkthrough (students' own statsmodels calls); damped Holt uses `ExponentialSmoothing`; the two
+  grading notes that would mark a correct student wrong are fixed first. The skill bars then take
+  their HW01 rows from the same walkthrough code.
+
+### Outcome of the 2026-10-18 follow-ups (coordinator)
+- **L10:** new frame 8 "Bayes' Theorem, Drawn" (`bayes_mosaic`); 22 pages. All five probabilities
+  reproduced and asserted; the pattern holds in each of the six years.
+- **HW01 reconciled** (forecasting-instructor): both keys and both narration scripts now quote the
+  walkthrough output; the two grading notes are fixed; PDFs rebuilt with `build_narration_pdfs.py`;
+  local gitignored copies synced. Assignment wording reported, not edited (P1 Q2 does not name the
+  Holt-Winters trend; P2 Q3(d) "mean RMSE across all steps" reads as MAE; P2 Q3 invites the 1-step
+  vs 52-step comparison the key calls a trap).
+- **L13 skill bars** (`skill_bars`) on "Lesson 1": eight bars, each against its own benchmark, all
+  reproduced (HW1 −8 / −6 / −3%; L11 +4%; HW2 +9 / +12%; HW3 +58%; HW4 +65%). The slide's HW1 claim
+  is narrowed to "every … model the assignment asked for". The one-week-ahead caveat is on the figure.
+- **L07 early stopping redrawn** at the owner's request: the epoch is chosen on a validation slice (the
+  last 52 training weeks), never on test weeks. Validation picks 107 / 132 / 80, test there 949 / 948 /
+  1,003 vs 1,159 / 1,411 / 1,053 at epoch 60 in the same runs; the test optimum is shown but not used.
+- Verified: L07 / L10 / L13 Beamer 0/0/0, slide-qa 0 overflow, parity, every frame ≤ 90 words,
+  check-book-claims 10/10; slides republished; Lab 6 re-rendered.

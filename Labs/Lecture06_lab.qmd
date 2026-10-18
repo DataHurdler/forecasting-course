@@ -187,10 +187,13 @@ for f in reversed(order[-8:]):
 ::: {.callout-note}
 ## Look at what survived
 
-Read that list of survivors and find the pattern in the lag numbers before reading on.
+Lecture 6 drew this path with the weekly lags in red. Check the list above against it: which
+survivor is *not* a multiple of 7, and why might the LASSO keep it anyway? Decide before reading on.
 
-Almost all of them are **multiples of 7**. Nobody told the model this series has a weekly cycle,
-and there is no explicit "week" feature among the lags. Under increasing penalty the LASSO
+Almost all of them are **multiples of 7**. The exception, `lag1`, earns its place differently:
+yesterday is the freshest reading of the level the series is at now.
+
+Nobody told the model this series has a weekly cycle, and there is no explicit "week" feature among the lags. Under increasing penalty the LASSO
 independently kept the lags that align with day-of-week and discarded the ones that do not.
 
 That is what makes the dropout ordering worth reporting: it recovered the structure of the series,
