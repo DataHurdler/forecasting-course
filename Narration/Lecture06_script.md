@@ -464,9 +464,10 @@ so on out to eight weeks, plus fifty-two weeks. And the list on the right is the
 to leave at the top: lag seven and lag twenty-eight together, then thirty-five, three sixty-four,
 fourteen, then yesterday and lag twenty-one together, then fifty-six.
 
-Seven of the last eight are multiples of seven. Nobody told the model this series has a weekly
-cycle. Under increasing penalty it kept the lags that line up with the day of the week and
-discarded the ones that don't.
+Seven of the last eight are multiples of seven. And the model had another way to describe the
+week: seven day-of-week dummies, which carry some of the biggest coefficients at the weakest
+penalty. Under increasing penalty it dropped every one of those dummies, kept the lags that line
+up with the day of the week, and discarded the lags that don't.
 
 **[pause]**
 
@@ -517,21 +518,26 @@ accuracy given up.
 
 **[pause]**
 
-And now the warning box, which is the same warning I have given you in every lecture, and I am
-going to keep giving it.
+And now the warning box, which is the same warning I have given you in every lecture, with one
+honest qualification this time.
 
-**Never use KFold here.**
+**Default to `TimeSeriesSplit`.**
 
 Random folds put future observations in the training set and past observations in validation. You
 are letting the model see the future to predict the past.
 
-The consequence is nasty specifically because it's silent. There's no crash. No warning. Your CV
-error just looks excellent — often dramatically better than what you'd get honestly — and then
-the forecast fails in production and you have no idea why.
+Here is the qualification, and it comes from the paper cited on the slide. Bergmeir, Hyndman and
+Koo show that for a purely autoregressive model whose errors are uncorrelated, ordinary K-fold is
+actually valid: each row carries its own lags with it. On Lab 6's lag regression, shuffled K-fold
+does no harm.
 
-Bergmeir and co-authors have the careful treatment of this if you want it.
+But that guarantee is gone once the series trends or the errors are correlated from one period to
+the next, and with business data you rarely know in advance which case you are in. When it fails,
+it fails silently. There's no crash. No warning. Your CV error looks better than it should, and
+the forecast disappoints in production.
 
-Use `TimeSeriesSplit`, exactly as in Lecture 1's walk-forward evaluation. Every time.
+So use `TimeSeriesSplit`, exactly as in Lab 2's walk-forward evaluation. A walk-forward split
+cannot train on the future, whatever the errors do.
 
 ---
 
@@ -575,13 +581,15 @@ using only that fold's training data. One function call, and the leak is gone.
 
 Two smaller notes.
 
-`l1_ratio` is alpha — the Ridge-LASSO mix. Give it a list and the CV searches over the mix and
-the penalty strength together.
+`l1_ratio` plays the role of alpha — the Ridge-LASSO mix. Give it a list and the CV searches over
+the mix and the penalty strength together. One piece of small print: `sklearn` puts a half in
+front of the squared term, so `l1_ratio` and the slide's alpha agree only at zero and one. An
+`l1_ratio` of one half is our alpha of two thirds, a little more LASSO than it sounds.
 
 And a naming trap that will bite you: **`sklearn` calls the penalty strength `alpha`, not
 `lambda`.** Which is unfortunate, because in the textbook notation — and on the slide behind me —
 alpha is the *mix*. So `sklearn`'s `alpha` is the textbook's lambda, and `sklearn`'s `l1_ratio`
-is the textbook's alpha.
+is, near enough, the textbook's alpha.
 
 Read the docstring, not your memory.
 

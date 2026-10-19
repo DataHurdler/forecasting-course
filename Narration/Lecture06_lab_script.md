@@ -15,12 +15,21 @@ Lab: `Labs/Lecture06_lab.qmd` (5 steps) · Measured runtime: **~22 minutes** of 
 - Numbers are the lab's real output, verified by running the chunks end to end. Deterministic;
   the whole lab takes about 6 seconds, LASSO paths and cross-validation included.
 
-### Nothing needed correcting this time
+### Corrections (2026-10-19)
 
-Every claim in the `.qmd` survived the measurement pass — including the two that sound like they
-were written from expectation rather than output (the multiples-of-7 survivors, and the
-CV-is-pessimistic argument in Step 5). Both are true, and Step 5's is quantified below in a way
-the lab does not print. See the last section for the one row a sharp student will ask about.
+An earlier pass reported that nothing needed correcting. The full-course review found five things
+it missed, now fixed here and in the lab. (1) The 62-column design is *exactly* collinear, rank 58
+at every window size, so OLS has no unique coefficients and the `OLS_max_coef` column is the
+solver's minimum-norm pick (Step 1). (2) The model *did* have day-of-week dummies; the finding is
+that it dropped them and kept the weekly lags (Step 3). (3) Tied features in Step 3 printed in an
+order that changed from run to run; the lab now sorts them, so the block below is what it prints.
+(4) 1,210 days is about three years, not four, and n = 120 is not the best training fit in Step 1
+(n = 80 fits better, 84 against 145). (5) Random K-fold is valid for a pure autoregression with
+uncorrelated errors (Step 5).
+
+The multiples-of-7 survivors and the CV-is-pessimistic argument in Step 5 still hold, and Step 5's
+is quantified below in a way the lab does not print. See the last section for the one row a sharp
+student will ask about.
 
 ### In-room language that needs replacing
 
@@ -84,8 +93,8 @@ number, because Step 1 is going to take it apart.
 
 *(Screen: run the shrinking-window table.)*
 
-We keep the features and the test set fixed and shrink only the training window. Four years, then
-about one, then two hundred days, then a hundred and twenty, then eighty. Same problem throughout.
+We keep the features and the test set fixed and shrink only the training window. About three
+years, then about one, then two hundred days, then a hundred and twenty, then eighty. Same problem throughout.
 Only the ratio changes.
 
 ```
@@ -99,31 +108,40 @@ Only the ratio changes.
 
 **[pause]** — *let it sit on screen. Do not talk over it.*
 
-Read across the OLS columns. At twenty observations per parameter, the largest coefficient is
-**153** and the test RMSE is **280** — a perfectly respectable model. At six observations per
-parameter, the coefficient is 636 and the error has multiplied by seven. At three, it is 1,364 and
-5,874.
+Read across the OLS columns, and start with the test RMSE. At twenty observations per parameter it
+is **280** — a perfectly respectable model. At six observations per parameter the error has
+multiplied by seven. At three, it is 5,874.
 
-And then the bottom two rows stop being a degradation and become an explosion. The largest
-coefficient is **over a million.** The test RMSE is **three and a half million** — on a series
-where a busy day is four thousand units.
+And then the bottom two rows stop being a degradation and become an explosion. The test RMSE is
+**three and a half million** — on a series where a busy day is four thousand units. The largest
+coefficient climbs past a million alongside it, but hold that column loosely; I'll come back to
+why in a moment.
 
 **[pause]**
 
 Now here is the part I want you to take away, and it is not in the printed table.
 
 At n = 120, that model's **training** RMSE is about **145.** It looks fine. If you fitted it and
-looked only at how it fits the data you gave it, you would ship it. It is the best-fitting model
-on this slide and it is wrong by a factor of a thousand on data it has not seen.
+looked only at how it fits the data you gave it, you would ship it — and it is wrong by a factor
+of a thousand on data it has not seen.
 
 **[pause]**
 
-One technical point, because a careful student will ask. We never crossed the line the lecture
-warned about. Sixty-two features and eighty rows — there are still more observations than
-parameters, so OLS has a unique solution the whole way down this table. **You do not need k
-greater than n to get this.** Twenty-eight consecutive lags of a smooth series are nearly
-collinear with one another, and near-collinearity is enough. The matrix does not have to be
-singular, only close to it.
+One technical point, because a careful student will ask. Sixty-two features and eighty rows —
+there are still more rows than parameters, so we never crossed the k-greater-than-n line the
+lecture warned about. **You do not need k greater than n to get this.** Twenty-eight consecutive
+lags of a smooth series are nearly collinear with one another, and that alone is enough to wreck
+the forecasts.
+
+And here is the honest footnote on the coefficient column. This design is not just nearly
+collinear, it is *exactly* collinear, at every window size. The seven-, fourteen- and
+twenty-eight-day rolling means are averages of lags that are already in the model, and the seven
+day-of-week dummies always add up to one. That is four exact dependencies, so the sixty-two
+columns have rank fifty-eight, and OLS has no unique set of coefficients anywhere in this table.
+`LinearRegression` does not complain. It quietly hands back one particular solution, the
+minimum-norm one, so read that column as the solver's pick, not as "the" OLS coefficients. The
+RMSE column is safe: the same identities hold in the test rows, so every one of those solutions
+makes the same forecasts.
 
 *(Point at the last column.)*
 
@@ -144,7 +162,7 @@ That is Lecture 6's opening argument, and you just measured it.
 
 *(Screen: run the three-model comparison.)*
 
-Back to the full training set, where OLS was fine, and now compare the two penalties.
+Back to the full training set, where OLS forecast well, and now compare the two penalties.
 
 ```
   OLS    test RMSE   280   non-zero coefficients  62/62
@@ -220,6 +238,9 @@ the last 8 features standing, in reverse order of elimination:
    lag56
 ```
 
+Two pairs leave at the same penalty step, `lag28` with `lag7` and `lag21` with `lag1`. The lab
+sorts each tie, so this list comes out the same on every run.
+
 **[STOP — learner works]** — *(replaces "which survivor is not a multiple of 7")*
 
 Pause here. You saw this path in the lecture, with the weekly lags in red. Find the one survivor
@@ -234,12 +255,12 @@ right now, which no weekly lag gives you.
 **[pause]**
 
 Now think about what was available to be chosen. The feature set had twenty-eight consecutive
-lags — 1, 2, 3, all the way to 28. There is no "week" feature. Nothing in the data told the model
-that seven days is a meaningful interval. The day-of-week dummies were there as an alternative
-route to the same information, and the LASSO dropped those too.
+lags — 1, 2, 3, all the way to 28 — and it also had seven day-of-week dummies, a direct encoding
+of the weekly cycle. At the weakest penalty some of those dummies carry the biggest coefficients
+in the model. Under heavy penalty the LASSO dropped every one of them.
 
-Under increasing penalty, forced to give things up, it kept exactly the lags that align with
-day-of-week and discarded the ones that do not. It also kept `lag364` — which is fifty-two weeks,
+Forced to give things up, it kept exactly the lags that align with day-of-week and discarded the
+ones that do not. It also kept `lag364` — which is fifty-two weeks,
 so the same-day-last-year lag that is *also* a multiple of seven, rather than `lag365`.
 
 That is why the dropout ordering is worth reporting to someone. It did not just rank your columns.
@@ -338,10 +359,13 @@ model's quality, not an unbiased estimate of it, and being conservative is a fin
 forecast you are going to stake inventory on.
 
 Second, and please do not do this: the pessimism is **not** a reason to switch to random k-fold
-splits. Random folds would fix the number, and they would fix it by training on Thursday to
-predict the previous Tuesday. The optimistic number you get back would be measuring your model's
-ability to interpolate inside a period it has already seen, which is not the job. A pessimistic
-estimate of the right quantity beats an accurate estimate of the wrong one.
+splits. Random folds would shrink the number, and they would do it by training on Thursday to
+predict the previous Tuesday. To be fair to them, on a lag regression like this one that does no
+harm: the paper Lecture 6 cites, Bergmeir and co-authors, shows k-fold is valid for a pure
+autoregression with uncorrelated errors. But you rarely know you are in that case, and when you
+are not, the number you get back measures your model's ability to interpolate inside a period it
+has already seen, which is not the job. A pessimistic estimate of the right quantity beats an
+accurate estimate of the wrong one.
 
 ---
 
@@ -422,8 +446,9 @@ Deterministic; whole lab runs in about 6 seconds.
 
 *The bottom two rows of Step 1 are not monotone, and a sharp student will point at it.* n=120 is
 worse than n=80 on both columns — 3.6 million against 2.1 million. There is no lesson in the
-ordering; once a design matrix is that ill-conditioned the magnitude is essentially arbitrary and
-depends on which near-collinear directions happen to line up. Say that rather than explaining it,
+ordering; once a design matrix is that ill-conditioned (and this one is exactly singular, rank 58
+of 62) the magnitude is essentially arbitrary and depends on which near-collinear directions
+happen to line up. Say that rather than explaining it,
 and steer back to the point, which is the *scale* of both numbers against a series that runs to
 about 4,000 units a day.
 

@@ -72,7 +72,7 @@
   \vspace{0.15cm}
   \textbf{Best subset} fits all $2^k$ models: exact, and hopeless past $k \approx 30$.
   \textbf{Stepwise} adds or drops one predictor at a time: greedy, so it can miss the best
-  combination. AIC, BIC or CV picks the winner.
+  combination. AIC, BIC or CV picks the winner \parencite[\S7.5]{Hyndman2021}.
   \begin{warningbox}
     Subset selection is \textbf{discrete}: a predictor is in or out, and small changes in the
     data flip it. The \emph{selected model} is itself high-variance --- the instability has
@@ -80,7 +80,7 @@
   \end{warningbox}
 
   \vspace{0.1cm}
-  \muted{\footnotesize \emph{FPP} \S7.5. Shrinkage replaces in-or-out with a continuous dial.}
+  \muted{\footnotesize Shrinkage replaces in-or-out with a continuous dial.}
 \end{frame}
 
 % =============================================================================
@@ -145,7 +145,7 @@
     \includegraphics[height=4.3cm]{../Figures/Lecture06_Regularization/diamond_and_disc.pdf}
   \end{center}
   \vspace{-0.35cm}
-  {\small The disc has no corners, so ridge keeps both. The diamond's corner zeros lag14, but only
+  {\small The disc has no corners, so Ridge keeps both. The diamond's corner zeros lag14, but only
   while $t < 0.16$, a fifth of OLS's $\sum_j |\hat{\beta}_j| = 0.84$: these lags are nearly
   interchangeable, so the ellipses run almost along its face. A zero means ``not worth its budget
   here,'' not ``proven irrelevant'' \parencite[\S6.2]{James2021}.}
@@ -204,26 +204,26 @@
   \end{center}
   \vspace{-0.35cm}
   {\small \textbf{The order in which predictors leave is the useful output.} Seven of the last
-  eight are multiples of 7: nobody told the model about the week. Report that ordering, not one
-  model's coefficient table.}
+  eight are multiples of 7: the model also had day-of-week dummies, yet under heavy penalty it
+  kept the weekly lags and dropped the dummies. Report that ordering, not one model's coefficient
+  table.}
 \end{frame}
 
 % --- Slide: Choosing lambda --------------------------------------------------
 \begin{frame}{Choosing $\lambda$ by Cross-Validation}
   \begin{enumerate}\small\itemsep0pt
     \item Define a grid of $\lambda$, usually log-spaced
-    \item For each $\lambda$, run walk-forward CV and record the mean validation RMSE
+    \item For each $\lambda$, run walk-forward CV, recording the mean validation RMSE
     \item Pick the $\lambda$ minimizing CV error, then refit on all training data
   \end{enumerate}
 
   \vspace{0.1cm}
   \textbf{The one-standard-error rule:} take the \emph{largest} $\lambda$ whose CV error is within
-  one standard error of the minimum. You give up almost no accuracy for a simpler, more stable
-  model.
+  one standard error of the minimum. You give up almost no accuracy for a simpler model.
   \begin{warningbox}
-    \textbf{Never use \texttt{KFold} here.} Random folds train on the future and validate on the
-    past: CV looks excellent and the forecast fails \parencite{Bergmeir2018}. Use
-    \texttt{TimeSeriesSplit}, as in Lecture 1.
+    \textbf{Default to \texttt{TimeSeriesSplit}}, as in Lecture 1. Random \texttt{KFold} trains
+    on the future to validate the past: valid for a pure autoregression with uncorrelated errors
+    \parencite{Bergmeir2018}, not under trend or serial correlation.
   \end{warningbox}
 \end{frame}
 
@@ -243,16 +243,16 @@
     \texttt{from sklearn.preprocessing import StandardScaler}\\
     \texttt{from sklearn.model\_selection import TimeSeriesSplit}\\[2pt]
     \texttt{model = make\_pipeline(StandardScaler(),}\\
-    \texttt{\ \ ElasticNetCV(l1\_ratio=[.1,.5,.7,.9,.95,1],}\\
-    \texttt{\ \ \ cv=TimeSeriesSplit(5), random\_state=42)).fit(X\_tr, y\_tr)}
+    \texttt{\mbox{}\ \ ElasticNetCV(l1\_ratio=[.1,.5,.7,.9,.95,1],}\\
+    \texttt{\mbox{}\ \ \ cv=TimeSeriesSplit(5), random\_state=42)).fit(X\_tr, y\_tr)}
     }
   \end{examplebox}
   \texttt{make\_pipeline} is the part that matters: it keeps standardization \emph{inside}
   each CV fold. Scale on the full sample and you have leaked the validation set into
   training, and your CV error is optimistic.
 
-  \texttt{l1\_ratio} is $\alpha$, the Ridge/LASSO mix; the \texttt{...CV} variants tune
-  $\lambda$ for you.
+  \texttt{l1\_ratio} sets the Ridge/LASSO mix, like $\alpha$, but matches $\alpha$ only at 0 and 1:
+  \texttt{sklearn} halves the $\ell_2$ term. The \texttt{...CV} variants tune $\lambda$ for you.
 
   \muted{\footnotesize \texttt{sklearn} calls the penalty \texttt{alpha}, not
   \texttt{lambda}.}
@@ -309,8 +309,8 @@
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: neural networks, where these penalties return as weight decay and
-  dropout.}
+  \muted{\itshape Next: neural networks, where the fit-plus-penalty skeleton of Lectures 3--6
+  returns as weight decay.}
 \end{frame}
 
 % --- References ---------------------------------------------------------------

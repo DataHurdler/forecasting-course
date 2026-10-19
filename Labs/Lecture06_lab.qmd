@@ -97,7 +97,8 @@ routine feature engineering produces.
 
 # Step 1 — Break it
 
-With 1,210 training rows and 62 features, OLS is fine. Now shrink the training window and watch.
+With 1,210 training rows and 62 features, OLS forecasts well. Now shrink the training window and
+watch.
 
 ```{python}
 rows = []
@@ -119,14 +120,21 @@ for n in (1210, 400, 200, 120, 80):
 print(pd.DataFrame(rows).to_string(index=False))
 ```
 
-**Read that table across, then down.** As the training window shrinks, the largest OLS coefficient
-grows from about 150 to the hundreds of thousands, and the test RMSE from 280 into the millions.
-Nothing about the *problem* changed — same features, same target, same test set. Only the ratio
-of observations to parameters.
+**Read that table across, then down.** As the training window shrinks, the OLS test RMSE climbs
+from 280 into the millions. Nothing about the *problem* changed — same features, same target, same
+test set. Only the ratio of observations to parameters.
 
 Ridge, with a one-line change, degrades gracefully across the entire range.
 
 That is Lecture 6's opening argument, and you just measured it.
+
+**Read the `OLS_max_coef` column with care.** This design is *exactly* collinear at every window
+size, not just nearly so: `roll7_mean`, `roll14_mean` and `roll28_mean` are averages of lags that
+are already features, and the seven `dow_` dummies always sum to 1. The 62 columns have rank 58,
+so OLS has no unique coefficients anywhere in this table. `LinearRegression` does not complain; it
+returns one particular solution, the minimum-norm one, and the coefficient column describes that
+solver's pick, not "the" OLS coefficients. The RMSE column is still meaningful: the same identities
+hold in the test rows, so every least-squares solution makes the same forecasts.
 
 ---
 
@@ -175,7 +183,7 @@ plt.tight_layout()
 survivors, order = set(FEATURES), []
 for a, coefs in zip(alphas, paths):
     nz = set(np.array(FEATURES)[coefs != 0])
-    for gone in survivors - nz:
+    for gone in sorted(survivors - nz, key=FEATURES.index):   # ties leave together; fix their order
         order.append(gone)
     survivors = nz
 
@@ -193,8 +201,9 @@ survivor is *not* a multiple of 7, and why might the LASSO keep it anyway? Decid
 Almost all of them are **multiples of 7**. The exception, `lag1`, earns its place differently:
 yesterday is the freshest reading of the level the series is at now.
 
-Nobody told the model this series has a weekly cycle, and there is no explicit "week" feature among the lags. Under increasing penalty the LASSO
-independently kept the lags that align with day-of-week and discarded the ones that do not.
+The model also had seven day-of-week dummies, a direct encoding of the weekly cycle, yet under
+heavy penalty it dropped every one of them and kept the lags that align with day-of-week,
+discarding the ones that do not.
 
 That is what makes the dropout ordering worth reporting: it recovered the structure of the series,
 not just a ranking of columns.
