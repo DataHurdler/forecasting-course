@@ -76,8 +76,9 @@
   \end{examplebox}
   \textbf{Do not standardize log price} --- with both in logs \texttt{b\_price} is an
   \textbf{elasticity}, percent change in demand per percent change in price. \texttt{lpc} is log
-  price centered within series, which fixed ESS 184 $\rightarrow$ 3{,}097.
-
+  price centered within series, which fixed ESS 184 $\rightarrow$ 3{,}097. \texttt{J} is the
+  number of series (30), \texttt{idx} maps each row to its series, and \texttt{yr} counts years
+  since the first week.
 \end{frame}
 
 % =============================================================================
@@ -130,7 +131,8 @@
     \includegraphics[height=3.2cm]{../Figures/Lecture12_BayesianRegression/posterior_area.pdf}\par}
   \vspace{-0.05cm}
   {\small Each answer is the share of the area past a line. Demand is \textbf{inelastic} in every
-  draw; the half-percent question stays open. \textbf{A p-value gives only the direction.}}
+  draw; the half-percent question stays open. \textbf{The usual p-value, against zero, gives only
+  the direction.}}
 \end{frame}
 
 % --- Slide: ROPE -----------------------------------------------------------------------
@@ -173,7 +175,7 @@
 
       \vspace{0.15cm}
       \textbf{Collider}: caused by both. Controlling for it \textbf{creates} a spurious
-      association.\par}
+      association \parencite{McElreath2020}.\par}
     \end{column}
   \end{columns}
 
@@ -195,7 +197,7 @@
   the series means alone flips the sign. With both removed: $-0.493$, HDI $[-0.596, -0.387]$. The
   naive $-2.805$, HDI $[-2.856, -2.756]$, is nearly six times too large, at half the width.}
   \begin{warningbox}
-    \small Confidently, precisely wrong: a tight interval says the model is sure, not that it
+    \small \textbf{Confidently, precisely wrong}: a tight interval says the model is sure, not that it
     answers your question. Only the DAG protects you from an omitted confounder.
   \end{warningbox}
 \end{frame}

@@ -1,5 +1,5 @@
 ---
-title: "Bayesian Statistics III --- Bayesian Linear Regression"
+title: "Bayesian Statistics III: Bayesian Linear Regression"
 subtitle: "ECON 8310: Business Forecasting --- Lecture 12"
 author: "Department of Economics"
 institute: "University of Nebraska at Omaha"
@@ -77,7 +77,7 @@ with pm.Model() as model:
 ```
 :::
 
-**Do not standardize log price** — with both in logs `b_price` is an **elasticity**, percent change in demand per percent change in price. `lpc` is log price centered within series, which fixed ESS 184 $\rightarrow$ 3,097.
+**Do not standardize log price** — with both in logs `b_price` is an **elasticity**, percent change in demand per percent change in price. `lpc` is log price centered within series, which fixed ESS 184 $\rightarrow$ 3,097. `J` is the number of series (30), `idx` maps each row to its series, and `yr` counts years since the first week.
 
 # Reading the Posterior
 
@@ -118,7 +118,7 @@ b = idata.posterior["b_price"].values.ravel()
 
 ![](../Figures/Lecture12_BayesianRegression/posterior_area.svg){fig-align="center" height="235px"}
 
-Each answer is the share of the area past a line. Demand is **inelastic** in every draw; the half-percent question stays open. **A p-value gives only the direction.**
+Each answer is the share of the area past a line. Demand is **inelastic** in every draw; the half-percent question stays open. **The usual p-value, against zero, gives only the direction.**
 
 ---
 
@@ -151,7 +151,7 @@ A **DAG** is a picture of what you believe causes what, drawn from domain knowle
 ::: {.column width="41%"}
 [**Confounder**]{style="color: #D71920;"}: causes both predictor and outcome. **Must** be controlled, or it leaks into your coefficient.
 
-**Collider**: caused by both. Controlling for it **creates** a spurious association.
+**Collider**: caused by both. Controlling for it **creates** a spurious association [@McElreath2020].
 :::
 ::::
 

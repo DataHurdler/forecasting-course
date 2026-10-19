@@ -179,8 +179,8 @@ between elastic and inelastic demand. We'll come back to what that buys you.
 
 `b_trend`: point-one-one-zero, a tight interval. About eleven percent growth per year.
 
-`b_snap`: point-oh-three-six. About a three-point-seven percent SNAP-week lift — consistent with
-what the hierarchy told us last week.
+`b_snap`: point-oh-three-six. About a three-point-seven percent SNAP-week lift — but that is one
+average across all thirty series. Last week's FOODS hierarchy put the FOODS lift near eight percent.
 
 `b_event`: minus point-oh-oh-three, interval from minus point-oh-one-one to plus point-oh-oh-four.
 **Spans zero.**
@@ -234,7 +234,7 @@ told you something similar.
 *(Point at the dashed line at minus one.)*
 
 Now the one a pricing manager cares about. Minus one is the line between **elastic** and
-**inelastic** demand, and it's labelled revenue break-even for a reason. To its left, a one percent
+**inelastic** demand, and it's labeled revenue break-even for a reason. To its left, a one percent
 price rise loses more than one percent of volume, so revenue falls. To its right, revenue rises.
 
 Look how far the curve is from that line. The probability the elasticity is below minus one is
@@ -255,7 +255,7 @@ minus one, settled; the finer size question, honestly open. "Statistically signi
 only the first. The question the business actually asks is *how big*, and the posterior tells you
 which size questions the data can answer and which they can't.
 
-No significance test would ever have given you that map.
+The usual p-value, tested against zero, gives you only the direction. It never draws that map.
 
 **[pause]**
 

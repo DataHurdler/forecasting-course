@@ -5,7 +5,7 @@
 Lab: `Labs/Lecture12_lab.qmd` (4 steps) · Measured runtime: **~25 minutes** of narration
 (the in-room version is budgeted at 45)
 
-**This is the last lab of the course.** Week 16 is synthesis with no lab, so this recording is
+**This is the last lab of the course.** Week 15 is synthesis with no lab, so this recording is
 also where the practical half of the semester ends. Worth one sentence at the close.
 
 ---
@@ -15,7 +15,7 @@ also where the practical half of the semester ends. Worth one sentence at the cl
 - **`▶ STEP n — Title`** matches the lab's own headings exactly.
 - *Italic parentheticals* are stage directions. **[pause]** is a beat; **[STOP — learner works]**
   is where you tell the viewer to pause the video and do something.
-- `random_seed=42`, four fits, most under 30 seconds.
+- `random_seed=42`, three fits, most under 30 seconds.
 
 ### Numbers aligned with the deck (re-checked 2026-10-13)
 
@@ -118,9 +118,10 @@ difference between two product categories, and calling it elasticity.
 
 *(Screen: run the controlled fit and the comparison.)*
 
-Add per-series intercepts and a trend, and center log price *within* each series — so the model
-uses only price variation inside a series over time, which is the only variation a manager could
-actually create.
+Add per-series intercepts and a trend. The intercepts are what confine the model to price
+variation inside a series over time, which is the only variation a manager could actually create.
+We also center log price *within* each series. That leaves the coefficient exactly where it was;
+what it improves is the sampler's job.
 
 Why the trend? Because time is a second confounder. Prices and volumes both rose over these five
 years, so within any one series the later weeks are dearer *and* busier. Leave the trend out and
@@ -205,10 +206,11 @@ times smaller, because prices move very little inside a single store-category ov
 
 **[pause]** — *this is the subtle part; say it slowly.*
 
-And here is the irony worth naming. That within-series variation is small **because of the good
-decision we made in Step 2.** Centering within series is what removed the confounding. It is also
-what makes the standard deviation tiny, and the smaller the number you divide by, the larger the
-distortion. **The correct modeling choice amplified the preprocessing error.**
+And here is the irony worth naming. The number we divided by is small **because of a good
+decision we made in Step 2.** The series intercepts removed the confounding; centering within
+series, which we did for the sampler, also stripped the between-series spread out of log price
+and left only the small within-series part. The smaller the number you divide by, the larger the
+distortion. **A sound modeling choice amplified the preprocessing error.**
 
 *(Run the scenario block.)*
 
@@ -271,9 +273,8 @@ draw.**
 
 The third line is a finer question about size: does a one percent price rise cost more than half a
 percent of volume? The posterior puts us at **0.460** — within a few points of a coin flip. So the
-honest report is: inelastic, certainly; *how* inelastic, the data cannot settle. A significance
-test here would have announced the direction — which was never in question — and said nothing
-about either size question.
+honest report is: inelastic, certainly; *how* inelastic, the data cannot settle. The usual p-value,
+against zero, would have given only the direction — which was never in question.
 
 *(Point at the histogram, then run the scenario.)*
 
@@ -351,13 +352,13 @@ elasticity three cells before anybody read it.
 None of those announced themselves. Every one of them was caught by holding something out and
 checking. That habit is the course.
 
-Solutions go up on Canvas after the deadline. See you in Week 16 for the synthesis.
+Solutions go up on Canvas after the deadline. See you in Week 15 for the synthesis.
 
 ---
 
 # Appendix — expected output
 
-`random_seed=42`; four fits, whole lab ≈ 2 minutes.
+`random_seed=42`; three fits, whole lab ≈ 2 minutes.
 
 | Quantity | Value |
 |---|---|
@@ -378,13 +379,14 @@ Solutions go up on Canvas after the deadline. See you in Week 16 for the synthes
 
 **Three things to know before recording.**
 
-*Step 3's irony is the best thing in the lab, and it is easy to skip.* The within-series standard
-deviation is small (0.0455) **because** Step 2 centered within series to remove the confounding.
-The correct modeling decision is what makes the preprocessing error enormous. Say it explicitly;
+*Step 3's irony is the best thing in the lab, and it is easy to skip.* The standard deviation we
+divide by is small (0.0455) **because** Step 2 centered within series. (The series intercepts are
+what remove the confounding; centering leaves the coefficient unchanged and helps the sampler.)
+A sound modeling decision is what makes the preprocessing error enormous. Say it explicitly;
 it is the kind of interaction students never anticipate.
 
 *Do not let Step 2's headline be "the estimate changed."* The headline is that the **wrong model
-had the tighter interval** — 0.100 against 0.207. Precision is not accuracy, and a narrow interval
+had the tighter interval** — 0.099 against 0.208. Precision is not accuracy, and a narrow interval
 is not evidence of anything except that the model is sure about whatever question it was given.
 
 *Step 4's probabilities must be delivered together.* P(elasticity < −1) = 0.000 is why

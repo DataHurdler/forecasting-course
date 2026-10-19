@@ -25,7 +25,7 @@ Two of the three are not statistical failures at all. One is a routine preproces
 have used in every lab since Lecture 6.
 
 **Suggested time:** ~45 minutes · **You will need:** `pandas`, `numpy`, `matplotlib`, `pymc`, `arviz`, and
-`data/processed/m5_weekly.csv`. Four model fits, most under 30 seconds.
+`data/processed/m5_weekly.csv`. Three model fits, most under 30 seconds.
 
 ---
 
@@ -124,9 +124,10 @@ difference between two product categories.
 # Step 2 — Control for the confounder
 
 Add per-series intercepts and a trend. The trend is there because time is a second confounder:
-prices and volumes both rose over 2011–2016, so later weeks are dearer *and* busier. Center log
-price within each series, so the model uses only price variation *inside* a series over time —
-which is the variation a manager could actually create.
+prices and volumes both rose over 2011–2016, so later weeks are dearer *and* busier. The series
+intercepts remove the between-series confounding, so the price coefficient uses only variation
+*inside* a series over time — which is the variation a manager could actually create. Centering
+log price within each series leaves the coefficient unchanged and makes the sampler's job easier.
 
 ```{python}
 df["lpc"] = df.lp - df.groupby("series").lp.transform("mean")
@@ -250,9 +251,8 @@ demand (above it, a price rise gains revenue). Not one posterior sample is below
 inelastic in every draw.**
 
 The third is a finer question about size: does a 1% price rise cost more than half a percent of
-volume? Here the posterior is within a few points of a coin flip, and that is the honest report. A
-significance test would have announced the direction and said nothing about either size
-question.
+volume? Here the posterior is within a few points of a coin flip, and that is the honest report.
+The usual p-value, against zero, would have given only the direction.
 
 ```{python}
 #| fig-cap: "The full posterior, with the elastic / inelastic boundary and the finer threshold marked."
