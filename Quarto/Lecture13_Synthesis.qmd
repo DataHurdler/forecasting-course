@@ -1,5 +1,5 @@
 ---
-title: "Synthesis --- What the Semester Measured"
+title: "Synthesis: What the Results Taught Us"
 subtitle: "ECON 8310: Business Forecasting --- Lecture 13"
 author: "Department of Economics"
 institute: "University of Nebraska at Omaha"
@@ -36,7 +36,7 @@ csl: https://www.zotero.org/styles/chicago-author-date
 
 # What We Built
 
-Four parts, twelve lectures, one dataset — and a scoreboard nobody would have predicted in Week 1.
+Fourteen weeks, four families of method, and one dataset carried through all of them.
 
 ---
 
@@ -75,6 +75,8 @@ Every model in this course, on the M5 weekly panel — same 30 series, same held
 | LSTM | 998 | L9 Part 1 |
 | 1D CNN (26-wk) | 1,032 | L8 |
 | Seasonal naive | 2,152 | benchmark |
+
+[XGBoost's 781 is from an earlier xgboost; the pinned 3.4.1 gives 792.]{.neutral style="font-size: 0.8em;"}
 :::
 ::::
 
@@ -82,13 +84,13 @@ Every model in this course, on the M5 weekly panel — same 30 series, same held
 
 # What the Results Taught
 
-Three lessons, each paid for with a measurement.
+Three lessons that came out of measurements, not out of anyone's opinion.
 
 ---
 
 ## Lesson 1: The Benchmark Is a Real Competitor
 
-A year ahead, Homework 1's seasonal naive beat **every smoothing and ARIMA model the assignment asked for**. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**.
+A year ahead, Homework 1's seasonal naive beat **every smoothing and ARIMA model the assignment asked for**. Holt-Winters estimated **52 seasonal indices from 4.3 annual cycles**; seasonal naive estimates **nothing**. Skill $= 1 - \text{RMSE} \div \text{benchmark RMSE}$.
 
 <!-- Figure: scripts/figures/lecture13_figures.py (skill_bars). Each bar against the seasonal naive on its own series and test period. -->
 ![](../Figures/Lecture13_Synthesis/skill_bars.svg){fig-align="center" height="360px"}
@@ -147,11 +149,13 @@ Five of those six tune that parameter by cross-validation. The sixth — the hie
 
 # Choosing a Method
 
+A decision guide built from what we measured.
+
 ---
 
 ## Which Method, When
 
-| If your situation is… | start here |
+| If your situation is… | Start here |
 |---|---|
 | One series, clear seasonality, short history | ETS or ARIMA — and check the benchmark |
 | Several seasonal cycles at once | GAM or Prophet |
@@ -165,7 +169,7 @@ Five of those six tune that parameter by cross-validation. The sixth — the hie
 
 # Doing It Honestly
 
-The errors that do not announce themselves.
+The errors in this field do not announce themselves.
 
 ---
 
@@ -195,7 +199,7 @@ Harder, and more common in professional work. Here **nothing is wrong with the p
 | Pooling groups that are not **exchangeable** | Lecture 11 Part 2 pooled ten FOODS series with twenty that ignore SNAP. Textbook shrinkage, clean diagnostics, and it reported $+0.011$ where held-out weeks said $+0.089$. |
 | Standardizing a coefficient you then **interpret** | Lecture 12: divide log price by its standard deviation and `b_price` stops being an elasticity. Identical fit, identical diagnostics, and the 5% price scenario moves by **22$\times$**. |
 | Omitting a confounder | The naive elasticity was six times too large *with an interval half the width*. Precision is not accuracy. |
-| Ignoring $\hat{R}$ and divergences | Our first two Bayesian fits returned reasonable-looking forecasts while failing convergence outright. |
+| Ignoring $\hat{R}$ and divergences | Our centered fits in Lecture 11 Parts 1 and 2 looked fine while failing $\hat{R}$ or divergences. |
 
 **Only the last row has a diagnostic.** The first three were caught by held-out data, by a DAG drawn before the model, and by asking what one unit of a variable means — none of which any library will run for you.
 
@@ -207,7 +211,7 @@ Every 25 December the stores close and sales are **exactly zero**. CA_1 FOODS, 2
 
 ![](../Figures/Lecture13_Synthesis/christmas_squares.svg){fig-align="center" height="255px"}
 
-Four days, **0.25%** of the evaluation window, carry **4.6%** of its squared error. Yet `is_event` fires on **158** days, only **5** of them closures.
+Four days, **0.25%** of the evaluation window, carry **4.6%** of the seasonal naive's squared error. Yet `is_event` fires on **158** days, only **5** of them closures.
 
 ::: {.keybox}
 Knowable years ahead, and every method failed: the *encoding*, not the model, lumped a locked door in with the Super Bowl.
@@ -227,7 +231,7 @@ Knowable years ahead, and every method failed: the *encoding*, not the model, lu
 
 **The fourth row is the one that distinguishes professional work.** A report where every result confirms the author's expectation is not a report anyone should act on.
 
-You have practised this all semester: the assignments were built so the obvious answer is frequently the wrong one, and the credit was for noticing.
+You have practiced this all semester: the assignments were built so the obvious answer is frequently the wrong one, and the credit was for noticing.
 
 ---
 
@@ -237,8 +241,8 @@ The final project asks for exactly the report on the previous slide, on data of 
 
 | | |
 |---|---|
-| **Three methods, from at least two parts of the course** | Classical, trees, deep learning, Bayesian. Three variations on one family does not count — the comparison must be between approaches differing *in kind*. |
-| **Plus a benchmark** | Which does not count toward the three, and is not optional. Lesson 1 is why. |
+| **Three methods, from at least two parts of the course** | Time series, trees, deep learning, Bayesian. Three variations on one family do not count — the comparison must be between approaches differing *in kind*. |
+| **Plus a benchmark** | It does not count toward the three, and it is not optional. Lesson 1 is why. |
 | **Walk-forward validation** | For every comparison. Not a random split, not once. |
 | **A recommendation a non-specialist can act on** | In the units of the business, with the uncertainty attached. |
 | **A methods reflection** | Which model won, and what about *your* data made it win. This is where the course is actually assessed. |
@@ -246,6 +250,8 @@ The final project asks for exactly the report on the previous slide, on data of 
 **The last row is not a formality.** Every scoreboard in this course came with a reason, and a project that reports a ranking without one has done the computation but not the work.
 
 # Where to Go Next
+
+What we left out, and what to read.
 
 ---
 
@@ -255,7 +261,7 @@ The final project asks for exactly the report on the previous slide, on data of 
 ::: {.column width="64%"}
 | | |
 |---|---|
-| **Hierarchical reconciliation** | Store forecasts that add up to regional totals. FPP Ch. 11. |
+| **Hierarchical reconciliation** | Store forecasts that add up to regional totals [@Hyndman2021, ch. 11]. |
 | **Intermittent demand** | Mostly-zero series: Croston's method and its relatives. |
 | **Structural breaks** | The future stops resembling the past, and every method fails together. |
 | **Causal inference** | DAGs told us confounders exist; credible causal estimates are a separate course. |
@@ -279,7 +285,7 @@ The final project asks for exactly the report on the previous slide, on data of 
 2. **Match the method to the problem**: our most advanced finished fifth.
 3. **One idea recurs:** fit against complexity, one parameter setting the rate.
 4. **Split by time, always.** Leakage does not crash; it flatters.
-5. **Diagnostics check the model, not the question.** Held-out data caught our worst two.
+5. **Diagnostics check the model, not the question.** Held-out data and a DAG caught our worst two.
 6. **Report what went against you.**
 7. **Know what the forecast is for.** Decisions need a distribution.
 :::

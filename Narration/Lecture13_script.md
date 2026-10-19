@@ -1,6 +1,6 @@
 # Lecture 13 — Recording Script
 
-**ECON 8310: Business Forecasting · Synthesis — What the Semester Measured**
+**ECON 8310: Business Forecasting · Synthesis: What the Results Taught Us**
 
 Deck: `Slides/Lecture13_Synthesis.pdf` (22 pages) · Measured runtime: see the timing guide
 
@@ -10,7 +10,7 @@ Deck: `Slides/Lecture13_Synthesis.pdf` (22 pages) · Measured runtime: see the t
 
 - **`▶ SLIDE n — Title`** marks where to advance. The number is the PDF page.
 - *Italic parentheticals* are stage directions. **[pause]** means stop for a beat.
-- Week 16 on the syllabus. **Deliberately has no lab** — the session is this synthesis followed
+- Week 15 on the syllabus. **Deliberately has no lab** — the session is this synthesis followed
   by project work time, so budget for questions about their projects.
 - Slides 14 and 15 are the heart of it. The split — bugs in the code versus a correct program
   answering the wrong question — is the most durable thing in the hour.
@@ -19,12 +19,12 @@ Deck: `Slides/Lecture13_Synthesis.pdf` (22 pages) · Measured runtime: see the t
 
 # ▶ SLIDE 1 — Title page
 
-Synthesis: what the semester measured.
+Synthesis: what the results taught us.
 
 Twelve lectures, four families of method, one dataset, and a scoreboard that almost nobody would
 have predicted in Week 1.
 
-Today is not new material. It's the session where the twelve weeks become one argument — and where
+Today is not new material. It's the session where the fourteen weeks become one argument — and where
 I want to hand you the handful of things that will still be true when every library in this course
 has been replaced.
 
@@ -94,8 +94,10 @@ hundred away from the benchmark.
 *(Now the table — it says where each number came from.)*
 
 LASSO with forty-six engineered features: **seven forty-four**, from Homework 4. XGBoost: seven
-eighty-one, also Homework 4. Vanilla RNN: eight-oh-five. Random forest: eight ninety-nine.
-Transformer encoder: nine ninety. LSTM: nine ninety-eight. 1D CNN: one thousand thirty-two.
+eighty-one, also Homework 4. That one came from an earlier xgboost; the version pinned for this
+course gives seven ninety-two, which leaves it in second place. Vanilla RNN: eight-oh-five.
+Random forest: eight ninety-nine. Transformer encoder: nine ninety. LSTM: nine ninety-eight. 1D
+CNN: one thousand thirty-two.
 
 One honest footnote on that list. The three recurrent and attention models all read fifty-two
 weeks of history. The CNN number comes from Lab 8, where it read twenty-six weeks, so the table
@@ -203,7 +205,7 @@ This is also the cheapest professional habit you can carry out of this course, a
 likely to distinguish you early in a job. A forecast presented without a benchmark is a number
 nobody can evaluate — including you, including the person who built it.
 
-If you take one thing from twelve weeks, take that.
+If you take one thing from fourteen weeks, take that.
 
 ---
 
@@ -437,8 +439,10 @@ five percent price scenario moves by a factor of **twenty-two**.
 **Omitting a confounder.** The naive elasticity was six times too large — *with an interval half the
 width* of the correct one. Precision is not accuracy.
 
-**Ignoring R-hat and divergences.** Our first two Bayesian fits returned reasonable-looking
-forecasts while failing convergence outright.
+**Ignoring R-hat and divergences.** Our centered fits in Lecture 11 looked fine and were not. In
+Part 1 the centered structural model handed back a forecast with an R-hat of one point oh two two.
+In Part 2 the centered hierarchy passed R-hat and ESS, and failed only on its forty-three
+divergences.
 
 **[pause]**
 
@@ -455,7 +459,7 @@ elasticity.
 
 *(Beat.)*
 
-That's the difference between knowing how to call a method and knowing what it assumes. Twelve
+That's the difference between knowing how to call a method and knowing what it assumes. Fourteen
 weeks of this course have been aimed at the second one.
 
 ---
@@ -572,7 +576,7 @@ Reporting what went against you is what makes the rest of it credible.
 
 *(Last paragraph.)*
 
-And you have practised this all semester, whether or not it felt like it. The assignments were
+And you have practiced this all semester, whether or not it felt like it. The assignments were
 built so that the obvious answer is frequently the wrong one — and the credit was for **noticing**,
 not for getting the flattering number.
 
@@ -585,8 +589,8 @@ on data of your choosing.
 
 *(Walk the requirements.)*
 
-**Three methods, from at least two parts of the course.** Classical, trees, deep learning,
-Bayesian. Three variations on one family does not satisfy this — the comparison has to be between
+**Three methods, from at least two parts of the course.** Time series, trees, deep learning,
+Bayesian. Three variations on one family do not satisfy this — the comparison has to be between
 approaches that differ *in kind*.
 
 **Plus a benchmark**, which does not count toward the three and is not optional. Lesson 1 is why.
@@ -677,7 +681,8 @@ Four. **Split by time, always.** The leakage errors in this field don't crash �
 better-looking number.
 
 Five. **Diagnostics check the model you wrote, not whether it was the right one.** Convergence,
-R-hat and ESS all passed on the two worst answers this course produced. Held-out data caught them.
+R-hat and ESS all passed on the two worst answers this course produced. Held-out data caught one
+of them; a DAG drawn before the model caught the other.
 
 Six. **Report what went against you.** It's the part that makes the rest credible.
 

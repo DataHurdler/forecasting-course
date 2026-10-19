@@ -1,5 +1,5 @@
 % =============================================================================
-% Lecture 13: Synthesis — What Twelve Weeks of Forecasting Taught Us
+% Lecture 13: Synthesis — What the Results Taught Us
 % ECON 8310: Business Forecasting
 % University of Nebraska at Omaha
 % =============================================================================
@@ -30,7 +30,7 @@
 % =============================================================================
 
 \sectionslide{What We Built}{%
-  Twelve weeks, four families of method, and one dataset
+  Fourteen weeks, four families of method, and one dataset
   carried through all of them.}
 
 % --- Slide: the arc -----------------------------------------------------------
@@ -90,6 +90,8 @@
         \bottomrule
       \end{tabular}
       }
+
+      {\scriptsize\color{unogray} XGBoost's 781 is from an earlier xgboost; the pinned 3.4.1 gives 792.\par}
     \end{column}
   \end{columns}
 
@@ -113,7 +115,7 @@
 \begin{frame}{Lesson 1: The Benchmark Is a Real Competitor}
   A year ahead, Homework 1's seasonal naive beat \textbf{every smoothing and ARIMA model the
   assignment asked for}. Holt-Winters estimated \textbf{52 seasonal indices from 4.3 annual
-  cycles}; seasonal naive estimates \textbf{nothing}.
+  cycles}; seasonal naive estimates \textbf{nothing}. Skill $= 1 - \text{RMSE} \div \text{benchmark RMSE}$.
   \begin{center}
     \includegraphics[height=4.1cm]{../Figures/Lecture13_Synthesis/skill_bars.pdf}
   \end{center}
@@ -210,7 +212,7 @@
     {\small
     \begin{tabular}{p{4.6cm}p{7.7cm}}
       \toprule
-      \textbf{If your situation is\ldots} & \textbf{start here} \\
+      \textbf{If your situation is\ldots} & \textbf{Start here} \\
       \midrule
       One series, clear seasonality, short history & ETS or ARIMA --- and check the benchmark \\[1pt]
       Several seasonal cycles at once & GAM or Prophet \\[1pt]
@@ -280,8 +282,8 @@
       identical diagnostics, and the 5\% price scenario moves by \textbf{22$\times$}. \\[3pt]
       Omitting a confounder & The naive elasticity was six times too large \emph{with an interval
       half the width}. Precision is not accuracy. \\[3pt]
-      Ignoring $\hat{R}$ and divergences & Our first two Bayesian fits returned
-      reasonable-looking forecasts while failing convergence outright. \\
+      Ignoring $\hat{R}$ and divergences & Our centered fits in Lecture 11 Parts 1 and 2 looked
+      fine while failing $\hat{R}$ or divergences. \\
       \bottomrule
     \end{tabular}
     }
@@ -300,7 +302,8 @@
     \includegraphics[height=3.7cm]{../Figures/Lecture13_Synthesis/christmas_squares.pdf}
   \end{center}
   \vspace{-0.3cm}
-  Four days, \textbf{0.25\%} of the evaluation window, carry \textbf{4.6\%} of its squared error.
+  Four days, \textbf{0.25\%} of the evaluation window, carry \textbf{4.6\%} of the seasonal naive's
+  squared error.
   Yet \texttt{is\_event} fires on \textbf{158} days, only \textbf{5} of them closures.
 
   \begin{keybox}
@@ -332,7 +335,7 @@
   result confirms the author's expectation is not a report anyone should act on.
 
   \vspace{0.1cm}
-  You have practised this all semester: the assignments were built so the obvious answer is
+  You have practiced this all semester: the assignments were built so the obvious answer is
   frequently the wrong one, and the credit was for noticing.
 \end{frame}
 
@@ -344,10 +347,10 @@
     {\small
     \begin{tabular}{p{3.6cm}p{8.7cm}}
       \toprule
-      \textbf{Three methods, from at least two parts of the course} & Classical, trees, deep
-      learning, Bayesian. Three variations on one family does not count --- the comparison must be
+      \textbf{Three methods, from at least two parts of the course} & Time series, trees, deep
+      learning, Bayesian. Three variations on one family do not count --- the comparison must be
       between approaches differing \emph{in kind}. \\[3pt]
-      \textbf{Plus a benchmark} & Which does not count toward the three, and is not optional.
+      \textbf{Plus a benchmark} & It does not count toward the three, and it is not optional.
       Lesson 1 is why. \\[3pt]
       \textbf{Walk-forward validation} & For every comparison. Not a random split, not once. \\[3pt]
       \textbf{A recommendation a non-specialist can act on} & In the units of the business, with
@@ -378,8 +381,8 @@
       {\small
       \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
         \toprule
-        \textbf{Hierarchical reconciliation} & Store forecasts that add up to regional totals.
-        FPP Ch.~11. \\[4pt]
+        \textbf{Hierarchical reconciliation} & Store forecasts that add up to regional totals
+        \parencite[ch.~11]{Hyndman2021}. \\[4pt]
         \textbf{Intermittent demand} & Mostly-zero series: Croston's method and its
         relatives. \\[4pt]
         \textbf{Structural breaks} & The future stops resembling the past, and every method
@@ -414,7 +417,7 @@
       \item \textbf{Match the method to the problem}: our most advanced finished fifth.
       \item \textbf{One idea recurs:} fit against complexity, one parameter setting the rate.
       \item \textbf{Split by time, always.} Leakage does not crash; it flatters.
-      \item \textbf{Diagnostics check the model, not the question.} Held-out data caught our worst two.
+      \item \textbf{Diagnostics check the model, not the question.} Held-out data and a DAG caught our worst two.
       \item \textbf{Report what went against you.}
       \item \textbf{Know what the forecast is for.} Decisions need a distribution.
     \end{enumerate}
