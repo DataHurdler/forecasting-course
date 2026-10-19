@@ -132,7 +132,7 @@ $$
 
 ![](../Figures/Lecture01_ETS_Eval/ses_levels.svg){fig-align="center" height="270px"}
 
-[Large $\alpha$ chases every wiggle; small $\alpha$ is smooth but slow. SES **nests both benchmarks**: $\alpha = 1$ is naïve, $\alpha \to 0$ the historical mean.]{.smaller} [*No trend, no season.*]{.neutral .smaller}
+[Large $\alpha$ chases every wiggle; small $\alpha$ is smooth but slow. SES **nests both benchmarks**: $\alpha = 1$ is naïve, $\alpha \to 0$ the historical mean.]{.smaller} [*CA_1 FOODS. No trend, no season.*]{.neutral .smaller}
 
 ---
 
@@ -173,7 +173,7 @@ $$
 \ell_t &= \alpha(y_t - s_{t-m}) + (1-\alpha)(\ell_{t-1}+b_{t-1}) \\
 b_t &= \beta^*(\ell_t - \ell_{t-1}) + (1-\beta^*)\,b_{t-1} \\
 s_t &= \gamma(y_t - \ell_{t-1} - b_{t-1}) + (1-\gamma)\,s_{t-m} \\
-\hat{y}_{T+h|T} &= \ell_T + h\,b_T + s_{T+h-m} \qquad (m = \text{seasonal period})
+\hat{y}_{T+h|T} &= \ell_T + h\,b_T + s_{T+h-m} \qquad (m = \text{seasonal period};\ h \le m)
 \end{aligned}
 $$
 :::
@@ -242,9 +242,9 @@ $$
 \text{MASE} = \frac{\text{MAE}}{\displaystyle\frac{1}{T-m}\sum_{t=m+1}^{T} |y_t - y_{t-m}|}
 $$
 
-The MASE denominator is seasonal naïve's average miss **on the training data**. $\text{MASE} < 1$: smaller errors than that; $\text{MASE} > 1$: [worse]{.negative}. It is the standard in the M-Competitions [@Makridakis2020].
+The MASE denominator is seasonal naïve's average miss **on the training data**. $\text{MASE} < 1$: smaller errors than that; $\text{MASE} > 1$: [worse]{.negative}. It is one of the M4 Competition's two accuracy measures [@Makridakis2020].
 
-[MAPE breaks down when $y_t$ is near zero; MASE does not.]{.neutral .smaller}
+[MAPE breaks down when $y_t$ is near zero; MASE does not. MASE $< 1$ is no win over seasonal naïve on the test weeks: on CA_1 FOODS both score 0.59.]{.neutral .smaller}
 
 ---
 
@@ -258,7 +258,7 @@ flowchart LR
 ```
 
 ::: {.warningbox}
-**Never randomly shuffle time series observations.** Use `TimeSeriesSplit` in scikit-learn, never `KFold`. Shuffling lets future data train the model — data leakage that makes results look excellent and forecast badly.
+**Never randomly shuffle time-series observations.** Use `TimeSeriesSplit` in scikit-learn, never `KFold`: shuffled or not, `KFold` lets future data train the model — data leakage that makes results look excellent and forecast badly.
 :::
 
 # Course Roadmap
@@ -276,7 +276,7 @@ What we will cover, and how it fits together.
 | III. Deep learning | 7. Neural networks (PyTorch) &emsp; 8. CNN architectures &emsp; 9. RNNs, LSTMs & Transformers |
 | IV. Bayesian | 10. Foundations &emsp; 11. Time series & hierarchical models &emsp; 12. Bayesian linear regression |
 
-[Python throughout: statsmodels, scikit-learn, xgboost, PyTorch, prophet, pyGAM, pymc.]{.neutral .smaller}
+[Lecture 13 closes the course with a synthesis of all four parts. Python throughout: statsmodels, scikit-learn, XGBoost, PyTorch, Prophet, pyGAM, PyMC.]{.neutral .smaller}
 
 ---
 
@@ -309,7 +309,7 @@ What we will cover, and how it fits together.
 5. **Evaluate out-of-sample, never shuffled.** RMSE punishes big misses; MASE compares across series.
 :::
 
-*Next: ARIMA & VAR — a regression-based approach to time series with richer autocorrelation structure.*
+*Next: ARIMA & VAR — a regression-based approach to time series with rich autocorrelation structure.*
 
 ---
 

@@ -22,9 +22,10 @@ Deck: `Slides/Lecture01_ETS_Eval.pdf` (22 pages) · Measured runtime: **~36 minu
 
 Welcome to ECON 8310, Business Forecasting.
 
-I'm Zijun Luo, and over the next twelve lectures we're going to build up a toolkit that
-takes you from the classical statistical methods — the ones that have been running supply
-chains since the 1950s — all the way through machine learning and modern Bayesian inference.
+I'm Zijun Luo, and over twelve method lectures and a closing synthesis we're going to build
+up a toolkit that takes you from the classical statistical methods — the ones that have been
+running supply chains since the 1950s — all the way through machine learning and modern
+Bayesian inference.
 
 Today is Lecture 1. We have three jobs. First, establish what forecasting actually is and
 why it matters commercially. Second, build our first real family of models: exponential
@@ -146,7 +147,7 @@ the conditional *median*. Optimal is always optimal *with respect to something*.
 Second, that script-F is the information set. Every model we build this semester is
 essentially a different guess about how to turn an information set into a conditional
 expectation. Exponential smoothing does it one way. Neural networks do it another. But
-that's the target, all twelve lectures.
+that's the target, in every lecture.
 
 ---
 
@@ -396,7 +397,8 @@ subscript: s-sub-t-minus-m, where m is the seasonal period — twelve for monthl
 for quarterly, seven for daily data with a weekly cycle. We're looking back one full season.
 
 In the level equation, we subtract the seasonal component before updating. We de-seasonalize
-first, then update. Then the forecast adds the season back in.
+first, then update. Then the forecast adds the season back in — as written, for horizons up
+to one season; past that, you reuse the last season's index again.
 
 **[pause]**
 
@@ -547,11 +549,12 @@ each week from the same week a year earlier.
 
 **[pause]**
 
-So MASE below one means your errors are smaller than seasonal naive's typical miss in the
-past. Above one, you're doing worse than that — and you should say so. It's built on the
-benchmark idea from slide seven, it's the standard in the M-Competitions, and it has a
-property the others lack: the number carries its own yardstick. An RMSE of eight hundred
-needs context. A MASE of one point two says you missed by more than last year's value used to.
+So MASE below one means your errors are smaller than seasonal naive's typical miss in the past.
+Above one, you're doing worse than that — and you should say so. It's built on the benchmark
+idea from slide seven, it's one of the two accuracy measures the M4 Competition scored on, and
+it has a property the others lack: the number carries its own yardstick. An RMSE of eight
+hundred needs context. A MASE of one point two says you missed by more than last year's value
+used to.
 
 One honest caution, from our own food series. Both SES *and* seasonal naive score about zero
 point five nine there. Why? Because the yardstick was set in the training years, and in 2012
@@ -581,11 +584,13 @@ test data. The split is *chronological* — the test set is the future.
 
 Now the warning box, and this is the single most common technical error I see.
 
-**Never randomly shuffle time series observations.**
+**Never randomly shuffle time-series observations.**
 
 In scikit-learn, use `TimeSeriesSplit`, never `KFold`. `KFold` is the default in most
-tutorials, and it shuffles. On a time series, that puts future observations into the
-training set and past observations into validation. The model gets to peek at the answer.
+tutorials, and shuffled or not, it holds out each block in turn and trains on the others —
+including the later ones. On a time series, that puts future observations into the training
+set and past observations into validation. The model gets to peek at the answer. Turning
+shuffling off does not fix it.
 
 This is called data leakage, and the reason it's dangerous is that it doesn't look like an
 error. Your cross-validation scores get *better*. The model looks excellent. Then it goes
@@ -604,7 +609,7 @@ Last part. Let's look at where the semester goes.
 
 # ▶ SLIDE 19 — ECON 8310: Four-Part Structure
 
-Twelve lectures, four parts.
+Twelve method lectures in four parts, then a synthesis.
 
 **Part one, time series models.** Today's lecture, then ARIMA and VAR in Lecture 2, then
 generalized additive models in Lecture 3. This is the classical econometric toolkit.
@@ -620,9 +625,11 @@ LSTMs and Transformers. We build these from the components up, not just by calli
 Bayesian linear regression. This is where we stop producing a single number and start
 producing a full distribution — which is often what the decision actually needed.
 
+Then Lecture 13 closes the course with a synthesis: what all four parts measured, side by side.
+
 **[pause]**
 
-Python throughout. Statsmodels, scikit-learn, xgboost, PyTorch, prophet, pyGAM, and pymc.
+Python throughout. Statsmodels, scikit-learn, XGBoost, PyTorch, Prophet, pyGAM, and PyMC.
 
 One note on sequencing: the parts get harder, but not uniformly. If you come from
 econometrics, part one will feel comfortable and part four will be a genuine shift in
@@ -636,7 +643,7 @@ the next one harder.
 
 Quickly, the stack. Statsmodels for the classical time series models. Scikit-learn for
 machine learning models, pipelines, and cross-validation. XGBoost for gradient boosting.
-PyTorch for neural networks. Prophet and pyGAM for additive models. And pymc for Bayesian
+PyTorch for neural networks. Prophet and pyGAM for additive models. And PyMC for Bayesian
 work.
 
 Get these installed before the next class. There's a test script in the course repository —
@@ -676,9 +683,8 @@ large errors; MASE scales by seasonal naive's misses, so it compares across seri
 
 **[pause]**
 
-If you remember only two of those, make it number two and number five. Benchmark first,
-evaluate honestly. Every method in the remaining eleven lectures is judged by those two
-standards.
+If you remember only two of those, make it number two and number five. Benchmark first, evaluate
+honestly. Every method from here on is judged by those two standards.
 
 ---
 

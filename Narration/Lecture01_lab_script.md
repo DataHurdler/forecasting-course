@@ -15,9 +15,12 @@ Lab: `Labs/Lecture01_lab.qmd` (6 steps) · Measured runtime: **~24 minutes** of 
 - **[pause]** means stop for a beat. **[STOP — learner works]** is different: it is where you
   tell the viewer to pause the video and do something. Say it out loud; people do not pause
   unless told.
-- Every number in this script is the number the code actually produces. They are deterministic —
-  no seeds involved — so if your screen disagrees with this page, something upstream changed and
-  you should stop and find out what.
+- Every number in this script is the number the code printed when the lab page was rendered.
+  No seeds are involved, so every row should match your screen exactly — except Holt-Winters.
+  Its optimizer lands on a parameter boundary, so its numbers depend on the platform: 885 / 814
+  on the rendered page, 875 / 804 on Linux with the pinned library versions. If any *other*
+  number disagrees with this page, something upstream changed and you should stop and find out
+  what.
 - Nothing here is sacred. If a sentence doesn't sound like you, change it.
 
 ### One thing to fix before recording
@@ -183,9 +186,10 @@ back a year and calling it a day. Holt is the model that adds a trend to SES, an
 has an obvious trend. It should have helped. It made things twenty percent worse than doing
 nothing.
 
-**Holt-Winters is third.** Eight eighty-five. It beats the benchmark, but only just, and it
-loses badly to a model with no trend and no seasonality in it at all. This is the most
-sophisticated thing on the table and it's mid.
+**Holt-Winters is third.** Eight eighty-five here — you may see eight seventy-five, because
+this one fit depends on the optimizer and the platform. Either way it beats the benchmark, but
+only just, and it loses badly to a model with no trend and no seasonality in it at all. This is
+the most sophisticated thing on the table and it's mid.
 
 **SES wins, and it isn't close.** Four twenty-seven against a benchmark of 973 — less than half
 the error. The simplest model on the list, the one that only tracks the level, beat everything.
@@ -354,8 +358,9 @@ Solutions for the coded parts go up on Canvas after the deadline. See you in Lec
 
 # Appendix — expected output
 
-Everything the lab prints, for checking against your screen. These are deterministic;
-if yours differ, the data changed.
+Everything the lab prints, for checking against your screen. These are deterministic, with
+one exception: the Holt-Winters fit sits on a parameter boundary, so its row depends on the
+optimizer and the platform. For every other row, if yours differ, the data changed.
 
 | Quantity | Value |
 |---|---|
@@ -363,7 +368,7 @@ if yours differ, the data changed.
 | Seasonal naive RMSE | 973 |
 | SES RMSE / MAE | 427 / 352 |
 | Holt (undamped) RMSE / MAE | 1166 / 1029 |
-| Holt-Winters RMSE / MAE | 885 / 814 |
+| Holt-Winters RMSE / MAE | 885 / 814 on the rendered page; 875 / 804 on Linux with the pinned versions (optimizer-dependent) |
 | Holt (damped) RMSE / MAE | 426 / 351 |
 | Estimated phi | 0.800 (statsmodels' lower bound; the fitted trend is ≈ 0) |
 | SES estimated alpha | 0.621 |
@@ -372,11 +377,13 @@ if yours differ, the data changed.
 | HOUSEHOLD test year vs prior year | +14.5% |
 | FOODS test year vs prior year | −1.5% |
 
-**Note for the instructor.** Holt-Winters emits a `ConvergenceWarning` on this series — the
-optimizer does not fully converge while estimating 52 seasonal indices. The lab suppresses
-warnings globally in Setup, so students will not see it. It does not change the conclusion
-(Holt-Winters loses to SES either way), but it is a second, quieter piece of evidence for the
-same point: that model is being asked to estimate more than this sample supports.
+**Note for the instructor.** Holt-Winters may emit a `ConvergenceWarning` on this series,
+depending on the platform: on Linux with the pinned versions it converges without one, to
+875 / 804. The fit lands on a parameter boundary (trend and seasonal smoothing both 0), so the
+optimum shifts slightly from machine to machine. The lab suppresses warnings globally in Setup,
+so students will not see a warning either way. None of this changes the conclusion (Holt-Winters
+loses to SES either way), but it is a second, quieter piece of evidence for the same point: that
+model is being asked to estimate more than this sample supports.
 
 **Three things to know before recording.**
 

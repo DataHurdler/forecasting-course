@@ -155,7 +155,7 @@
   \vspace{-0.35cm}
   {\small Large $\alpha$ chases every wiggle; small $\alpha$ is smooth but slow.
   SES \textbf{nests both benchmarks}: $\alpha = 1$ is na\"{i}ve, $\alpha \to 0$ the
-  historical mean.} \muted{\footnotesize\itshape No trend, no season.}
+  historical mean.} \muted{\footnotesize\itshape CA\_1 FOODS. No trend, no season.}
 \end{frame}
 
 % --- Slide: Holt ---------------------------------------------------------------
@@ -192,7 +192,7 @@
       b_t &= \beta^*(\ell_t - \ell_{t-1}) + (1-\beta^*)\,b_{t-1} \\[-1pt]
       s_t &= \gamma(y_t - \ell_{t-1} - b_{t-1}) + (1-\gamma)\,s_{t-m} \\[-1pt]
       \hat{y}_{T+h|T} &= \ell_T + h\,b_T + s_{T+h-m}
-      \qquad (m = \text{seasonal period})
+      \qquad (m = \text{seasonal period};\ h \le m)
     \end{aligned}
     \]
     \vspace{-0.4cm}
@@ -279,11 +279,12 @@
   \]
   The MASE denominator is seasonal na\"{i}ve's average miss \textbf{on the
   training data}. $\text{MASE} < 1$: smaller errors than that;
-  $\text{MASE} > 1$: \negc{worse}. It is the standard in the M-Competitions
-  \parencite{Makridakis2020}.
+  $\text{MASE} > 1$: \negc{worse}. It is one of the M4 Competition's two
+  accuracy measures \parencite{Makridakis2020}.
 
   \vspace{0.15cm}
-  \muted{\small MAPE breaks down when $y_t$ is near zero; MASE does not.}
+  \muted{\small MAPE breaks down when $y_t$ is near zero; MASE does not. MASE $< 1$ is no
+  win over seasonal na\"{i}ve on the test weeks: on CA\_1 FOODS both score 0.59.}
 \end{frame}
 
 % --- Slide: Out-of-sample principle -------------------------------------------
@@ -308,10 +309,10 @@
     \end{tikzpicture}
   \end{center}
   \begin{warningbox}
-    \textbf{Never randomly shuffle time series observations.} Use
-    \texttt{TimeSeriesSplit} in scikit-learn, never \texttt{KFold}. Shuffling
-    lets future data train the model --- data leakage that makes results look
-    excellent and forecast badly.
+    \textbf{Never randomly shuffle time-series observations.} Use
+    \texttt{TimeSeriesSplit} in scikit-learn, never \texttt{KFold}: shuffled or
+    not, \texttt{KFold} lets future data train the model --- data leakage that
+    makes results look excellent and forecast badly.
   \end{warningbox}
 \end{frame}
 
@@ -351,8 +352,8 @@
     }
   \end{center}
   \vspace{0.1cm}
-  \muted{\small Python throughout: statsmodels, scikit-learn, xgboost, PyTorch,
-  prophet, pyGAM, pymc.}
+  \muted{\small Lecture 13 closes the course with a synthesis of all four parts.
+  Python throughout: statsmodels, scikit-learn, XGBoost, PyTorch, Prophet, pyGAM, PyMC.}
 \end{frame}
 
 % --- Slide: Tools and expectations -------------------------------------------
