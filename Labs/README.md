@@ -132,13 +132,13 @@ clear of HW3, which pools all 30 weekly series at a different frequency.
 
 Labs 4 and 5 run as a **pair on one series** — daily CA_1 FOODS. Lab 4 ends with students
 averaging 20 bootstrap trees by hand (324 → 266); Lab 5 opens by replacing that with a real forest
-(248) and closes on XGBoost (230). One scoreboard, five models, one series.
+(248) and closes on XGBoost (244). One scoreboard, five models, one series.
 
 They do not spoil HW3, which pools all 30 weekly series and asks a different question. Two
 deliberate divisions of labour: Lab 5 shows MDI and permutation **disagreeing on real features**
 (`snap` moves from 8th to 3rd), while HW3 makes students *plant noise controls* to prove why. And
-Lab 5 finds `max_features="sqrt"` losing on 10 features with one dominant predictor, where HW3's
-27-feature panel gives the textbook answer — the lab teaches the condition, the homework tests it.
+Lab 5 finds `max_features="sqrt"` losing on 10 features with one dominant predictor; HW3's
+27-feature panel is dominated by `units_lag1` too, so `sqrt` loses there as well.
 
 Lab 2 Step 6 leaves M5 on purpose. It delivers the `UNRATE` → `RSXFS` question promised on the
 Lecture 2 slide, and it is the only place in the course where a Granger verdict **flips with the
