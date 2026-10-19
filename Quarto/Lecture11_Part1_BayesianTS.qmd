@@ -1,5 +1,5 @@
 ---
-title: "Bayesian Statistics II --- Time Series"
+title: "Bayesian Structural Time Series"
 subtitle: "ECON 8310: Business Forecasting --- Lecture 11, Part 1"
 author: "Department of Economics"
 institute: "University of Nebraska at Omaha"
@@ -62,7 +62,7 @@ A Bayesian time series model returns a **full predictive distribution for every 
 | **Components get error bars** | Not just a forecast, but "how confident am I that there is a trend at all?" — separately from the seasonality. |
 | **Uncertainty compounds honestly** | Forecast 52 weeks out and the interval widens as it should, because the model propagates uncertainty forward instead of assuming it away. |
 
-That third row is the one people underestimate. A prediction interval from ARIMA widens too, but according to a formula derived under assumptions you did not check. Here the widening is a consequence of the model you actually wrote down.
+That third row is the one people underestimate. A prediction interval from ARIMA widens too, but it plugs in point estimates of the parameters. This one also carries their uncertainty, and each source of widening is a named part of the model.
 
 **And the price:** it is slower, it needs priors you have to defend, and — as we will see — it can fail silently in ways a least-squares fit cannot.
 
@@ -87,7 +87,7 @@ $$
 
 ---
 
-## The Level: A Random Walk With a Prior On It
+## The Level: A Random Walk with a Prior on It
 
 The simplest useful trend is a **local level** — the series has a level, and the level itself drifts:
 
@@ -165,7 +165,7 @@ Written the obvious way, with `pm.GaussianRandomWalk`, the model fails Lecture 1
 
 ---
 
-## The Fix: Reparameterize, Don't Sample More
+## The Fix: Reparameterize, Do Not Sample More
 
 | **Centered** (the first fit) | **Non-centered** (the fix) |
 |---|---|
@@ -173,7 +173,7 @@ Written the obvious way, with `pm.GaussianRandomWalk`, the model fails Lecture 1
 | Resize $\sigma_{\text{level}}$ and all 225 levels must move with it: the sampler crawls. | The sampler moves independent standard Normals; the level is built afterwards. |
 
 ::: {.warningbox}
-**Same data, same 6,000 draws: ESS 274 $\to$ 2,376.** BMCP §4.6.1 covers exactly this, and you will meet it again next week.
+**Same data, same 6,000 draws: ESS 274 $\to$ 2,376.** It is the standard fix [@MartinKumarLao2021, §4.6.1], and you will meet it again next week.
 :::
 
 [Almost the same model. `GaussianRandomWalk` lets week 1's level start anywhere (its default start, $\mathcal{N}(0, 100)$, raises a warning the lab silences); the `cumsum` starts it near zero. That, not sampling, is why the trace heights differ.]{.neutral}
@@ -186,7 +186,7 @@ The point estimate, the interval, and whether either is any use.
 
 ## Does It Work? The Point Forecast
 
-CA_1 FOODS, 52 weeks held out.
+CA_1 FOODS, 52 weeks held out (Lecture 9's 2,152 was on the 30-series panel).
 
 | Model | Test RMSE |
 |---|---:|
@@ -249,7 +249,7 @@ What structural models are for.
 6. The interval was **calibrated but too wide to act on**; establishing that is the product.
 :::
 
-[Next: hierarchical models, for thirty series at once.]{.neutral}
+[Next: hierarchical models, for ten series at once.]{.neutral}
 
 ---
 

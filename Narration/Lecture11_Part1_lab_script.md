@@ -304,7 +304,7 @@ that took twenty seconds to sample, a reparameterization to converge, and a page
 If accuracy were the argument for this model, that number would be an embarrassment. Accuracy is
 not the argument. What you bought is a level and a seasonal component you can plot and defend, a
 full distribution for every future week, and — the thing the whole lab has been about — an
-interval that **admits when it does not know**. Whether that trade is worth 5% is a business
+interval that **admits when it does not know**. Whether that trade is worth 4% is a business
 question, and it depends entirely on whether anyone downstream will use the uncertainty you went
 to the trouble of producing.
 
@@ -364,7 +364,7 @@ one, and what happens when some of them barely have any data.
 
 *Step 1's failure shows zero divergences, and that is the teaching point.* R-hat and ESS catch it;
 the diagnostic students learn first is silent. Next week's lab is the mirror image — R-hat and ESS
-pass and 127 divergences are the loudest objection. Say both, so "check all three" stops sounding like
+pass and 43 divergences are the loudest objection. Say both, so "check all three" stops sounding like
 ritual.
 
 *The by-horizon table matters more than the aggregate one.* The headline table makes it look like

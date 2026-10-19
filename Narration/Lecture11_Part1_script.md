@@ -20,7 +20,7 @@ Deck: `Slides/Lecture11_Part1_BayesianTS.pdf` (20 pages) · Measured runtime: se
 
 # ▶ SLIDE 1 — Title page
 
-Lecture 11, Part 1: Bayesian Statistics II — Time Series.
+Lecture 11, Part 1: Bayesian Structural Time Series.
 
 Last week we built the machinery — Bayes' theorem, priors, MCMC, and the three diagnostics. All of
 it on a conversion rate, which is not a time series.
@@ -110,22 +110,23 @@ the model propagates uncertainty forward rather than assuming it away.
 
 *(Point at the third row again — it's the one to dwell on.)*
 
-That third row is the one people underestimate, so let me sharpen it.
+That third row is the one people underestimate, so let me sharpen it, and be fair to ARIMA while
+I do.
 
-An ARIMA prediction interval widens too. But it widens according to a **formula**, derived under
-assumptions about the error process that you did not check and probably could not check.
+An ARIMA prediction interval widens too, and it also follows from a model you wrote down. Lecture 2
+showed you how to check that model's residuals. The real difference is narrower: ARIMA's formula
+plugs in **point estimates** of its parameters, as if they were known exactly. This model carries
+their uncertainty into the band as well.
 
-Here, the widening is a *consequence of the model you wrote down*. If you said the level follows a
-random walk, then fifty-two steps of random walk uncertainty is what you get. You can trace the
-interval back to a modeling choice and argue about that choice.
+And each source of widening is a *named part of the model*. If you said the level follows a random
+walk, then fifty-two steps of random walk uncertainty is what you get. You can trace the interval
+back to a modeling choice and argue about that choice.
 
 **[pause]**
 
 That traceability is worth more than it sounds. When a planner tells you the interval is too wide
 to use — which is exactly what will happen at the end of this lecture — you can point at the
-specific assumption producing it and propose changing *that*, rather than shrugging at a formula.
-
-An ARIMA interval you can only accept or reject. This one you can negotiate with.
+specific component producing it and propose changing *that*.
 
 *(Point at the price.)*
 
@@ -222,7 +223,7 @@ makes you responsible for them.
 
 ---
 
-# ▶ SLIDE 8 — The Level: A Random Walk With a Prior On It
+# ▶ SLIDE 8 — The Level: A Random Walk with a Prior on It
 
 The simplest useful trend is a **local level**: the series has a level, and the level itself
 drifts over time.
@@ -425,7 +426,7 @@ one slide.
 
 ---
 
-# ▶ SLIDE 13 — The Fix: Reparameterize, Don't Sample More
+# ▶ SLIDE 13 — The Fix: Reparameterize, Do Not Sample More
 
 *(Walk the table, left column, then right.)*
 
@@ -445,8 +446,9 @@ navigate it.
 *(Point at the warning box.)*
 
 Same data, same six thousand draws. ESS went from two hundred seventy-four to two thousand three
-hundred seventy-six. BMCP section four-point-six-point-one covers exactly this, and next week we'll
-see the same fix applied to a hierarchy, where it will matter even more.
+hundred seventy-six. It is the standard fix: Martin, Kumar and Lao work it in section
+four-point-six-point-one of their book. Next week we'll see the same fix applied to a hierarchy,
+where it will matter even more.
 
 **[pause]**
 
@@ -486,6 +488,10 @@ Bayesian structural model: RMSE one thousand five hundred eighty-nine. Seasonal 
 last year, one line of code: one thousand six hundred sixty.
 
 So we beat the benchmark by about **four percent**.
+
+*(Point at the parenthesis.)* And don't set this benchmark beside the two thousand one hundred
+fifty-two from Lectures 8 and 9. That one was seasonal naive across the whole thirty-series panel.
+This is one series, CA_1 FOODS, the same benchmark as Homework 1.
 
 **[pause]**
 
@@ -594,9 +600,9 @@ But notice what just happened, because this is the argument for the entire lectu
 **We could ask whether the uncertainty was honest.** We computed coverage against held-out data,
 and got an answer.
 
-For every point-forecast model in this course — every single one, from ETS through the Transformer
-— that question had **no answer at all**. There was nothing to check. You got a number, and the
-number was right or wrong, and that was the end of the conversation.
+For the models before this one, we never asked. ETS had intervals, and Prophet drew a band in
+Homework 2, but we scored every model on its point forecast and never checked a band against
+held-out weeks. **Here we did.**
 
 A calibrated-but-too-wide interval is a worse forecast and a better *deliverable*, because it tells
 you something true about how much you actually know. That is worth paying four percent for.
@@ -631,7 +637,7 @@ average, and widening with the horizon — and being able to *establish* that is
 
 **[pause]**
 
-Next time: hierarchical models. What to do when you have thirty series and some of them barely
+Next time: hierarchical models. What to do when you have ten series and some of them barely
 have any data — and a question you have to answer *before* you fit anything.
 
 ---

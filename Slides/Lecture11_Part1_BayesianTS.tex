@@ -70,8 +70,8 @@
 
   \vspace{0.1cm}
   That third row is the one people underestimate. A prediction interval from ARIMA widens too,
-  but according to a formula derived under assumptions you did not check. Here the widening is a
-  consequence of the model you actually wrote down.
+  but it plugs in point estimates of the parameters. This one also carries their uncertainty, and
+  each source of widening is a named part of the model.
 
   \vspace{0.15cm}
   \textbf{And the price:} it is slower, it needs priors you have to defend, and --- as we will
@@ -105,7 +105,7 @@
 \end{frame}
 
 % --- Slide: local level --------------------------------------------------------
-\begin{frame}{The Level: A Random Walk With a Prior On It}
+\begin{frame}{The Level: A Random Walk with a Prior on It}
   The simplest useful trend is a \textbf{local level} --- the series has a level, and the level
   itself drifts:
   \[
@@ -169,14 +169,14 @@
   \begin{examplebox}{Local level $+$ Fourier seasonality}
     {\tiny\linespread{1.0}\selectfont
     \texttt{with pm.Model() as model:}\\
-    \texttt{\ \ sigma\_level = pm.Exponential("sigma\_level", 10.0)}\\
-    \texttt{\ \ z\ \ \ \ \ \ \ \ \ \ \ = pm.Normal("z", 0, 1, shape=n)\ \ \ \# non-centered}\\
-    \texttt{\ \ level = pm.Deterministic("level", pm.math.cumsum(z * sigma\_level))}\\
-    \texttt{\ \ beta\ = pm.Normal("beta", 0, 0.5, shape=2*K)\ \ \ \ \ \ \# Fourier}\\
-    \texttt{\ \ sigma = pm.Exponential("sigma", 1.0)}\\[2pt]
-    \texttt{\ \ pm.Normal("obs", mu=level + pm.math.dot(X, beta),}\\
-    \texttt{\ \ \ \ \ \ \ \ \ \ \ \ sigma=sigma, observed=y\_scaled)}\\
-    \texttt{\ \ idata = pm.sample(1500, tune=2000, chains=4, target\_accept=0.95)}
+    \texttt{\mbox{}\ \ sigma\_level = pm.Exponential("sigma\_level", 10.0)}\\
+    \texttt{\mbox{}\ \ z\ \ \ \ \ \ \ \ \ \ \ = pm.Normal("z", 0, 1, shape=n)\ \ \ \# non-centered}\\
+    \texttt{\mbox{}\ \ level = pm.Deterministic("level", pm.math.cumsum(z * sigma\_level))}\\
+    \texttt{\mbox{}\ \ beta\ = pm.Normal("beta", 0, 0.5, shape=2*K)\ \ \ \ \ \ \# Fourier}\\
+    \texttt{\mbox{}\ \ sigma = pm.Exponential("sigma", 1.0)}\\[2pt]
+    \texttt{\mbox{}\ \ pm.Normal("obs", mu=level + pm.math.dot(X, beta),}\\
+    \texttt{\mbox{}\ \ \ \ \ \ \ \ \ \ \ \ sigma=sigma, observed=y\_scaled)}\\
+    \texttt{\mbox{}\ \ idata = pm.sample(1500, tune=2000, chains=4, target\_accept=0.95)}
     }
   \end{examplebox}
   Line for line this is the equations above --- \texttt{cumsum} of scaled Normal draws \emph{is}
@@ -200,7 +200,7 @@
 \end{frame}
 
 % --- Slide: the fix ----------------------------------------------------------------
-\begin{frame}{The Fix: Reparameterize, Don't Sample More}
+\begin{frame}{The Fix: Reparameterize, Do Not Sample More}
   \begin{center}
     {\small
     \begin{tabular}{p{6.3cm}p{6.3cm}}
@@ -209,7 +209,7 @@
       \midrule
       {\scriptsize\texttt{level = pm.GaussianRandomWalk("level",}} &
       {\scriptsize\texttt{z = pm.Normal("z", 0, 1, shape=n)}} \\
-      {\scriptsize\texttt{\ \ \ \ \ \ \ \ sigma=sigma\_level, shape=n)}} &
+      {\scriptsize\texttt{\mbox{}\ \ \ \ \ \ \ \ sigma=sigma\_level, shape=n)}} &
       {\scriptsize\texttt{level = pm.math.cumsum(z * sigma\_level)}} \\[4pt]
       Resize $\sigma_{\text{level}}$ and all 225 levels must move with it: the sampler crawls. &
       The sampler moves independent standard Normals; the level is built afterwards. \\
@@ -219,8 +219,8 @@
   \end{center}
 
   \begin{warningbox}
-    \textbf{Same data, same 6{,}000 draws: ESS 274 $\to$ 2{,}376.} BMCP §4.6.1 covers exactly
-    this, and you will meet it again next week.
+    \textbf{Same data, same 6{,}000 draws: ESS 274 $\to$ 2{,}376.} It is the standard fix
+    \parencite[§4.6.1]{MartinKumarLao2021}, and you will meet it again next week.
   \end{warningbox}
 
   \muted{\footnotesize Almost the same model. \texttt{GaussianRandomWalk} lets week 1's level start
@@ -237,7 +237,7 @@
 
 % --- Slide: results --------------------------------------------------------------
 \begin{frame}{Does It Work? The Point Forecast}
-  CA\_1 FOODS, 52 weeks held out.
+  CA\_1 FOODS, 52 weeks held out (Lecture 9's 2{,}152 was on the 30-series panel).
   \begin{center}
     {\small
     \begin{tabular}{lr}
@@ -325,7 +325,7 @@
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: hierarchical models, for thirty series at once.}
+  \muted{\itshape Next: hierarchical models, for ten series at once.}
 \end{frame}
 
 \begin{frame}[allowframebreaks]{References}
