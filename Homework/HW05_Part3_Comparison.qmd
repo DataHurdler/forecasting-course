@@ -110,8 +110,9 @@ if its *target* week falls before the cutoff.
 ::: {.callout-warning}
 ## Two mistakes that will not raise an error
 
-**Do not shuffle.** `DataLoader(..., shuffle=False)` for every model here. Shuffling destroys the
-ordering the sequence models exist to exploit, and it will not warn you.
+**Split by time before anything else.** A random split, or shuffling rows before you build
+windows, puts future weeks into training and will not warn you. Then use
+`DataLoader(..., shuffle=False)` for every model here, so your runs are reproducible.
 
 **Standardize using training statistics only.** Compute the mean and standard deviation on the
 training windows, then apply them to the test windows. Computing them over the full dataset leaks
@@ -142,8 +143,9 @@ units. I build sliding windows over each series: 26 weeks for Part A and
 52 weeks for Part B, with four channels (units, snap_days, event_days,
 avg_price). Temporal split at 2015-05-17, matching Homework 3 and 4.
 
-This homework covers four neural network architectures for time series
-forecasting: FFN, 1D CNN, LSTM, and Transformer encoder (all in PyTorch).
+Homework 5 covers five neural network architectures for time series
+forecasting: FFN, 1D CNN, vanilla RNN, LSTM, and Transformer encoder (all in
+PyTorch). This part compares all five.
 I will ask you questions one at a time. For each:
 1. Write clean, well-commented PyTorch code that runs end-to-end
 2. Explain what the output means so that I understand it — but do NOT draft the written
@@ -166,8 +168,7 @@ Repository rules — these apply to every prompt in this thread:
   files, I will paste them in myself.
 - After finishing the work for each prompt, make exactly one git commit:
   `hw05_part3 prompt <prompt_id>: <short summary>`
-- If a prompt would take me past my budget of 3, do not do the work. Reply exactly
-  PROMPT_LIMIT_REACHED, and still log that prompt.
+- If this prompt takes me past my budget of 3, say so, log it as over budget, and continue.
 - Never modify `AGENTS.md`, anything in `assignments/`, or anything in `policy/`.
 
 Confirm by responding with: HW05P3_CONTEXT_ACK
@@ -219,8 +220,9 @@ Earlier versions of this assignment asked whether your results matched a "theore
 that sequence models beat convolutional ones, which beat feedforward ones. **That expectation is
 not what Lecture 9 found.** On this panel, at a fixed training budget, the vanilla RNN beat both
 the LSTM and the Transformer — and every neural model lost to a regularized linear model. Note the
-qualifier: Lecture 9 Part 1 also showed the RNN's margin over the LSTM shrinking to nothing once
-both are trained to convergence, so *how long you trained* is part of any ranking you report.
+qualifier: Lecture 9 Part 1 also showed the RNN's margin over the LSTM shrinking to nothing by
+100 epochs, with the LSTM still improving, so *how long you trained* is part of any ranking you
+report.
 
 Report your ranking, whatever it is, and explain it in terms of *this* problem: window length,
 the amount of training data, and where the predictive signal actually sits.
@@ -273,7 +275,7 @@ Answer all three:
 
 1. Where did increasing model complexity pay off, and where did it not?
 2. Neural networks are often described as "data hungry." Your 52-week training set holds
-   roughly 5,900 windows across 30 series. Is that enough? What would you expect to change
+   5,160 windows across 30 series. Is that enough? What would you expect to change
    with 10× more data — and which of the five architectures would benefit most?
 3. If you were advising a mid-sized retailer with a small data science team,
    which **two** models from the entire course would you recommend they invest in,
@@ -289,7 +291,7 @@ Answer all three:
 - [ ] Your name replaces the `author:` placeholder at the top of the document
 - [ ] Written responses completed in your own words
 - [ ] `INITIAL_PROMPT.md` saved in `submissions/hw05_part3_<your_name>/`
-- [ ] `PROMPT_LOG.md` complete with **3 or fewer** entries for Part 3
+- [ ] `PROMPT_LOG.md` complete for Part 3: every prompt logged; over-budget prompts noted
 - [ ] Every file above uploaded to the **Canvas** assignment
 
 *Not graded, but worth doing:* commit locally once per prompt, `hw05_part3 prompt <id>: <summary>`.
