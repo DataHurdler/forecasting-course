@@ -49,7 +49,7 @@ Lab 8, and it starts with the failure we ended on last week.
 
 Last week you took a 26-week window, flattened it into 104 numbers, and handed it to a network.
 That model had no idea the window was ordered. Week 1 and week 26 were just two positions in a
-list, and nothing told it that positions 1 and 5 were the same quantity four weeks apart.
+list, and nothing told it that positions 1 and 5 were the same quantity one week apart.
 
 A convolution knows. It slides a small filter along the time axis and looks for local shapes, and
 the same filter is applied everywhere — so a pattern learned at week 3 is recognized at week 20.
@@ -267,8 +267,8 @@ So a longer window adds reach and capacity together. The flatten head can now we
 same week, but every extra week is also more weights to fit, from fewer training windows. Here the
 capacity won, and the 52-week column is what overfitting looks like.
 
-**More data into the model is not more information out of it, unless the architecture can reach
-it.**
+**More history into the model is not automatically better: the context has to be worth the
+weights it costs.**
 
 **[STOP — learner works]**
 
@@ -341,7 +341,7 @@ time. Without naming an architecture, describe what a model would need in order 
 
 **[pause]** — *they are describing recurrence or attention, and next week they get both.*
 
-**The practice.** Step 4's result — longer window, no better or worse forecast — is the sort of
+**The practice.** Step 4's result — longer window, worse forecast — is the sort of
 thing a practitioner discovers after a week of tuning. What one calculation, done in Step 1 in ten
 seconds, would have predicted it?
 

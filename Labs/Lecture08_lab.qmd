@@ -126,7 +126,7 @@ print(f"kernels (5, 3, 3)   -> receptive field {receptive_field([5,3,3])} weeks"
 print(f"kernels (5, 3, 3, 3)-> receptive field {receptive_field([5,3,3,3])} weeks")
 ```
 
-**Seven weeks.** Not 26 — seven. Hand this model a 52-week window and each output neuron still
+**Seven weeks.** Not 26 — seven. Hand this model a 52-week window and each convolution unit still
 sees only seven consecutive weeks of it.
 
 **Hold that fact.** Step 4 tests what it costs.

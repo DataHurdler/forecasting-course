@@ -40,7 +40,7 @@ That's the theme of the next two lectures. Not a better optimizer, not more laye
 # ▶ SLIDE 2 — Lecture Outline
 
 Four parts. Convolution itself — what a filter is and what it costs. Pooling, which is where I
-want you to be suspicious. Then twenty years of image architectures, compressed into the three
+want you to be suspicious. Then two decades of image architectures, compressed into the three
 ideas that outlived them. And then one-dimensional CNNs on our own time series, with an honest
 measurement at the end.
 
@@ -127,14 +127,14 @@ lecture we will have an example of each, on the same dataset.
 # ▶ SLIDE 6 — How a Convolutional Layer Works
 
 For a sequence — which is what we care about — a one-dimensional convolution slides a filter of
-length K along the series, and at each position it takes a dot product.
+width K along the series, and at each position it takes a dot product.
 
 That's the formula on the slide, and honestly the formula is less useful than the picture — which
 is the next slide: a small window sliding along, computing one number at each stop.
 
 *(Walk the four hyperparameters.)*
 
-**Kernel size** is the filter length. Bigger means a wider receptive field — more context per
+**Kernel size** is the filter width. Bigger means a wider receptive field — more context per
 output — and more parameters.
 
 **Stride** is how far the filter jumps between positions. Stride two halves your output length.
@@ -245,12 +245,12 @@ And I chose this photograph on purpose. That's a grocery aisle on the eighteenth
 the week panic buying emptied shelves across the country. A demand forecast built on that store's
 own history had no way to see it coming; nothing in the past looked like it.
 
-Keep that picture in your head. We come back to it in Week 16, when we talk about what forecasting
+Keep that picture in your head. We come back to it in Week 15, when we talk about what forecasting
 cannot do.
 
 ---
 
-# ▶ SLIDE 9 — Section divider: Pooling and Dropout
+# ▶ SLIDE 9 — Section divider: Pooling
 
 ---
 
@@ -298,7 +298,7 @@ in this lecture.
 
 # ▶ SLIDE 11 — Section divider: CNN Architecture Evolution
 
-Twenty years of image models, and the three ideas that outlived them.
+Two decades of architectures, and three ideas that survived.
 
 ---
 
@@ -313,14 +313,15 @@ nineties.
 filters — but stack a lot of them.
 
 Why does that work? Two stacked three-by-threes see the same receptive field as one five-by-five.
-But they use fewer parameters, and you get an extra nonlinearity in between them, which makes the
-combination strictly more expressive.
+But they use fewer parameters — eighteen weights against twenty-five — and you get an extra
+nonlinearity in between them. It is not strictly more expressive: the VGG authors describe the stack
+as a regularization, because it constrains what the filter can be while adding that nonlinearity.
 
 *(Point at the key box.)*
 
 That is the lesson that carried forward: **depth built from small filters beats width built from
-large ones.** Cheaper and more expressive. It's why nearly every modern architecture is deep and
-narrow rather than shallow and wide.
+large ones.** Fewer weights, more nonlinearity. It's why nearly every modern architecture is deep
+and narrow rather than shallow and wide.
 
 **[pause]**
 
@@ -354,7 +355,8 @@ convolutions operate on a smaller input.
 **ResNet** solved a different problem, and it's the one that transfers to us.
 
 Past a certain depth, deeper networks were getting **worse**. Not from overfitting — the training
-error was worse too. The gradients were degrading on their way back through many layers.
+error was worse too. And not from vanishing gradients either: the authors checked, and the gradients
+were healthy. The deeper plain networks were simply harder to optimize.
 
 *(Point at the diagram.)*
 
@@ -386,8 +388,8 @@ Addition doesn't do that. The plus-x term hands the gradient a route home that s
 multiplication entirely. Repeated multiplication shrinks; repeated addition doesn't.
 
 Remember that sentence. In Lecture 9 you'll see the LSTM's cell state doing precisely the same
-thing, for precisely the same reason, invented eighteen years earlier for time rather than for
-depth.
+thing — and there, unlike in ResNet, fading gradients really are the problem it solves. Invented
+eighteen years earlier, for time rather than for depth.
 
 ---
 
@@ -428,11 +430,11 @@ end of this lecture.
 These architectures were built for images, on problems that look nothing like weekly demand
 forecasting. Three of their ideas transfer anyway.
 
-**Small stacked filters.** A width-three filter applied twice sees six weeks of context, with far
-fewer weights than one width-six filter would need.
+**Small stacked filters.** Two stacked width-three filters see five weeks of context, with a
+nonlinearity between them. The weight saving does not come along, though — that was a 2D effect. In
+one dimension, two width-three filters need six weights where one width-five filter needs five.
 
-**Skip connections.** Same fix, same problem — gradients that fade as they travel back through
-depth.
+**Skip connections.** Same fix, same problem — a deep stack that is hard to train.
 
 **Learned features.** You stop hand-engineering lag windows and let the filters find whichever
 local shapes actually matter.
@@ -464,7 +466,7 @@ well is knowing which half you actually wanted.
 
 # ▶ SLIDE 16 — Section divider: 1D CNNs for Time Series
 
-The same machinery, along a time axis — and what it costs.
+The same machinery, one dimension, and an honest measurement.
 
 ---
 
@@ -513,7 +515,8 @@ engineering *and* paying for a neural network.
 That is not a reason never to use one. It is a reason to be clear-eyed about what the architecture
 is actually buying you on a given problem.
 
-Remember that number — seven weeks. It explains the results two slides from now.
+Remember both numbers — seven weeks per filter, twenty-six in the window. The window is the one
+that explains the results two slides from now.
 
 ---
 
@@ -533,7 +536,8 @@ Everything from Lecture 7 still applies. Adam with weight decay. `zero_grad()` e
 *(Point at the muted note.)*
 
 And note what `AdaptiveAvgPool1d(1)` does: it averages across the *entire* time axis, collapsing
-it to a single number per channel.
+it to a single number per channel. That's called **global average pooling**. The alternative, a
+**flatten head**, skips it and gives every position in the window its own weight.
 
 Watch what that costs on the next slide.
 
@@ -609,8 +613,8 @@ common production pattern is to let convolutions compress a long raw window into
 learned summary features, then feed *those* into gradient boosting alongside your engineered
 columns. You get the pattern discovery without betting the forecast on it.
 
-**Do not reach for one** when the dominant signal is at a long lag, when you already have well
-engineered tabular features, or when a stakeholder needs to read the model and understand it.
+**Do not reach for one** when the dominant signal is at a long lag, when you already have
+well-engineered tabular features, or when a stakeholder needs to read the model and understand it.
 
 **[pause]**
 
@@ -644,8 +648,8 @@ usually does not. Measured cost on our data: about five hundred RMSE.
 Three. The architecture history reduces to three transferable ideas: small filters stacked deep,
 skip connections for trainable depth, and learned rather than hand-engineered features.
 
-Four. A 1D CNN takes a window across channels and predicts the next step. Its weakness is the
-receptive field — seven weeks of context cannot see an annual lag.
+Four. A 1D CNN takes a window across channels and predicts the next step. Its filters see a few
+weeks at a time; reaching a year back needs a long window and many weights.
 
 And five. On our panel, every CNN variant lost to a forty-six-coefficient LASSO. Architecture has
 to fit the problem. It is not a ladder you climb.

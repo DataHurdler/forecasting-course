@@ -63,7 +63,7 @@
 
 % --- Slide: How convolution works --------------------------------------------
 \begin{frame}{How a Convolutional Layer Works}
-  For a sequence, a 1D convolution slides a filter of length $K$ along the series and takes a dot
+  For a sequence, a 1D convolution slides a filter of width $K$ along the series and takes a dot
   product at each position:
   \[
     (f * g)[t] = \sum_{k=0}^{K-1} f[k] \cdot g[t - k]
@@ -73,7 +73,7 @@
     {\small
     \begin{tabular}{p{2.3cm}p{10.1cm}}
       \toprule
-      \textbf{Kernel size} & Filter length $K$. Larger means a wider receptive field --- more
+      \textbf{Kernel size} & Filter width $K$. Larger means a wider receptive field --- more
       context per output, and more parameters. \\[2pt]
       \textbf{Stride} & How far the filter moves between positions. Stride 2 halves the output
       length. \\[2pt]
@@ -110,14 +110,14 @@
     \includegraphics[height=5.3cm]{../Figures/Lecture08/filter_sees.pdf}
   \end{center}
   \vspace{-0.25cm}
-  \muted{\small 18 March 2020: shelves emptied by a shock no forecast saw coming --- more in Week 16.}
+  \muted{\small 18 March 2020: shelves emptied by a shock no forecast saw coming --- more in Week 15.}
 \end{frame}
 
 % =============================================================================
-\section{Pooling and Dropout}
+\section{Pooling}
 % =============================================================================
 
-\sectionslide{Pooling and Dropout}{%
+\sectionslide{Pooling}{%
   Pooling shrinks the feature map and buys robustness ---
   at a price that matters more for forecasting than for images.}
 
@@ -144,7 +144,7 @@
 % =============================================================================
 
 \sectionslide{CNN Architecture Evolution}{%
-  Thirty years of architectures, and three ideas that survived.}
+  Two decades of architectures, and three ideas that survived.}
 
 % --- Slide: LeNet to VGG -----------------------------------------------------
 \begin{frame}{LeNet to VGG: Depth and Small Filters}
@@ -172,15 +172,16 @@
   convolutions keep the cost down.
 
   \vspace{0.15cm}
-  \textbf{ResNet} \parencite{He2016} fixed a different problem: past some depth, deeper networks
-  got \emph{worse} --- not from overfitting, but because gradients faded on the way back. The fix
-  is a \textbf{residual} or skip connection:
+  \textbf{ResNet} \parencite{He2016} fixed a different problem: past some depth, deeper plain
+  networks \emph{trained} worse --- not overfitting, but an optimization difficulty. The fix is a
+  \textbf{residual} or skip connection:
   \begin{center}
     \includegraphics[height=2.4cm]{../Figures/Lecture08/residual_block.pdf}
   \end{center}
   \vspace{-0.3cm}
-  The $+\,\mathbf{x}$ gives the gradient a direct path backward. It made 100-layer networks
-  trainable, and it is in nearly every deep architecture since --- including Lecture 9's.
+  Each block learns only a change to $\mathbf{x}$, and the $+\,\mathbf{x}$ gives the gradient a
+  direct path backward. It made 100-layer networks trainable, and it is in nearly every deep
+  architecture since --- including Lecture 9's.
 \end{frame}
 
 % --- Slide: what a trained network learned --------------------------------------
@@ -205,10 +206,11 @@
     {\small
     \begin{tabular}{p{3.6cm}p{8.8cm}}
       \toprule
-      \textbf{Small stacked filters} & A width-3 filter twice sees six weeks of context with far
-      fewer weights than one width-6 filter. \\[3pt]
-      \textbf{Skip connections} & Same fix for the same problem --- gradients that fade through
-      depth. \\[3pt]
+      \textbf{Small stacked filters} & Two stacked width-3 filters see five weeks, with a
+      nonlinearity between them. VGG's weight saving was a 2D effect: in 1D it is 6 weights
+      against 5. \\[3pt]
+      \textbf{Skip connections} & Same fix for the same problem --- a deep stack that is hard to
+      train. \\[3pt]
       \textbf{Learned features} & You stop hand-engineering lag windows and let filters find the
       local shapes that matter. \\
       \bottomrule
@@ -249,11 +251,11 @@
     {\tiny\linespread{1.2}\selectfont
     \texttt{import torch.nn as nn}\\[2pt]
     \texttt{model = nn.Sequential(}\\
-    \texttt{\ \ \ \ nn.Conv1d(n\_channels, 32, kernel\_size=5), nn.ReLU(),}\\
-    \texttt{\ \ \ \ nn.Conv1d(32, 64, kernel\_size=3),\ \ \ \ \ \ \ nn.ReLU(),}\\
-    \texttt{\ \ \ \ nn.AdaptiveAvgPool1d(1),\ \ \ \# collapses the time axis}\\
-    \texttt{\ \ \ \ nn.Flatten(),}\\
-    \texttt{\ \ \ \ nn.Linear(64, 1))}
+    \texttt{\mbox{}\ \ \ \ nn.Conv1d(n\_channels, 32, kernel\_size=5), nn.ReLU(),}\\
+    \texttt{\mbox{}\ \ \ \ nn.Conv1d(32, 64, kernel\_size=3),\ \ \ \ \ \ \ nn.ReLU(),}\\
+    \texttt{\mbox{}\ \ \ \ nn.AdaptiveAvgPool1d(1),\ \ \ \# collapses the time axis}\\
+    \texttt{\mbox{}\ \ \ \ nn.Flatten(),}\\
+    \texttt{\mbox{}\ \ \ \ nn.Linear(64, 1))}
     }
   \end{examplebox}
   Input shape is \texttt{(batch, channels, time)} --- note that channels come \emph{before} time,
@@ -264,8 +266,9 @@
   batch, \texttt{shuffle=False}, and a split by time rather than at random.
 
   \vspace{0.1cm}
-  \muted{\footnotesize\itshape \texttt{AdaptiveAvgPool1d(1)} averages across the whole time axis.
-  Watch what that does on the next slide.}
+  \muted{\footnotesize\itshape \texttt{AdaptiveAvgPool1d(1)} is \textbf{global average pooling}: one
+  mean per filter over the whole time axis. A \textbf{flatten head} skips it and gives every position
+  its own weight. Watch what that does on the next slide.}
 \end{frame}
 
 % --- Slide: does it work -----------------------------------------------------
@@ -325,14 +328,16 @@
     \end{tabular}
     }
   \end{center}
+  \vspace{-0.2cm}
+  \muted{\footnotesize VGG, Inception and ResNet appeared a year before the papers cited for them.}
 
   \vspace{0.15cm}
   \textbf{Reach for a 1D CNN} when local shape matters more than exact position, when you have
   many parallel series, or as a cheap feature extractor feeding something else.
 
   \vspace{0.1cm}
-  \textbf{Do not reach for one} when the dominant signal is at a long lag, when you have well
-  engineered tabular features already, or when a stakeholder needs to read the model. On the
+  \textbf{Do not reach for one} when the dominant signal is at a long lag, when you have well-engineered
+  tabular features already, or when a stakeholder needs to read the model. On the
   evidence above, that covers most of what we forecast in this course.
 \end{frame}
 
@@ -344,7 +349,7 @@
       \item \textbf{Convolution} = local connectivity + weight sharing: learn a pattern once,
             find it everywhere.
       \item \textbf{Pooling} buys translation invariance --- which images want and forecasts
-            usually don't. Cost here: about 500 RMSE.
+            usually do not. Cost here: about 500 RMSE.
       \item Three ideas outlived the architectures: \textbf{small filters stacked deep},
             \textbf{skip connections}, \textbf{learned features}.
       \item A \textbf{1D CNN}'s filters see a few weeks; a year back needs a long

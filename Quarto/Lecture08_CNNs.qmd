@@ -29,7 +29,7 @@ csl: https://www.zotero.org/styles/chicago-author-date
 ## Lecture Outline
 
 1. Convolution: The Core Idea
-2. Pooling and Dropout
+2. Pooling
 3. CNN Architecture Evolution
 4. 1D CNNs for Time Series
 5. Key Takeaways
@@ -62,13 +62,13 @@ A reader does not memorize the letter "A" separately for every spot on the page.
 
 ## How a Convolutional Layer Works
 
-For a sequence, a 1D convolution slides a filter of length $K$ along the series and takes a dot product at each position:
+For a sequence, a 1D convolution slides a filter of width $K$ along the series and takes a dot product at each position:
 
 $$(f * g)[t] = \sum_{k=0}^{K-1} f[k] \cdot g[t - k]$$
 
 | | |
 |---|---|
-| **Kernel size** | Filter length $K$. Larger means a wider receptive field — more context per output, and more parameters. |
+| **Kernel size** | Filter width $K$. Larger means a wider receptive field — more context per output, and more parameters. |
 | **Stride** | How far the filter moves between positions. Stride 2 halves the output length. |
 | **Padding** | Zeros at the edges. `padding='same'` keeps output length equal to input length. |
 | **Filters** | How many different patterns to learn. This becomes the number of output channels. |
@@ -93,9 +93,9 @@ The same operation in two dimensions: a $3\times3$ filter slides over every pixe
 
 ![](../Figures/Lecture08/filter_sees.svg){fig-align="center" height="400px"}
 
-[18 March 2020: shelves emptied by a shock no forecast saw coming — more in Week 16.]{.neutral .smaller}
+[18 March 2020: shelves emptied by a shock no forecast saw coming — more in Week 15.]{.neutral .smaller}
 
-# Pooling and Dropout
+# Pooling
 
 Pooling shrinks the feature map and buys robustness — at a price that matters more for forecasting than for images.
 
@@ -115,7 +115,7 @@ It buys **fewer parameters downstream** and **translation invariance**: shift th
 
 # CNN Architecture Evolution
 
-Twenty years of image models, and the three ideas that outlived them.
+Two decades of architectures, and three ideas that survived.
 
 ---
 
@@ -137,11 +137,11 @@ VGG's cost: 138 million parameters, mostly in the final dense layers.
 
 **Inception** [@Szegedy2015] runs $1\times1$, $3\times3$ and $5\times5$ convolutions *in parallel* and lets the network choose the scale; $1\times1$ convolutions keep the cost down.
 
-**ResNet** [@He2016] fixed a different problem: past some depth, deeper networks got *worse* — not from overfitting, but because gradients faded on the way back. The fix is a **residual** or skip connection:
+**ResNet** [@He2016] fixed a different problem: past some depth, deeper plain networks *trained* worse — not overfitting, but an optimization difficulty. The fix is a **residual** or skip connection:
 
 ![](../Figures/Lecture08/residual_block.svg){fig-align="center" height="150px"}
 
-The $+\,\mathbf{x}$ gives the gradient a direct path backward. It made 100-layer networks trainable, and it is in nearly every deep architecture since — including Lecture 9's.
+Each block learns only a change to $\mathbf{x}$, and the $+\,\mathbf{x}$ gives the gradient a direct path backward. It made 100-layer networks trainable, and it is in nearly every deep architecture since — including Lecture 9's.
 
 ---
 
@@ -161,15 +161,15 @@ These architectures were built for images, on problems that look nothing like we
 
 | | |
 |---|---|
-| **Small stacked filters** | A width-3 filter twice sees six weeks of context with far fewer weights than one width-6 filter. |
-| **Skip connections** | Same fix for the same problem — gradients that fade through depth. |
+| **Small stacked filters** | Two stacked width-3 filters see five weeks, with a nonlinearity between them. VGG's weight saving was a 2D effect: in 1D it is 6 weights against 5. |
+| **Skip connections** | Same fix for the same problem — a deep stack that is hard to train. |
 | **Learned features** | You stop hand-engineering lag windows and let filters find the local shapes that matter. |
 
 **One idea does not transfer, and it is the one we flagged:** pooling for translation invariance. An image classifier should not care where the cat is. A forecaster usually should care where the spike was.
 
 # 1D CNNs for Time Series
 
-The same machinery, along a time axis — and what it costs.
+The same machinery, one dimension, and an honest measurement.
 
 ---
 
@@ -205,7 +205,7 @@ Input shape is `(batch, channels, time)` — note that channels come *before* ti
 
 Everything from Lecture 7 still applies: Adam with weight decay, `zero_grad()` every batch, `shuffle=False`, and a split by time rather than at random.
 
-[`AdaptiveAvgPool1d(1)` averages across the whole time axis. Watch what that does on the next slide.]{.neutral .smaller}
+[`AdaptiveAvgPool1d(1)` is **global average pooling**: one mean per filter over the whole time axis. A **flatten head** skips it and gives every position its own weight. Watch what that does on the next slide.]{.neutral .smaller}
 
 ---
 
@@ -229,6 +229,8 @@ And swapping average pooling for `Flatten`, which keeps *where* each pattern occ
 
 # Key Takeaways
 
+What convolution is for, and what it is not for.
+
 ---
 
 ## CNN Architecture Summary
@@ -241,9 +243,11 @@ And swapping average pooling for `Flatten`, which keeps *where* each pattern occ
 | ResNet | 2015 | Skip connections make real depth trainable |
 | 1D CNN | — | The same machinery along a time axis |
 
+[VGG, Inception and ResNet appeared a year before the papers cited for them.]{.neutral .smaller}
+
 **Reach for a 1D CNN** when local shape matters more than exact position, when you have many parallel series, or as a cheap feature extractor feeding something else.
 
-**Do not reach for one** when the dominant signal is at a long lag, when you have well engineered tabular features already, or when a stakeholder needs to read the model. On the evidence above, that covers most of what we forecast in this course.
+**Do not reach for one** when the dominant signal is at a long lag, when you have well-engineered tabular features already, or when a stakeholder needs to read the model. On the evidence above, that covers most of what we forecast in this course.
 
 ---
 
@@ -252,7 +256,7 @@ And swapping average pooling for `Flatten`, which keeps *where* each pattern occ
 ::: {.keybox}
 1. **Convolution** = local connectivity + weight sharing: learn a pattern once, find it everywhere.
 
-2. **Pooling** buys translation invariance — which images want and forecasts usually don't. Cost here: about 500 RMSE.
+2. **Pooling** buys translation invariance — which images want and forecasts usually do not. Cost here: about 500 RMSE.
 
 3. Three ideas outlived the architectures: **small filters stacked deep**, **skip connections**, **learned features**.
 
