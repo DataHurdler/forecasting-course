@@ -73,7 +73,7 @@ June and July. The gap matters; the location doesn't.
 **[pause]**
 
 The first two conditions have a picture, and it's on the right. *(Point at the figure.)* This
-is TX_1 household goods, the series you forecast in Lecture 1. The gray line is the data. The
+is TX_1 household goods, the series you forecast in Lab 1. The gray line is the data. The
 thick line is a rolling average over a year, and the shaded band is two standard deviations
 either side of it.
 
@@ -81,7 +81,7 @@ Top panel, the weekly units. Watch the band. It climbs — the average goes from
 hundred units a week to about sixty-five hundred. A constant mean would give you a flat band.
 This one is a ramp.
 
-Bottom panel, the same series as week-to-week changes. Now the band is horizontal, centred on
+Bottom panel, the same series as week-to-week changes. Now the band is horizontal, centered on
 zero, and it keeps roughly the same width the whole way across. That's what conditions one and
 two look like: **the series stays inside a horizontal band of fixed width.**
 
@@ -282,8 +282,9 @@ its theta, can have a lag-one autocorrelation above one-half. That's the dashed 
 see a lag-one spike of point eight followed by nothing, it isn't a clean MA(1).
 
 The PACF decays — and notice it alternates sign, flipping above and below the axis. That
-alternating decay is characteristic of an MA process, and it's a pattern you'll start to
-recognize.
+happens because theta here is positive. With a negative theta — and simple exponential
+smoothing, two slides from now, has one — the PACF decays on one side, every bar negative. The
+decay is the MA signature; the sign flips are not.
 
 **[pause]**
 
@@ -297,7 +298,7 @@ ARMA, and that's when you stop squinting at plots and let `auto_arima` search.
 
 # ▶ SLIDE 10 — Difference First, Then Read the ACF
 
-Now real data. This is the TX_1 household series from Lecture 1 — the one whose ADF numbers
+Now real data. This is the TX_1 household series from Lab 1 — the one whose ADF numbers
 you saw a few slides ago.
 
 *(Point at the left panel.)* The ACF of the levels. Point nine four at lag one, and still
@@ -327,8 +328,8 @@ slide: that's the MA(1) signature. A moving average of order one, on the differe
 ARIMA zero-one-one.
 
 And here's why that's satisfying. ARIMA zero-one-one is simple exponential smoothing — you'll
-see that at the start of the next section. In Lecture 1, SES on this very series chose an alpha of point six
-two. That alpha implies a lag-one autocorrelation of minus point three three in the
+see that at the start of the next section. In Lab 1, SES on this very series chose an alpha
+of point six two. That alpha implies a lag-one autocorrelation of minus point three three in the
 differences. The data show minus point two nine. Two different methods, from two different
 lectures, describing the same series the same way.
 
@@ -385,14 +386,16 @@ methodology, and it's why every ARIMA workflow you'll see has the same three sta
 
 **[pause]**
 
-In Python, `auto_arima` from pmdarima automates the identify step. It searches a grid of
-orders and returns whichever minimizes AIC — usually stepwise, so it doesn't try all of them.
+In Python, `auto_arima` from pmdarima automates the identify step. It picks d first, with a
+unit-root test — KPSS by default — and then searches a grid of p and q and returns whichever
+minimizes AIC — usually stepwise, so it doesn't try all of them. AIC can't choose d itself:
+models with different differencing are fit to different data, so their AICs don't compare.
 
 Use it. But understand its failure mode: it optimizes a number, and it has no idea what your
 data means. I've seen it return an ARIMA(5,2,4) on a series that visibly needs one difference
-and an AR(1) — technically the lowest AIC on that sample, and complete nonsense out of
-sample. AIC rewards fit with a complexity penalty, and on a short noisy series the penalty
-isn't strong enough to stop it.
+and an AR(1). Its unit-root step chose the second difference, and AIC then over-fitted p and
+q — the lowest AIC on that sample, and complete nonsense out of sample. AIC rewards fit with a
+complexity penalty, and on a short noisy series the penalty isn't strong enough to stop it.
 
 So: run the search, then look at the ACF and PACF anyway, and ask whether the answer is
 sensible. If `auto_arima` returns a second difference and your ADF test said one was enough,
@@ -521,8 +524,9 @@ drives sales and not the other way round, so that's ARIMAX.
 
 # ▶ SLIDE 18 — The VAR(p) Model
 
-Here's the structure for two series. Two equations, and each one regresses on the lags of
-*both* variables.
+Here's the structure for two series, written out for one lag — $p$ equal to one. Two
+equations, and each one regresses on the lags of *both* variables. More lags just add more of
+the same terms.
 
 Look at where the value is: the **cross terms**. $a_{12}$ is how much $y_2$ yesterday predicts
 $y_1$ today. That coefficient is precisely what a univariate AR throws away — it has no place
@@ -564,9 +568,12 @@ coefficients. It's quadratic in the number of variables.
 
 Five variables, four lags: one hundred coefficients.
 
-Sit with that number. A monthly business series over ten years gives you a hundred and twenty
-observations. You'd be estimating a hundred parameters from a hundred and twenty data points.
-That model will fit your sample beautifully and forecast like a coin flip.
+Sit with that number, one equation at a time. A monthly business series over ten years gives
+you a hundred and twenty observations per variable — a hundred and sixteen once four are spent
+on the lags. Each equation fits twenty slopes plus an intercept: twenty-one coefficients from a
+hundred and sixteen rows, one coefficient for every five or six observations, in every
+equation. Add a sixth variable and it's twenty-five per equation. That model will fit your
+sample beautifully and forecast far worse than it fits.
 
 So keep $k$ at four or fewer, unless you're using a regularized LASSO-VAR — which is the kind
 of thing Lecture 6 gives you the tools for.
@@ -594,8 +601,9 @@ result in applied forecasting.
 
 It tests *predictive content*. It does not establish that $x$ mechanically brings $y$ about.
 
-A rooster reliably predicts sunrise. The rooster Granger-causes the sunrise. The rooster does
-not cause the sunrise.
+Umbrella sales Granger-cause rain. People buy umbrellas when the forecast says rain, so
+yesterday's umbrella sales carry information that rain's own past does not. Umbrellas do not
+cause rain.
 
 So report it as "predictive of." Never "causes." Say it the careful way and you will never
 have to walk a claim back in front of a room of executives.
@@ -720,7 +728,7 @@ Let's pull it together.
 
 ---
 
-# ▶ SLIDE 23 — Key Takeaways
+# ▶ SLIDE 23 — Lecture 2: Key Takeaways
 
 Five things.
 

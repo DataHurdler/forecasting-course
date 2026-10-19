@@ -88,7 +88,7 @@
     negative autocorrelation that you then have to model away. Difference, re-test, and stop
     at $d = 1$ once the result is stationary.
   \end{warningbox}
-  \muted{\footnotesize Lecture 1's TX\_1 HOUSEHOLD: ADF $-1.38$ on the levels (a unit root),
+  \muted{\footnotesize Lab 1's TX\_1 HOUSEHOLD: ADF $-1.38$ on the levels (a unit root),
   $-8.51$ after one difference (stationary). So $d = 1$.}
 \end{frame}
 
@@ -156,14 +156,14 @@
 % Figure: scripts/figures/lecture02_figures.py (acf_levels_vs_diff). TX_1, not CA_1: Lab 2 has
 % students read CA_1 HOUSEHOLD's ACF themselves.
 \begin{frame}{Difference First, Then Read the ACF}
-  Lecture 1's TX\_1 HOUSEHOLD series, before and after one difference:
+  Lab 1's TX\_1 HOUSEHOLD series, before and after one difference:
   \begin{center}
     \includegraphics[height=3.9cm]{../Figures/Lecture02_ARIMA_VAR/acf_levels_vs_diff.pdf}
   \end{center}
   \vspace{-0.3cm}
   The levels' ACF crawls down whatever the process is: it only says you have not differenced
   yet. The change has one negative spike at lag 1, the MA(1) signature. So ARIMA(0,1,1),
-  which is simple exponential smoothing: Lecture 1's $\alpha = 0.62$ implies $\rho_1 = -0.33$;
+  which is simple exponential smoothing: Lab 1's $\alpha = 0.62$ implies $\rho_1 = -0.33$;
   the data show $-0.29$.
 \end{frame}
 
@@ -280,7 +280,7 @@
 
 % --- Slide: VAR(1) definition -------------------------------------------------
 \begin{frame}{The VAR($p$) Model}
-  For two stationary series, each equation regresses on the lags of \emph{both}:
+  For two stationary series and $p = 1$, each equation regresses on the lags of \emph{both}:
   \[
     \begin{cases}
       y_{1t} = c_1 + a_{11}\,y_{1,t-1} + a_{12}\,y_{2,t-1} + \varepsilon_{1t}\\[2pt]
@@ -288,11 +288,11 @@
     \end{cases}
   \]
   The cross terms carry the value: $a_{12}$ is how much $y_{2,t-1}$ predicts $y_{1t}$,
-  exactly what a univariate AR throws away. If $a_{12} = a_{21} = 0$, the system is two
+  what a univariate AR throws away. If $a_{12} = a_{21} = 0$, it is two
   separate ARs.
   \begin{warningbox}
     \textbf{Parameter explosion.} $k$ variables and $p$ lags make $k^2 p$ coefficients: at
-    $k=5$, $p=4$, \textbf{100}, often more than a monthly series has observations. Keep
+    $k=5$, $p=4$, \textbf{100}: 21 per equation, from about 116 months in ten years. Keep
     $k \leq 4$, or use a LASSO-VAR.
   \end{warningbox}
   \muted{\footnotesize \textbf{Python:}
@@ -309,8 +309,8 @@
   $H_0$: all $x$-lag coefficients are zero.
 
   \vspace{0.2cm}
-  \textbf{Not structural causality.} It tests predictive content: a rooster reliably predicts
-  sunrise. Say ``predictive of,'' never ``causes.''
+  \textbf{Not structural causality.} It tests predictive content: umbrella sales Granger-cause
+  rain, because shoppers read the forecast. Say ``predictive of,'' never ``causes.''
 \end{frame}
 
 % --- Slide: Granger on the lab's macro data -----------------------------------
@@ -354,10 +354,10 @@
 % =============================================================================
 
 \sectionslide{Key Takeaways and Roadmap}{%
-  Stationarity, ARIMA, VAR, and ARIMAX form the classical time series toolkit.}
+  Stationarity, ARIMA, VAR, and ARIMAX form the classical time-series toolkit.}
 
 % --- Slide: Key Takeaways -----------------------------------------------
-\begin{frame}{Key Takeaways}
+\begin{frame}{Lecture 2: Key Takeaways}
   \begin{keybox}
     {\small
     \begin{enumerate}
