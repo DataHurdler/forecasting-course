@@ -153,7 +153,7 @@ effect compounds. Use office hours early rather than after you are stuck.
 | | |
 |---|---|
 | **Slides** | One deck per lecture, published as interactive HTML rather than PDF — HTML carries real headings, alt text, table headers and readable maths |
-| **Labs** | One executable lab per lecture, designed to be run alongside the deck. Each carries a **suggested time** — that is the classroom pace, not a target. Working through one on your own reasonably takes longer, and taking longer is not a sign you are behind |
+| **Labs** | One executable lab per lecture except the synthesis, designed to be run alongside the deck. Each carries a **suggested time** — that is the classroom pace, not a target. Working through one on your own reasonably takes longer, and taking longer is not a sign you are behind |
 | **Assignments** | Eleven submissions across seven assignments, each with its own prompt budget |
 | **[The book](https://www.luozijun.com/forecasting-course/book/index.html)** | Every lecture as continuous prose — the slides plus what was said about them |
 | **[The workbook](https://www.luozijun.com/forecasting-course/workbook/index.html)** | Every lab and assignment in one searchable volume, code shown rather than run |
