@@ -47,7 +47,7 @@ The prepared data is **already committed** to the course environment repository,
 means you are running from the wrong folder rather than that the file is missing.
 
 ```bash
-ls data/processed/          # from the top of your clone — you should see five .csv files
+ls data/processed/          # from the top of your clone — you should see m5_weekly.csv and the other course .csv files
 ```
 
 If they are there, open the repository *root* in your editor, not the `assignments/` folder. If
