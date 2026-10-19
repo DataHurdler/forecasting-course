@@ -43,8 +43,8 @@ distributions over every coefficient. Instead of asking "Is beta significant at
 p < 0.05?", you ask "What is the probability that this effect is positive?" and
 "Is the effect large enough to matter for business decisions?"
 
-This final homework fits a Bayesian regression model for store sales as a function
-of promotions, competition, and store characteristics. It also introduces Directed
+This final homework fits a Bayesian regression of weekly log units on log price, SNAP
+and event weeks, a trend and series effects. It also introduces Directed
 Acyclic Graphs (DAGs) as a tool for deciding which variables to include and how to
 interpret the coefficients causally.
 
@@ -174,8 +174,7 @@ Repository rules — these apply to every prompt in this thread:
   files, I will paste them in myself.
 - After finishing the work for each prompt, make exactly one git commit:
   `hw07 prompt <prompt_id>: <short summary>`
-- If a prompt would take me past my budget of 16, do not do the work. Reply exactly
-  PROMPT_LIMIT_REACHED, and still log that prompt.
+- If this prompt takes me past my budget of 16, say so, log it as over budget, and continue.
 - Never modify `AGENTS.md`, anything in `assignments/`, or anything in `policy/`.
 
 Confirm by responding with: HW07_CONTEXT_ACK
@@ -185,6 +184,8 @@ Confirm by responding with: HW07_CONTEXT_ACK
 ---
 
 ## Questions
+
+The suggested prompts below add up to 13 of your budget of 16; the remaining 3 are spare.
 
 ::: {.callout-note}
 ## How the code cells work
@@ -263,7 +264,8 @@ Fit the **controlled** specification from Q2(b) as a Bayesian model — price, S
 trend, and a per-series intercept. Use weakly informative priors:
 
 - `beta_j ~ Normal(0, 1)` for each predictor (weakly informative on these scales)
-- `alpha ~ Normal(0, 1)` for the intercept
+- `alpha ~ Normal(df.ly.mean(), 1)` for the intercept (log units average about 8.6, so a prior
+  centered at 0 would sit 7–10 standard deviations from every series' mean)
 - `sigma ~ HalfNormal(1)` for observation noise
 
 Give the per-series intercepts a hierarchical prior, written **non-centered**, as in Homework 6.
@@ -363,8 +365,9 @@ Push the scenario through your posterior rather than through a point estimate.
 
 **(a)** Report the mean percentage change in units and its 94% interval.
 
-**(b)** Revenue rises if the percentage volume loss is smaller than the 5% price gain. Compute
-the **probability that revenue increases**, directly from the posterior samples.
+**(b)** Revenue rises if 1.05 × (1 + volume change) > 1, that is, if the elasticity $b > -1$ (a
+volume loss under 1 − 1/1.05 ≈ 4.76%, not 5%). Compute the **probability that revenue
+increases**, directly from the posterior samples.
 
 **(c)** Repeat using the *naive* elasticity from Q2(a). Report how the recommendation changes.
 
@@ -402,7 +405,7 @@ Answer the following:
 - [ ] Your name replaces the `author:` placeholder at the top of the document
 - [ ] Written responses completed in your own words
 - [ ] `INITIAL_PROMPT.md` saved in `submissions/hw07_<your_name>/`
-- [ ] `PROMPT_LOG.md` complete with **16 or fewer** entries
+- [ ] `PROMPT_LOG.md` complete: every prompt logged; over-budget prompts noted
 - [ ] Every file above uploaded to the **Canvas** assignment
 
 *Not graded, but worth doing:* commit locally once per prompt, `hw07 prompt <id>: <summary>`.
