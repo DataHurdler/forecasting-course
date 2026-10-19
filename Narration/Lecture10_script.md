@@ -153,7 +153,8 @@ One equation, and it is a bookkeeping rule rather than a philosophy.
 
 *(Point at the definition box, then read it as English.)*
 
-Here's the equation. Posterior equals likelihood times prior, over the evidence.
+Here's the equation. Theta is the unknown, whatever you're uncertain about, and D is the data.
+Posterior equals likelihood times prior, over the evidence.
 
 Read it as a sentence, and it stops being intimidating: **what I believe after seeing the data**
 equals **how well each parameter value explains the data**, times **what I believed beforehand**,
@@ -296,6 +297,8 @@ part of the model.
 
 The square had a yes-or-no theta. Most parameters are numbers instead, so take one: a conversion
 rate — theta — with a Beta five, forty-five prior, and then thirty successes in two hundred trials.
+Read a Beta prior as a count you already have: Beta five, forty-five is as if you had seen five
+successes in fifty trials before the data arrived.
 
 *(Point at the blue curve.)*
 
@@ -613,7 +616,7 @@ independent ones. ESS tells you how many you effectively have.
 
 **Divergences**, and you want exactly zero. A divergence means the sampler hit terrain it could not
 navigate — typically a sharp funnel. Even a handful means parts of the posterior were explored
-wrongly. We'll meet this for real in Lecture 11, twice.
+poorly. We'll meet this for real in Lecture 11, twice.
 
 **[pause]**
 
@@ -625,6 +628,10 @@ One practical note that will save you confusion. Call `az.summary` with **both**
 ArviZ now defaults to an eighty-nine percent *equal-tailed* interval, not the HDI. If you don't
 pass those arguments you will get a different interval than the one you think you're reading, and
 than the one on these slides.
+
+The HDI, the highest-density interval, is the narrowest interval that holds ninety-four percent of
+the draws. And why ninety-four, when slide five said ninety-five? Nothing special happens at
+either. The level is a choice, so say which one you used.
 
 On our simple model: R-hat one-point-oh-oh, ESS three thousand two hundred ninety, zero
 divergences. **Report all three, every time.** A posterior mean without its diagnostics is not a

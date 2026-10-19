@@ -186,14 +186,20 @@ print(pd.DataFrame(rows).to_string(index=False))
 ```
 
 ::: {.callout-important}
-## With enough data the prior stops mattering
+## With enough data the prior is outweighed, not erased
 
-Three priors, including one centered on 0.91 — badly, deliberately wrong. All three posteriors land
-close together, because 277 observations dominate.
+Three priors, including one centered on 0.91 — badly, deliberately wrong. The posterior means land
+at 0.265, 0.259 and 0.309: 277 observations outweigh a prior worth 22 observations, so even the
+wrong one is dragged most of the way to the data.
 
-**That is the answer to the arbitrariness objection**, and it comes with a condition attached:
-it holds *when you have enough data*. With 8 observations rather than 277, the third prior would
-still be visible in the answer.
+Most of the way is not all of the way. The wrong prior moves P(θ > 0.30) from 0.080 (Step 4) to
+about 0.61. Count it from `i2`, which still holds that fit. A shift of 0.04 in the mean flips the
+answer to a question whose threshold sits close by.
+
+**That is the answer to the arbitrariness objection**, and it comes with conditions attached:
+it holds *when you have enough data*, and even then you check it on the question you will be
+asked, not only on the mean. With 8 observations rather than 277, the third prior would still be
+visible in the answer.
 
 Which is exactly the situation Lecture 11 Part 2 is about.
 :::
@@ -215,8 +221,9 @@ how far the posterior moves.
 
 # Before you leave
 
-> **Discuss (the prior):** Your Step 5 table says a deliberately wrong prior barely changed the
-> answer. Under what circumstances would you *not* be reassured by that, and what would you check?
+> **Discuss (the prior):** Your Step 5 table says a deliberately wrong prior moved the posterior
+> mean by only about 0.04, yet it moves P(θ > 0.30) from 0.08 to about 0.61. Under what
+> circumstances would you *not* be reassured by a small shift in the mean, and what would you check?
 >
 > **Discuss (the check):** You verified $\hat{R}$, ESS and divergences before reading any result.
 > Name the equivalent check you have been doing all semester for a non-Bayesian model, and say

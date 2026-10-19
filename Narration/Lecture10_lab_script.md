@@ -259,8 +259,8 @@ a range of **0.05**. The data compressed the disagreement by a factor of thirtee
 
 **[pause]**
 
-Now let me be more careful than the word "close" allows, because this is the step where it is
-tempting to oversell.
+Now let me be careful, because this is the step where it is tempting to oversell, and the
+callout's title says it precisely: outweighed, not erased.
 
 The badly-wrong prior did **not** land in the same place as the others. It landed at 0.309, and
 the weak prior's 94% interval runs up to 0.313. So the wrong prior's answer sits *just inside* the
@@ -272,10 +272,19 @@ So the correct claim is not "the prior did not matter." It is: **with 277 observ
 absurd prior gets dragged to the edge of the right answer rather than away from it.** That is a
 strong result and it does not need embellishment.
 
+**[pause]**
+
+And the edge is not the middle. Go back to the manager's question from Step 4. Under the weak
+prior, the chance that more than thirty percent of weeks are high-SNAP weeks was eight percent.
+Under the wrong prior it is about sixty-one percent. Same data. A shift of four hundredths in the
+mean, and the answer to the question you would actually be asked goes from "unlikely" to "more
+likely than not," because the threshold sits right where the mean moved. So check the prior's
+influence on the question you will be asked, not only on the mean.
+
 *(Point at the condition in the callout.)*
 
-And it comes with a condition, which is the sentence to land hardest on. It holds **when you have
-enough data.** With eight observations instead of 277, that third prior would still be sitting in
+And it comes with conditions. The first is the sentence to land hardest on: it holds **when you
+have enough data.** With eight observations instead of 277, that third prior would still be sitting in
 your answer, plainly visible.
 
 **[STOP — learner works]**
@@ -299,9 +308,10 @@ hand, the hierarchy will do automatically.
 
 Three questions for the board.
 
-**The prior.** Your Step 5 table says a deliberately wrong prior barely changed the answer. Under
-what circumstances would you *not* be reassured by that? Name two, and be specific — one about
-sample size, one about what the prior is a prior *over*.
+**The prior.** Your Step 5 table says a deliberately wrong prior moved the posterior mean by only
+about 0.04, yet it moves P(θ > 0.30) from 0.08 to about 0.61. Under what circumstances would you
+*not* be reassured by a small shift in the mean? Name two, and be specific — one about sample
+size, one about what the prior is a prior *over*.
 
 **[pause]** — *the second one is the interesting half: this was a prior on a single bounded rate.
 A prior on a variance, or on a hierarchical scale parameter, can dominate a posterior with far
@@ -344,6 +354,7 @@ verifiable in closed form** — the exact column below is `Beta(2+72, 2+205)` et
 | Beta(2,2) → posterior mean | 0.265 | 0.2633 · HDI [0.2144, 0.3129] |
 | Beta(5,15) → posterior mean | 0.259 | 0.2593 · HDI [0.2119, 0.3072] |
 | Beta(20,2) → posterior mean | 0.309 | 0.3077 · HDI [0.2579, 0.3580] |
+| P(θ > 0.30), Beta(2,2) vs Beta(20,2) | 0.080 vs not printed | **0.084 vs 0.608** |
 | Prior-mean spread → posterior spread | 0.66 → **0.05** (13× compression) | — |
 
 **Three things to know before recording.**
@@ -352,12 +363,14 @@ verifiable in closed form** — the exact column below is `Beta(2+72, 2+205)` et
 closed form exists, agreement is within Monte Carlo error on all four quantities, and stating it
 buys trust for Lectures 11 and 12, where no such check is available.
 
-*Do not oversell Step 5.* "All three land close together" is the lab's phrasing and it is a little
-generous: 0.309 against 0.259 is a 19% relative difference, and the wrong prior's posterior mean
-sits at the **upper edge** (0.309) of the weak prior's interval (top 0.313), not in the middle of
-it. The precise claim — an absurd prior gets dragged to the *edge* of the right answer rather than
-away from it — is stronger *because* it is exact, and it sets up the condition that Lecture 11
-Part 2 depends on.
+*Do not oversell Step 5.* **Corrected 2026-10-19:** the callout used to be titled "With enough
+data the prior stops mattering" and said "All three posteriors land close together." That was
+more than a little generous: 0.309 against 0.259 is a 19% relative difference, the wrong prior's
+posterior mean sits at the **upper edge** (0.309) of the weak prior's interval (top 0.313), not in
+the middle of it, and it moves P(θ > 0.30) from 0.084 to 0.608 (exact). The callout now says
+"outweighed, not erased" and gives that probability. The precise claim — an absurd prior gets
+dragged to the *edge* of the right answer rather than away from it — is stronger *because* it is
+exact, and it sets up the condition that Lecture 11 Part 2 depends on.
 
 *The `az.summary` rounding will be noticed.* [0.22, 0.31] in Step 2 versus [0.2132, 0.3098] in
 Step 4 is `round_to=2`, not a disagreement. Name it in passing at Step 2 so it never becomes a

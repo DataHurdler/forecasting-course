@@ -91,7 +91,7 @@
 
 % --- Slide: Bayes' theorem ---------------------------------------------------
 \begin{frame}{Bayes' Theorem \parencite{Gelman2013}}
-  \begin{definitionbox}{The update rule}
+  \begin{definitionbox}{The update rule, for an unknown $\theta$ and data $\mathcal{D}$}
     \[
       \underbrace{p(\theta \mid \mathcal{D})}_{\text{posterior}}
       = \frac{\overbrace{p(\mathcal{D} \mid \theta)}^{\text{likelihood}}
@@ -158,7 +158,7 @@
 
 % --- Slide: the update, graphically ------------------------------------------
 \begin{frame}{The Update, in Pictures}
-  A conversion rate $\theta$: a $\text{Beta}(5, 45)$ prior, then 30 successes in 200 trials.
+  A conversion rate $\theta$: a Beta(5, 45) prior, like 5 successes in 50 trials, then 30 in 200.
   \begin{center}
     \includegraphics[height=4.8cm]{../Figures/Lecture10_BayesianFoundations/bayes_update.pdf}
   \end{center}
@@ -210,8 +210,8 @@
   \end{center}
 
   \textbf{The honest framing:} a prior is an assumption stated in public, where it can be argued
-  with. Frequentist analyses contain assumptions too --- functional form, variable selection,
-  sampling scheme --- they are just not written as distributions.
+  with. Frequentist analyses contain assumptions too: functional form, variable selection,
+  sampling scheme. They are just not written as distributions.
 \end{frame}
 
 % =============================================================================
@@ -277,8 +277,7 @@
 
 % --- Slide: diagnostics ------------------------------------------------------
 \begin{frame}{Did the Sampler Actually Work? \parencite{MartinKumarLao2021}}
-  MCMC can fail quietly. It always returns samples; whether they came from the posterior is a
-  separate question.
+  MCMC can fail quietly: it always returns samples, from the posterior or not.
   \begin{center}
     {\small
     \begin{tabular}{p{2.5cm}p{3.0cm}p{6.6cm}}
@@ -289,8 +288,8 @@
       matters. \\[2pt]
       ESS & $> 400$ & Effective sample size --- 8{,}000 correlated draws may carry as much
       information as 200 independent ones. \\[2pt]
-      Divergences & $0$ & The sampler hit terrain it could not navigate. Even a few means the
-      posterior is explored wrongly. \\
+      Divergences & $0$ & The sampler hit terrain it could not navigate. Even a few divergences
+      mean the posterior is explored poorly. \\
       \bottomrule
     \end{tabular}
     }
@@ -298,6 +297,7 @@
 
   \texttt{az.summary(idata, ci\_kind="hdi", ci\_prob=0.94)} prints the interval, $\hat{R}$ and ESS.
   \textbf{Pass both arguments} --- ArviZ now defaults to an 89\% equal-tailed interval, not the HDI.
+  HDI: the narrowest interval holding 94\% of the draws. 94 or 95 is a choice; say which.
 
   On the model above: $\hat{R} = 1.00$, ESS 3{,}290, zero divergences. \textbf{Report all three.}
 \end{frame}
@@ -353,7 +353,7 @@
             believe after the data.
       \item \textbf{Bayes' theorem}: posterior $\propto$ likelihood $\times$ prior, landing
             between the two, nearer the weightier.
-      \item \textbf{Priors:} match the support first; weakly informative by default.
+      \item \textbf{Priors}: match the support first; weakly informative by default.
       \item \textbf{MCMC} (NUTS in PyMC) draws samples; every summary is counted from them.
       \item \textbf{Check before you trust}: $\hat{R}$, ESS and divergences, and a prior
             predictive check, every time.

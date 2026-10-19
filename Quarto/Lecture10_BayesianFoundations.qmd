@@ -1,5 +1,5 @@
 ---
-title: "Bayesian Statistics I --- Foundations"
+title: "Bayesian Statistics I: Foundations"
 subtitle: "ECON 8310: Business Forecasting --- Lecture 10"
 author: "Department of Economics"
 institute: "University of Nebraska at Omaha"
@@ -75,16 +75,16 @@ One equation, and it is a bookkeeping rule rather than a philosophy.
 
 ---
 
-## Bayes' Theorem
+## Bayes' Theorem [@Gelman2013]
 
 ::: {.definitionbox}
 ::: {.definitionbox-title}
-The update rule
+The update rule, for an unknown $\theta$ and data $\mathcal{D}$
 :::
 $$\underbrace{p(\theta \mid \mathcal{D})}_{\text{posterior}} = \frac{\overbrace{p(\mathcal{D} \mid \theta)}^{\text{likelihood}} \cdot \overbrace{p(\theta)}^{\text{prior}}}{\underbrace{p(\mathcal{D})}_{\text{evidence}}}$$
 :::
 
-Read it as a sentence [@Gelman2013]. **What I believe after seeing the data** equals **how well each value explains the data**, times **what I believed beforehand**, rescaled to sum to one.
+Read it as a sentence. **What I believe after seeing the data** equals **how well each value explains the data**, times **what I believed beforehand**, rescaled to sum to one.
 
 The denominator is only that rescaling — it does not change the *shape*. So the working form is:
 
@@ -130,7 +130,7 @@ $$
 
 ## The Update, in Pictures
 
-A conversion rate $\theta$: a $\text{Beta}(5, 45)$ prior, then 30 successes in 200 trials.
+A conversion rate $\theta$: a Beta(5, 45) prior, like 5 successes in 50 trials, then 30 in 200.
 
 ![](../Figures/Lecture10_BayesianFoundations/bayes_update.svg){fig-align="center" height="370px"}
 
@@ -162,7 +162,7 @@ The standard objection to Bayesian work is that the prior is arbitrary. The stan
 | **Informative** | Encodes real prior evidence — last year's conversion rate, a published elasticity. Defensible when you can name the source. |
 | **Flat / "uninformative"** | Sounds neutral, often is not, and can be improper. Avoid it as a reflex choice. |
 
-**The honest framing:** a prior is an assumption stated in public, where it can be argued with. Frequentist analyses contain assumptions too — functional form, variable selection, sampling scheme — they are just not written as distributions.
+**The honest framing:** a prior is an assumption stated in public, where it can be argued with. Frequentist analyses contain assumptions too: functional form, variable selection, sampling scheme. They are just not written as distributions.
 
 # Posterior Inference with PyMC
 
@@ -222,25 +222,25 @@ A PyMC model describes **how the data could have been generated**: what I believ
 
 ---
 
-## Did the Sampler Actually Work?
+## Did the Sampler Actually Work? [@MartinKumarLao2021]
 
-MCMC can fail quietly. It always returns samples; whether they came from the posterior is a separate question [@MartinKumarLao2021].
+MCMC can fail quietly: it always returns samples, from the posterior or not.
 
 | Check | Want | What it means |
 |---|---|---|
 | $\hat{R}$ | $< 1.01$ | Did the chains land in the same place? If not, nothing else matters. |
 | ESS | $> 400$ | Effective sample size — 8,000 correlated draws may carry as much information as 200 independent ones. |
-| Divergences | $0$ | The sampler hit terrain it could not navigate. Even a few means the posterior is explored wrongly. |
+| Divergences | $0$ | The sampler hit terrain it could not navigate. Even a few divergences mean the posterior is explored poorly. |
 
-`az.summary(idata, ci_kind="hdi", ci_prob=0.94)` prints the interval, $\hat{R}$ and ESS. **Pass both arguments** — ArviZ now defaults to an 89% equal-tailed interval, not the HDI.
+`az.summary(idata, ci_kind="hdi", ci_prob=0.94)` prints the interval, $\hat{R}$ and ESS. **Pass both arguments** — ArviZ now defaults to an 89% equal-tailed interval, not the HDI. HDI: the narrowest interval holding 94% of the draws. 94 or 95 is a choice; say which.
 
 On the model above: $\hat{R} = 1.00$, ESS 3,290, zero divergences. **Report all three.**
 
 ---
 
-## Prior Predictive Checks
+## Prior Predictive Checks [@McElreath2020]
 
-Before touching the data, simulate from the prior alone [@McElreath2020].
+Before touching the data, simulate from the prior alone.
 
 ::: {.examplebox}
 ::: {.examplebox-title}
@@ -283,7 +283,7 @@ Bayesian inference: beliefs in, beliefs out. Data updates your prior into a post
 
 2. **Bayes' theorem**: posterior $\propto$ likelihood $\times$ prior, landing between the two, nearer the weightier.
 
-3. **Priors:** match the support first; weakly informative by default.
+3. **Priors**: match the support first; weakly informative by default.
 
 4. **MCMC** (NUTS in PyMC) draws samples; every summary is counted from them.
 
