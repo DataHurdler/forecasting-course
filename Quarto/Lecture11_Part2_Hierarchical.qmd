@@ -222,7 +222,7 @@ What hierarchy buys, and what it costs.
 
 ---
 
-## Lecture 11 Part 2: Key Takeaways
+## Lecture 11, Part 2: Key Takeaways
 
 ::: {.keybox}
 1. **Ask what may be pooled first:** groups must be **exchangeable**. FOODS and HOBBIES are not.

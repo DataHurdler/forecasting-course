@@ -601,7 +601,7 @@ What hierarchy buys, and what it costs.
 
 ---
 
-# ▶ SLIDE 19 — Lecture 11 Part 2: Key Takeaways
+# ▶ SLIDE 19 — Lecture 11, Part 2: Key Takeaways
 
 One, and it's first for a reason. **Ask what may be pooled before you pool it.** Groups must be
 exchangeable. FOODS and HOBBIES are not, and no amount of good sampling fixes a hierarchy built
