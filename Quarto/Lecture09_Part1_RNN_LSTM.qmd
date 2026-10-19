@@ -94,13 +94,13 @@ Exploding is fixed by `clip_grad_norm_`; vanishing is not — the next section.
 
 ---
 
-## Why a Vanilla RNN Forgets
+## Why a Vanilla RNN Forgets [@Bengio1994]
 
-Suppose each backward step multiplies the gradient by $0.7$ — an unremarkable value for a $\tanh$ network — and compare our own RNN, trained on 52-week windows, measured [@Bengio1994]:
+Suppose each backward step multiplies the gradient by $0.7$ — an unremarkable value for a $\tanh$ network — and compare our own RNN, trained on 52-week windows, measured:
 
 ![](../Figures/Lecture09_Part1/gradient_decay.svg){fig-align="center" height="330px"}
 
-**The same factor every step is a straight line on a log scale.** Ours keeps about $0.79$ a step: **0.4%** of the gradient reaches 26 weeks back, **0.001%** the same week last year. **Bengio and colleagues** proved this is inherent to the architecture.
+**The same factor every step is a straight line on a log scale.** Past the first few steps, ours keeps about $0.79$ a step; measured, **0.4%** of the gradient reaches 26 weeks back, **0.001%** the same week last year. **Bengio and colleagues** proved this is inherent to the architecture.
 
 # LSTM: Long Short-Term Memory
 
@@ -124,7 +124,7 @@ The memory update itself is the line that matters:
 $$\mathbf{c}_t = \mathbf{f}_t \odot \mathbf{c}_{t-1} \;+\; \mathbf{i}_t \odot \tilde{\mathbf{c}}_t,
 \qquad \mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{c}_t)$$
 
-Here $\sigma$ is the sigmoid, so each gate outputs between 0 and 1 — a soft switch the network learns. $[\mathbf{h}_{t-1}, \mathbf{x}_t]$ stacks the two vectors.
+Here $\sigma$ is the sigmoid, so each gate outputs between 0 and 1 — a soft switch the network learns. $[\mathbf{h}_{t-1}, \mathbf{x}_t]$ stacks the two vectors; $\odot$ multiplies element by element.
 
 ---
 
@@ -276,7 +276,7 @@ An LSTM holds about **four times** an RNN's parameters at the same hidden size: 
 
 ---
 
-## Lecture 9 Part 1: Key Takeaways
+## Lecture 9, Part 1: Key Takeaways
 
 ::: {.keybox}
 1. A **recurrent network** reads in order, carrying a hidden state.

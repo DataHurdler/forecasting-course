@@ -94,8 +94,8 @@ And as always: neither library complains. Feed an RNN the Conv1d layout and it w
 channels as a four-step sequence, treat the 26 weeks as features, train to convergence, and hand
 you a number.
 
-That is now the fourth instance of the same failure mode in this course — `shuffle=True`, missing
-`zero_grad()`, transposed axes for the convolution, and now transposed back for the recurrence.
+That is now the fourth instance of the same failure mode in this course — shuffling before the
+time split, missing `zero_grad()`, transposed axes for the convolution, and now transposed back for the recurrence.
 None of them raise. I keep pointing at it because it is the single biggest practical difference
 between this material and the regression you did in Lecture 6, where a shape error is an error.
 
@@ -141,8 +141,9 @@ parameter ratio: 4.0x the RNN
 
 Account for the ratio before you look at the RMSE, because it is the whole economics of the
 comparison. An LSTM has a forget gate, an input gate, an output gate, and a candidate — four sets
-of weights where the plain RNN has one. Same hidden size, four times the parameters. **Exactly**
-four, as the printout shows.
+of weights where the plain RNN has one. Same hidden size, four times the parameters — almost
+exactly: the recurrent layer is exactly four times as big, and the shared linear head at the end
+pulls the total ratio to 3.96, which the printout rounds to 4.0.
 
 And on this seed it scores 1,004 against the RNN's 860.
 
@@ -377,7 +378,7 @@ four models to 100 epochs and takes 2–3 minutes.**
 |---|---|
 | Tensor shape at W=26 | (5940, **26**, 4) — batch, time, channels (*not* the Conv1d layout) |
 | Vanilla RNN | **4,545** parameters · seed 1 → 860 |
-| LSTM | **17,985** parameters · seed 1 → 1,004 · ratio exactly **4.0×** |
+| LSTM | **17,985** parameters · seed 1 → 1,004 · ratio **4.0×** as printed (3.96; the recurrent layer alone is exactly 4×) |
 | Window table — RNN | 13w: **878** (sd 33) · 26w: **842** (sd 19) · 52w: **805** (sd 5) |
 | Window table — LSTM | 13w: 990 (sd 21) · 26w: 987 (sd 17) · 52w: 998 (sd 3) |
 | Gaps vs spreads | 112 / 145 / 193 against sds of 3–33 — **not** a seed artifact |

@@ -1,4 +1,4 @@
-# Lecture 9 Part 1 — Recording Script
+# Lecture 9, Part 1 — Recording Script
 
 **ECON 8310: Business Forecasting · RNNs and LSTMs**
 
@@ -22,7 +22,7 @@ Lecture 9, Part 1: Recurrent Neural Networks and LSTMs.
 
 For two weeks we've been building models that take a fixed block of numbers and produce a
 forecast. Last week's CNN was the closest we've come to a model that understands time, and even
-it only sees about seven weeks back.
+its filters only see about seven weeks back.
 
 Today we get the architecture that was designed for sequences from the beginning — one that reads
 data in order, one step at a time, and carries something forward as it goes.
@@ -242,11 +242,12 @@ in one picture: repeated multiplication.
 *(Point at the red line.)*
 
 And the red line is not an example. That's our own RNN — the lab's model, trained on fifty-two-week
-windows — and we measured how much gradient actually reaches each step back. It keeps more than
-the example, about zero-point-seven-nine per step; before training it was zero-point-five-five, so
-training did stretch its memory. But it is still a straight line down. About four tenths of a
-percent survives to twenty-six weeks back. By the same week last year, one thousandth of a
-percent.
+windows — and we measured how much gradient actually reaches each step back. Past the first few
+steps it keeps more than the example, about zero-point-seven-nine per step; before training it was
+zero-point-five-five, so training did stretch its memory. But it is still a straight line down.
+Measured directly — not by multiplying out the slope, which the first few steps would throw off —
+about four tenths of a percent survives to twenty-six weeks back. By the same week last year, one
+thousandth of a percent.
 
 **[pause]**
 
@@ -287,7 +288,8 @@ offer this week, a tanh of the same two inputs. The input gate decides how much 
 Here sigma means the sigmoid specifically — in Lecture 7 it stood for any activation. So each gate
 outputs a number between zero and one. Think of it as a soft switch — not open or closed, but a
 dial, and the network learns where to set it. The square brackets just mean last week's hidden
-state and this week's input, stacked into one vector.
+state and this week's input, stacked into one vector. The circled dot multiplies two vectors element
+by element. And f-t here is the forget gate — not last week's filter.
 
 **[pause]**
 
@@ -380,8 +382,8 @@ Repeated multiplication shrinks. Repeated addition does not.
 
 And you have seen this fix before — last week.
 
-It is the ResNet skip connection. y equals F of x, **plus x**. Same problem: gradients dying as
-they travel back through depth. Same solution: give the gradient an additive path home.
+It is the ResNet skip connection. y equals F of x, **plus x**. A related problem: a signal that
+has to pass through many layers. Same solution: give the gradient an additive path home.
 
 *(Beat.)*
 
@@ -687,7 +689,7 @@ other position in a single operation.
 
 ---
 
-# ▶ SLIDE 23 — Lecture 9 Part 1: Key Takeaways
+# ▶ SLIDE 23 — Lecture 9, Part 1: Key Takeaways
 
 One. A recurrent network reads a sequence in order and carries a hidden state. Weights are shared
 across time, so window length costs no parameters.
@@ -705,7 +707,7 @@ Five. On our panel, both recurrent models beat every CNN variant, on four raw ch
 still lose to a forty-six-coefficient LASSO.
 
 And six. The LSTM lost to the vanilla RNN at a thirty-epoch budget, at all three window lengths —
-and tied once both reached convergence. Gating solves long-range
+and tied by a hundred epochs, with the LSTM still improving. Gating solves long-range
 forgetting; a twenty-six-week window doesn't suffer from it. So the gates bought four times the
 parameters and nothing else. **Fit the architecture to the problem.**
 

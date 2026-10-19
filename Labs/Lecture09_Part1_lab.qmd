@@ -356,8 +356,8 @@ be stored until $t+k$. That is the canonical use for a forget gate and an input 
 panel does not contain one instance of it.
 
 **So the gates solve something real, on data that does not have it.** They charge four times the
-parameters and — as Step 4 showed — roughly three times the epochs for the service, and at
-convergence they return a tie.
+parameters and — as Step 4 showed — roughly three times the epochs for the service, and by
+100 epochs they return a tie.
 :::
 
 **The transferable part** is the three questions, not the answer. Before reaching for a gated or

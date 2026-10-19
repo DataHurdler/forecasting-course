@@ -113,9 +113,10 @@
     \includegraphics[height=4.3cm]{../Figures/Lecture09_Part1/gradient_decay.pdf}
   \end{center}
   \vspace{-0.25cm}
-  \textbf{The same factor every step is a straight line on a log scale.} Ours keeps about $0.79$
-  a step: \textbf{0.4\%} of the gradient reaches 26 weeks back, \textbf{0.001\%} the same week
-  last year. \textbf{Bengio and colleagues} proved this is inherent to the architecture.
+  \textbf{The same factor every step is a straight line on a log scale.} Past the first few steps,
+  ours keeps about $0.79$ a step; measured, \textbf{0.4\%} of the gradient reaches 26 weeks back,
+  \textbf{0.001\%} the same week last year. \textbf{Bengio and colleagues} proved this is inherent
+  to the architecture.
 \end{frame}
 
 % =============================================================================
@@ -159,7 +160,8 @@
   \vspace{-0.3cm}
 
   Here $\sigma$ is the sigmoid, so each gate outputs between 0 and 1 --- a soft switch the network
-  learns. $[\mathbf{h}_{t-1}, \mathbf{x}_t]$ stacks the two vectors.
+  learns. $[\mathbf{h}_{t-1}, \mathbf{x}_t]$ stacks the two vectors; $\odot$ multiplies element by
+  element.
 \end{frame}
 
 % --- Slide: gates in business terms -------------------------------------------
@@ -380,7 +382,7 @@
 \end{frame}
 
 % --- Slide: takeaways --------------------------------------------------------
-\begin{frame}{Lecture 9 Part 1: Key Takeaways}
+\begin{frame}{Lecture 9, Part 1: Key Takeaways}
   \begin{keybox}
     {\small
     \begin{enumerate}\itemsep3pt
