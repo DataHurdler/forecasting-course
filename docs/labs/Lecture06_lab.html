@@ -2360,7 +2360,7 @@ window.Quarto = {
 </section>
 <section id="setup" class="level1">
 <h1>Setup</h1>
-<div id="e9476dea" class="cell" data-execution_count="1">
+<div id="c248834c" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2422,8 +2422,8 @@ window.Quarto = {
 </section>
 <section id="step-1-break-it" class="level1">
 <h1>Step 1 — Break it</h1>
-<p>With 1,210 training rows and 62 features, OLS is fine. Now shrink the training window and watch.</p>
-<div id="37c99eb5" class="cell" data-execution_count="2">
+<p>With 1,210 training rows and 62 features, OLS forecasts well. Now shrink the training window and watch.</p>
+<div id="cef3a5fd" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> n <span class="kw">in</span> (<span class="dv">1210</span>, <span class="dv">400</span>, <span class="dv">200</span>, <span class="dv">120</span>, <span class="dv">80</span>):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> train.iloc[<span class="op">-</span>n:]</span>
@@ -2450,15 +2450,16 @@ window.Quarto = {
   80  1.3      355,629     2,072,167             770</code></pre>
 </div>
 </div>
-<p><strong>Read that table across, then down.</strong> As the training window shrinks, the largest OLS coefficient grows from about 150 to the hundreds of thousands, and the test RMSE from 280 into the millions. Nothing about the <em>problem</em> changed — same features, same target, same test set. Only the ratio of observations to parameters.</p>
+<p><strong>Read that table across, then down.</strong> As the training window shrinks, the OLS test RMSE climbs from 280 into the millions. Nothing about the <em>problem</em> changed — same features, same target, same test set. Only the ratio of observations to parameters.</p>
 <p>Ridge, with a one-line change, degrades gracefully across the entire range.</p>
 <p>That is Lecture 6’s opening argument, and you just measured it.</p>
+<p><strong>Read the <code>OLS_max_coef</code> column with care.</strong> This design is <em>exactly</em> collinear at every window size, not just nearly so: <code>roll7_mean</code>, <code>roll14_mean</code> and <code>roll28_mean</code> are averages of lags that are already features, and the seven <code>dow_</code> dummies always sum to 1. The 62 columns have rank 58, so OLS has no unique coefficients anywhere in this table. <code>LinearRegression</code> does not complain; it returns one particular solution, the minimum-norm one, and the coefficient column describes that solver’s pick, not “the” OLS coefficients. The RMSE column is still meaningful: the same identities hold in the test rows, so every least-squares solution makes the same forecasts.</p>
 <hr>
 </section>
 <section id="step-2-two-penalties-two-behaviors" class="level1">
 <h1>Step 2 — Two penalties, two behaviors</h1>
 <p>Back to the full training set. Fit Ridge and LASSO at a comparable penalty and count what survives.</p>
-<div id="ebe322ee" class="cell" data-execution_count="3">
+<div id="97c1a4fe" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sc <span class="op">=</span> StandardScaler().fit(X_train)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Xs, Xts <span class="op">=</span> sc.transform(X_train), sc.transform(X_test)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2480,7 +2481,7 @@ window.Quarto = {
 <section id="step-3-the-path-and-the-order-features-die-in" class="level1">
 <h1>Step 3 — The path, and the order features die in</h1>
 <p>Lecture 6 argued that the <strong>order</strong> predictors leave is a more stable finding than any single coefficient table. Produce that ordering.</p>
-<div id="d3462cb9" class="cell" data-execution_count="4">
+<div id="be63385d" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>alphas <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">60</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> []</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> a <span class="kw">in</span> alphas:</span>
@@ -2501,11 +2502,11 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<div id="70648c25" class="cell" data-execution_count="5">
+<div id="5b812f81" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>survivors, order <span class="op">=</span> <span class="bu">set</span>(FEATURES), []</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> a, coefs <span class="kw">in</span> <span class="bu">zip</span>(alphas, paths):</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    nz <span class="op">=</span> <span class="bu">set</span>(np.array(FEATURES)[coefs <span class="op">!=</span> <span class="dv">0</span>])</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> gone <span class="kw">in</span> survivors <span class="op">-</span> nz:</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> gone <span class="kw">in</span> <span class="bu">sorted</span>(survivors <span class="op">-</span> nz, key<span class="op">=</span>FEATURES.index):   <span class="co"># ties leave together; fix their order</span></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        order.append(gone)</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    survivors <span class="op">=</span> nz</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
@@ -2514,8 +2515,8 @@ window.Quarto = {
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&quot;   </span><span class="sc">{</span>f<span class="sc">}</span><span class="ss">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>the last 8 features standing, in reverse order of elimination:
-   lag7
    lag28
+   lag7
    lag35
    lag364
    lag14
@@ -2536,7 +2537,7 @@ Look at what survived
 <div class="callout-body-container callout-body">
 <p>Lecture 6 drew this path with the weekly lags in red. Check the list above against it: which survivor is <em>not</em> a multiple of 7, and why might the LASSO keep it anyway? Decide before reading on.</p>
 <p>Almost all of them are <strong>multiples of 7</strong>. The exception, <code>lag1</code>, earns its place differently: yesterday is the freshest reading of the level the series is at now.</p>
-<p>Nobody told the model this series has a weekly cycle, and there is no explicit “week” feature among the lags. Under increasing penalty the LASSO independently kept the lags that align with day-of-week and discarded the ones that do not.</p>
+<p>The model also had seven day-of-week dummies, a direct encoding of the weekly cycle, yet under heavy penalty it dropped every one of them and kept the lags that align with day-of-week, discarding the ones that do not.</p>
 <p>That is what makes the dropout ordering worth reporting: it recovered the structure of the series, not just a ranking of columns.</p>
 </div>
 </div>
@@ -2544,7 +2545,7 @@ Look at what survived
 </section>
 <section id="step-4-choosing-alpha-and-the-one-standard-error-rule" class="level1">
 <h1>Step 4 — Choosing alpha, and the one-standard-error rule</h1>
-<div id="e1f4faa8" class="cell" data-execution_count="6">
+<div id="55bc1527" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tscv <span class="op">=</span> TimeSeriesSplit(n_splits<span class="op">=</span><span class="dv">5</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> np.logspace(<span class="op">-</span><span class="dv">1</span>, <span class="fl">2.5</span>, <span class="dv">30</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2569,7 +2570,7 @@ Look at what survived
 </div>
 </div>
 <p><strong>Your turn:</strong> plot the CV curve with its one-standard-error band, and mark both chosen alphas.</p>
-<div id="38f9864d" class="cell" data-execution_count="7">
+<div id="f9712f60" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in the blank ----</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fig, ax = plt.subplots(figsize=(7, 3.4))</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ax.plot(np.log10(grid), means)</span></span>
@@ -2585,7 +2586,7 @@ Look at what survived
 <section id="step-5-why-your-cv-number-looks-worse-than-the-truth" class="level1">
 <h1>Step 5 — Why your CV number looks worse than the truth</h1>
 <p>The CV RMSE above is noticeably higher than the test RMSE. That is not a mistake, and the reason is sitting in Step 1.</p>
-<div id="2478643e" class="cell" data-execution_count="8">
+<div id="cd6c4958" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, (tr_idx, va_idx) <span class="kw">in</span> <span class="bu">enumerate</span>(tscv.split(X_train), <span class="dv">1</span>):</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    m <span class="op">=</span> make_pipeline(StandardScaler(), Lasso(alpha<span class="op">=</span><span class="dv">20</span>, max_iter<span class="op">=</span><span class="dv">50000</span>)).fit(X_train[tr_idx], y_train[tr_idx])</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&quot;  fold </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">: train n=</span><span class="sc">{</span><span class="bu">len</span>(tr_idx)<span class="sc">:4d}</span><span class="ss"> (n/k=</span><span class="sc">{</span><span class="bu">len</span>(tr_idx)<span class="op">/</span><span class="bu">len</span>(FEATURES)<span class="sc">:4.1f}</span><span class="ss">)   &quot;</span></span>
@@ -2605,7 +2606,7 @@ Look at what survived
 <section id="before-you-leave" class="level1">
 <h1>Before you leave</h1>
 <p>Add today’s best linear model to the scoreboard you have been building since Lab 4.</p>
-<div id="6e1fe027" class="cell" data-execution_count="9">
+<div id="e5209378" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>best <span class="op">=</span> make_pipeline(StandardScaler(), Lasso(alpha<span class="op">=</span>grid[i_min], max_iter<span class="op">=</span><span class="dv">50000</span>)).fit(X_train, y_train)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>board <span class="op">=</span> {</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Benchmark (same day last year)&quot;</span>: rmse(y_test, test.units_lag365.values),</span>

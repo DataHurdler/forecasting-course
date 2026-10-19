@@ -442,7 +442,7 @@
   <meta name="generator" content="quarto-1.7.33">
 
   <meta name="author" content="Department of Economics">
-  <title>Bayesian Statistics II — Time Series</title>
+  <title>Bayesian Structural Time Series</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -1071,7 +1071,7 @@ margin-right: 0; }
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Bayesian Statistics II — Time Series</h1>
+  <h1 class="title">Bayesian Structural Time Series</h1>
   <p class="subtitle">ECON 8310: Business Forecasting — Lecture 11, Part 1</p>
 
 <div class="quarto-title-authors">
@@ -1132,7 +1132,7 @@ Department of Economics
 </tr>
 </tbody>
 </table>
-<p>That third row is the one people underestimate. A prediction interval from ARIMA widens too, but according to a formula derived under assumptions you did not check. Here the widening is a consequence of the model you actually wrote down.</p>
+<p>That third row is the one people underestimate. A prediction interval from ARIMA widens too, but it plugs in point estimates of the parameters. This one also carries their uncertainty, and each source of widening is a named part of the model.</p>
 <p><strong>And the price:</strong> it is slower, it needs priors you have to defend, and — as we will see — it can fail silently in ways a least-squares fit cannot.</p>
 </section></section>
 <section>
@@ -1155,7 +1155,7 @@ y_t \;=\; \underbrace{\mu_t}_{\text{level}} \;+\; \underbrace{s_t}_{\text{season
 <p><strong>Each piece is something a business person can name</strong>, and each gets its own posterior: “demand is growing” is about <span class="math inline">\(\mu_t\)</span>, “August is our peak” is about <span class="math inline">\(s_t\)</span>, “how noisy is this store?” is <span class="math inline">\(\sigma\)</span>. That is why it is called <em>structural</em>.</p>
 </section>
 <section id="the-level-a-random-walk-with-a-prior-on-it" class="slide level2">
-<h2>The Level: A Random Walk With a Prior On It</h2>
+<h2>The Level: A Random Walk with a Prior on It</h2>
 <p>The simplest useful trend is a <strong>local level</strong> — the series has a level, and the level itself drifts:</p>
 <p><span class="math display">\[\mu_t = \mu_{t-1} + \eta_t, \qquad \eta_t \sim \mathcal{N}(0, \sigma_{\text{level}}^2)\]</span></p>
 <p>Read it as a sentence: this week’s level is last week’s level, plus a shock. And <span class="math inline">\(\sigma_{\text{level}}\)</span> — which you put a prior on — controls <strong>how fast the level is allowed to move</strong>.</p>
@@ -1231,8 +1231,8 @@ s_t = \textstyle\sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
 <p><strong>Nothing crashed</strong>, and the forecast looked reasonable. But the top chains wander: 6,000 draws, worth about 274 independent ones. Only the diagnostics objected.</p>
 <p><span class="neutral">The two rows also sit at different heights. The next slide says why.</span></p>
 </section>
-<section id="the-fix-reparameterize-dont-sample-more" class="slide level2">
-<h2>The Fix: Reparameterize, Don’t Sample More</h2>
+<section id="the-fix-reparameterize-do-not-sample-more" class="slide level2">
+<h2>The Fix: Reparameterize, Do Not Sample More</h2>
 <table class="caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -1256,7 +1256,7 @@ s_t = \textstyle\sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
 </tbody>
 </table>
 <div class="warningbox">
-<p><strong>Same data, same 6,000 draws: ESS 274 <span class="math inline">\(\to\)</span> 2,376.</strong> BMCP §4.6.1 covers exactly this, and you will meet it again next week.</p>
+<p><strong>Same data, same 6,000 draws: ESS 274 <span class="math inline">\(\to\)</span> 2,376.</strong> It is the standard fix <span class="citation" data-cites="MartinKumarLao2021">(<a href="#/references" role="doc-biblioref" onclick>Martin et al. 2021, sec. 4.6.1</a>)</span>, and you will meet it again next week.</p>
 </div>
 <p><span class="neutral">Almost the same model. <code>GaussianRandomWalk</code> lets week 1’s level start anywhere (its default start, <span class="math inline">\(\mathcal{N}(0, 100)\)</span>, raises a warning the lab silences); the <code>cumsum</code> starts it near zero. That, not sampling, is why the trace heights differ.</span></p>
 </section></section>
@@ -1267,7 +1267,7 @@ s_t = \textstyle\sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
 </section>
 <section id="does-it-work-the-point-forecast" class="slide level2">
 <h2>Does It Work? The Point Forecast</h2>
-<p>CA_1 FOODS, 52 weeks held out.</p>
+<p>CA_1 FOODS, 52 weeks held out (Lecture 9’s 2,152 was on the 30-series panel).</p>
 <table class="caption-top">
 <thead>
 <tr class="header">
@@ -1324,7 +1324,7 @@ s_t = \textstyle\sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
 <p>What structural models are for.</p>
 </section>
 <section id="lecture-11-part-1-key-takeaways" class="slide level2">
-<h2>Lecture 11 Part 1: Key Takeaways</h2>
+<h2>Lecture 11, Part 1: Key Takeaways</h2>
 <div class="keybox">
 <ol type="1">
 <li>A <strong>structural</strong> model names a series’ parts and puts a prior on each.</li>
@@ -1335,12 +1335,14 @@ s_t = \textstyle\sum_{k=1}^{K}\left[a_k \sin\!\left(\tfrac{2\pi k t}{P}\right)
 <li>The interval was <strong>calibrated but too wide to act on</strong>; establishing that is the product.</li>
 </ol>
 </div>
-<p><span class="neutral">Next: hierarchical models, for thirty series at once.</span></p>
+<p><span class="neutral">Next: hierarchical models, for ten series at once.</span></p>
 </section>
 <section id="references" class="slide level2 smaller scrollable">
 <h2>References</h2>
-<div id="refs" role="list">
-
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-MartinKumarLao2021" class="csl-entry" role="listitem">
+Martin, Osvaldo A., Ravin Kumar, and Junpeng Lao. 2021. <em>Bayesian Modeling and Computation in Python</em>. Chapman; Hall/CRC. <a href="https://bayesiancomputationbook.com/">https://bayesiancomputationbook.com/</a>.
+</div>
 </div>
 
 </section></section>

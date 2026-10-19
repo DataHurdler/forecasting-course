@@ -2360,7 +2360,7 @@ window.Quarto = {
 </section>
 <section id="setup" class="level1">
 <h1>Setup</h1>
-<div id="4ea4db7f" class="cell" data-execution_count="1">
+<div id="3fcea537" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2425,7 +2425,7 @@ The layout flips back
 <section id="step-1-a-plain-rnn" class="level1">
 <h1>Step 1 — A plain RNN</h1>
 <p>One recurrent layer, then a linear layer on the <strong>final</strong> hidden state — the summary after reading the whole window.</p>
-<div id="81f1f058" class="cell" data-execution_count="2">
+<div id="5374641d" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Recurrent(nn.Module):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, kind, n_channels<span class="op">=</span><span class="dv">4</span>, hidden<span class="op">=</span><span class="dv">64</span>):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -2468,7 +2468,7 @@ The layout flips back
 <section id="step-2-an-lstm" class="level1">
 <h1>Step 2 — An LSTM</h1>
 <p>Identical code, one word changed.</p>
-<div id="c180a585" class="cell" data-execution_count="3">
+<div id="34f79fdb" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>score_lstm, n_par_lstm <span class="op">=</span> train(<span class="st">&quot;lstm&quot;</span>, <span class="dv">26</span>, seed<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;LSTM        — </span><span class="sc">{</span>n_par_lstm<span class="sc">:,}</span><span class="ss"> parameters, test RMSE </span><span class="sc">{</span>score_lstm<span class="sc">:,.0f}</span><span class="ss">&quot;</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;</span><span class="ch">\n</span><span class="ss">parameter ratio: </span><span class="sc">{</span>n_par_lstm <span class="op">/</span> n_par<span class="sc">:.1f}</span><span class="ss">x the RNN&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2484,7 +2484,7 @@ parameter ratio: 4.0x the RNN</code></pre>
 <section id="step-3-which-wins-and-does-it-hold" class="level1">
 <h1>Step 3 — Which wins, and does it hold?</h1>
 <p>One comparison at one window is not evidence. Vary the window and use two seeds.</p>
-<div id="6b81bc61" class="cell" data-execution_count="4">
+<div id="ad4abcfc" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> W <span class="kw">in</span> (<span class="dv">13</span>, <span class="dv">26</span>, <span class="dv">52</span>):</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> [train(<span class="st">&quot;rnn&quot;</span>,  W, s)[<span class="dv">0</span>] <span class="cf">for</span> s <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">2</span>)]</span>
@@ -2517,7 +2517,7 @@ Read the columns in this order
 </div>
 </div>
 <p><strong>Your turn:</strong> compute the gap at each window and say whether it is closing or widening.</p>
-<div id="14b37749" class="cell" data-execution_count="5">
+<div id="6c76ebfd" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in ----</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># df = pd.DataFrame(rows)</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df[&quot;gap&quot;] = ___ - ___          # &lt;- which two columns?</span></span>
@@ -2529,7 +2529,7 @@ Read the columns in this order
 <h1>Step 4 — Was that a fair fight?</h1>
 <p>Step 3 compared two models at <strong>one</strong> training budget. Lab 7 taught you not to trust a comparison run at one seed; this is the same objection one level up. An LSTM has four times the parameters, and bigger models generally take longer to converge.</p>
 <p>So train both to 100 epochs, and record the test RMSE along the way instead of only at the end.</p>
-<div id="00e7c5e4" class="cell" data-execution_count="6">
+<div id="afa1d378" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>CKPT <span class="op">=</span> [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">45</span>, <span class="dv">60</span>, <span class="dv">80</span>, <span class="dv">100</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> curve(kind, W, seed):</span>
@@ -2574,7 +2574,7 @@ Read the columns in this order
     100  830   821   -9</code></pre>
 </div>
 </div>
-<div id="c2e59adf" class="cell" data-execution_count="7">
+<div id="371dafa2" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="fl">6.5</span>, <span class="fl">3.4</span>))</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>ax.plot(CKPT, paths[<span class="st">&quot;rnn&quot;</span>],  marker<span class="op">=</span><span class="st">&quot;o&quot;</span>, label<span class="op">=</span><span class="st">&quot;vanilla RNN&quot;</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>ax.plot(CKPT, paths[<span class="st">&quot;lstm&quot;</span>], marker<span class="op">=</span><span class="st">&quot;o&quot;</span>, label<span class="op">=</span><span class="st">&quot;LSTM&quot;</span>)</span>
@@ -2612,7 +2612,7 @@ The gap is largest at exactly the budget we used
 </div>
 </div>
 <p><strong>Your turn:</strong> the run-to-run spread in Step 3 was roughly 20 RMSE. From which checkpoint on is the gap smaller than that?</p>
-<div id="80531d4a" class="cell" data-execution_count="8">
+<div id="7f1b08ad" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in ----</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># noise = ___                       # &lt;- the seed spread from Step 3</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># print(table[table.gap.abs() &lt; noise].epochs.tolist())</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2622,7 +2622,7 @@ The gap is largest at exactly the budget we used
 <section id="step-5-why-the-gates-buy-nothing-here" class="level1">
 <h1>Step 5 — Why the gates buy nothing here</h1>
 <p>The LSTM’s gates exist to solve one problem: in a plain RNN, gradients shrink as they propagate backward, so signal from far in the past never reaches the weights. Put a number on it.</p>
-<div id="269640c2" class="cell" data-execution_count="9">
+<div id="2a60118d" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> factor <span class="kw">in</span> (<span class="fl">0.7</span>, <span class="fl">0.9</span>):</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&quot;gradient shrink factor </span><span class="sc">{</span>factor<span class="sc">}</span><span class="ss"> per step:&quot;</span>)</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> steps <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">26</span>, <span class="dv">52</span>):</span>
@@ -2648,7 +2648,7 @@ gradient shrink factor 0.9 per step:
 <p>At 0.7 per step the signal is essentially gone by 26 steps. <strong>That is the problem gating fixes.</strong></p>
 <p>Two things about that table before we go on. At a shrink factor of 0.7 the signal is gone by 26 steps. At <strong>0.9</strong> it is still 0.065 at 26 steps and 0.004 at 52 — small, but not zero. Vanishing gradients are a matter of degree and of <em>sequence length</em>, and 26 weeks is short.</p>
 <p>Now stop asserting and go measure whether this dataset has the problem gating solves. Three questions, three numbers.</p>
-<div id="129bb1d4" class="cell" data-execution_count="10">
+<div id="867050cf" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> weekly.assign(series<span class="op">=</span>weekly.store_id <span class="op">+</span> <span class="st">&quot;_&quot;</span> <span class="op">+</span> weekly.cat_id)</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>w[<span class="st">&quot;level&quot;</span>] <span class="op">=</span> w.groupby(<span class="st">&quot;series&quot;</span>).units.transform(<span class="st">&quot;mean&quot;</span>)</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>w[<span class="st">&quot;dev&quot;</span>]   <span class="op">=</span> w.units <span class="op">-</span> w.level</span>
@@ -2697,7 +2697,7 @@ Three reasons the gates have nothing to do
 <p><strong>1. Most of the variance is not sequential at all.</strong> About <strong>91%</strong> of the variation in weekly units is <em>between</em> series — which store, which category — and only 9% is within a series over time. The single biggest thing a model must get right is the level of the series in front of it, and that is readable from the most recent few weeks. No memory mechanism is needed for it.</p>
 <p><strong>2. The series are smooth, which is the opposite of needing memory.</strong> Within-series autocorrelation is <strong>0.83 at lag 1</strong> and still <strong>0.43 at lag 52</strong>. That looks like long memory and is in fact the reason long memory is unnecessary: because neighboring weeks are nearly the same number, <em>the recent past is a sufficient statistic for the distant past.</em> Nothing has to be carried across the gap, because the gap has been filled in continuously along the way. Gating pays off when a value must survive many steps that would otherwise <strong>overwrite</strong> it — and here nothing overwrites anything.</p>
 <p><strong>3. Nothing in the inputs arrives early.</strong> <code>snap_days</code> correlates <strong>+0.14</strong> with units in the same week. The −0.13 at <code>t+2</code> and +0.12 at <code>t+4</code> are not advance notice: SNAP days fall on the same dates every month, so this week’s <code>snap_days</code> predicts the count two and four weeks out (correlations of −0.84 and +0.82), and those weeks carry their own same-week effect. The lead correlations are the same-week +0.14 echoed by the calendar. <code>event_days</code> is flat at every horizon including zero. There is no <em>announcement</em> structure in this data — nothing shows up at time <span class="math inline">\(t\)</span> that must be stored until <span class="math inline">\(t+k\)</span>. That is the canonical use for a forget gate and an input gate, and this panel does not contain one instance of it.</p>
-<p><strong>So the gates solve something real, on data that does not have it.</strong> They charge four times the parameters and — as Step 4 showed — roughly three times the epochs for the service, and at convergence they return a tie.</p>
+<p><strong>So the gates solve something real, on data that does not have it.</strong> They charge four times the parameters and — as Step 4 showed — roughly three times the epochs for the service, and by 100 epochs they return a tie.</p>
 </div>
 </div>
 <p><strong>The transferable part</strong> is the three questions, not the answer. Before reaching for a gated or attention-based model on your own series, ask: how much of my variance is cross-sectional rather than sequential? Is my series smooth enough that recent values already summarize old ones? Does anything in my inputs <em>lead</em> the target? If the answers look like this panel’s, the extra machinery has nothing to do.</p>

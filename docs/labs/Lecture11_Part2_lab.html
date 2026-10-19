@@ -2356,12 +2356,12 @@ window.Quarto = {
 <p>A hierarchical model lets thirty series share information: each gets its own effect, drawn from a common distribution the data also estimates. Data-poor series borrow from data-rich ones, and nobody has to choose the weights.</p>
 <p>That is genuinely powerful, and today you will watch it work. You will also watch it produce a confidently wrong answer — on the same data, with clean diagnostics, textbook shrinkage, and no warning of any kind.</p>
 <p>The difference between the two runs is not the code. It is a decision made before any code was written: <strong>which series belong in the same hierarchy.</strong></p>
-<p><strong>Suggested time:</strong> ~45 minutes · <strong>You will need:</strong> <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code>, <code>pymc</code>, <code>arviz</code>, and <code>data/processed/m5_weekly.csv</code>. Six model fits, most under 30 seconds.</p>
+<p><strong>Suggested time:</strong> ~45 minutes · <strong>You will need:</strong> <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code>, <code>pymc</code>, <code>arviz</code>, and <code>data/processed/m5_weekly.csv</code>. Five model fits, most under 30 seconds.</p>
 <hr>
 </section>
 <section id="setup" class="level1">
 <h1>Setup</h1>
-<div id="ccb79829" class="cell" data-execution_count="1">
+<div id="92a6199b" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2387,7 +2387,7 @@ window.Quarto = {
 </div>
 <p>Our question: <strong>does a high-SNAP week lift units, and by how much in each store?</strong></p>
 <p>We will need one helper repeatedly — the SNAP effect actually observed in a set of weeks, with no model involved. It is just the difference in mean log units between high-SNAP weeks and the rest.</p>
-<div id="ad1ca1b9" class="cell" data-execution_count="2">
+<div id="0f422018" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> empirical_effect(frame, series_name):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Observed high-SNAP effect on log units for one series.&quot;&quot;&quot;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> frame[frame.series <span class="op">==</span> series_name]</span>
@@ -2401,7 +2401,7 @@ window.Quarto = {
 <h1>Step 1 — Build the imbalance</h1>
 <p>Real panels are lopsided: some series have years of history, others are new stores or newly re-categorized products with a handful of usable weeks. We create that imbalance deliberately so we can check the answer later.</p>
 <p>Thin every third series down to 8 weeks. The weeks we remove are not thrown away — they become a held-out set that the model never sees, and that we will use in Step 3 to grade it.</p>
-<div id="e0b6a6dd" class="cell" data-execution_count="3">
+<div id="1dcb5d94" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>codes, uniq <span class="op">=</span> pd.factorize(df.series)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;idx&quot;</span>] <span class="op">=</span> codes</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>J <span class="op">=</span> <span class="bu">len</span>(uniq)</span>
@@ -2425,7 +2425,7 @@ window.Quarto = {
 </div>
 </div>
 <p>Here is the model. It is the one from lecture, written non-centered, and it takes a flag so we can reuse it for the unpooled fit.</p>
-<div id="c8120829" class="cell" data-execution_count="4">
+<div id="ad111254" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit(data, kind, n_series, centered<span class="op">=</span><span class="va">False</span>, target_accept<span class="op">=</span><span class="fl">0.9</span>):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;kind: &#39;unpooled&#39; or &#39;hier&#39;. Returns the InferenceData.&quot;&quot;&quot;</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    i <span class="op">=</span> data.idx.values</span>
@@ -2457,7 +2457,7 @@ window.Quarto = {
 <section id="step-2-fit-it-and-admire-the-shrinkage" class="level1">
 <h1>Step 2 — Fit it, and admire the shrinkage</h1>
 <p>Fit both models on all thirty series and measure how far each estimate moved.</p>
-<div id="20275235" class="cell" data-execution_count="5">
+<div id="3751f596" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>idata_u30 <span class="op">=</span> fit(train, <span class="st">&quot;unpooled&quot;</span>, J)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>idata_h30 <span class="op">=</span> fit(train, <span class="st">&quot;hier&quot;</span>, J)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2478,7 +2478,7 @@ window.Quarto = {
   hierarchical   r_hat 1.003  ess  5077  divergences    0</code></pre>
 </div>
 </div>
-<div id="b5d79e68" class="cell" data-execution_count="6">
+<div id="067706ae" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>move_thin <span class="op">=</span> np.<span class="bu">abs</span>(bh30[thin] <span class="op">-</span> bu30[thin]).mean()</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>move_full <span class="op">=</span> np.<span class="bu">abs</span>(bh30[<span class="op">~</span>thin] <span class="op">-</span> bu30[<span class="op">~</span>thin]).mean()</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2503,7 +2503,7 @@ window.Quarto = {
 </div>
 <p>Everything a hierarchical model is supposed to do, it did. Diagnostics are clean. The data-poor series moved an order of magnitude further toward the group mean than the data-rich ones, and nobody told the model which was which.</p>
 <p>The shrinkage plot makes it visual.</p>
-<div id="adeea25e" class="cell" data-execution_count="7">
+<div id="323aaf91" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">5</span>))</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(J):</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> <span class="st">&quot;crimson&quot;</span> <span class="cf">if</span> thin[j] <span class="cf">else</span> <span class="st">&quot;steelblue&quot;</span></span>
@@ -2540,7 +2540,7 @@ Before you go on
 <section id="step-3-grade-it-against-the-weeks-it-never-saw" class="level1">
 <h1>Step 3 — Grade it against the weeks it never saw</h1>
 <p>We thinned those ten series ourselves. The weeks we removed are sitting in <code>heldout</code>, and each thinned series has hundreds of them. So we can compute the effect that <em>actually</em> occurred and compare.</p>
-<div id="0075b82f" class="cell" data-execution_count="8">
+<div id="d3a7a27d" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>thin_names <span class="op">=</span> [uniq[j] <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(J) <span class="cf">if</span> thin[j]]</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>truth <span class="op">=</span> np.array([empirical_effect(heldout, s) <span class="cf">for</span> s <span class="kw">in</span> thin_names])</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>est_u <span class="op">=</span> np.array([bu30[j] <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(J) <span class="cf">if</span> thin[j]])</span>
@@ -2593,13 +2593,13 @@ The diagnostics could never have caught this
 <h1>Step 4 — Find out what went wrong</h1>
 <p>Two things are wrong, and one of them is invisible until you look.</p>
 <p>First, look at which series we thinned.</p>
-<div id="104ccce7" class="cell" data-execution_count="9">
+<div id="2fcf180d" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;thinned series:&quot;</span>, thin_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>thinned series: [&#39;CA_1_FOODS&#39;, &#39;CA_2_FOODS&#39;, &#39;CA_3_FOODS&#39;, &#39;CA_4_FOODS&#39;, &#39;TX_1_FOODS&#39;, &#39;TX_2_FOODS&#39;, &#39;TX_3_FOODS&#39;, &#39;WI_1_FOODS&#39;, &#39;WI_2_FOODS&#39;, &#39;WI_3_FOODS&#39;]</code></pre>
 </div>
 </div>
-<div id="894d62b7" class="cell" data-execution_count="10">
+<div id="2330225f" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Empirical high-SNAP effect by category (all data, no model):&quot;</span>)</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cat, grp <span class="kw">in</span> df.groupby(<span class="st">&quot;cat_id&quot;</span>):</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    effs <span class="op">=</span> [empirical_effect(grp, s) <span class="cf">for</span> s <span class="kw">in</span> grp.series.unique()]</span>
@@ -2630,7 +2630,7 @@ Exchangeability is a modeling assumption, and it is yours to defend
 <p>Nothing in PyMC checks this. No diagnostic reports it. It is subject-matter knowledge, applied before the model is written.</p>
 </div>
 </div>
-<div id="e80c2497" class="cell" data-execution_count="11">
+<div id="86cdb799" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and answer in the strings ----</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># whose_fault = &quot;...&quot;   # &lt;- would a bigger sample have fixed this? why or why not?</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># print(whose_fault)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2640,7 +2640,7 @@ Exchangeability is a modeling assumption, and it is yours to defend
 <section id="step-5-do-it-on-the-exchangeable-set" class="level1">
 <h1>Step 5 — Do it on the exchangeable set</h1>
 <p>Restrict to the ten FOODS series — the set we can actually defend pooling — and rebuild the same imbalance: thin every other one to 8 weeks.</p>
-<div id="70f93064" class="cell" data-execution_count="12">
+<div id="25a12eb9" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>foods <span class="op">=</span> df[df.cat_id <span class="op">==</span> <span class="st">&quot;FOODS&quot;</span>].copy()</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>codes_f, uniq_f <span class="op">=</span> pd.factorize(foods.series)</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>foods[<span class="st">&quot;idx&quot;</span>] <span class="op">=</span> codes_f</span>
@@ -2664,7 +2664,7 @@ Exchangeability is a modeling assumption, and it is yours to defend
 train 1,425 rows | held-out 1,345 rows</code></pre>
 </div>
 </div>
-<div id="dd0e9810" class="cell" data-execution_count="13">
+<div id="aaabc939" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>idata_uf <span class="op">=</span> fit(train_f, <span class="st">&quot;unpooled&quot;</span>, Jf)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>idata_hf <span class="op">=</span> fit(train_f, <span class="st">&quot;hier&quot;</span>, Jf)</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>buf, bhf <span class="op">=</span> b_means(idata_uf, Jf), b_means(idata_hf, Jf)</span>
@@ -2677,7 +2677,7 @@ mu_b  0.078  0.035    0.017     0.15     1544     1588  1.00   0.00092  0.00082
 sd_b  0.065  0.038   0.0097     0.16     1027     1153  1.00    0.0011   0.0011</code></pre>
 </div>
 </div>
-<div id="dee4f70a" class="cell" data-execution_count="14">
+<div id="7c5f2a82" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>mt <span class="op">=</span> np.<span class="bu">abs</span>(bhf[thin_f] <span class="op">-</span> buf[thin_f]).mean()</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>mf <span class="op">=</span> np.<span class="bu">abs</span>(bhf[<span class="op">~</span>thin_f] <span class="op">-</span> buf[<span class="op">~</span>thin_f]).mean()</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;              unpooled spread   after pooling   mean move&quot;</span>)</span>
@@ -2696,7 +2696,7 @@ sd_b  0.065  0.038   0.0097     0.16     1027     1153  1.00    0.0011   0.0011<
 </div>
 <p>Compare that middle column to Step 2’s. There, <em>everything</em> collapsed onto the group mean. Here the thin series collapse but the full series <strong>keep most of their spread</strong> — the model discarded variation that 8 weeks could not support and kept variation that 277 weeks could. That is what partial pooling is supposed to look like.</p>
 <p>Now grade it the same way.</p>
-<div id="633d05d9" class="cell" data-execution_count="15">
+<div id="043402c5" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>tn <span class="op">=</span> [uniq_f[j] <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(Jf) <span class="cf">if</span> thin_f[j]]</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>truth_f <span class="op">=</span> np.array([empirical_effect(heldout_f, s) <span class="cf">for</span> s <span class="kw">in</span> tn])</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>eu <span class="op">=</span> np.array([buf[j] <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(Jf) <span class="cf">if</span> thin_f[j]])</span>
@@ -2722,7 +2722,7 @@ WI_2_FOODS     0.338         0.103           0.207
 </div>
 </div>
 <p><strong>That is borrowing strength, and now it is real.</strong> The same code, the same priors, the same diagnostics — and the thin series are estimated well because the other five exist. The only thing that changed was which series were allowed into the hierarchy.</p>
-<div id="6a0c026c" class="cell" data-execution_count="16">
+<div id="81a9e151" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in the comparison ----</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># print(&quot;30-series pooling improved RMSE by ___%&quot;)   # &lt;- from Step 3&#39;s two numbers</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co"># print(&quot;FOODS-only pooling improved RMSE by ___%&quot;)  # &lt;- from the two above</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2734,7 +2734,7 @@ WI_2_FOODS     0.338         0.103           0.207
 <p>One more failure, and this one <em>is</em> mechanical. The natural way to write the hierarchy reads exactly like the equation:</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> pm.Normal(<span class="st">&quot;b&quot;</span>, mu_b, sd_b, shape<span class="op">=</span>J)   <span class="co"># the centered form</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Fit it that way and watch the diagnostics.</p>
-<div id="9e237b34" class="cell" data-execution_count="17">
+<div id="4d0eb45a" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>idata_cent <span class="op">=</span> fit(train_f, <span class="st">&quot;hier&quot;</span>, Jf, centered<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Diagnostics&quot;</span>)</span>
