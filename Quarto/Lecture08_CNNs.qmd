@@ -223,7 +223,7 @@ Fitted on our weekly panel — 26-week windows, four channels, 30 store-category
 | 1D CNN, global average pool | 1,534 | 6,945 |
 | Seasonal naive | 2,152 | 0 |
 
-[**Every CNN variant loses to a 46-coefficient linear model**]{.key-result} — a seven-week receptive field cannot see the annual lag LASSO was handed directly.
+[**Every CNN variant loses to a 46-coefficient linear model**]{.key-result} — their 26-week window does not reach the annual lag LASSO was handed directly.
 
 And swapping average pooling for `Flatten`, which keeps *where* each pattern occurred, is worth about **500 RMSE** — three seeds each, against a spread of about 80.
 
@@ -256,7 +256,7 @@ And swapping average pooling for `Flatten`, which keeps *where* each pattern occ
 
 3. Three ideas outlived the architectures: **small filters stacked deep**, **skip connections**, **learned features**.
 
-4. A **1D CNN**'s limit is its **receptive field**: seven weeks cannot see an annual lag.
+4. A **1D CNN**'s filters see a few weeks; a year back needs a long window and many weights.
 
 5. Every CNN variant **lost to a 46-coefficient LASSO**. Fit the architecture to the problem.
 :::

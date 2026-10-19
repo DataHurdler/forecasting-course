@@ -558,9 +558,9 @@ Seasonal naive, at the bottom: twenty-one fifty-two.
 
 Two things to take from this.
 
-First — **every CNN variant loses to a forty-six-coefficient linear model.** Not narrowly. And now
-you know why: a seven-week receptive field cannot see the annual lag that LASSO was simply handed
-as a column. The architecture's assumption about locality is wrong for this data.
+First — **every CNN variant loses to a forty-six-coefficient linear model.** Not narrowly. Part of
+the reason is plain: these runs use a twenty-six-week window, so last year's same week is not in
+the window at all, and LASSO was simply handed it as a column. The architecture's assumption about locality is wrong for this data.
 
 Second, and this is the one I promised you.
 

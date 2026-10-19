@@ -307,10 +307,10 @@ Retrain the CNN at windows of **13, 26 and 52** weeks. Report test RMSE for each
 # Retrain CNN for each window length; collect RMSE
 ```
 
-> **Your response:** Does a longer window always help? Your two convolution layers see about
-> seven weeks of context regardless of how long the window is — explain how that limits what a
-> longer window can buy, and what you would change architecturally to use a 52-week window
-> properly.
+> **Your response:** Does a longer window always help? Each convolution unit sees about seven
+> weeks; the flatten head then gives every position in the window its own weight. Explain what a
+> longer window adds (context *and* parameters), why that did or did not pay off in your runs, and
+> what you would change architecturally to use a 52-week window well.
 
 ---
 

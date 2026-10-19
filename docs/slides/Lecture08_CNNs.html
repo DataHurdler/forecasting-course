@@ -1329,7 +1329,7 @@ Department of Economics
 </tr>
 </tbody>
 </table>
-<p><span class="key-result"><strong>Every CNN variant loses to a 46-coefficient linear model</strong></span> — a seven-week receptive field cannot see the annual lag LASSO was handed directly.</p>
+<p><span class="key-result"><strong>Every CNN variant loses to a 46-coefficient linear model</strong></span> — their 26-week window does not reach the annual lag LASSO was handed directly.</p>
 <p>And swapping average pooling for <code>Flatten</code>, which keeps <em>where</em> each pattern occurred, is worth about <strong>500 RMSE</strong> — three seeds each, against a spread of about 80.</p>
 </section></section>
 <section>
@@ -1385,7 +1385,7 @@ Department of Economics
 <li><p><strong>Convolution</strong> = local connectivity + weight sharing: learn a pattern once, find it everywhere.</p></li>
 <li><p><strong>Pooling</strong> buys translation invariance — which images want and forecasts usually don’t. Cost here: about 500 RMSE.</p></li>
 <li><p>Three ideas outlived the architectures: <strong>small filters stacked deep</strong>, <strong>skip connections</strong>, <strong>learned features</strong>.</p></li>
-<li><p>A <strong>1D CNN</strong>’s limit is its <strong>receptive field</strong>: seven weeks cannot see an annual lag.</p></li>
+<li><p>A <strong>1D CNN</strong>’s filters see a few weeks; a year back needs a long window and many weights.</p></li>
 <li><p>Every CNN variant <strong>lost to a 46-coefficient LASSO</strong>. Fit the architecture to the problem.</p></li>
 </ol>
 </div>

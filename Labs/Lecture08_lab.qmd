@@ -228,12 +228,14 @@ standard deviation of 80. That is exactly the kind of difference Lab 7 taught yo
 and you should not trust it here either. But 52 weeks is **123 RMSE worse than 13 weeks**, a gap
 no seed accounts for: the worst 13-week run still beats the best 52-week run.
 
-The receptive field is stuck at seven weeks no matter how much history you supply. What a longer
-window *does* add is parameters — the flatten layer grows with `W`, from 7,329 to 9,825 — so you
-get more capacity to overfit and no additional context to justify it.
+Each convolution unit still sees only seven weeks, but the flatten layer gives every position in
+the window its own weight, so the network as a whole *does* see the whole window. A longer window
+therefore adds context **and** parameters — the flatten layer grows with `W`, from 7,329 to
+9,825 — learned from fewer training windows, because each one needs a longer history. Here the
+extra capacity cost more than the extra context bought.
 
-**More data into the model is not more information out of it**, unless the architecture can reach
-it.
+**More history into the model is not automatically better**: the context has to be worth the
+weights it costs.
 :::
 
 **Your turn:** using `receptive_field()`, find how many kernel-3 layers you would need to stack

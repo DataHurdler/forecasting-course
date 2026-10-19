@@ -224,7 +224,7 @@ The **Transformer lost to an RNN**, with fifteen times the parameters. Its advan
 advantages *at scale*, and five thousand one hundred sixty overlapping fifty-two-week windows —
 roughly a hundred genuinely independent years of data — is not scale.
 
-**CNNs lost to LASSO**, because a seven-week receptive field cannot see an annual lag.
+**CNNs lost to LASSO**, because their twenty-six-week window held no annual lag, and LASSO was handed one as a column.
 
 And **tuning bought nothing measurable** — nine fits, and a three-unit change.
 

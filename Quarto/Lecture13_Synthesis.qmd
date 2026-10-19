@@ -107,7 +107,7 @@ Four times this course, the more advanced method failed to win — and each time
 |---|---|
 | **LSTM lost to a plain RNN** | At three windows, *at a fixed 30-epoch budget*; at 26 weeks they tie by 100 epochs. Gating fixes forgetting, and with 91% of the variance between series there is little to forget. |
 | **Transformer lost to an RNN** | 67,329 parameters against roughly **100 effectively independent** 52-week blocks — ours overlap 98%. |
-| **CNNs lost to LASSO** | A seven-week receptive field cannot see an annual lag. |
+| **CNNs lost to LASSO** | Their 26-week window held no annual lag; LASSO was handed one. |
 | **Tuning bought nothing measurable** | Nine fits and a 3-unit change, against a **seed spread of 20–90** at one fixed config. CV improved; test did not. |
 
 **None of these means the losing method is bad** — each solves a problem this data does not have: long dependency chains, large corpora.

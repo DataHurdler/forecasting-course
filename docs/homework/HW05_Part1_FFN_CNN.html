@@ -2263,7 +2263,7 @@ Your numbers will not match mine, and that is fine
 <section id="dataset-and-setup" class="level2">
 <h2 class="anchored" data-anchor-id="dataset-and-setup">Dataset and Setup</h2>
 <p>We construct fixed-length sliding windows over each store-category series. Each input is a window of past weeks; the target is the next week’s units. <strong>Part A</strong> (FFN, CNN) uses a 26-week window; <strong>Part B</strong> (RNN, LSTM, Transformer) uses 52 weeks, so the sequence models get a full annual cycle.</p>
-<div id="e18da376" class="cell" data-execution_count="1">
+<div id="c44f9ae0" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2409,7 +2409,7 @@ How the code cells work
 <li>A window is <strong>training</strong> if its target week falls before <code>CUTOFF</code></li>
 </ul>
 <p>Standardize each channel using <strong>training statistics only</strong>, and standardize <code>y</code> the same way. Build <code>DataLoader</code>s with <code>batch_size=64</code> and <strong><code>shuffle=False</code> for both</strong>.</p>
-<div id="901df5cd" class="cell" data-execution_count="2">
+<div id="c20d03a0" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WINDOW_A <span class="op">=</span> <span class="dv">26</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SeriesWindowDataset(Dataset):</span>
@@ -2434,7 +2434,7 @@ How the code cells work
 <h3 class="anchored" data-anchor-id="q2-feedforward-network-suggested-prompts-2">Q2 — Feedforward Network <em>(Suggested prompts: 2)</em></h3>
 <p>Flatten the window to a vector of length <code>W × 4</code> and feed it to a plain network: <code>Linear(W*4 → 128)</code>, ReLU, <code>Dropout(0.2)</code>, <code>Linear(128 → 64)</code>, ReLU, <code>Dropout(0.2)</code>, <code>Linear(64 → 1)</code>.</p>
 <p>Train 30 epochs, Adam <code>lr=1e-3</code>, <code>weight_decay=1e-4</code>, MSE loss. Plot the loss curve and report test RMSE in <strong>original units</strong> (invert the standardization before computing RMSE).</p>
-<div id="964ecb4f" class="cell" data-execution_count="3">
+<div id="14c17246" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FFNForecaster(nn.Module):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, window, n_channels):</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -2456,7 +2456,7 @@ How the code cells work
 <p>Build a <code>CNNForecaster</code>: <code>Conv1d(4, 32, kernel_size=5)</code>, ReLU, <code>Conv1d(32, 64, kernel_size=3)</code>, ReLU, then <strong>flatten</strong> and a final <code>Linear</code> to one output.</p>
 <p>Note the input shape: <code>Conv1d</code> expects <code>(batch, channels, time)</code>, so you must transpose the <code>(batch, time, channels)</code> tensors from your DataLoader.</p>
 <p>Train as in Q2 and report test RMSE.</p>
-<div id="65a07056" class="cell" data-execution_count="4">
+<div id="d57ee810" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CNNForecaster(nn.Module):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_channels):</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -2474,11 +2474,11 @@ How the code cells work
 <section id="q4-receptive-field-and-window-length-suggested-prompts-2" class="level3">
 <h3 class="anchored" data-anchor-id="q4-receptive-field-and-window-length-suggested-prompts-2">Q4 — Receptive Field and Window Length <em>(Suggested prompts: 2)</em></h3>
 <p>Retrain the CNN at windows of <strong>13, 26 and 52</strong> weeks. Report test RMSE for each.</p>
-<div id="2e6dc572" class="cell" data-execution_count="5">
+<div id="75b62ac3" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrain CNN for each window length; collect RMSE</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
-<p><strong>Your response:</strong> Does a longer window always help? Your two convolution layers see about seven weeks of context regardless of how long the window is — explain how that limits what a longer window can buy, and what you would change architecturally to use a 52-week window properly.</p>
+<p><strong>Your response:</strong> Does a longer window always help? Each convolution unit sees about seven weeks; the flatten head then gives every position in the window its own weight. Explain what a longer window adds (context <em>and</em> parameters), why that did or did not pay off in your runs, and what you would change architecturally to use a 52-week window well.</p>
 </blockquote>
 <hr>
 </section>

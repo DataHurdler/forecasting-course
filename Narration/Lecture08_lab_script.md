@@ -129,9 +129,10 @@ kernels (5, 3, 3, 3)-> receptive field 11 weeks
 And look at what stacking buys: each extra kernel-3 layer adds **two** weeks. Two. You go from
 seven to nine to eleven, one whole convolutional layer at a time.
 
-Hand this network a 52-week window and every output neuron still sees seven consecutive weeks of
-it. The annual cycle — the thing that actually drives a retail series — is not merely hard for
-this model to find. It is **outside what any neuron in it can look at.**
+Hand this network a 52-week window and every convolution unit still sees only seven consecutive
+weeks of it. The flatten layer after them gives each position its own weight, so the network as a
+whole does see all fifty-two weeks — but it has to learn the annual relationship one weight per
+position, with nothing shared across positions.
 
 Hold that. Step 4 measures what it costs.
 
@@ -262,9 +263,9 @@ Why? Look at the two columns either side of the RMSE. The receptive field is **7
 it does not move, because nothing about the architecture changed. The parameter count goes 7,329,
 8,161, 9,825 — because the flatten layer's input grows with the window.
 
-So a longer window adds capacity and adds no reach. Every extra week you supply becomes more
-weights to fit and not one additional week that any neuron can actually look at. That is a recipe
-for overfitting, and the 52-week column is what it looks like.
+So a longer window adds reach and capacity together. The flatten head can now weigh last year's
+same week, but every extra week is also more weights to fit, from fewer training windows. Here the
+capacity won, and the 52-week column is what overfitting looks like.
 
 **More data into the model is not more information out of it, unless the architecture can reach
 it.**
@@ -317,9 +318,10 @@ Both are well behind a 46-coefficient LASSO at 744.
 **[pause]**
 
 That is not a failure of the lab and it is not a bad implementation. It is a result about the
-problem. The useful signal in weekly store sales sits at lags a seven-week filter cannot reach —
-last year's same week, the annual shape — and no amount of care inside this architecture will
-recover something the receptive field excludes.
+problem. The useful signal in weekly store sales sits at long lags — last year's same week, the annual
+shape — and this architecture reaches them only through the flatten layer, one weight per
+position. At twenty-six weeks the window does not reach a year at all; at fifty-two it does, and
+the extra weights cost more than the extra context bought.
 
 Which is the honest reason to move on to Lecture 9, and not a reason to conclude that
 convolutions are bad.
