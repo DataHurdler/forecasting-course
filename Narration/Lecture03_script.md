@@ -43,7 +43,7 @@ specifically for time series. Then pyGAM, for the general case. And the takeaway
 
 ---
 
-# ▶ SLIDE 3 — Section divider: Motivation
+# ▶ SLIDE 3 — Section divider: Motivation: Beyond Linear, Without Black Boxes
 
 *(Divider.)*
 
@@ -184,7 +184,7 @@ model. Where is the "generalized"?
 
 **[pause]**
 
-Everything we've modelled has been continuous and roughly symmetric — sales in dollars,
+Everything we've modeled has been continuous and roughly symmetric — sales in dollars,
 demand in units. For that kind of outcome, adding smooth functions together works directly.
 
 But suppose your outcome is a **count**. Units sold at a small store: zero, one, two, seven.
@@ -242,10 +242,10 @@ price of bending.
 
 **[pause]**
 
-*(Point at the left panel.)* Lambda near zero. Bending is free, so the curve chases every
-wiggle — every cold snap, every heat wave, every weekend dip. It uses about a hundred effective
-degrees of freedom: basically all of them. Its strip is off the scale — eighty times the area
-of the middle one.
+*(Point at the left panel.)* Lambda near zero. Bending is free, so the curve chases every wiggle
+— every cold snap, every heat wave, every weekend dip. It uses about a hundred effective degrees
+of freedom — the "edof" above each panel, the number of parameters the curve really uses:
+basically all of them. Its strip is off the scale — eighty times the area of the middle one.
 
 *(Point at the right panel.)* Lambda huge. Any bending at all is infinitely expensive, so the
 curve can't bend, and what's left is a straight line. And not just any line — it's exactly the
@@ -261,8 +261,10 @@ line.
 
 *(Point at the middle panel.)* And in between: lambda chosen by GCV, generalized
 cross-validation — not by eye. You'll hear that refrain all semester: the tuning parameter is
-selected against held-out error, never by what looks nice. Forty-three effective degrees of
-freedom. It keeps the two humps, heating and cooling, and drops most of the noise.
+selected by an estimate of out-of-sample error, never by what looks nice. GCV computes that
+estimate from the fit itself — a shortcut to leave-one-out error, with nothing actually held
+out. Forty-three effective degrees of freedom. It keeps the two humps, heating and cooling, and
+drops most of the noise.
 
 The proof is in the titles: each curve scored on the *next* year, 2015. The wiggly fit misses
 by thirty-nine forty-six. The straight line by forty-six twenty. The GCV fit by thirty-six
@@ -294,13 +296,13 @@ mostly isn't — and this is the elegant part of the penalized approach. You giv
 plenty of knots, more than you think you need, and then let **lambda** control how much of
 that available flexibility actually gets used.
 
-So the knots set the ceiling, and lambda sets where under the ceiling you land. That's why
-you tune lambda by cross-validation and generally leave the knot count alone. One tuning
+So the knots set the ceiling, and lambda sets where under the ceiling you land. That's why you
+tune lambda — by GCV or cross-validation — and generally leave the knot count alone. One tuning
 decision instead of two — and the one that's easier to make honestly.
 
 ---
 
-# ▶ SLIDE 10 — Section divider: Prophet for Time Series GAMs
+# ▶ SLIDE 10 — Section divider: Prophet for Time-Series GAMs
 
 Part three. Prophet — a GAM built specifically for business time series.
 
@@ -308,8 +310,8 @@ Part three. Prophet — a GAM built specifically for business time series.
 
 # ▶ SLIDE 11 — Prophet: Forecasting at Scale
 
-Taylor and Letham built Prophet at Meta for large-scale forecasting. And it is a GAM in
-time-series clothing — look at the decomposition.
+Taylor and Letham built Prophet at Facebook, now Meta, for large-scale forecasting. And it is a
+GAM in time-series clothing — look at the decomposition.
 
 $y$ at time $t$ equals trend, plus seasonality, plus holidays, plus noise. Three additive
 components. That is the GAM structure from two slides ago, with the terms chosen for what
@@ -449,12 +451,13 @@ worth more than a small RMSE improvement.
 **Reach for Prophet** on seasonal series with known holiday effects, especially when someone
 will ask you to explain the forecast.
 
-**Reach for pyGAM** when you have many correlated external predictors instead — which is where
-we're going next.
+**Reach for pyGAM** instead when the drivers are a few non-calendar predictors whose shape you
+want to see — which is where we're going next. Not many correlated ones: that's the case where
+GAM curves stop being trustworthy, as you'll see in a minute.
 
 ---
 
-# ▶ SLIDE 14 — Section divider: pyGAM
+# ▶ SLIDE 14 — Section divider: pyGAM for Generalized Additive Modeling
 
 Part four. pyGAM, for when you have several predictors and want a flexible effect for each.
 
@@ -480,15 +483,16 @@ be linear — don't spend flexibility where you don't need it.
 
 **`f(j)`** handles a binary or categorical feature — a factor.
 
-Then `gridsearch` tunes lambda by cross-validation, so you don't pick it yourself.
+Then `gridsearch` tunes lambda by GCV — the same in-sample shortcut to leave-one-out error you
+saw on the penalty slide — so you don't pick it yourself.
 
 **[pause]**
 
-One habit I'd ask you to build: after `gridsearch` returns, **look at the curves**. The
-search optimizes held-out error, and it will happily give you a curve that's statistically
-optimal and economically absurd — sales rising as unemployment rises, say. When that happens
-the model isn't broken; it's telling you something is confounded. But you only find out if
-you look.
+One habit I'd ask you to build: after `gridsearch` returns, **look at the curves**. The search
+optimizes an estimate of held-out error, and it will happily give you a curve that's
+statistically optimal and economically absurd — sales rising as unemployment rises, say. When
+that happens the model isn't broken; it's telling you something is confounded. But you only find
+out if you look.
 
 **[pause]**
 
@@ -582,7 +586,7 @@ columns rather than across.
 ARIMA and ETS: not nonlinear, no interactions, highly interpretable, univariate time series.
 Linear regression: same, with manual interactions if you build them.
 
-GAM: **nonlinear, yes. Interactions, no. Interpretable, high.**
+GAM: **nonlinear, yes. Interactions, only the ones you specify. Interpretable, high.**
 
 Random Forest: nonlinear and interactions, medium interpretability. XGBoost: same, but low.
 
@@ -591,12 +595,14 @@ Random Forest: nonlinear and interactions, medium interpretability. XGBoost: sam
 The column that decides it is usually **Interactions**.
 
 A GAM is additive by construction. That's the source of its interpretability, and it's also a
-hard limit. If the effect of price genuinely depends on whether it's a holiday week, a GAM
-cannot represent that. A tree can — that's exactly what a tree does, and it's why the next
-three lectures exist.
+real limit — though not an absolute one. If the effect of price genuinely depends on whether
+it's a holiday week, a GAM can represent that only if you add the interaction term yourself: a
+tensor-product smooth, `te()` in pyGAM, or a smooth of price fitted separately by holiday. You
+have to suspect the interaction first. A tree finds it on its own — that's exactly what a tree
+does, and it's why the next three lectures exist.
 
 So the additivity is a bargain, not a free lunch. You buy explainability with the ability to
-model interactions.
+find interactions automatically.
 
 **[pause]**
 
@@ -618,7 +624,7 @@ Five things.
 additive. Each variable's effect can be visualized and explained independently.
 
 **Two.** The smoothness penalty prevents overfitting. Lambda trades fit against smoothness,
-and it's chosen by cross-validation — never by eye.
+and it's chosen by GCV or cross-validation — never by eye.
 
 **Three.** Prophet decomposes a series into trend, seasonality, and holidays using a GAM.
 Ideal for business series with seasonal patterns and known irregular events.

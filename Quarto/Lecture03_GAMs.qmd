@@ -30,9 +30,9 @@ csl: https://www.zotero.org/styles/chicago-author-date
 
 1. Motivation: Beyond Linear, Without Black Boxes
 2. GAM Structure and Smoothing
-3. Prophet for Time Series GAMs
-4. pyGAM for General Additive Modeling
-5. Key Takeaways
+3. Prophet for Time-Series GAMs
+4. pyGAM for Generalized Additive Modeling
+5. Key Takeaways and Roadmap
 
 # Motivation: Beyond Linear, Without Black Boxes
 
@@ -67,7 +67,7 @@ We want flexibility to capture nonlinear relationships while still being able to
 
 ## Why Additivity Matters for Interpretation
 
-In an additive model, each variable's effect is the same whatever the others are doing. Lab 3's electricity load, by month:
+In an additive model, each variable's effect is the same whatever the others are doing. Lab 3's daily electricity load (PJM East), by month:
 
 ![](../Figures/Lecture03_GAMs/additivity_gap.svg){fig-align="center" height="300px"}
 
@@ -98,7 +98,7 @@ Each $f_j$ is free to be linear, curved, U-shaped, or threshold-like — the dat
 
 ## What the "Generalized" Actually Means
 
-So far every $y$ we have modelled has been continuous and roughly symmetric — sales in dollars, demand in units. For that case an *additive* model is enough. The **G** in GAM is what happens when $y$ is not that kind of variable.
+So far every $y$ we have modeled has been continuous and roughly symmetric — sales in dollars, demand in units. For that case an *additive* model is enough. The **G** in GAM is what happens when $y$ is not that kind of variable.
 
 ::: {.definitionbox}
 ::: {.definitionbox-title}
@@ -129,7 +129,7 @@ $$\text{PSSE} = \underbrace{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}_{\text{fit}} + \u
 
 [$f''$ measures bending, so the penalty is the shaded area: zero only for a straight line. Same data, same 100 splines (cubic pieces joined at knots); only $\lambda$ changes, and GCV chooses it, not your eye.]{.smaller}
 
-# Prophet for Time Series GAMs
+# Prophet for Time-Series GAMs
 
 Facebook's Prophet decomposes a time series into trend, seasonality, and holiday effects using a GAM.
 
@@ -137,7 +137,7 @@ Facebook's Prophet decomposes a time series into trend, seasonality, and holiday
 
 ## Prophet: Forecasting at Scale
 
-@TaylorLetham2018 built Prophet for large-scale forecasting at Meta. It is a GAM in time-series clothing — the series is decomposed additively:
+@TaylorLetham2018 built Prophet for large-scale forecasting at Facebook (now Meta). It is a GAM in time-series clothing — the series is decomposed additively:
 
 $$y(t) = \underbrace{g(t)}_{\text{trend}} + \underbrace{s(t)}_{\text{seasonality}} + \underbrace{h(t)}_{\text{holidays}} + \varepsilon_t$$
 
@@ -174,9 +174,9 @@ fc = m.predict(test);  m.plot_components(fc)
 
 ![](../Figures/Lecture03_GAMs/prophet_components.svg){fig-align="center" height="205px"}
 
-[`plot_components` draws one panel per additive term. **Reach for Prophet** when someone will ask you to explain the forecast; **reach for pyGAM** when you have many correlated external predictors.]{.smaller}
+[`plot_components` draws one panel per additive term. **Reach for Prophet** when someone will ask you to explain the forecast; **reach for pyGAM** to see the shape of a few non-calendar drivers.]{.smaller}
 
-# pyGAM for General Additive Modeling
+# pyGAM for Generalized Additive Modeling
 
 When you have multiple predictors and want flexible nonlinear effects for each.
 
@@ -203,7 +203,7 @@ y_hat = gam.predict(X_new)
 
 The three term types are the whole vocabulary: `s(j)` is a smooth spline of feature $j$ — the flexible nonlinear effect; `l(j)` forces a straight line, which is worth using when theory says the effect should be linear; and `f(j)` handles a binary or categorical feature.
 
-`gridsearch` then tunes $\lambda$ by cross-validation — though you should still look at the resulting curves and ask whether they are plausible.
+`gridsearch` then tunes $\lambda$ by GCV (generalized cross-validation), an in-sample shortcut to leave-one-out error — but still look at the curves and ask whether they are plausible.
 
 ---
 
@@ -213,7 +213,7 @@ Each panel is one $\hat{f}_j(x_j)$ with its confidence band, from Lab 3's electr
 
 ![](../Figures/Lecture03_GAMs/partial_dependence.svg){fig-align="center" height="280px"}
 
-[Read the band too. Every day of the year is equally covered, so it barely changes width; where data thin out it fans, just where readers want to extrapolate.]{.smaller}
+[Read the band too. Every day of the year appears four or five times, so it barely changes width; where data thin out it fans, just where readers want to extrapolate.]{.smaller}
 
 ::: {.keybox}
 A sentence someone can act on: *"plan for mid-July demand about 11,400 MW above the late-April trough, a winter peak about 8,500 above it, and weekends about 3,000 below weekdays."* No straight line in day of year has two peaks.
@@ -231,11 +231,11 @@ GAMs: flexible, interpretable, and underutilized in business forecasting.
 |--------|-----------|--------------|---------------|----------|
 | ARIMA / ETS | No | No | High | Univariate time series |
 | Linear regression | No | Manual | High | Few predictors |
-| **GAM** | Yes | No | High | Few predictors, explain effects |
+| **GAM** | Yes | Manual | High | Few predictors, explain effects |
 | Random Forest | Yes | Yes | Medium | Many predictors, tabular |
 | XGBoost | Yes | Yes | Low | Many predictors, accuracy first |
 
-The column that decides it is usually **Interactions**. A GAM is additive by construction, so if the effect of price depends on whether it is a holiday week, a GAM cannot represent that and a tree can.
+The deciding column is usually **Interactions**. A GAM is additive by construction, so if the effect of price depends on whether it is a holiday week, you must add that interaction yourself (`te()`); a tree finds it unprompted.
 
 **Choose a GAM when** you must explain each predictor's effect, the effects are curved, or a series has complex trend and seasonality (Prophet), and interpretability matters more than the last few points of accuracy. Whether a flexible model buys those points is an empirical question; Lectures 4–6 test it.
 

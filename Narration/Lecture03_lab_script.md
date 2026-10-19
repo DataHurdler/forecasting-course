@@ -28,8 +28,8 @@ you know why the wording changed if you remember the earlier version.
    the single-harmonic Prophet (3,358) loses to seasonal naive (3,333). The lab now says "on
    RMSE" and points at the disagreement.
 3. **The closing** said the simpler model "was competitive." pyGAM **wins** — 3,444 against
-   Prophet's 3,935, about 12% better on both metrics. Understating your own result trains
-   students to do the same.
+   Prophet's 3,935, about 12% better on RMSE and 15% on MAE. Understating your own result
+   trains students to do the same.
 
 ### In-room language that needs replacing
 
@@ -93,7 +93,7 @@ Before any model, look at the three periodicities separately.
 Hour of day: demand bottoms out around four in the morning and peaks in the early evening,
 around hour nineteen. People wake up, go to work, come home, turn things on.
 
-Day of week: Monday highest, Sunday lowest. Commercial and industrial load.
+Day of week: Tuesday highest, Sunday lowest. Commercial and industrial load.
 
 Day of year: and this one is a strange shape, which is the whole point of Step 2.
 
@@ -181,8 +181,9 @@ Prophet                  RMSE   3,935   MAE   3,001
 Prophet beats the benchmark — about fifteen percent better on RMSE.
 
 One deliberate choice: `daily_seasonality=False`. The data is one row per day, so there is no
-within-day variation left to model. Leave it on and Prophet will happily fit a daily cycle to
-noise, and report it to you with a straight face.
+within-day variation left to model. Leave it on and the daily terms are constant — every
+timestamp is midnight, so the daily wave reads the same value every day — and they cannot be
+identified. Prophet would still draw you a daily curve the data cannot support.
 
 ---
 
@@ -197,8 +198,8 @@ meeting.
 
 Three panels, one per additive term, each on the scale of the original series. The trend. The
 weekly cycle. The yearly cycle. Separately readable, and each one is a sentence you can say to a
-non-technical person: *"demand is drifting down slightly, Mondays run about a thousand megawatts
-above Sundays, and there are two annual peaks."*
+non-technical person: *"demand is drifting down slightly, weekdays run about three thousand
+megawatts above Sundays, and there are two annual peaks."*
 
 **[pause]**
 
@@ -275,12 +276,12 @@ Seasonal naive (364d)     4608   3333
 
 **[pause]** — *let the table sit.*
 
-Every model beat the benchmark. The single-harmonic Prophet is the worst of the three, as Step 2
-predicted.
+Every model beat the benchmark on RMSE — on MAE, as you just saw, the single harmonic did not.
+The single-harmonic Prophet is the worst of the three, as Step 2 predicted.
 
 And **pyGAM wins.** Thirty-four forty-four against Prophet's thirty-nine thirty-five — about
-twelve percent better, on both RMSE and MAE, using two terms against Prophet's three, with no
-trend component at all.
+twelve percent better on RMSE, and fifteen percent better on MAE, using two terms against
+Prophet's three, with no trend component at all.
 
 That should bother you slightly, and we'll come back to it in the closing question.
 
@@ -291,7 +292,7 @@ Now the partial dependence — the GAM equivalent of the components plot.
 *(Point at the left panel.)*
 
 **Say what the left panel means in words**, the way you'd say it to a grid operator: demand is
-high in January, falls through spring to a minimum around mid-April, climbs to an annual peak in
+high in January, falls through spring to a minimum in late April, climbs to an annual peak in
 mid-July, and falls again into autumn. The model learned the M shape directly from the data by
 bending, without being given a single Fourier term.
 
@@ -314,7 +315,7 @@ Post these in the Week 3 thread before Lecture 4.
 
 **First, the awkward result.** pyGAM was given two things: day of year and day of week. Prophet
 was given a trend, a weekly cycle, *and* a yearly cycle with ten harmonics. Prophet has strictly
-more machinery — and it lost by twelve percent.
+more machinery — and it lost by twelve percent on RMSE, fifteen on MAE.
 
 Give me one reason a more flexible model can lose on a held-out year. And name the thing you
 would check before concluding that pyGAM is genuinely the better choice here, rather than luckier
@@ -350,7 +351,7 @@ Reproducible; verified bit-identical across repeated runs. Prophet uses MAP esti
 |---|---|
 | Data | 2,041 days (train 1,673, test 368), 2017-08-01 → 2018-08-03 |
 | Swing — hour of day | 33.3% (min hour 4, max hour 19) |
-| Swing — day of week | 11.6% (min Sunday, max Monday) |
+| Swing — day of week | 11.6% (min Sunday, max Tuesday) |
 | Swing — day of year | 44.7% (min day 116, max day 200) |
 | January / April / July | 34,403 / 26,945 / 37,043 MW |
 | One harmonic, in-sample | 3,428 MW |
@@ -367,7 +368,7 @@ Reproducible; verified bit-identical across repeated runs. Prophet uses MAP esti
 the single-harmonic Prophet (3,358) while having a worse RMSE. It is the only metric disagreement
 in the table and it makes the point about symmetric loss concretely, so do not smooth over it.
 
-*pyGAM beating Prophet is a genuine result, not a fluke of rounding* — it wins on both metrics by
-roughly 12%. The honest caveat, which is what the closing question is fishing for, is that this
-is a single held-out year. Walk-forward validation over several origins is what would settle it,
-and that is Lecture 1's lesson arriving again one lecture later.
+*pyGAM beating Prophet is a genuine result, not a fluke of rounding* — it wins on both metrics,
+by about 12% on RMSE and 15% on MAE. The honest caveat, which is what the closing question is
+fishing for, is that this is a single held-out year. Walk-forward validation over several
+origins is what would settle it, and that is Lab 2's lesson arriving again one lecture later.

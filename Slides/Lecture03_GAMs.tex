@@ -76,7 +76,7 @@
 % ("additivity"): Lab 3's rows from 2013, weekday minus weekend 4,063 MW in July, 2,006 in December.
 \begin{frame}{Why Additivity Matters for Interpretation}
   In an additive model, each variable's effect is the same whatever the others are doing. Lab 3's
-  electricity load, by month:
+  daily electricity load (PJM East), by month:
   \begin{center}
     \includegraphics[height=4.3cm]{../Figures/Lecture03_GAMs/additivity_gap.pdf}
   \end{center}
@@ -116,7 +116,7 @@
 
 % --- Slide: what the "Generalized" means -------------------------------------
 \begin{frame}{What the ``Generalized'' Actually Means}
-  So far every $y$ we have modelled has been continuous and roughly symmetric --- sales in
+  So far every $y$ we have modeled has been continuous and roughly symmetric --- sales in
   dollars, demand in units. For that case an \emph{additive} model is enough.
   The \textbf{G} in GAM is what happens when $y$ is not that kind of variable.
   \begin{definitionbox}{Generalized Additive Model, in full}
@@ -168,17 +168,17 @@
 \end{frame}
 
 % =============================================================================
-\section{Prophet for Time Series GAMs}
+\section{Prophet for Time-Series GAMs}
 % =============================================================================
 
-\sectionslide{Prophet for Time Series GAMs}{%
+\sectionslide{Prophet for Time-Series GAMs}{%
   Facebook's Prophet decomposes a time series into trend, seasonality,
   and holiday effects using a GAM.}
 
 % --- Slide: Prophet overview -------------------------------------------------
 \begin{frame}{Prophet: Forecasting at Scale}
-  \textcite{TaylorLetham2018} built Prophet for large-scale forecasting at Meta. It is a GAM
-  in time-series clothing --- the series is decomposed additively:
+  \textcite{TaylorLetham2018} built Prophet for large-scale forecasting at Facebook (now
+  Meta). It is a GAM in time-series clothing --- the series is decomposed additively:
   \[
     y(t) = \underbrace{g(t)}_{\text{trend}} + \underbrace{s(t)}_{\text{seasonality}}
           + \underbrace{h(t)}_{\text{holidays}} + \varepsilon_t
@@ -226,15 +226,15 @@
   \end{center}
   \vspace{-0.35cm}
   {\small \texttt{plot\_components} draws one panel per additive term. \textbf{Reach for
-  Prophet} when someone will ask you to explain the forecast; \textbf{reach for pyGAM} when you
-  have many correlated external predictors.}
+  Prophet} when someone will ask you to explain the forecast; \textbf{reach for pyGAM} to see
+  the shape of a few non-calendar drivers.}
 \end{frame}
 
 % =============================================================================
-\section{pyGAM for General Additive Modeling}
+\section{pyGAM for Generalized Additive Modeling}
 % =============================================================================
 
-\sectionslide{pyGAM for General Additive Modeling}{%
+\sectionslide{pyGAM for Generalized Additive Modeling}{%
   When you have multiple predictors and want flexible nonlinear effects
   for each.}
 
@@ -256,8 +256,9 @@
   binary or categorical feature.
 
   \vspace{0.15cm}
-  \texttt{gridsearch} then tunes $\lambda$ by cross-validation --- though you should still
-  look at the resulting curves and ask whether they are plausible.
+  \texttt{gridsearch} then tunes $\lambda$ by GCV (generalized cross-validation), an in-sample
+  shortcut to leave-one-out error --- but still look at the curves and ask whether they are
+  plausible.
 \end{frame}
 
 % --- Slide: Partial dependence -----------------------------------------------
@@ -269,8 +270,8 @@
     \includegraphics[height=3.5cm]{../Figures/Lecture03_GAMs/partial_dependence.pdf}
   \end{center}
   \vspace{-0.35cm}
-  {\small Read the band too. Every day of the year is equally covered, so it barely changes
-  width; where data thin out it fans, just where readers want to extrapolate.}
+  {\small Read the band too. Every day of the year appears four or five times, so it barely
+  changes width; where data thin out it fans, just where readers want to extrapolate.}
   \begin{keybox}
     \small A sentence someone can act on: \emph{``plan for mid-July demand about 11,400 MW
     above the late-April trough, a winter peak about 8,500 above it, and weekends about 3,000
@@ -295,7 +296,7 @@
       \midrule
       ARIMA / ETS       & No  & No     & High   & Univariate time series \\
       Linear regression & No  & Manual & High   & Few predictors \\
-      \textbf{GAM}      & Yes & No     & High   & Few predictors, explain effects \\
+      \textbf{GAM}      & Yes & Manual & High   & Few predictors, explain effects \\
       Random Forest     & Yes & Yes    & Medium & Many predictors, tabular \\
       XGBoost           & Yes & Yes    & Low    & Many predictors, accuracy first \\
       \bottomrule
@@ -304,9 +305,9 @@
   \end{center}
 
   \vspace{0.15cm}
-  The column that decides it is usually \textbf{Interactions}. A GAM is additive by
-  construction, so if the effect of price depends on whether it is a holiday week, a GAM
-  cannot represent that and a tree can.
+  The deciding column is usually \textbf{Interactions}. A GAM is additive by construction, so
+  if the effect of price depends on whether it is a holiday week, you must add that interaction
+  yourself (\texttt{te()}); a tree finds it unprompted.
 
   \vspace{0.15cm}
   \textbf{Choose a GAM when} you must explain each predictor's effect, the effects are curved,

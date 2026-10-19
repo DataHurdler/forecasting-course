@@ -169,7 +169,9 @@ for k, (r, a) in results.items():
 ```
 
 We turned `daily_seasonality` off deliberately — the data is one row per day, so there is no
-within-day variation left to model. Leave it on and Prophet will happily fit noise.
+within-day variation left to model. Leave it on and the daily terms are constant on midnight
+timestamps, so they cannot be identified: Prophet would draw a daily curve the data cannot
+support.
 
 ---
 
@@ -268,7 +270,7 @@ while MAE treats every error proportionally.
 
 > **Discuss:** `pyGAM` was given only day-of-year and day-of-week — no trend term at all. Prophet
 > was given a trend, a weekly cycle, *and* a yearly cycle with ten harmonics. Yet on this holdout
-> the simpler model won, by roughly 12% on both RMSE and MAE.
+> the simpler model won, by about 12% on RMSE and 15% on MAE.
 >
 > Give one reason a more flexible model can lose on a held-out year, and name the thing you
 > would check before concluding that pyGAM is genuinely the better choice here.
