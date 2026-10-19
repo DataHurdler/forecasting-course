@@ -199,7 +199,8 @@ contributions from all twenty-six positions.
 
 And this is where it breaks.
 
-Propagating a gradient back through k steps multiplies it by roughly W-h, k times over. If the
+Propagating a gradient back through k steps multiplies it by W-h, and by the slope of tanh, which
+is never more than one — that's Lecture 7's right-hand panel — k times over. If the
 relevant factor is below one, the gradient shrinks **exponentially** as it travels. If it's above
 one, it explodes.
 
@@ -280,10 +281,13 @@ rest of the network actually sees. Three gates control the traffic between them.
 
 The **forget gate** decides what fraction of the old memory to keep. The **input gate** decides
 how much of the new candidate value to write in. The **output gate** decides how much of the
-memory to expose to the outside world.
+memory to expose to the outside world. And the last row is the **candidate**: the new content on
+offer this week, a tanh of the same two inputs. The input gate decides how much of it gets written.
 
-Each gate is a sigmoid, so it outputs a number between zero and one. Think of it as a soft switch
-— not open or closed, but a dial, and the network learns where to set it.
+Here sigma means the sigmoid specifically — in Lecture 7 it stood for any activation. So each gate
+outputs a number between zero and one. Think of it as a soft switch — not open or closed, but a
+dial, and the network learns where to set it. The square brackets just mean last week's hidden
+state and this week's input, stacked into one vector.
 
 **[pause]**
 
@@ -426,6 +430,10 @@ two — which Homework 5 asks you to do — this is where you'll get a shape err
 And `out[:, -1, :]` is the hidden state after the last step. That's the summary of the whole
 window, which is what we put the linear layer on.
 
+*(Point at the comment.)* For the vanilla RNN — the one that topped our scoreboard, and the one
+Homework 5 asks for — swap in `nn.RNN`. It returns `out, h`, not `out, (h, c)`: there is no cell
+state. Copy the LSTM line unchanged and Python will complain about unpacking.
+
 Everything from Lecture 7 still applies: Adam, weight decay, `zero_grad()`, `shuffle=False`, split
 by time. Plus one addition — `clip_grad_norm_` with a max norm of one, to handle the exploding
 gradient case from slide 8.
@@ -472,7 +480,7 @@ strongest result deep learning gets on our data.
 
 And the second reading. **The LSTM lost to the vanilla RNN** — at a fixed thirty-epoch budget.
 
-That is not a typo. Hold onto the qualifier, though, because the next three slides are about what
+That is not a typo. Hold onto the qualifier, though, because the next four slides are about what
 that line does and does not mean.
 
 ---
@@ -592,10 +600,11 @@ last few weeks tell you that. No memory mechanism required.
 
 **Two. The series are smooth** — and this one is counter-intuitive, so take it slowly. That's the
 autocorrelation of each series around its own mean, averaged over the thirty. Point eight three at
-lag one, and still point four three at lag fifty-two. That *looks* like long memory, and it is
-actually the reason long memory is unnecessary. Because neighboring weeks are nearly the same
-number, the recent past is a **sufficient statistic** for the distant past. Nothing has to be
-carried across the gap, because the gap was filled in continuously along the way.
+lag one, and still point four three at lag fifty-two. That *looks* like long memory — and history
+does help: on the scoreboard the RNN improved from eight seventy-eight to eight oh five as the
+window grew from thirteen weeks to fifty-two. But it arrives smoothly. Because neighboring weeks
+are nearly the same number, no single value has to survive many steps untouched; the gap is filled
+in continuously along the way.
 
 Gating earns its keep when something must survive steps that would overwrite it. Here nothing
 overwrites anything.

@@ -98,8 +98,8 @@
   back from step $T$ to step 1, and $\mathbf{W}_h$'s gradient sums contributions from all 26.
 
   \begin{warningbox}
-    \textbf{This is where it breaks.} Going back $k$ steps multiplies by roughly $\mathbf{W}_h$,
-    $k$ times. Below 1, the gradient shrinks \emph{exponentially}; above 1, it can explode.
+    \textbf{This is where it breaks.} Going back $k$ steps multiplies by $\mathbf{W}_h$ and by
+    $\tanh' \le 1$, $k$ times. Below 1, the gradient shrinks \emph{exponentially}; above 1, it can explode.
   \end{warningbox}
 
   Exploding is fixed by \texttt{clip\_grad\_norm\_}; vanishing is not --- the next section.
@@ -108,7 +108,7 @@
 % --- Slide: vanishing gradients ----------------------------------------------
 \begin{frame}{Why a Vanilla RNN Forgets \parencite{Bengio1994}}
   Suppose each backward step multiplies the gradient by $0.7$ --- an unremarkable value for a
-  $\tanh$ network --- and compare our own trained RNN, measured:
+  $\tanh$ network --- and compare our own RNN, trained on 52-week windows, measured:
   \begin{center}
     \includegraphics[height=4.3cm]{../Figures/Lecture09_Part1/gradient_decay.pdf}
   \end{center}
@@ -141,7 +141,9 @@
       \textbf{Input gate} & $\mathbf{i}_t = \sigma(\mathbf{W}_i[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i)$
         --- how much of the new candidate to write \\[3pt]
       \textbf{Output gate} & $\mathbf{o}_t = \sigma(\mathbf{W}_o[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o)$
-        --- how much of memory to expose \\
+        --- how much of memory to expose \\[3pt]
+      \textbf{Candidate} & $\tilde{\mathbf{c}}_t = \tanh(\mathbf{W}_c[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c)$
+        --- the new content on offer \\
       \bottomrule
     \end{tabular}
     }
@@ -156,7 +158,8 @@
   \]
   \vspace{-0.3cm}
 
-  Each gate is a sigmoid, so it outputs between 0 and 1 --- a soft switch the network learns.
+  Here $\sigma$ is the sigmoid, so each gate outputs between 0 and 1 --- a soft switch the network
+  learns. $[\mathbf{h}_{t-1}, \mathbf{x}_t]$ stacks the two vectors.
 \end{frame}
 
 % --- Slide: gates in business terms -------------------------------------------
@@ -221,14 +224,14 @@
   \begin{examplebox}{Window in, one forecast out}
     {\tiny\linespread{1.2}\selectfont
     \texttt{class LSTMForecaster(nn.Module):}\\
-    \texttt{\ \ def \_\_init\_\_(self, n\_features, hidden=64, layers=1):}\\
-    \texttt{\ \ \ \ super().\_\_init\_\_()}\\
-    \texttt{\ \ \ \ self.lstm = nn.LSTM(n\_features, hidden, num\_layers=layers,}\\
-    \texttt{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ batch\_first=True)}\\
-    \texttt{\ \ \ \ self.fc = nn.Linear(hidden, 1)}\\[3pt]
-    \texttt{\ \ def forward(self, x):\ \ \ \ \ \ \# x: (batch, seq\_len, n\_features)}\\
-    \texttt{\ \ \ \ out, (h, c) = self.lstm(x)}\\
-    \texttt{\ \ \ \ return self.fc(out[:, -1, :]).squeeze(-1)}
+    \texttt{\mbox{}\ \ def \_\_init\_\_(self, n\_features, hidden=64, layers=1):}\\
+    \texttt{\mbox{}\ \ \ \ super().\_\_init\_\_()}\\
+    \texttt{\mbox{}\ \ \ \ self.lstm = nn.LSTM(n\_features, hidden, num\_layers=layers,}\\
+    \texttt{\mbox{}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ batch\_first=True)}\\
+    \texttt{\mbox{}\ \ \ \ self.fc = nn.Linear(hidden, 1)}\\[3pt]
+    \texttt{\mbox{}\ \ def forward(self, x):\ \ \ \ \ \ \# x: (batch, seq\_len, n\_features)}\\
+    \texttt{\mbox{}\ \ \ \ out, (h, c) = self.lstm(x)\ \ \# nn.RNN instead: out, h = self.rnn(x)}\\
+    \texttt{\mbox{}\ \ \ \ return self.fc(out[:, -1, :]).squeeze(-1)}
     }
   \end{examplebox}
   \texttt{batch\_first=True} gives shape \texttt{(batch, seq\_len, features)} --- the
@@ -264,7 +267,7 @@
 
   \vspace{0.1cm}
   \textbf{And the LSTM lost to the vanilla RNN} --- at a fixed 30-epoch budget. That is not a
-  typo, and the next three slides are about what it does and does not mean.
+  typo, and the next four slides are about what it does and does not mean.
 \end{frame}
 
 % --- Slide: why LSTM lost ----------------------------------------------------
@@ -324,8 +327,8 @@
   is reading the level, and the last few weeks give you that.
 
   \vspace{0.1cm}
-  \textbf{2. The series are smooth.} The recent past is a \emph{sufficient statistic} for the
-  distant past: nothing needs carrying across a gap.
+  \textbf{2. History helps, but it arrives smoothly.} A longer window still improves the RNN
+  (878 $\to$ 805), but no value has to survive many steps untouched.
 \end{frame}
 
 % --- Slide: the data check, continued -----------------------------------------

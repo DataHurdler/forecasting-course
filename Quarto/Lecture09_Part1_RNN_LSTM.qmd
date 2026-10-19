@@ -87,7 +87,7 @@ In words: the new summary is a squashed mix of the old summary and the new week.
 Training is ordinary backpropagation on an unusual graph. **Unroll** the recurrence and it is a 26-layer network, one layer per week, every layer sharing the same weights. Gradients flow back from step $T$ to step 1, and $\mathbf{W}_h$'s gradient sums contributions from all 26.
 
 ::: {.warningbox}
-**This is where it breaks.** Going back $k$ steps multiplies by roughly $\mathbf{W}_h$, $k$ times. Below 1, the gradient shrinks *exponentially*; above 1, it can explode.
+**This is where it breaks.** Going back $k$ steps multiplies by $\mathbf{W}_h$ and by $\tanh' \le 1$, $k$ times. Below 1, the gradient shrinks *exponentially*; above 1, it can explode.
 :::
 
 Exploding is fixed by `clip_grad_norm_`; vanishing is not — the next section.
@@ -96,7 +96,7 @@ Exploding is fixed by `clip_grad_norm_`; vanishing is not — the next section.
 
 ## Why a Vanilla RNN Forgets
 
-Suppose each backward step multiplies the gradient by $0.7$ — an unremarkable value for a $\tanh$ network — and compare our own trained RNN, measured [@Bengio1994]:
+Suppose each backward step multiplies the gradient by $0.7$ — an unremarkable value for a $\tanh$ network — and compare our own RNN, trained on 52-week windows, measured [@Bengio1994]:
 
 ![](../Figures/Lecture09_Part1/gradient_decay.svg){fig-align="center" height="330px"}
 
@@ -117,13 +117,14 @@ An LSTM carries **two** things forward: a **cell state** $\mathbf{c}_t$, which i
 | **Forget gate** | $\mathbf{f}_t = \sigma(\mathbf{W}_f[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f)$ — what fraction of the old memory to keep |
 | **Input gate** | $\mathbf{i}_t = \sigma(\mathbf{W}_i[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i)$ — how much of the new candidate to write |
 | **Output gate** | $\mathbf{o}_t = \sigma(\mathbf{W}_o[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o)$ — how much of memory to expose |
+| **Candidate** | $\tilde{\mathbf{c}}_t = \tanh(\mathbf{W}_c[\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c)$ — the new content on offer |
 
 The memory update itself is the line that matters:
 
 $$\mathbf{c}_t = \mathbf{f}_t \odot \mathbf{c}_{t-1} \;+\; \mathbf{i}_t \odot \tilde{\mathbf{c}}_t,
 \qquad \mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{c}_t)$$
 
-Each gate is a sigmoid, so it outputs between 0 and 1 — a soft switch the network learns.
+Here $\sigma$ is the sigmoid, so each gate outputs between 0 and 1 — a soft switch the network learns. $[\mathbf{h}_{t-1}, \mathbf{x}_t]$ stacks the two vectors.
 
 ---
 
@@ -174,7 +175,7 @@ class LSTMForecaster(nn.Module):
         self.fc = nn.Linear(hidden, 1)
 
     def forward(self, x):        # x: (batch, seq_len, n_features)
-        out, (h, c) = self.lstm(x)
+        out, (h, c) = self.lstm(x)   # nn.RNN instead: out, h = self.rnn(x)
         return self.fc(out[:, -1, :]).squeeze(-1)
 ```
 :::
@@ -199,7 +200,7 @@ Same weekly panel, same 26-week windows, same test block as Homework 4.
 
 [**Recurrence beats convolution decisively**]{.key-result} — and it did so on *four raw channels* with no lag engineering at all, against 46 hand-built features for LASSO. That is the case for reading a sequence in order, in one line.
 
-**And the LSTM lost to the vanilla RNN** — at a fixed 30-epoch budget. That is not a typo, and the next three slides are about what it does and does not mean.
+**And the LSTM lost to the vanilla RNN** — at a fixed 30-epoch budget. That is not a typo, and the next four slides are about what it does and does not mean.
 
 ---
 
@@ -241,7 +242,7 @@ Gating pays when a value must survive many steps that would otherwise overwrite 
 
 **1. Most variance is not sequential.** **91%** is *between* series: the task is reading the level, and the last few weeks give you that.
 
-**2. The series are smooth.** The recent past is a *sufficient statistic* for the distant past: nothing needs carrying across a gap.
+**2. History helps, but it arrives smoothly.** A longer window still improves the RNN (878 → 805), but no value has to survive many steps untouched.
 
 ---
 
