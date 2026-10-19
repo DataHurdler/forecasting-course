@@ -213,16 +213,16 @@ template-maintenance gates that this course repo does not satisfy.
 **Figures roadmap:** [`quality_reports/plans/2026-10-13_visuals-and-geometry-audit.md`](quality_reports/plans/2026-10-13_visuals-and-geometry-audit.md)
 ranks the figures and algebra-to-geometry swaps for every deck and tracks which decks are built
 (every deck has its first figure and the shared geometry pictures as of 2026-10-13, and every non-Low candidate as of 2026-10-18); slide text is kept to about 90 words a frame (`python3 scripts/slide_word_counts.py`). Figure generators live in `scripts/figures/lectureNN_figures.py`.
-**Site status:** `docs/` carries all 16 weeks plus finals week — slides (HTML only -- PDFs are deliberately not published), 14 labs,
+**Site status:** `docs/` carries all 16 weeks (Week 15 is the synthesis, Week 16 the project presentations) — slides (HTML only -- PDFs are deliberately not published), 14 labs,
 11 homework submissions, and the syllabus, datasets guide and project rubric as HTML.
 **Note:** The pre-redesign lecture set (Lecture01_Intro through Lecture12_Capstone) was removed in the Fall 2026 cleanup; it remains recoverable from git history. Its QA reports were kept in `quality_reports/`. Its lab notebooks (`scripts/Lecture*.ipynb`) were **deleted 2026-08-31**: they had been kept as "the only worked Python outside Homework/", which stopped being true once the 14 executable labs landed, and their filenames collided with the current numbering (`Lecture10_NeuralNets.ipynb` beside a Lecture 10 that is Bayesian Foundations). They loaded `statsmodels` toy data, never the course datasets. Recoverable from git history.
 
 | Lecture | Beamer | Quarto | Key Content |
 |---------|--------|--------|-------------|
-| 1: Intro, ETS & Forecast Evaluation | `Lecture01_ETS_Eval.tex` ✓ | `Lecture01_ETS_Eval.qmd` ✓ | SES, Holt, Holt-Winters, ETS framework, RMSE/MAE/MAPE/MASE, walk-forward CV, DM test. |
+| 1: Intro, ETS & Forecast Evaluation | `Lecture01_ETS_Eval.tex` ✓ | `Lecture01_ETS_Eval.qmd` ✓ | SES, Holt, Holt-Winters, ETS framework, RMSE/MAE/MAPE/MASE. |
 | 2: ARIMA, VAR & Multivariate Models | `Lecture02_ARIMA_VAR.tex` ✓ | `Lecture02_ARIMA_VAR.qmd` ✓ | Stationarity, ARIMA/SARIMA, auto-ARIMA, VAR, Granger causality, ARIMAX. |
 | 3: Generalized Additive Models | `Lecture03_GAMs.tex` ✓ | `Lecture03_GAMs.qmd` ✓ | GAM structure, smoothing penalty, splines, Prophet, pyGAM, partial dependence plots. |
-| 4: Decision Trees | `Lecture04_DecisionTrees.tex` ✓ | `Lecture04_DecisionTrees.qmd` ✓ | Bias-variance tradeoff, CART, entropy/information gain, sklearn, feature importance. |
+| 4: Decision Trees | `Lecture04_DecisionTrees.tex` ✓ | `Lecture04_DecisionTrees.qmd` ✓ | Bias-variance tradeoff, regression CART, cost-complexity pruning, sklearn, feature importance. |
 | 5: Tree Ensembles — RF & Boosted Trees | `Lecture05_TreeEnsembles.tex` ✓ | `Lecture05_TreeEnsembles.qmd` ✓ | Bagging, bootstrap aggregation, feature subsampling, OOB error, MDI vs permutation importance, gradient boosting, XGBoost (Newton step, col subsampling). |
 | 6: Regularization & Model Selection | `Lecture06_Regularization.tex` ✓ | `Lecture06_Regularization.qmd` ✓ | Subset selection vs shrinkage, Ridge, LASSO, Elastic Net, l1/l2 geometry, regularization paths, choosing λ by walk-forward CV. |
 | 7: Introduction to Neural Networks | `Lecture07_NeuralNets.tex` ✓ | `Lecture07_NeuralNets.qmd` ✓ | Neurons, activations, FFN layers, MSE loss, backprop, Adam, dropout, PyTorch Dataset/DataLoader/training loop. |
@@ -233,7 +233,7 @@ ranks the figures and algebra-to-geometry swaps for every deck and tracks which 
 | 11 Part 1: Bayesian TS (Wk 12) | `Lecture11_Part1_BayesianTS.tex` ✓ | `Lecture11_Part1_BayesianTS.qmd` ✓ | Structural decomposition, local level, Fourier seasonality. Measured: RMSE 1,589 vs naive 1,660; 94% interval 100% covered but ±30% wide. |
 | 11 Part 2: Hierarchical (Wk 13) | `Lecture11_Part2_Hierarchical.tex` ✓ | `Lecture11_Part2_Hierarchical.qmd` ✓ | **Exchangeability first** (the ten FOODS series), then complete/no/partial pooling, non-centred parameterization. Measured (lab, seed 42): thin series shrink 8.1× more; held-out RMSE 0.126 → 0.048; centred fit 43 divergences → 0 non-centred, while R-hat (1.003) and ESS pass in both — only the divergences object. The count is seed-dependent (15–285 centred across 11 seeds); the earlier 127 → 1 / R-hat 1.044 did not reproduce. |
 | 12: Bayesian Statistics III — Linear Regression | `Lecture12_BayesianRegression.tex` ✓ | `Lecture12_BayesianRegression.qmd` ✓ | Bayesian linear regression, posterior coefficient distributions, HDI, DAGs, scenario analysis, course method map. |
-| 13: Synthesis *(Wk 16, no lab)* | `Lecture13_Synthesis.tex` ✓ | `Lecture13_Synthesis.qmd` ✓ | Course-wide scoreboard, the three lessons the measurements taught, method-choice guide, a two-part silent-failure catalogue (pipeline bugs vs. correct code / wrong answer), the Christmas-closure limit (0.25% of days, 4.6% of squared error), and the final-project frame. |
+| 13: Synthesis *(Wk 15, no lab)* | `Lecture13_Synthesis.tex` ✓ | `Lecture13_Synthesis.qmd` ✓ | Course-wide scoreboard, the three lessons the measurements taught, method-choice guide, a two-part silent-failure catalogue (pipeline bugs vs. correct code / wrong answer), the Christmas-closure limit (0.25% of days, 4.6% of squared error), and the final-project frame. |
 
 ---
 
@@ -245,8 +245,7 @@ ranks the figures and algebra-to-geometry swaps for every deck and tracks which 
 (L03 multiple seasonality). **Two datasets are project-only:** the **online store** (`onlinestore_weekly.csv`, 454 weeks
 2018–2026, revenue indexed to Nov 2025 = 100, built by `forecasting-instructor/prep_ico_weekly.py`
 from a gitignored dump; shipped in the student repo, documented as §5 of the datasets guide) and
-**Favorita** as of 2026-08-31 — there is no
-`prep_favorita.py` and Week 16 does not use it. The Week 16 shock cameo is built on M5's own
+**Favorita** as of 2026-08-31 — Week 15 does not use it. The Week 15 shock cameo is built on M5's own
 Christmas closures (units = 0 on 25 Dec, five years; `is_event` fires on 158 days of which 5
 are closures), which needs no second dataset. The migration off
 Rossmann is **complete** — no Rossmann reference remains in `Homework/` or `Labs/`.
@@ -265,7 +264,7 @@ budget, and the folder stem is also the commit-message prefix and the key in the
 | HW | File | Lectures | Dataset | Prompt Budget | Key Tasks |
 |----|------|----------|---------|---------------|-----------|
 | 1a | `HW01_Part1_ETS.qmd` ✓ | L01 | Weekly, Store 1 | 4 | ETS (SES/Holt/HW), held-out RMSE/MAE |
-| 1b | `HW01_Part2_ARIMA_VAR.qmd` ✓ | L02 | Weekly, Store 1 + Store 2 | 8 | ARIMA walk-forward CV, VAR, Granger causality, method comparison |
+| 1b | `HW01_Part2_ARIMA_VAR.qmd` ✓ | L02 | Weekly, CA_1 + CA_3 FOODS | 8 | ARIMA walk-forward CV, VAR, Granger causality, method comparison |
 | 2 | `HW02_GAMs.qmd` ✓ | L03 | **M5 daily, CA_1 FOODS** | 10 | Prophet components + SNAP/event regressors, pyGAM cyclic spline, seasonal-naive benchmark |
 | 3 | `HW03_Trees_RF.qmd` ✓ | L04 + L05 | **M5 weekly, 30 series** | 12 | Tree visualization, RF + OOB, MDI vs permutation with planted noise controls, walk-forward CV |
 | 4 | `HW04_XGBoost_Regularization.qmd` ✓ | L06 | **M5 weekly, 46 engineered features** | 12 | XGBoost tuning incl. `reg_lambda`, LASSO path, per-mix alpha tuning, cross-model CV |
