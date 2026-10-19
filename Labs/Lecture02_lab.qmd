@@ -249,12 +249,31 @@ the story everyone expects: people lose jobs, people stop spending.
 
 **Now drop the COVID window and run it again.**
 
-```{python}
-ex_covid = macro[(macro.index < "2020-02-01") | (macro.index > "2021-06-01")]
+Dropping the rows first and then lagging would splice January 2020 straight onto July 2021, as if
+they were neighboring months. So build every lag on the unbroken series, then drop each row whose
+target **or any of its lags** falls inside the window.
 
+```{python}
+import statsmodels.api as sm
+from scipy import stats
+
+def granger_excluding(effect, cause, data, start, end, lag=4):
+    d = pd.DataFrame({"y": data[effect]})
+    for k in range(1, lag + 1):                       # lags on the unbroken series
+        d[f"y{k}"], d[f"x{k}"] = data[effect].shift(k), data[cause].shift(k)
+    d = d.dropna()
+    d = d[(d.index < start) | (d.index > pd.Timestamp(end) + pd.DateOffset(months=lag))]
+    own = sm.OLS(d["y"], sm.add_constant(d[[f"y{k}" for k in range(1, lag + 1)]])).fit()
+    both = sm.OLS(d["y"], sm.add_constant(d.drop(columns="y"))).fit()
+    F = ((own.ssr - both.ssr) / lag) / (both.ssr / both.df_resid)
+    p = stats.f.sf(F, lag, both.df_resid)
+    print(f"  {cause:>12} -> {effect:<14} F = {F:6.2f}   p = {p:.4f}"
+          f"   {'significant' if p < 0.05 else 'NOT significant'}")
+
+ex_covid = macro[(macro.index < "2020-02-01") | (macro.index > "2021-06-01")]
 print(f"Excluding Feb 2020 - Jun 2021 ({len(ex_covid)} months)")
-granger_macro("retail_growth", "unrate_diff", ex_covid)
-granger_macro("unrate_diff", "retail_growth", ex_covid)
+granger_excluding("retail_growth", "unrate_diff", macro, "2020-02-01", "2021-06-01")
+granger_excluding("unrate_diff", "retail_growth", macro, "2020-02-01", "2021-06-01")
 ```
 
 **Your turn:** restrict the sample to everything *before* February 2020 and run both directions

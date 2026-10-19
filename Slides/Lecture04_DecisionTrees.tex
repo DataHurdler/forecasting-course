@@ -69,12 +69,12 @@
   \end{definitionbox}
   \vspace{-0.3cm}
   \begin{center}
-    \includegraphics[height=3.2cm]{../Figures/Lecture04_DecisionTrees/stumps_vs_deep.pdf}
+    \includegraphics[height=3.3cm]{../Figures/Lecture04_DecisionTrees/stumps_vs_deep.pdf}
   \end{center}
   \vspace{-0.4cm}
   {\small Weekly CA\_1 FOODS, 20 bootstrap refits per model. \textbf{Stumps} (one-question trees)
   agree and miss: bias. \textbf{Deep trees} center on the truth but scatter: variance. (The miss
-  includes this week's noise, so it is not pure bias.) \textbf{Goal:} the complexity that
+  includes noise, so it is not pure bias.) \textbf{Goal:} the complexity that
   balances the two, visible only \emph{out-of-sample}.}
 \end{frame}
 
@@ -206,11 +206,11 @@
   A \textbf{stump} asks one question: high bias, low variance. A \textbf{full tree}, one week per
   leaf, memorizes the sample: zero \emph{training} error, high variance.
   \begin{center}
-    \includegraphics[height=3.9cm]{../Figures/Lecture04_DecisionTrees/depth_curve.pdf}
+    \includegraphics[height=4.1cm]{../Figures/Lecture04_DecisionTrees/depth_curve.pdf}
   \end{center}
   \vspace{-0.35cm}
   {\small Weekly CA\_1 FOODS, one week ahead (seasonal naive: 1,660). Training error falls to
-  zero; test error stops improving after depth 3, since 173 weeks leave little to split. Read
+  zero; test error stops improving after depth 3 (only 173 weeks). Read
   the shape, not the minimum: picking depth from the test year is a leak. \textbf{Unstable,
   too:} one changed week can flip the root split, and everything below it. Tune by
   \texttt{TimeSeriesSplit}.}

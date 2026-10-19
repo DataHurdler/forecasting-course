@@ -251,11 +251,8 @@
   each CV fold. Scale on the full sample and you have leaked the validation set into
   training, and your CV error is optimistic.
 
-  \texttt{l1\_ratio} sets the Ridge/LASSO mix, like $\alpha$, but matches $\alpha$ only at 0 and 1:
-  \texttt{sklearn} halves the $\ell_2$ term. The \texttt{...CV} variants tune $\lambda$ for you.
-
-  \muted{\footnotesize \texttt{sklearn} calls the penalty \texttt{alpha}, not
-  \texttt{lambda}.}
+  \texttt{l1\_ratio} is the Ridge/LASSO mix; it equals $\alpha$ only at 0 and 1, since \texttt{sklearn}
+  halves the $\ell_2$ term. \texttt{...CV} tunes $\lambda$, which \texttt{sklearn} calls \texttt{alpha}.
 \end{frame}
 
 % =============================================================================
@@ -315,6 +312,7 @@
 
 % --- References ---------------------------------------------------------------
 \begin{frame}[allowframebreaks]{References}
+  \renewcommand*{\bibfont}{\small}
   \printbibliography[heading=none]
 \end{frame}
 

@@ -66,16 +66,14 @@
   \[
     \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V
   \]
-  A lookup with soft matching: each week's \textbf{query} is scored against every week's
-  \textbf{key}, and the scores weight the \textbf{values}. $Q$, $K$ and $V$ are three learned
-  projections of the same weeks; $d_k$ is the length of each key.
+  Each week's \textbf{query} is scored against every week's \textbf{key}, and the scores weight the
+  \textbf{values}; $Q$, $K$, $V$ are learned projections of the same weeks, $d_k$ the key length.
   \begin{center}
-    \includegraphics[height=3.0cm]{../Figures/Lecture09_Part2/attention_geometry.pdf}
+    \includegraphics[height=3.4cm]{../Figures/Lecture09_Part2/attention_geometry.pdf}
   \end{center}
   \vspace{-0.3cm}
-  {\small The score is the query's length times the key's shadow on it. Softmax exponentiates the
-  scores and divides by their total, so the weights are positive and sum to one: the output stays
-  \emph{inside} the values. Attention averages; it cannot extrapolate. The $\sqrt{d_k}$ keeps the
+  {\small The score is the query's length times the key's shadow on it. Softmax turns the
+  scores into positive weights that sum to one, so the output stays \emph{inside} the values. Attention averages; it cannot extrapolate. The $\sqrt{d_k}$ keeps the
   softmax from saturating.}
 \end{frame}
 
@@ -139,19 +137,18 @@
 
 % --- Slide: positional encoding ----------------------------------------------
 \begin{frame}{Positional Encoding: Attention Cannot Tell Time}
-  \textbf{Attention ignores order}: shuffle the window and each week's output moves with it,
-  seeing the rest as an unordered bag. A forecaster that cannot tell two weeks ago from thirty is
+  \textbf{Attention ignores order}: shuffle the window and each week's output moves with it;
+  the rest is an unordered bag. A forecaster that cannot tell two weeks ago from thirty is
   not forecasting.
 
-  \vspace{0.1cm}
   The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{-2i/d}$, to each
   week --- each pair a clock hand turning at its own speed:
   \begin{center}
-    \includegraphics[height=3.1cm]{../Figures/Lecture09_Part2/positional_clocks.pdf}
+    \includegraphics[height=3.5cm]{../Figures/Lecture09_Part2/positional_clocks.pdf}
   \end{center}
   \vspace{-0.3cm}
-  {\small Moving $\Delta$ weeks turns every hand by its own fixed angle, so how alike two weeks
-  look depends only on their distance. \textbf{We measure what removing it costs at the end.}}
+  {\small Shifting $\Delta$ weeks turns each hand by a fixed angle, so similarity depends only
+  on distance. \textbf{We measure what removing it costs at the end.}}
 \end{frame}
 
 % --- Slide: why they took over ------------------------------------------------

@@ -201,9 +201,8 @@ model = nn.Sequential(
 ```
 :::
 
-Input shape is `(batch, channels, time)` — note that channels come *before* time, which is the transpose of how the data naturally sits in a dataframe.
+Input shape is `(batch, channels, time)`: channels *before* time, the transpose of a dataframe. Lecture 7's rules still apply: Adam with weight decay, `zero_grad()`, `shuffle=False`, a split by time.
 
-Everything from Lecture 7 still applies: Adam with weight decay, `zero_grad()` every batch, `shuffle=False`, and a split by time rather than at random.
 
 [`AdaptiveAvgPool1d(1)` is **global average pooling**: one mean per filter over the whole time axis. A **flatten head** skips it and gives every position its own weight. Watch what that does on the next slide.]{.neutral .smaller}
 

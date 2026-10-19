@@ -258,14 +258,10 @@
     \texttt{\mbox{}\ \ \ \ nn.Linear(64, 1))}
     }
   \end{examplebox}
-  Input shape is \texttt{(batch, channels, time)} --- note that channels come \emph{before} time,
-  which is the transpose of how the data naturally sits in a dataframe.
+  Input shape is \texttt{(batch, channels, time)}: channels \emph{before} time, the transpose of a
+  dataframe. Lecture 7's rules still apply: Adam with weight decay, \texttt{zero\_grad()},
+  \texttt{shuffle=False}, a split by time.
 
-  \vspace{0.15cm}
-  Everything from Lecture 7 still applies: Adam with weight decay, \texttt{zero\_grad()} every
-  batch, \texttt{shuffle=False}, and a split by time rather than at random.
-
-  \vspace{0.1cm}
   \muted{\footnotesize\itshape \texttt{AdaptiveAvgPool1d(1)} is \textbf{global average pooling}: one
   mean per filter over the whole time axis. A \textbf{flatten head} skips it and gives every position
   its own weight. Watch what that does on the next slide.}

@@ -640,8 +640,8 @@ On the full sample, both directions are significant — and unemployment looks l
 stronger driver: eighteen point two against twelve point eight. Exactly the story everyone
 expects. People lose jobs, people stop spending.
 
-Then drop the COVID window and rerun. The intuitive direction collapses to two point nine —
-barely over the line. Meanwhile retail predicting unemployment holds up at six point seven.
+Then drop the COVID window and rerun. The intuitive direction collapses to two point four —
+right on the line. Meanwhile retail predicting unemployment barely moves, to about ten.
 The lines cross. And when you restrict the sample to before 2020 in the lab, you'll see where
 that trend ends.
 

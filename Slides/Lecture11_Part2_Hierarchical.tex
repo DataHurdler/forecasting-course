@@ -177,10 +177,9 @@
     \texttt{\mbox{}\ \ pm.Normal("obs", mu=a[idx] + b[idx]*snap, sigma=s, observed=y)}
     }
   \end{examplebox}
-  \texttt{J} is the number of series (10). \texttt{idx} maps each row to its series, so
-  \texttt{b[idx]} picks out the right effect for every observation. That indexing pattern is how every hierarchical model in PyMC is written.
+  \texttt{J} = 10 series; \texttt{idx} maps each row to its series, so \texttt{b[idx]} picks each row's
+  effect --- the pattern behind every hierarchical model in PyMC.
 
-  \vspace{0.15cm}
   \textbf{Note what is \emph{not} here.} No decision about how much to pool, no weighting scheme,
   no threshold for ``enough data.'' Those all come out of estimating $\sigma_b$.
 \end{frame}
@@ -264,12 +263,11 @@
   \end{center}
   \vspace{-0.3cm}
   \textbf{RMSE against the truth: 0.126 unpooled, 0.048 pooled --- 2.6 times smaller.} Pooling won
-  on four series of five; CA\_3 lost narrowly. WI\_2 was pulled past its truth, yet still ended
-  closer than its own estimate.
+  on four of five; CA\_3 lost narrowly, and WI\_2, pulled past its truth, still ended closer than
+  its own estimate.
 
-  \vspace{0.05cm}
-  \muted{\footnotesize\itshape Borrowing strength is not a figure of speech: the thin series were
-  estimated better \emph{because} the other five existed.}
+  \muted{\footnotesize\itshape Borrowing strength is literal: the thin series were estimated better
+  \emph{because} the other five existed.}
 \end{frame}
 
 % --- Slide: the business answer ---------------------------------------------

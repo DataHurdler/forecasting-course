@@ -264,19 +264,24 @@ suspicious of how satisfying it is.
 
 **Now drop the COVID window.**
 
+*(Point at the comment in the cell.)* One detail in the code before you run it: the lags are built on
+the unbroken series first, and only then are the COVID months dropped — along with the four months
+after, whose lags still reach into the window. Drop the rows first and the test would treat January
+2020 and July 2021 as neighbors.
+
 *(Run the ex-COVID cell.)*
 
 ```
 Excluding Feb 2020 - Jun 2021 (395 months)
-   unrate_diff -> retail_growth   F =   2.91   p = 0.0214   significant
- retail_growth -> unrate_diff     F =   6.74   p = 0.0000   significant
+   unrate_diff -> retail_growth   F =   2.42   p = 0.0480   significant
+ retail_growth -> unrate_diff     F =   9.96   p = 0.0000   significant
 ```
 
 Seventeen months removed out of four hundred and twelve — four percent of the sample. The
-unemployment-to-retail F-statistic falls from **18.22 to 2.91.** It's still significant, barely,
-but it has lost about six-sevenths of its strength.
+unemployment-to-retail F-statistic falls from **18.22 to 2.42.** It's still significant, but only
+just — a p-value of point zero four eight — and it has lost about seven-eighths of its strength.
 
-The reverse direction went from 12.80 to 6.74. Weaker, but still overwhelming.
+The reverse direction went from 12.80 to 9.96. Barely weaker, and still overwhelming.
 
 **[STOP — learner works]**
 
@@ -300,7 +305,7 @@ The intuitive direction — the one everybody expects, the one that has a mechan
 put in a slide without checking — is gone.
 
 And the direction nobody leads with, retail predicting unemployment, survives every single cut:
-12.80, then 6.74, then 9.67. Never above a p-value of point zero zero zero one.
+12.80, then 9.96, then 9.67. Never above a p-value of point zero zero zero one.
 
 ---
 
@@ -357,7 +362,7 @@ order the student chooses.
 | food → household | F = 3.83, p = 0.0048 |
 | household → food | F = 2.80, p = 0.0263 |
 | **Macro, full sample (412 mo)** | unrate→retail F = 18.22 · retail→unrate F = 12.80 |
-| **Ex-COVID (395 mo)** | unrate→retail F = 2.91 (p = 0.0214) · retail→unrate F = 6.74 |
+| **Ex-COVID (395 mo)** | unrate→retail F = 2.42 (p = 0.048) · retail→unrate F = 9.96 |
 | **Pre-COVID (336 mo)** | unrate→retail F = 1.85 (**p = 0.1196, not significant**) · retail→unrate F = 9.67 |
 
 **Note for the instructor.** The FRED full sample ends 2026-06, so it moves as `prep_fred.py` is

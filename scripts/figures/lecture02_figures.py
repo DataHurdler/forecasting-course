@@ -163,11 +163,28 @@ def measured() -> dict:
         F, p, df_den, df_num = res[lag][0]["ssr_ftest"]
         return {"F": float(F), "p": float(p), "df": [int(df_num), float(df_den)]}
 
+    def granger_excluding(effect, cause, data, start, end, lag=4):
+        # Lags are built on the unbroken series, then every row whose target or any lag falls in
+        # [start, end] is dropped. Dropping the months first would splice Jan 2020 onto Jul 2021
+        # (full-course review m8, 2026-10-19). On the full sample this equals grangercausalitytests.
+        import statsmodels.api as sm
+        from scipy.stats import f as f_dist
+        d = pd.DataFrame({"y": data[effect]})
+        for k in range(1, lag + 1):
+            d[f"y{k}"], d[f"x{k}"] = data[effect].shift(k), data[cause].shift(k)
+        d = d.dropna()
+        d = d[(d.index < start) | (d.index > pd.Timestamp(end) + pd.DateOffset(months=lag))]
+        own = sm.OLS(d["y"], sm.add_constant(d[[f"y{k}" for k in range(1, lag + 1)]])).fit()
+        both = sm.OLS(d["y"], sm.add_constant(d.drop(columns="y"))).fit()
+        F = ((own.ssr - both.ssr) / lag) / (both.ssr / both.df_resid)
+        return {"F": float(F), "p": float(f_dist.sf(F, lag, both.df_resid)), "df": [lag, float(both.df_resid)]}
+
     m["granger"] = {
         "full": {"n": int(len(macro)), "u_to_r": granger("retail_growth", "unrate_diff", macro),
                  "r_to_u": granger("unrate_diff", "retail_growth", macro)},
-        "ex_covid": {"n": int(len(ex)), "u_to_r": granger("retail_growth", "unrate_diff", ex),
-                     "r_to_u": granger("unrate_diff", "retail_growth", ex)}}
+        "ex_covid": {"n": int(len(ex)),
+                     "u_to_r": granger_excluding("retail_growth", "unrate_diff", macro, *COVID),
+                     "r_to_u": granger_excluding("unrate_diff", "retail_growth", macro, *COVID)}}
     from scipy.stats import f as f_dist
     df_num, df_den = m["granger"]["full"]["u_to_r"]["df"]
     m["granger_f_crit_5pct"] = float(f_dist.ppf(0.95, df_num, df_den))
@@ -186,7 +203,7 @@ def measured() -> dict:
     g = m["granger"]
     for got, want in [(round(m["adf_levels"], 2), -1.38), (round(m["adf_diff"], 2), -8.51),
                       (round(g["full"]["u_to_r"]["F"], 2), 18.22), (round(g["full"]["r_to_u"]["F"], 2), 12.80),
-                      (round(g["ex_covid"]["u_to_r"]["F"], 2), 2.91), (round(g["ex_covid"]["r_to_u"]["F"], 2), 6.74),
+                      (round(g["ex_covid"]["u_to_r"]["F"], 2), 2.42), (round(g["ex_covid"]["r_to_u"]["F"], 2), 9.96),
                       (g["full"]["n"], 412), (g["ex_covid"]["n"], 395)]:
         assert got == want, f"does not reproduce: got {got}, expected {want}"
     # the slide's claim: the seasonal peaks sit at 7, 14, 21, 28 before the difference
@@ -413,12 +430,14 @@ def granger_covid() -> None:
     ur = [g["full"]["u_to_r"]["F"], g["ex_covid"]["u_to_r"]["F"]]
     ru = [g["full"]["r_to_u"]["F"], g["ex_covid"]["r_to_u"]["F"]]
     ax.axhline(crit, color=GRAY, lw=1.0, ls=(0, (3, 2)), zorder=1)
-    ax.text(0.5, crit - 0.5, f"5% critical value, {crit:.1f}", ha="center", va="top", fontsize=10.5, color=GRAY)
+    ax.text(0.5, crit - 0.5, f"5% critical value, {crit:.2f}", ha="center", va="top", fontsize=10.5, color=GRAY)
     for vals, c in [(ur, AMBER), (ru, GREEN)]:
         ax.plot(xs, vals, "-o", color=c, lw=2.0, ms=6, zorder=3)
         for x, v in zip(xs, vals):
-            ax.text(x + (-0.1 if x == 0 else 0.1), v, f"{v:.1f}", ha="right" if x == 0 else "left",
-                    va="center", fontsize=11, color=c, fontweight="bold")
+            near = abs(v - crit) < 1.5          # a point on the critical line: two decimals, label above it
+            ax.text(x + (-0.1 if x == 0 else 0.1), v + (1.1 if near else 0), f"{v:.2f}" if near else f"{v:.1f}",
+                    ha="right" if x == 0 else "left", va="bottom" if near else "center",
+                    fontsize=11, color=c, fontweight="bold")
     # the legend sits above the panel, where nothing is drawn
     ax.text(-0.55, 1.13, "unemployment $\\rightarrow$ retail", transform=ax.get_xaxis_transform(),
             ha="left", va="bottom", fontsize=11, color=AMBER)

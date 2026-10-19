@@ -63,11 +63,11 @@ A learned, weighted lookup — which is a more useful way to read it than the fo
 
 $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
 
-A lookup with soft matching: each week's **query** is scored against every week's **key**, and the scores weight the **values**. $Q$, $K$ and $V$ are three learned projections of the same weeks; $d_k$ is the length of each key.
+Each week's **query** is scored against every week's **key**, and the scores weight the **values**; $Q$, $K$, $V$ are learned projections of the same weeks, $d_k$ the key length.
 
 ![](../Figures/Lecture09_Part2/attention_geometry.svg){fig-align="center" height="270px"}
 
-[The score is the query's length times the key's shadow on it. Softmax exponentiates the scores and divides by their total, so the weights are positive and sum to one: the output stays *inside* the values. Attention averages; it cannot extrapolate. The $\sqrt{d_k}$ keeps the softmax from saturating.]{.smaller}
+[The score is the query's length times the key's shadow on it. Softmax turns the scores into positive weights that sum to one, so the output stays *inside* the values. Attention averages; it cannot extrapolate. The $\sqrt{d_k}$ keeps the softmax from saturating.]{.smaller}
 
 ---
 
@@ -114,13 +114,13 @@ Stack $N$ of those and you have the encoder. Nothing in the block is new to you 
 
 ## Positional Encoding: Attention Cannot Tell Time
 
-**Attention ignores order**: shuffle the window and each week's output moves with it, seeing the rest as an unordered bag. A forecaster that cannot tell two weeks ago from thirty is not forecasting.
+**Attention ignores order**: shuffle the window and each week's output moves with it; the rest is an unordered bag. A forecaster that cannot tell two weeks ago from thirty is not forecasting.
 
 The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{-2i/d}$, to each week — each pair a clock hand turning at its own speed:
 
 ![](../Figures/Lecture09_Part2/positional_clocks.svg){fig-align="center" height="240px"}
 
-[Moving $\Delta$ weeks turns every hand by its own fixed angle, so how alike two weeks look depends only on their distance. **We measure what removing it costs at the end.**]{.smaller}
+[Shifting $\Delta$ weeks turns each hand by a fixed angle, so similarity depends only on distance. **We measure what removing it costs at the end.**]{.smaller}
 
 ---
 

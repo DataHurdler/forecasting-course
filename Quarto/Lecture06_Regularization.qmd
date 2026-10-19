@@ -219,9 +219,8 @@ model = make_pipeline(
 
 `make_pipeline` is the part that matters: it keeps standardization *inside* each CV fold. Scale on the full sample and you have leaked the validation set into training, and your CV error is optimistic.
 
-`l1_ratio` sets the Ridge/LASSO mix, like $\alpha$, but matches $\alpha$ only at 0 and 1: `sklearn` halves the $\ell_2$ term. The `...CV` variants tune $\lambda$ for you.
+`l1_ratio` is the Ridge/LASSO mix; it equals $\alpha$ only at 0 and 1, since `sklearn` halves the $\ell_2$ term. `...CV` tunes $\lambda$, which `sklearn` calls `alpha`.
 
-[`sklearn` calls the penalty `alpha`, not `lambda`.]{.neutral .smaller}
 
 # Key Takeaways and Roadmap
 
