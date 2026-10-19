@@ -156,8 +156,9 @@ so at any given split most trees are not even allowed to *look* at day-of-week. 
 only a bargain when you have enough redundant, correlated features that losing a few at each split
 costs you little.
 
-In Homework 3 you will run a forest on 27 features with no single dominant one. Check whether the
-ranking flips there. **The lesson is the condition, not the default.**
+Do not expect Homework 3 to restore the textbook answer: its forest has 27 features, but
+`units_lag1` dominates there the way `dow` dominates here, and `sqrt` loses there too. **The lesson
+is the condition, not the default.**
 :::
 
 ---

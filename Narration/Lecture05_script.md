@@ -50,7 +50,7 @@ Part one, and it starts with an observation that has nothing to do with statisti
 
 # ▶ SLIDE 4 — The Wisdom of Crowds
 
-In 1907, at a county fair, eight hundred people guessed the weight of an ox.
+In 1906, at a county fair, eight hundred people guessed the weight of an ox.
 
 Francis Galton collected the guesses expecting to show that the crowd was foolish. Individually
 they were — almost nobody was close.
@@ -209,7 +209,8 @@ it.
 
 Now look to the right of the box, along those eight rows. Everything red is a week *after*
 thirty December that the scoring tree trained on. Across the whole forest, the trees that score a
-week trained on about sixty-four percent of the weeks that came after it.
+week still trained on about sixty-three percent of the weeks that came after it — the same share
+as any bootstrap sample, because leaving one week out says nothing about the others.
 
 So OOB is answering "how well can the model fill in a missing week inside the years it has seen?"
 — not "how well will it forecast next month?" Those are different questions, and only the second
@@ -270,8 +271,9 @@ But not enough. The bagged ensemble wins, two forty-eight to two fifty-four.
 That is not a failure of the idea. It's the idea's boundary condition. You deliberately make each
 tree worse in order to make the ensemble better — and that trade pays when you have many partly
 redundant features and no single dominant one. With ten features and one of them carrying most of
-the signal, the handicap costs more than the independence buys. In Homework 3 you'll run a forest
-on twenty-seven features where nothing dominates, and you should see the trade flip.
+the signal, the handicap costs more than the independence buys. Don't expect Homework 3 to rescue
+the textbook rule: its forest has twenty-seven features, but last week's sales dominate there the
+way day of the week dominates here, and the square-root setting loses there too.
 
 ---
 
@@ -322,7 +324,8 @@ Part four. Which predictors matter?
 # ▶ SLIDE 13 — Random Forest Feature Importance
 
 Mean decrease in impurity. For each feature, sum the variance reduction across every split
-where it was used, weighted by how many observations passed through that node. Normalize to one.
+where it was used, weighted by how many observations passed through that node. Do that in every
+tree, average across the trees, and normalize to one.
 
 This is the forest from the next slide, on our weekly CA_1 food sales. The ranking comes out:
 **four-week lag at zero point two eight**, last week at zero point two one, **SNAP benefit days at
@@ -331,7 +334,7 @@ down.
 
 Compare last week's single tree, which gave the four-week lag zero point six two. The forest
 spreads the credit — partly because it averages many trees, and partly because each split was only
-allowed to see three of the eight features, so other features got their turn.
+allowed to see two of the eight features, so other features got their turn.
 
 **[pause]**
 
@@ -373,21 +376,28 @@ The forest cuts RMSE about **twenty-three percent** against the single tree. Tha
 reduction, bought by averaging — same algorithm, same features, five hundred of them instead of
 one.
 
-And both tree models **beat the seasonal naive benchmark on this series** — the first methods in
-this course to do it. In Homework 1 you found that exponential smoothing couldn't. ARIMA couldn't
-either. Even last week's single tree does; the forest does it comfortably.
+And both tree models **beat the seasonal naive benchmark on this series**. In Homework 1
+exponential smoothing and ARIMA couldn't. But before you credit the trees, check what each one was
+asked to do.
 
 **[pause]**
 
-Now — be careful about the conclusion you draw, because the obvious one is wrong.
+The forest forecasts **one week ahead**. Every test week it is handed last week's actual sales,
+and the three weeks before that. The ETS and ARIMA numbers from Lectures 1 and 2 forecast the
+whole test year from the end of training, without seeing a single test-year actual. Those are
+different jobs.
 
-What changed is not that random forests model time series better than ARIMA. It's that we gave
-this model **information the others never had**: lags, price, SNAP days, event flags. ETS and
-ARIMA only ever saw the series' own history.
+Give the classical methods the same one-week job and they beat sixteen sixty too: simple
+exponential smoothing scores about thirteen hundred, an ARIMA about twelve sixty. And a forest
+handed only the series' own lags — no price, no SNAP, no events — scores twelve thirty-one.
 
-That's the real lesson of the second half of this course. The gains from here are coming
-substantially from feature engineering, not from model sophistication. A random forest with one
-lag feature would lose to ARIMA. A random forest with a well-built feature set wins.
+So of the five hundred forty-five units the forest gains over seasonal naive, about four hundred
+thirty come from seeing last week's actual sales, before any price or SNAP column. The features
+add the last hundred or so, and the algorithm on its own adds little: at the same horizon, on the
+same history, the forest and the ARIMA are within a few percent of each other.
+
+That's the real lesson of the second half of this course. Ask what information a model was given,
+and for how far ahead, before you ask how clever it is.
 
 ---
 
@@ -666,7 +676,7 @@ cannot. Or model the *change* instead of the level, so the target stays inside i
 
 # ▶ SLIDE 26 — Lecture 5: Key Takeaways
 
-Seven things, one line each.
+Eight things, one line each.
 
 **One.** Ensembles work because independent errors cancel. The word independent is load-bearing.
 
@@ -686,12 +696,10 @@ Bagging attacks variance; boosting attacks bias.
 **Seven.** Tune by cross-validation, always with `TimeSeriesSplit`, and pair boosting with early
 stopping.
 
-**[pause]**
-
-And one thing that isn't on the slide. The jump from the seasonal naive benchmark to the random
-forest on our data was large — sixteen sixty down to eleven fifteen. Most of that came from the feature set, not the
-algorithm. Remember that when you're tempted to reach for a more complicated model instead of a
-better predictor.
+**Eight.** The forest beat naive on its inputs, not its algorithm. The jump from the seasonal
+naive benchmark to the random forest was large — sixteen sixty down to eleven fifteen — and most of
+it came from being handed last week's actual sales, one week ahead. Remember that when you're
+tempted to reach for a more complicated model instead of a better predictor.
 
 ---
 

@@ -39,7 +39,7 @@
   A single expert can be wrong. Average many \emph{independent} estimates and the errors tend
   to cancel.
   \begin{examplebox}{Classic Example: Guessing the Ox's Weight}
-    At a 1907 county fair, 800 people guessed the weight of an ox. No individual was very
+    At a 1906 county fair, 800 people guessed the weight of an ox. No individual was very
     accurate --- but the \textbf{average of all 800 guesses} came within one pound of the
     true weight.
   \end{examplebox}
@@ -102,9 +102,11 @@
     \includegraphics[height=3.9cm]{../Figures/Lecture05_TreeEnsembles/oob_grid.pdf}
   \end{center}
   \vspace{-0.35cm}
+  \muted{\footnotesize Weekly CA\_1 FOODS forest. Gray: in that tree's bootstrap sample; white:
+  out of bag.}
   \begin{warningbox}
-    \textbf{On a time series it is not a forecast test.} The trees that score a week trained on
-    about 64\% of the weeks after it: OOB fills gaps. Use walk-forward CV.
+    \textbf{On a time series it is not a forecast test.} The trees that score a week still trained
+    on about 63\% of the weeks after it: OOB fills gaps. Use walk-forward CV.
   \end{warningbox}
 \end{frame}
 
@@ -125,9 +127,9 @@
     \includegraphics[height=4.0cm]{../Figures/Lecture05_TreeEnsembles/root_splits.pdf}
   \end{center}
   \vspace{-0.3cm}
-  {\small Lab 5, 300 trees each. The fix spreads the roots, and its trees average better (417 to
-  254, against 398 to 248), but they start worse: with one dominant feature among ten,
-  \texttt{sqrt} loses.}
+  {\small Lab 5 (daily CA\_1 FOODS), 300 trees each. The fix spreads the roots, and its trees
+  average better (417 to 254, against 398 to 248), but they start worse: with one dominant
+  feature among ten, \texttt{sqrt} loses.}
 \end{frame}
 
 % --- Slide: RF hyperparameters -----------------------------------------------
@@ -140,9 +142,9 @@
       \midrule
       Number of trees & \texttt{n\_estimators} & 100 & More = lower variance; plateaus $\sim$500 \\
       Max features/split & \texttt{max\_features} & \texttt{1.0} (all) & Lower = more decorrelated \\
-      Max depth & \texttt{max\_depth} & None & Limit only to reduce memory \\
+      Max depth & \texttt{max\_depth} & \texttt{None} & Limit only to reduce memory \\
       Min samples/leaf & \texttt{min\_samples\_leaf} & 1 & Higher = smoother predictions \\
-      OOB score & \texttt{oob\_score} & False & \texttt{True} gives a free CV estimate \\
+      OOB score & \texttt{oob\_score} & \texttt{False} & \texttt{True} gives a free CV estimate \\
       \bottomrule
     \end{tabular}
     }
@@ -167,9 +169,9 @@
 % --- Slide: Feature importance -----------------------------------------------
 \begin{frame}{Random Forest Feature Importance \parencite{Molnar2022}}
   \begin{definitionbox}{Mean Decrease in Impurity (MDI)}
-    \small For each feature $j$, average the total reduction in node impurity across every
-    split on $j$, weighted by the fraction of observations reaching that node. Normalize to
-    sum to 1.
+    \small For each feature $j$, sum the impurity reduction over every split on $j$, weighted
+    by the fraction of observations reaching that node. Average over trees; normalize to sum
+    to 1.
   \end{definitionbox}
   \begin{center}
     {\small
@@ -200,7 +202,7 @@
     {\scriptsize
     \texttt{from sklearn.ensemble import RandomForestRegressor}\\
     \texttt{rf = RandomForestRegressor(n\_estimators=500, max\_features='sqrt',}\\
-    \texttt{\ \ \ min\_samples\_leaf=5, oob\_score=True, random\_state=42).fit(X\_tr, y\_tr)}\\
+    \texttt{\mbox{}\ \ \ min\_samples\_leaf=5, oob\_score=True, random\_state=42).fit(X\_tr, y\_tr)}\\
     \texttt{print(rf.oob\_score\_);\ \ importances = rf.feature\_importances\_}
     }
   \end{examplebox}
@@ -210,7 +212,7 @@
       \toprule
       \textbf{Model (CA\_1 FOODS, 52-week test)} & \textbf{Test RMSE} \\
       \midrule
-      Seasonal na\"{i}ve   & 1,660 \\
+      Seasonal naive       & 1,660 \\
       Single deep tree     & 1,456 \\
       \textbf{Random Forest} & \textbf{1,115} \\
       \bottomrule
@@ -218,11 +220,11 @@
     }
   \end{center}
 
-  The forest cuts RMSE by \textbf{23\%} against a single deep tree. Both tree models beat the
-  seasonal naive benchmark, the first in this course to do so on this series.
+  The forest cuts RMSE by \textbf{23\%} against a single deep tree. Both beat seasonal naive,
+  but they forecast only \textbf{one week ahead}; Lectures 1--2 forecast a whole year.
 
-  \muted{\footnotesize What changed is not a better model of the series but a richer feature
-  set --- lags, price, and SNAP days are information ETS and ARIMA never had.}
+  \muted{\footnotesize One week ahead, SES and ARIMA beat 1,660 too, and a forest on the series' lags
+  alone scores 1,231: most of the gain is last week's actual sales, not price or SNAP.}
 \end{frame}
 
 % =============================================================================
@@ -355,8 +357,8 @@
   \begin{examplebox}{Code Template}
     {\scriptsize
     \texttt{model = xgb.XGBRegressor(n\_estimators=1000, learning\_rate=0.05,}\\
-    \texttt{\ \ max\_depth=4, subsample=0.8, colsample\_bytree=0.8,}\\
-    \texttt{\ \ early\_stopping\_rounds=50, random\_state=42)}\\
+    \texttt{\mbox{}\ \ max\_depth=4, subsample=0.8, colsample\_bytree=0.8,}\\
+    \texttt{\mbox{}\ \ early\_stopping\_rounds=50, random\_state=42)}\\
     \texttt{model.fit(X\_train, y\_train, eval\_set=[(X\_val, y\_val)], verbose=False)}
     }
   \end{examplebox}
@@ -427,11 +429,11 @@
       \item \textbf{Boosting} fits each tree to the errors so far: it attacks bias.
       \item No tree can \textbf{extrapolate} beyond the training range.
       \item Tune with \texttt{TimeSeriesSplit}; pair boosting with \textbf{early stopping}.
+      \item The forest beat naive on its \textbf{inputs}, not its algorithm.
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: Regularization \& Model Selection ---
-  choosing among many predictors by shrinking coefficients rather than counting them.}
+  \muted{\itshape Next: Regularization \& Model Selection.}
 \end{frame}
 
 % --- References ---------------------------------------------------------------

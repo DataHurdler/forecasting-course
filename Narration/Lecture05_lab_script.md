@@ -192,9 +192,9 @@ Notice the honest middle of the table: `0.6` is the best row, at 247. Mild subsa
 hair. So the finding is not "decorrelation is wrong here," it is "the standard *dose* is too
 strong for this feature set."
 
-In Homework 3 you run a forest on twenty-seven features with no single dominant one. Check whether
-this ranking flips. It should — and that difference between the lab and the homework is the actual
-lesson. **What you are learning is the condition, not the default.**
+Do not expect Homework 3 to flip this ranking. Its forest has twenty-seven features, but
+`units_lag1` dominates there the way `dow` dominates here, and `sqrt` loses there too.
+**What you are learning is the condition, not the default.**
 
 ---
 
@@ -219,20 +219,20 @@ how this model will do next month.
 
 *(Resume.)*
 
-Two reasons, and they pull in the same direction.
+The obvious suspect is the wrong one. An OOB prediction for a given row comes from only the third
+of trees that did not see it — about a hundred trees rather than three hundred. But Step 2 told you
+what a smaller forest costs: a hundred trees score 249 against 248. One unit cannot explain 49.
 
-First, an OOB prediction for a given row comes from only the third of trees that did not see it —
-about a hundred trees rather than three hundred. Step 2 told you exactly what a smaller forest
-costs. So OOB is scoring a systematically *smaller* forest than the one you are going to ship.
-
-Second, the rows are different. OOB rows are scattered across 2012 to 2015, the whole training
-period, including the earlier, noisier stretch. The test set is one solid block of the final year.
+The gap is the rows. OOB rows are scattered across 2012 to 2015, the whole training period. By
+year, the OOB error runs 311, 319, 283 and 239: the earlier years are noisier. And the training
+period holds three Christmas days when the store sold nothing; drop those three days and OOB falls
+to 275. The test set is one solid block of the final year.
 
 **[pause]**
 
 So which do you quote? Neither, uncritically. OOB is the cheap sanity check you can compute
 without giving up any data — genuinely valuable when data is scarce. But it is scoring the wrong
-model on the wrong period for a forecasting question, and it is not a walk-forward estimate. If
+period for a forecasting question, and it is not a walk-forward estimate. If
 someone asks how this does next month, the only honest answer comes from evaluating on time you
 held out, in order — which is what the test column is, and what Homework 3 makes you do properly.
 
@@ -282,7 +282,7 @@ a food aisle: SNAP days average 3,201 units against 2,839 otherwise, about 13% h
 0.017 to 0.012. Permutation says price is worth **exactly zero** and the event flag is worth 22.
 
 That inversion has a known mechanism, and Lecture 4's footnote named it: **MDI is biased toward
-high-cardinality features.** `avg_price` takes 173 distinct values in the training set, so it
+features with many split points.** `avg_price` takes 173 distinct values in the training set, so it
 offers 172 candidate split points, and with that many chances some will reduce impurity by luck
 alone. `is_event` is binary — one possible split, no opportunity to get lucky. MDI rewards
 opportunity; permutation rewards contribution.
@@ -388,7 +388,7 @@ boosting, bought 22 units between them.
 Three questions on the discussion board.
 
 **The ranking.** Boosting won, 244 to 248 — by about one and a half percent. Name one property of
-*this* dataset that favours it. Then name a situation where you would still reach for the forest
+*this* dataset that favors it. Then name a situation where you would still reach for the forest
 first, thinking about two things specifically: how much tuning each one needed today, and what
 happens to each when nobody retunes it for a year.
 
@@ -450,8 +450,9 @@ long, cut elsewhere.
 
 *The `max_features` result is a genuine finding and students will read it as an error.* `sqrt` is
 in every textbook and it loses here, by 6 units. Say plainly that this is the rule's boundary
-condition — ten features, one dominant — and point at Homework 3, where twenty-seven features
-should restore the textbook answer. Do not apologise for the dataset.
+condition — ten features, one dominant. Do not promise that Homework 3 restores the textbook
+answer: its twenty-seven features are dominated by `units_lag1`, and `sqrt` loses there too. Do not
+apologize for the dataset.
 
 *Do not quietly promote the `lr=0.3` row to the scoreboard.* It is the best test number in the
 grid (238) and it is tempting. Choosing it would be selecting on the test set, one lecture after

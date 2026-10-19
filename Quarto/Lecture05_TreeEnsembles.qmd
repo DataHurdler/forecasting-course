@@ -34,7 +34,7 @@ csl: https://www.zotero.org/styles/chicago-author-date
 4. Feature Importance and Interpretation
 5. Gradient Boosting
 6. XGBoost
-7. Key Takeaways
+7. Key Takeaways and Roadmap
 
 # From Single Trees to Ensembles
 
@@ -50,7 +50,7 @@ A single expert can be wrong. Average many *independent* estimates and the error
 ::: {.examplebox-title}
 Classic Example: Guessing the Ox's Weight
 :::
-At a 1907 county fair, 800 people guessed the weight of an ox. No individual was very accurate — but the **average of all 800 guesses** came within one pound of the true weight.
+At a 1906 county fair, 800 people guessed the weight of an ox. No individual was very accurate — but the **average of all 800 guesses** came within one pound of the true weight.
 :::
 
 Models work the same way. One tree is unstable, Lecture 4's closing complaint. Average many trees fitted to different versions of the data and the noise largely cancels while the signal survives.
@@ -95,8 +95,10 @@ A bootstrap sample holds about **63%** of the distinct rows. Score each row with
 
 ![](../Figures/Lecture05_TreeEnsembles/oob_grid.svg){fig-align="center" height="300px"}
 
+[Weekly CA_1 FOODS forest. Gray: in that tree's bootstrap sample; white: out of bag.]{.neutral .smaller}
+
 ::: {.warningbox}
-**On a time series it is not a forecast test.** The trees that score a week trained on about 64% of the weeks after it: OOB fills gaps. Use walk-forward CV.
+**On a time series it is not a forecast test.** The trees that score a week still trained on about 63% of the weeks after it: OOB fills gaps. Use walk-forward CV.
 :::
 
 # Random Forests: Decorrelating the Trees
@@ -111,7 +113,7 @@ If one feature dominates (`dow` daily, the four-week lag weekly), nearly every b
 
 ![](../Figures/Lecture05_TreeEnsembles/root_splits.svg){fig-align="center" height="340px"}
 
-[Lab 5, 300 trees each. The fix spreads the roots, and its trees average better (417 to 254, against 398 to 248), but they start worse: with one dominant feature among ten, `sqrt` loses.]{.smaller}
+[Lab 5 (daily CA_1 FOODS), 300 trees each. The fix spreads the roots, and its trees average better (417 to 254, against 398 to 248), but they start worse: with one dominant feature among ten, `sqrt` loses.]{.smaller}
 
 ---
 
@@ -121,9 +123,9 @@ If one feature dominates (`dow` daily, the four-week lag weekly), nearly every b
 |-----------|--------------|---------|--------|
 | Number of trees | `n_estimators` | 100 | More = lower variance; plateaus ~500 |
 | Max features/split | `max_features` | `1.0` (all) | Lower = more decorrelated |
-| Max depth | `max_depth` | None | Limit only to reduce memory |
+| Max depth | `max_depth` | `None` | Limit only to reduce memory |
 | Min samples/leaf | `min_samples_leaf` | 1 | Higher = smoother predictions |
-| OOB score | `oob_score` | False | `True` gives a free CV estimate |
+| OOB score | `oob_score` | `False` | `True` gives a free CV estimate |
 
 **The default is plain bagging.** scikit-learn's regressor considers every feature at every split; `'sqrt'` is the classifier's default. So set `max_features` yourself: it is the dial for $\rho$, and the only one that really needs tuning. Start with `n_estimators=500`, `min_samples_leaf=5`.
 
@@ -141,7 +143,7 @@ Which predictors matter most? RF gives a data-driven answer.
 ::: {.definitionbox-title}
 Mean Decrease in Impurity (MDI)
 :::
-For each feature $j$, average the total reduction in node impurity across every split on $j$, weighted by the fraction of observations reaching that node. Normalize to sum to 1.
+For each feature $j$, sum the impurity reduction over every split on $j$, weighted by the fraction of observations reaching that node. Average over trees; normalize to sum to 1.
 :::
 
 | Feature (CA_1 FOODS, weekly) | Importance |
@@ -176,13 +178,13 @@ importances = rf.feature_importances_
 
 | Model (CA_1 FOODS, 52-week test) | Test RMSE |
 |----------------------------------|-----------|
-| Seasonal naïve | 1,660 |
+| Seasonal naive | 1,660 |
 | Single deep tree | 1,456 |
 | **Random Forest** | **1,115** |
 
-The forest cuts RMSE by **23%** against a single deep tree. Both tree models beat the seasonal naive benchmark, the first in this course to do so on this series.
+The forest cuts RMSE by **23%** against a single deep tree. Both beat seasonal naive, but they forecast only **one week ahead**; Lectures 1–2 forecast a whole year.
 
-[What changed is not a better model of the series but a richer feature set — lags, price, and SNAP days are information ETS and ARIMA never had.]{.neutral .smaller}
+[One week ahead, SES and ARIMA beat 1,660 too, and a forest on the series' lags alone scores 1,231: most of the gain is last week's actual sales, not price or SNAP.]{.neutral .smaller}
 
 # Gradient Boosting
 
@@ -266,12 +268,12 @@ Three improvements over vanilla boosting: second-order optimization, explicit re
 
 | Parameter | XGB name | Typical | Effect |
 |-----------|---------|---------|--------|
-| Number of trees | `n_estimators` | 500–2000 | More + small $\eta$ = better |
-| Learning rate | `learning_rate` | 0.01–0.1 | Smaller = more robust |
-| Tree depth | `max_depth` | 3–6 | Shallow preferred |
+| Number of trees | `n_estimators` | 500–2000 | More + small $\eta$ = better (use early stopping) |
+| Learning rate | `learning_rate` | 0.01–0.1 | Smaller = more robust; needs more trees |
+| Tree depth | `max_depth` | 3–6 | Shallow preferred; depth >6 risks overfit |
 | Row subsample | `subsample` | 0.7–0.9 | Fraction of training rows per tree |
-| Col. subsample | `colsample_bytree` | 0.7–0.9 | Feature fraction per tree |
-| L2 leaf penalty | `reg_lambda` | 1 | Ridge on leaf weights |
+| Col. subsample | `colsample_bytree` | 0.7–0.9 | Feature fraction per tree (like RF) |
+| L2 leaf penalty | `reg_lambda` | 1 | Ridge on leaf weights; stabilizes |
 
 ::: {.keybox}
 **Practical starting point:** `learning_rate=0.05`, `max_depth=4`, `n_estimators=1000` with early stopping on validation RMSE. Tune `max_depth` and `subsample` via `TimeSeriesSplit`.
@@ -337,9 +339,10 @@ A forest's prediction is a weighted average of training targets, so it can never
 5. **Boosting** fits each tree to the errors so far: it attacks bias.
 6. No tree can **extrapolate** beyond the training range.
 7. Tune with `TimeSeriesSplit`; pair boosting with **early stopping**.
+8. The forest beat naive on its **inputs**, not its algorithm.
 :::
 
-*Next: Regularization & Model Selection — choosing among many predictors by shrinking coefficients rather than counting them.*
+*Next: Regularization & Model Selection.*
 
 ---
 
