@@ -21,7 +21,7 @@ itself part of the skill this course is teaching.
 |---|---|---|
 | **M5 / Walmart** | Throughout — the spine | Five years of daily store-item sales with prices, holidays, and a real store/category hierarchy |
 | **FRED** macro series | Lecture 2 | Gives a case where the causal *direction* is defensible — unemployment moves retail spending, not the reverse |
-| **Electricity demand** | Lecture 3 | Half-hourly data has daily, weekly *and* yearly cycles at once. Retail has one |
+| **Electricity demand** | Lecture 3 | Hourly data has daily, weekly *and* yearly cycles at once. Retail has one |
 | **Favorita** (Ecuador) | Optional, for final projects | A rich second panel with promotions, holidays and an oil price — and a documented natural experiment |
 | **Online store** | Optional, for final projects | A small shop still trading today: no published answer to copy, and real business messiness at a scale you can hold in your head |
 
@@ -54,9 +54,9 @@ assignment; it writes the processed files the homework expects.
 **The shock it already contains.** On **25 December**, every year, the stores are shut and
 recorded sales are **exactly zero** — five occurrences in the sample, against a daily average of
 about 2,800 units. The seasonal-naive benchmark predicts roughly 2,300 on those days, so it is
-wrong by 100% of the true value on a date known years in advance. The `is_event` flag fires on
+wrong by 100% of its own forecast on a date known years in advance. The `is_event` flag fires on
 **158** days, of which only **5** are closures, so the feature every model in this course relies
-on cannot distinguish "the doors are locked" from an ordinary Super Bowl. We use this in Week 16.
+on cannot distinguish "the doors are locked" from an ordinary Super Bowl. We use this in Week 15.
 
 **Why it can carry the whole course.**
 
@@ -67,11 +67,12 @@ on cannot distinguish "the doors are locked" from an ordinary Super Bowl. We use
   `sell_prices` gives you a genuine exogenous regressor: price drives demand.
 - **Lecture 3 (GAMs, Prophet).** Daily data with an explicit holiday and event calendar — the
   input Prophet was designed around.
-- **Lectures 4–6 (trees, boosting, regularization).** A wide tabular feature set: price, promo,
-  SNAP, calendar effects, store type, category, and lags. Plenty of correlated predictors,
+- **Lectures 4–6 (trees, boosting, regularization).** A wide tabular feature set: price, SNAP,
+  calendar events, store/category/state identifiers, and lags. Plenty of correlated predictors,
   which is what makes regularization worth doing.
-- **Lectures 7–9 (deep learning).** Thousands of parallel series and nearly 2,000 time steps.
-  Neural networks need volume, and this has it.
+- **Lectures 7–9 (deep learning).** We train on a weekly aggregate: 30 parallel series of 277
+  weeks each. Neural networks need volume, and the synthesis lecture shows this is not enough
+  for the largest models — a result worth knowing in its own right.
 - **Lecture 11 (hierarchical Bayes).** The hierarchy is real and explicit — state → store, and
   category → department → item. This is what partial pooling is *for*: a store with a short
   history borrows strength from the stores around it.
@@ -83,8 +84,8 @@ on cannot distinguish "the doors are locked" from an ordinary Super Bowl. We use
 ## 2. FRED macro series — Lecture 2
 
 **What it is.** The Federal Reserve Bank of St. Louis publishes hundreds of thousands of
-economic time series, free and without a login. We use a handful of monthly US series: retail
-sales, unemployment, the consumer price index, and consumer sentiment.
+economic time series, free and without a login. We use three monthly US series: retail
+sales, unemployment, and consumer sentiment.
 
 **Where to get it.** [https://fred.stlouisfed.org](https://fred.stlouisfed.org), or directly
 from Python with `pandas_datareader`, which pulls the series by code.
@@ -110,9 +111,10 @@ informative rather than inevitable.
 
 ## 3. Electricity demand — Lecture 3
 
-**What it is.** Half-hourly electricity demand, with temperature as a covariate. We take it
-from the [Monash Time Series Forecasting Repository](https://forecastingdata.org/), a free
-curated archive of 30 forecasting datasets that requires no login.
+**What it is.** Hourly electricity demand for PJM East, the eastern zone of the grid operator
+for 13 mid-Atlantic states and DC: one row per day from 2002 to 2018, and one row per hour from
+2016 to 2018. It is demand only — there is no temperature or other covariate. The prep script
+downloads it from a public mirror of PJM's load data; no login is needed.
 
 **Why we need it and M5 cannot substitute.** Lecture 3 covers GAMs and Prophet, whose real
 strength is handling **several seasonal cycles at the same time**. Retail sales have one
@@ -122,10 +124,10 @@ meaningful season: the yearly cycle. Electricity demand has three simultaneously
 - a **weekly** cycle (weekdays differ from weekends),
 - a **yearly** cycle (heating and cooling).
 
-On top of that, temperature drives demand non-linearly — demand rises when it is very cold
-*and* when it is very hot. That U-shape is precisely what a smooth term in a GAM captures and
-a linear model cannot. Retail data would let you fit the method; electricity lets you see why
-it exists.
+On top of that, the yearly cycle has **two peaks**: a July maximum from air conditioning and a
+smaller January one from heating, with the lows in the mild spring and autumn months. That
+shape is precisely what a smooth term in a GAM captures and a straight line or a single yearly
+wave cannot. Retail data would let you fit the method; electricity lets you see why it exists.
 
 ---
 
@@ -174,7 +176,7 @@ model was badly specified, but because the future stopped resembling the past, a
 here assumes it does not. If your project wants to study a genuine structural break rather than
 simulate one, this is the cleanest one available.
 
-*(We make the related point in Week 16 without leaving the spine dataset — see the Christmas
+*(We make the related point in Week 15 without leaving the spine dataset — see the Christmas
 closures in §1, where a **known, dated** event defeats every model in the course. Favorita's
 earthquake is the harder case: an event nobody could have known about at all.)*
 
