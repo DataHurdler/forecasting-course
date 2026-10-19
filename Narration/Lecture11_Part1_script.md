@@ -615,7 +615,7 @@ What structural models are for.
 
 ---
 
-# ▶ SLIDE 19 — Lecture 11 Part 1: Key Takeaways
+# ▶ SLIDE 19 — Lecture 11, Part 1: Key Takeaways
 
 One. A structural model writes the series as named parts — level, seasonality, noise — and gives
 each one a prior and a posterior.

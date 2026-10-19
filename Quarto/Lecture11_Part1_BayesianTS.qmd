@@ -238,7 +238,7 @@ What structural models are for.
 
 ---
 
-## Lecture 11 Part 1: Key Takeaways
+## Lecture 11, Part 1: Key Takeaways
 
 ::: {.keybox}
 1. A **structural** model names a series' parts and puts a prior on each.
