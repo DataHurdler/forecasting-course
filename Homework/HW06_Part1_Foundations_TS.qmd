@@ -160,8 +160,7 @@ Repository rules — these apply to every prompt in this thread:
   files, I will paste them in myself.
 - After finishing the work for each prompt, make exactly one git commit:
   `hw06_part1 prompt <prompt_id>: <short summary>`
-- If a prompt would take me past my budget of 10, do not do the work. Reply exactly
-  PROMPT_LIMIT_REACHED, and still log that prompt.
+- If this prompt takes me past my budget of 10, say so, log it as over budget, and continue.
 - Never modify `AGENTS.md`, anything in `assignments/`, or anything in `policy/`.
 
 Confirm by responding with: HW06P1_CONTEXT_ACK
@@ -295,7 +294,7 @@ Report three things: RMSE, the seasonal-naive RMSE for comparison, and the **cov
 - [ ] Your name replaces the `author:` placeholder at the top of the document
 - [ ] Written responses completed in your own words
 - [ ] `INITIAL_PROMPT.md` saved in `submissions/hw06_part1_<your_name>/`
-- [ ] `PROMPT_LOG.md` complete with **10 or fewer** entries for Part 1
+- [ ] `PROMPT_LOG.md` complete for Part 1: every prompt logged; over-budget prompts noted
 - [ ] Every file above uploaded to the **Canvas** assignment
 
 *Not graded, but worth doing:* commit locally once per prompt, `hw06_part1 prompt <id>: <summary>`.
