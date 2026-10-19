@@ -92,8 +92,8 @@ a 26-by-4 block.
 
 Now notice the count, because it is a trap dressed as good news. **8,310 rows became 7,530
 examples.** It looks like you have seven and a half thousand independent observations. You do not.
-Every week appears in twenty-six different windows — once as a target, twenty-five times as
-interior context. The examples overlap almost completely with their neighbors.
+Most weeks appear as input in twenty-six different windows, and once more as a target. The
+examples overlap almost completely with their neighbors.
 
 So the effective sample size is far smaller than 7,530, and that matters for how much you should
 trust anything this network tells you. Half of Homework 5's difficulty is remembering this.
@@ -151,7 +151,7 @@ units, that is an error of about 12%.
 And now the comparison you should not skip. On this same panel, in Homework 4, **XGBoost managed
 781** and a **46-coefficient LASSO managed 744.**
 
-Twenty-two thousand parameters lost to forty-six coefficients. Not narrowly — by about 45%.
+Twenty-two thousand parameters lost to forty-six coefficients. Not narrowly — by about half.
 
 **[pause]**
 
@@ -239,7 +239,7 @@ draw for `1e-4` and an average draw for zero, and that is the entire finding.
 *(Point at the min and max columns.)*
 
 Look closer and it is worse than that. On `min` and on `max`, no weight decay is *better* than
-`1e-4` — 946 against 991, 1,176 against 1,343. The setting with the worse spread has the
+`1e-4` — 946 against 991, 1,176 against 1,343. The setting with the tighter spread also has the
 marginally better mean, by four. There is no effect here in any direction.
 
 **[pause]**

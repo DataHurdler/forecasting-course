@@ -45,8 +45,8 @@
   A network's prediction is \textbf{continuous} --- with ReLU, piecewise linear.
 
   \begin{warningbox}
-    \textbf{This is not an upgrade.} On Homeworks 3 and 4, boosting and a tuned LASSO were hard
-    to beat; a network often loses to both. Reach for one for \emph{sequences}, images or audio,
+    \textbf{This is not an upgrade.} On Homework 3 and Homework 4, boosting and a tuned LASSO were
+    hard to beat; a network often loses to both. Reach for one for \emph{sequences}, images or audio,
     or very large $n$.
   \end{warningbox}
 \end{frame}
@@ -58,7 +58,7 @@
 
   \vspace{0.15cm}
   A \textbf{neuron} is that same expression with one addition --- a nonlinear
-  \textbf{activation} $\sigma(\cdot)$ wrapped around it:
+  \textbf{activation} $\sigma(\cdot)$, such as ReLU's $\max(0, z)$, wrapped around it:
   \[
     a = \sigma(\mathbf{w}^\top \mathbf{x} + b)
   \]
@@ -87,13 +87,13 @@
 
 % --- Slide: universal approximation -------------------------------------------
 \begin{frame}{Universal Approximation: Existence, Not Estimation}
-  Add units and the kinks multiply. With enough of them, one hidden layer can approximate
-  \emph{any} continuous function arbitrarily well: the \textbf{universal approximation theorem}.
+  Add units and the kinks multiply. With enough, one hidden layer can approximate \emph{any}
+  continuous function arbitrarily well on a bounded input range: the \textbf{universal
+  approximation theorem}.
 
   \vspace{0.15cm}
   \textbf{Read it carefully.} It says a network \emph{can} represent the function --- not
-  that your optimizer will find it, that you have the data to identify it, or that it will
-  generalize.
+  that your optimizer will find it, that your data can identify it, or that it will generalize.
 
   \vspace{0.15cm}
   Four units already reach RMSE 3{,}037 on the electricity year, and no function of the day of
@@ -215,7 +215,8 @@
 
 % --- Slide: early stopping, measured ---------------------------------------------
 \begin{frame}{Early Stopping, on Lab 7's Network}
-  Lab 7's network for 200 epochs, with the last 52 training weeks held out as a validation slice:
+  We train Lab 7's network for 200 epochs, holding out the last 52 training weeks as a validation
+  slice:
   \begin{center}
     \includegraphics[height=4.8cm]{../Figures/Lecture07_NeuralNets/overfit_epochs.pdf}
   \end{center}
@@ -238,13 +239,13 @@
     {\tiny\linespread{1.2}\selectfont
     \texttt{from torch.utils.data import Dataset, DataLoader}\\[2pt]
     \texttt{class ForecastDataset(Dataset):}\\
-    \texttt{\ \ def \_\_init\_\_(self, X, y):}\\
-    \texttt{\ \ \ \ self.X = torch.tensor(X, dtype=torch.float32)}\\
-    \texttt{\ \ \ \ self.y = torch.tensor(y, dtype=torch.float32)}\\
-    \texttt{\ \ def \_\_len\_\_(self): return len(self.X)}\\
-    \texttt{\ \ def \_\_getitem\_\_(self, i): return self.X[i], self.y[i]}\\[3pt]
+    \texttt{\mbox{}\ \ def \_\_init\_\_(self, X, y):}\\
+    \texttt{\mbox{}\ \ \ \ self.X = torch.tensor(X, dtype=torch.float32)}\\
+    \texttt{\mbox{}\ \ \ \ self.y = torch.tensor(y, dtype=torch.float32)}\\
+    \texttt{\mbox{}\ \ def \_\_len\_\_(self): return len(self.X)}\\
+    \texttt{\mbox{}\ \ def \_\_getitem\_\_(self, i): return self.X[i], self.y[i]}\\[3pt]
     \texttt{loader = DataLoader(ForecastDataset(X\_tr, y\_tr),}\\
-    \texttt{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ batch\_size=64, shuffle=False)}
+    \texttt{\mbox{}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ batch\_size=64, shuffle=False)}
     }
   \end{examplebox}
   \texttt{Dataset} fetches \emph{one} example; \texttt{DataLoader} batches.
@@ -258,9 +259,9 @@
     {\scriptsize\linespread{1.15}\selectfont
     \texttt{import torch.nn as nn}\\[2pt]
     \texttt{model = nn.Sequential(}\\
-    \texttt{\ \ \ \ nn.Linear(n\_features, 128), nn.ReLU(), nn.Dropout(0.3),}\\
-    \texttt{\ \ \ \ nn.Linear(128, 128),\ \ \ \ \ \ nn.ReLU(), nn.Dropout(0.3),}\\
-    \texttt{\ \ \ \ nn.Linear(128, 1))}
+    \texttt{\mbox{}\ \ \ \ nn.Linear(n\_features, 128), nn.ReLU(), nn.Dropout(0.3),}\\
+    \texttt{\mbox{}\ \ \ \ nn.Linear(128, 128),\ \ \ \ \ \ nn.ReLU(), nn.Dropout(0.3),}\\
+    \texttt{\mbox{}\ \ \ \ nn.Linear(128, 1))}
     }
   \end{examplebox}
   Read it top to bottom and it is the block diagram from \emph{How Big Is This Model?}: a linear
@@ -283,12 +284,12 @@
     \texttt{opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight\_decay=1e-4)}\\
     \texttt{lossfn = nn.MSELoss()}\\[3pt]
     \texttt{for epoch in range(n\_epochs):}\\
-    \texttt{\ \ model.train()}\\
-    \texttt{\ \ for xb, yb in loader:}\\
-    \texttt{\ \ \ \ opt.zero\_grad()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \# 1 clear old gradients}\\
-    \texttt{\ \ \ \ loss = lossfn(model(xb).squeeze(), yb)\ \# 2 forward}\\
-    \texttt{\ \ \ \ loss.backward()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \# 3 backward}\\
-    \texttt{\ \ \ \ opt.step()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \# 4 update weights}
+    \texttt{\mbox{}\ \ model.train()}\\
+    \texttt{\mbox{}\ \ for xb, yb in loader:}\\
+    \texttt{\mbox{}\ \ \ \ opt.zero\_grad()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \# 1 clear old gradients}\\
+    \texttt{\mbox{}\ \ \ \ loss = lossfn(model(xb).squeeze(), yb)\ \# 2 forward}\\
+    \texttt{\mbox{}\ \ \ \ loss.backward()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \# 3 backward}\\
+    \texttt{\mbox{}\ \ \ \ opt.step()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \# 4 update weights}
     }
   \end{examplebox}
   Every PyTorch training loop is those four lines with more around them.
@@ -317,13 +318,15 @@
       Random forest & no & no & light & Tabular, robust default \\
       XGBoost & no & no & moderate & Tabular, best-in-class \\
       FFN & no & yes & heavy & Smooth functions, large $n$ \\
-      RNN / LSTM & \textbf{yes} & yes & heavy & Sequences (Lecture 9) \\
+      RNN / LSTM & \textbf{yes} & bounded$^{*}$ & heavy & Sequences (Lecture 9) \\
       \bottomrule
     \end{tabular}
     }
   \end{center}
+  \vspace{-0.2cm}
+  \muted{\footnotesize $^{*}$tanh-squashed states cap the forecast at a fixed ceiling.}
 
-  \vspace{0.15cm}
+  \vspace{0.1cm}
   \textbf{An FFN on lag features is doing the same job as XGBoost on lag features} --- same
   inputs, same flat table, no notion of order. It is not obviously the better tool, and on the
   evidence of Homework 4 it usually is not.
@@ -331,7 +334,7 @@
   \vspace{0.15cm}
   What changes in the next two lectures is the \emph{architecture}: convolutions that see local
   structure, and recurrence that carries state through time. That is when the sequence column
-  above starts saying yes, and it is the reason to learn this machinery now.
+  says yes, and why we learn this machinery now.
 \end{frame}
 
 % --- Slide: Key takeaways ---------------------------------------------------

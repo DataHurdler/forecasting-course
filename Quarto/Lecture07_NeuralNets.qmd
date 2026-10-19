@@ -47,7 +47,7 @@ A tree treats rows as independent: time enters only as the lag columns you built
 A network's prediction is **continuous** — with ReLU, piecewise linear.
 
 ::: {.warningbox}
-**This is not an upgrade.** On Homeworks 3 and 4, boosting and a tuned LASSO were hard to beat; a network often loses to both. Reach for one for *sequences*, images or audio, or very large $n$.
+**This is not an upgrade.** On Homework 3 and Homework 4, boosting and a tuned LASSO were hard to beat; a network often loses to both. Reach for one for *sequences*, images or audio, or very large $n$.
 :::
 
 ---
@@ -56,7 +56,7 @@ A network's prediction is **continuous** — with ReLU, piecewise linear.
 
 Start from something you already know. Linear regression predicts $\hat{y} = \mathbf{w}^\top \mathbf{x} + b$.
 
-A **neuron** is that same expression with one addition — a nonlinear **activation** $\sigma(\cdot)$ wrapped around it:
+A **neuron** is that same expression with one addition — a nonlinear **activation** $\sigma(\cdot)$, such as ReLU's $\max(0, z)$, wrapped around it:
 
 $$a = \sigma(\mathbf{w}^\top \mathbf{x} + b)$$
 
@@ -78,9 +78,9 @@ Depth alone buys nothing: a linear function of a linear function is linear, $\ma
 
 ## Universal Approximation: Existence, Not Estimation
 
-Add units and the kinks multiply. With enough of them, one hidden layer can approximate *any* continuous function arbitrarily well: the **universal approximation theorem**.
+Add units and the kinks multiply. With enough, one hidden layer can approximate *any* continuous function arbitrarily well on a bounded input range: the **universal approximation theorem**.
 
-**Read it carefully.** It says a network *can* represent the function — not that your optimizer will find it, that you have the data to identify it, or that it will generalize.
+**Read it carefully.** It says a network *can* represent the function — not that your optimizer will find it, that your data can identify it, or that it will generalize.
 
 Four units already reach RMSE 3,037 on the electricity year, and no function of the day of the year fits better than 2,864. Past that, capacity is not what is missing.
 
@@ -161,7 +161,7 @@ Twenty-two thousand parameters on five thousand rows will memorize the training 
 
 ## Early Stopping, on Lab 7's Network
 
-Lab 7's network for 200 epochs, with the last 52 training weeks held out as a validation slice:
+We train Lab 7's network for 200 epochs, holding out the last 52 training weeks as a validation slice:
 
 ![](../Figures/Lecture07_NeuralNets/overfit_epochs.svg){fig-align="center" height="360px"}
 
@@ -254,7 +254,7 @@ Where a network belongs in the toolkit you now have.
 
 ---
 
-## Neural Networks vs. Tree Methods
+## Neural Networks vs. Tree Methods [@James2021]
 
 | Method | Sequences | Extrapolates | Tuning | Best for |
 |---|---|---|---|---|
@@ -262,11 +262,13 @@ Where a network belongs in the toolkit you now have.
 | Random forest | no | no | light | Tabular, robust default |
 | XGBoost | no | no | moderate | Tabular, best-in-class |
 | FFN | no | yes | heavy | Smooth functions, large $n$ |
-| RNN / LSTM | **yes** | yes | heavy | Sequences (Lecture 9) |
+| RNN / LSTM | **yes** | bounded\* | heavy | Sequences (Lecture 9) |
 
-**An FFN on lag features is doing the same job as XGBoost on lag features** — same inputs, same flat table, no notion of order. It is not obviously the better tool, and on the evidence of Homework 4 it usually is not [@James2021].
+[\*tanh-squashed states cap the forecast at a fixed ceiling.]{.neutral .smaller}
 
-What changes in the next two lectures is the *architecture*: convolutions that see local structure, and recurrence that carries state through time. That is when the sequence column above starts saying yes, and it is the reason to learn this machinery now.
+**An FFN on lag features is doing the same job as XGBoost on lag features** — same inputs, same flat table, no notion of order. It is not obviously the better tool, and on the evidence of Homework 4 it usually is not.
+
+What changes in the next two lectures is the *architecture*: convolutions that see local structure, and recurrence that carries state through time. That is when the sequence column says yes, and why we learn this machinery now.
 
 ---
 

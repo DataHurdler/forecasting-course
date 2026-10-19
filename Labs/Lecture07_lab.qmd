@@ -92,9 +92,9 @@ print(f"X shape {X.shape}  (windows, weeks, channels)")
 print(f"train {train_mask.sum():,}   test {test_mask.sum():,}")
 ```
 
-**Notice the window count is far larger than the row count.** Every week is the end of one window
-and the interior of twenty-five others, so 8,310 rows become ~7,500 overlapping examples. That
-overlap is why the effective sample size is much smaller than it looks.
+**Notice the window count is close to the row count, yet the windows overlap heavily.** The 8,310
+rows become 7,530 windows, and most weeks sit inside 26 of them as input. That overlap is why the
+effective sample size is much smaller than it looks.
 
 Now standardize — **using training statistics only**.
 

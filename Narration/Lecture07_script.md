@@ -192,7 +192,10 @@ what you get when you let the data place them.
 
 Add more units and the kinks multiply. That's the intuition behind a result called the **universal
 approximation theorem**: a network with a single hidden layer can approximate any continuous
-function as closely as you like, given enough neurons.
+function as closely as you like over a bounded range of inputs, given enough neurons.
+
+That "bounded range" matters in a forecasting course. Outside the range it was trained on, a ReLU
+network is just a straight line past its last kink, whatever the true function does there.
 
 Now — read that claim carefully, because it is quoted far more often than it is understood.
 
@@ -588,7 +591,7 @@ accumulation is a legitimate technique that some people want deliberately.
 
 So your model trains. It just trains badly, and you have no idea why.
 
-We will do this deliberately in the lab, so you can see what the loss curve looks like when it
+We will do this deliberately in the lab, so you can see what it does to the forecast when it
 happens. It is worth seeing once in a controlled setting rather than at eleven at night before a
 deadline.
 
@@ -636,8 +639,13 @@ averaging the training values that landed in a leaf, so it physically cannot out
 larger than the largest one it has seen. If your series is trending upward, a random forest will
 forecast a flat line at the top of its training range, forever.
 
-The linear models and the networks say yes. A LASSO fit with a trend term will happily project
-that trend forward. So will a network.
+The linear models and the feedforward network say yes. A LASSO fit with a trend term will happily
+project that trend forward. So will a ReLU network, past its last kink.
+
+The RNN and LSTM row says *bounded*, and that's a real difference. Their hidden state is squashed
+by tanh into the range minus one to one, so with a linear output layer the forecast can go past
+the training maximum, but only up to a fixed ceiling set by the output weights.
+*(Point at the footnote under the table.)*
 
 Whether that is a *feature* depends entirely on whether the trend is real. Extrapolating a
 genuine trend is the right answer. Extrapolating a temporary run-up is how forecasts embarrass
