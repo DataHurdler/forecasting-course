@@ -43,8 +43,8 @@
           is not a constant slope
     \item \textbf{Threshold effects} --- spending may be flat until
           unemployment drops below 5\%, then jump
-    \item \textbf{Asymmetry} --- extreme values distort coefficients
-          equally in both directions
+    \item \textbf{Asymmetry} --- a rise and a fall of the same size move the
+          forecast equally, even when the real response is lopsided
   \end{itemize}
   \begin{examplebox}{Retail Sales Example}
     Monthly sales depend on last year's same-month sales (trend),
@@ -69,10 +69,10 @@
   \end{definitionbox}
   \vspace{-0.3cm}
   \begin{center}
-    \includegraphics[height=3.3cm]{../Figures/Lecture04_DecisionTrees/stumps_vs_deep.pdf}
+    \includegraphics[height=3.2cm]{../Figures/Lecture04_DecisionTrees/stumps_vs_deep.pdf}
   \end{center}
   \vspace{-0.4cm}
-  {\small Each model refitted on 20 bootstrap resamples. \textbf{Stumps} (one-question trees)
+  {\small Weekly CA\_1 FOODS, 20 bootstrap refits per model. \textbf{Stumps} (one-question trees)
   agree and miss: bias. \textbf{Deep trees} center on the truth but scatter: variance. (The miss
   includes this week's noise, so it is not pure bias.) \textbf{Goal:} the complexity that
   balances the two, visible only \emph{out-of-sample}.}
@@ -206,13 +206,14 @@
   A \textbf{stump} asks one question: high bias, low variance. A \textbf{full tree}, one week per
   leaf, memorizes the sample: zero \emph{training} error, high variance.
   \begin{center}
-    \includegraphics[height=4.1cm]{../Figures/Lecture04_DecisionTrees/depth_curve.pdf}
+    \includegraphics[height=3.9cm]{../Figures/Lecture04_DecisionTrees/depth_curve.pdf}
   \end{center}
   \vspace{-0.35cm}
-  {\small Training error falls to zero; test error stops improving after depth 3, since 173 weeks
-  leave little to split. Read the shape, not the minimum: picking depth from the test year is a
-  leak. \textbf{Unstable, too:} one changed week can flip the root split, and everything below
-  it. Tune by \texttt{TimeSeriesSplit}.}
+  {\small Weekly CA\_1 FOODS, one week ahead (seasonal naive: 1,660). Training error falls to
+  zero; test error stops improving after depth 3, since 173 weeks leave little to split. Read
+  the shape, not the minimum: picking depth from the test year is a leak. \textbf{Unstable,
+  too:} one changed week can flip the root split, and everything below it. Tune by
+  \texttt{TimeSeriesSplit}.}
 \end{frame}
 
 % --- Slide: pruning ----------------------------------------------------------
@@ -316,8 +317,8 @@
   From the previous slide's depth-5 tree. Read it as a list of what the tree leaned on: a fast
   way to screen predictors.
   \muted{\footnotesize But impurity importance is biased toward
-  high-cardinality features. Permutation importance and SHAP give more
-  reliable attributions; we return to this in Lecture 5.}
+  features with many split points. Permutation importance gives a more
+  reliable ranking; we return to it in Lecture 5.}
 \end{frame}
 
 % --- Slide: Interpreting tree predictions ------------------------------------
@@ -381,18 +382,19 @@
     {\small
     \begin{enumerate}
       \item Trees capture \textbf{interactions} and \textbf{thresholds} without being told.
-      \item Depth sets the \textbf{bias--variance} trade: too shallow underfits, too deep
+      \item Depth sets the \textbf{bias--variance} tradeoff: too shallow underfits, too deep
             overfits.
       \item \textbf{CART} takes the split with the least squared error; a leaf predicts its mean.
       \item Stop overfitting with \texttt{min\_samples\_leaf} or \texttt{ccp\_alpha}, tuned by
             \texttt{TimeSeriesSplit}.
       \item Trees are \textbf{interpretable}: you can read the path to any prediction.
-      \item One tree has \textbf{high variance}; ensembles (Lecture 5) fix that.
+      \item A tree is a \textbf{step function} that cannot extrapolate; its \textbf{high
+            variance} needs ensembles (Lecture 5).
     \end{enumerate}
     }
   \end{keybox}
-  \muted{\itshape Next: Random Forests --- variance reduction through
-  bootstrap aggregation and random feature selection.}
+  \muted{\itshape Next: Tree Ensembles --- variance reduction through
+  bootstrap aggregation, and sequential error correction with boosting.}
 \end{frame}
 
 % --- References ---------------------------------------------------------------

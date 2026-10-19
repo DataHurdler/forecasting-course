@@ -45,7 +45,7 @@ Real-world relationships are often nonlinear, involve interactions, and shift wi
 
 - **Interactions** — the holiday-season advertising effect is not a constant slope
 - **Threshold effects** — spending may be flat until unemployment drops below 5%, then jump
-- **Asymmetry** — extreme values distort coefficients equally in both directions
+- **Asymmetry** — a rise and a fall of the same size move the forecast equally, even when the real response is lopsided
 
 ::: {.examplebox}
 ::: {.examplebox-title}
@@ -58,7 +58,7 @@ Monthly sales depend on last year's same-month sales (trend), whether it is Dece
 
 ---
 
-## The Bias--Variance Tradeoff
+## The Bias--Variance Tradeoff [@James2021]
 
 ::: {.definitionbox}
 ::: {.definitionbox-title}
@@ -69,7 +69,7 @@ $$\text{Expected MSE} = \underbrace{\text{Bias}^2}_{\text{systematic error}} + \
 
 ![](../Figures/Lecture04_DecisionTrees/stumps_vs_deep.svg){fig-align="center" height="230px"}
 
-[Each model refitted on 20 bootstrap resamples. **Stumps** (one-question trees) agree and miss: bias. **Deep trees** center on the truth but scatter: variance. (The miss includes this week's noise, so it is not pure bias.) **Goal:** the complexity that balances the two, visible only *out-of-sample*.]{.smaller}
+[Weekly CA_1 FOODS, 20 bootstrap refits per model. **Stumps** (one-question trees) agree and miss: bias. **Deep trees** center on the truth but scatter: variance. (The miss includes this week's noise, so it is not pure bias.) **Goal:** the complexity that balances the two, visible only *out-of-sample*.]{.smaller}
 
 # How Decision Trees Work
 
@@ -99,11 +99,11 @@ Each question is a straight cut parallel to an axis. Each leaf is a rectangle, s
 
 ---
 
-## The CART Algorithm (Regression)
+## The CART Algorithm (Regression) [@Breiman1984]
 
 :::: {.columns}
 ::: {.column width="42%"}
-At each node, CART [@Breiman1984] tries every feature $j$ and threshold $t$, and keeps the split with the least squared error:
+At each node, CART tries every feature $j$ and threshold $t$, and keeps the split with the least squared error:
 
 $$\textstyle\sum_{x_{ij} \leq t} (y_i - \bar{y}_{L})^2 + \sum_{x_{ij} > t} (y_i - \bar{y}_{R})^2$$
 
@@ -141,7 +141,7 @@ A **stump** asks one question: high bias, low variance. A **full tree**, one wee
 
 ![](../Figures/Lecture04_DecisionTrees/depth_curve.svg){fig-align="center" height="340px"}
 
-[Training error falls to zero; test error stops improving after depth 3, since 173 weeks leave little to split. Read the shape, not the minimum: picking depth from the test year is a leak. **Unstable, too:** one changed week can flip the root split, and everything below it. Tune by `TimeSeriesSplit`.]{.smaller}
+[Weekly CA_1 FOODS, one week ahead (seasonal naive: 1,660). Training error falls to zero; test error stops improving after depth 3, since 173 weeks leave little to split. Read the shape, not the minimum: picking depth from the test year is a leak. **Unstable, too:** one changed week can flip the root split, and everything below it. Tune by `TimeSeriesSplit`.]{.smaller}
 
 ---
 
@@ -182,7 +182,6 @@ sklearn Code Template
 :::
 ```python
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.model_selection import TimeSeriesSplit
 
 X, y = weekly[FEATURES], weekly['units']   # lags, SNAP, events, price
 
@@ -203,7 +202,7 @@ Cross-validate with `TimeSeriesSplit`, never `KFold` — **random folds leak the
 
 ---
 
-## Feature Importance
+## Feature Importance [@Molnar2022]
 
 ::: {.definitionbox}
 ::: {.definitionbox-title}
@@ -222,7 +221,7 @@ For each feature $j$, sum the total reduction in variance across all splits wher
 
 From the previous slide's depth-5 tree. Read it as a list of what the tree leaned on: a fast way to screen predictors.
 
-[But impurity importance is biased toward high-cardinality features. Permutation importance and SHAP give more reliable attributions; we return to this in Lecture 5.]{.neutral .smaller}
+[But impurity importance is biased toward features with many split points. Permutation importance gives a more reliable ranking; we return to it in Lecture 5.]{.neutral .smaller}
 
 ---
 
@@ -281,11 +280,11 @@ A single tree is a weak learner. Combine hundreds to build a strong one.
 
 ::: {.keybox}
 1. Trees capture **interactions** and **thresholds** without being told.
-2. Depth sets the **bias--variance** trade: too shallow underfits, too deep overfits.
+2. Depth sets the **bias--variance** tradeoff: too shallow underfits, too deep overfits.
 3. **CART** takes the split with the least squared error; a leaf predicts its mean.
 4. Stop overfitting with `min_samples_leaf` or `ccp_alpha`, tuned by `TimeSeriesSplit`.
 5. Trees are **interpretable**: you can read the path to any prediction.
-6. One tree has **high variance**; ensembles (Lecture 5) fix that.
+6. A tree is a **step function** that cannot extrapolate; its **high variance** needs ensembles (Lecture 5).
 :::
 
 *Next: Tree Ensembles — variance reduction through bootstrap aggregation, and sequential error correction with boosting.*

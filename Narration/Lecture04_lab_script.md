@@ -16,10 +16,15 @@ Lab: `Labs/Lecture04_lab.qmd` (4 steps) · Measured runtime: **~20 minutes** of 
   is deterministic — `random_state=42` on every fit, and the bootstrap draws come from a seeded
   `RandomState`. Re-running gives the same table.
 
-### One correction that was applied to the lab
+### Two corrections that were applied to the lab
 
-Step 3 closed with "You just built a small Random Forest by hand." That is the wrong name, and
-Lecture 5 contradicts it four days later: bagging and random forests differ *precisely* by the
+**Step 4 (2026-10-19).** The lab used to blame the tree for under-forecasting the busiest days and
+over-forecasting the quietest. That pattern is regression to the mean: days chosen by their actual
+sales produce it for any imperfect forecaster, and a linear regression on the same features shows
+more of it. The prose, the closing question and the script below now say so. The code is unchanged.
+
+**Step 3.** The step closed with "You just built a small Random Forest by hand." That is the
+wrong name, and Lecture 5 contradicts it four days later: bagging and random forests differ *precisely* by the
 feature subsampling this lab does not do, and L05 spends a whole slide on the problem bagging
 does **not** solve. The line now says you built a **bagged ensemble** — a forest with the
 decorrelation step still missing. If you remember the earlier wording, that is why it changed.
@@ -211,8 +216,8 @@ almost nothing. At full depth it's 0 against 406.
 
 Two things to carry out of this table.
 
-First, the model that fits the training data best is the *worst* model in the table on data it
-has not seen. That is not a subtlety, that is the whole lesson, and it will repeat in every
+First, the model that fits the training data best is worse on data it has not seen than every
+tree from depth 2 to depth 12. That is not a subtlety, that is the whole lesson, and it will repeat in every
 lecture for the rest of the course.
 
 Second — and this is the practical one — the depth-5 tree beats the fully grown tree, and the
@@ -308,16 +313,21 @@ busiest 10% of test days  (n=37): actual 4,115   predicted 3,929   under by 186
 quietest 10% of test days (n=37): actual 2,030   predicted 2,237   over by  207
 ```
 
-Both ends are wrong, and — this is the point — **they are wrong in opposite directions**.
-The busy days are under-forecast by 186 units. The quiet days are over-forecast by 207. The model
-is pulling everything toward the middle.
+Both ends are wrong, and **they are wrong in opposite directions**. The busy days are
+under-forecast by 186 units. The quiet days are over-forecast by 207.
 
-Be precise about what this is and is not. The hard ceiling did not bite this year: the busiest
-test day was 4,717 units and the training set had a 5,016-unit day, so nothing was clipped.
-What you are seeing is the softer, more common version — leaf averaging shrinks the extremes
-inward. It is not a large effect in absolute terms next to a full tree's RMSE of 406. It is a
-*systematic* one, which is worse, because it will not average out over the year and it is exactly
-the days you care most about.
+Now be precise about what this is, because it is not what it looks like. First, the hard ceiling
+did not bite this year: the busiest test day was 4,717 units and the training set had a 5,016-unit
+day, so nothing was clipped.
+
+Second, look at how we chose these days: by their *actual* sales. Part of what made a day one of
+the busiest was luck — a bigger crowd than its features suggested — and no forecast sees luck
+coming. So any imperfect forecaster under-predicts the days that turned out busiest and
+over-predicts the days that turned out quietest. That is **regression to the mean**, and it is not
+a tree failure. A linear regression on the same features, day of week as dummies, which *can* extrapolate,
+pulls harder:
+255 under at the top and 269 over at the bottom. And if you choose the busiest days by the tree's
+*prediction* instead, the sign flips: those days actually sold 3,820 against a forecast of 4,137.
 
 **[STOP — learner works]**
 
@@ -328,7 +338,8 @@ Uncomment the scatter block and fill in the two blanks — actual on x, predicte
 
 You should be looking at a cloud that is flatter than the 45-degree line. Below the line on the
 right, above it on the left, hinged in the middle. Once you have seen that shape you will
-recognize it everywhere, in every method that predicts by averaging.
+recognize it everywhere: with the actual on the x-axis, every imperfect forecast looks like this,
+however good it is, because none of them can predict the luck.
 
 ---
 
@@ -340,9 +351,10 @@ recognize it everywhere, in every method that predicts by averaging.
 
 Two questions on the discussion board before the next session.
 
-**First, the failure.** You have just seen a tree pull its predictions toward the middle at both
-ends. Give me the *mechanical* reason — and I mean mechanical, in terms of what a leaf prediction
-literally is, not "the model is conservative."
+**First, the pull to the middle.** You have just seen the busiest days under-forecast and the
+quietest over-forecast. Explain why *any* imperfect forecaster shows that pattern when the days are
+picked by their actual sales — and what you would expect if they were picked by the forecast
+instead.
 
 Then the operational half. This store is planning inventory. One of those two errors costs more
 than the other: under-forecasting a busy day means an empty shelf and a lost sale; over-forecasting
@@ -411,6 +423,7 @@ is 324 → 266. The stronger comparison, which is worth saying out loud, is that
 
 *The extrapolation ceiling did not bind this year.* Training max 5,016, test max 4,717, so no
 test day was clipped. The mechanism is real and worth stating as an absolute (a tree *cannot*
-predict above its training range), but the failure actually visible in the numbers is
-regression toward the middle — 186 under at the top, 207 over at the bottom. Say both; do not
-let the second be mistaken for evidence of the first.
+predict above its training range), but what the numbers show is regression to the mean — 186
+under at the top, 207 over at the bottom — and it comes from choosing days by their actual value,
+not from the tree: a linear regression on the same features shows more (255 and 269, not printed
+by the lab). Say both; do not let the second be mistaken for evidence of the first.

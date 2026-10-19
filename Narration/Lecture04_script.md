@@ -64,8 +64,9 @@ interaction term by hand — but only if you already suspected it was there.
 **Threshold effects.** Spending might be flat while unemployment sits above five percent, then
 move sharply once it drops below. That's a kink. A straight line has no kinks.
 
-**Asymmetry.** Extreme values pull coefficients equally hard in both directions, whether or
-not the underlying relationship is symmetric.
+**Asymmetry.** A constant slope means a rise and a fall of the same size move the forecast by
+the same amount, whether or not the underlying relationship is symmetric. Customers may punish a
+price rise harder than they reward a cut; a straight line cannot say so.
 
 **[pause]**
 
@@ -352,7 +353,8 @@ The gray line does what it must: it falls with every extra level and hits **zero
 tree. A deeper tree can always fit the sample better.
 
 The red line doesn't follow it. It drops from the stump to depth three — about twelve hundred
-thirteen — and then stops improving. Past depth three it wanders between about thirteen hundred
+thirteen, against sixteen sixty for seasonal naive — and then stops improving. One thing to know
+about that comparison: these trees forecast one week ahead, handed the true lags every week. Past depth three it wanders between about thirteen hundred
 fifty and fifteen hundred sixty. The gap between the two lines is overfitting, drawn to scale.
 
 **[pause]**
@@ -510,7 +512,8 @@ surfaced unless someone already thought to look.
 
 **[pause]**
 
-But be careful, because impurity importance is **biased toward high-cardinality features**.
+But be careful, because impurity importance is **biased toward features with many split
+points** — high-cardinality features, in the jargon.
 
 Look at our own table. `avg_price` is continuous — it offers hundreds of distinct split points,
 so the algorithm gets hundreds of chances to find one that happens to help. `snap_days` takes a
@@ -578,11 +581,14 @@ will flatten out exactly when you need it to keep climbing. If your sales have g
 and you ask a tree to forecast next year, it will predict something inside the range it already
 knows.
 
-Put a number on it. CA_1 food sales grew about twenty-nine percent over five years. Train a
-tree on the first four and ask it for year five, and the highest value it can possibly output
-is the highest leaf mean it learned — a number from the *old*, lower range. It will
-systematically under-forecast, and no amount of tuning fixes it, because the model has no
-representation of "up."
+Be honest about where that bites. CA_1 food sales grew about twenty-nine percent over five
+years, but almost all of it came between the first year and the second; since then the store has
+plateaued. Train a tree on the first four years and ask it for the fifth, and not one of the
+fifty-two weeks rises above the training maximum. So on this series the ceiling never binds.
+Next week you'll see a series where it does: US retail sales, which a forest trained through
+2019 never forecasts above four hundred fifty billion dollars while actual sales climb to six
+hundred sixty-five. On a series like that a tree systematically under-forecasts, and no amount
+of tuning fixes it, because the model has no representation of "up."
 
 An ARIMA with a drift term has no such problem. It will happily forecast values it has never
 seen.
@@ -606,7 +612,7 @@ Six things.
 **One.** Linear models cannot capture interactions or threshold effects. Trees can, without
 your specifying them in advance.
 
-**Two.** Depth sets the bias–variance trade: too shallow underfits, too deep overfits.
+**Two.** Depth sets the bias–variance tradeoff: too shallow underfits, too deep overfits.
 
 **Three.** CART takes the split with the least squared error — slide the cut, total the squared
 sticks. The prediction is the mean of the leaf.
@@ -616,7 +622,9 @@ touching the curve — tuned by `TimeSeriesSplit`.
 
 **Five.** Trees are interpretable — you can trace the exact path to any prediction.
 
-**Six.** Single trees have high variance. Ensembles solve this, and that's Lecture 5.
+**Six.** A tree is a step function, so it cannot extrapolate — and a single tree has high
+variance. Ensembles solve the variance, and that's Lecture 5. They do not solve the
+extrapolation.
 
 **[pause]**
 

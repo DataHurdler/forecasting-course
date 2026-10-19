@@ -233,8 +233,9 @@ print(f"training target range : [{y_train.min():,.0f}, {y_train.max():,.0f}]")
 print(f"prediction range      : [{p.min():,.0f}, {p.max():,.0f}]")
 ```
 
-The predictions cannot leave the training range — not "usually do not," *cannot*. Now watch what
-that does at the extremes.
+The predictions cannot leave the training range — not "usually do not," *cannot*. That is the
+one place trees reliably fail: a series that grows past its history. This test year does not, so
+the ceiling never binds here. Keep that in mind before you blame the next result on it.
 
 ```{python}
 hi = y_test > np.percentile(y_test, 90)
@@ -246,8 +247,13 @@ print(f"quietest 10% of test days (n={lo.sum()}): actual {y_test[lo].mean():,.0f
       f"   predicted {p[lo].mean():,.0f}   over by  {p[lo].mean()-y_test[lo].mean():,.0f}")
 ```
 
-**Your turn:** the two errors above point in opposite directions. Plot predicted against actual
-for the test set, add the 45-degree line, and see the shape this produces.
+The two errors point in opposite directions. Before you blame the tree, look at how we picked
+these days: by their *actual* sales. Picked that way, **any** imperfect forecaster errs in exactly
+this pattern. It is called **regression to the mean**, and a linear regression on the same
+features (day of week as dummies), which can extrapolate, pulls toward the middle even harder.
+
+**Your turn:** plot predicted against actual for the test set, add the 45-degree line, and see
+the shape this produces.
 
 ```{python}
 # ---- your turn: uncomment and fill in the two blanks ----
@@ -263,11 +269,13 @@ for the test set, add the 45-degree line, and see the shape this produces.
 
 # Before you leave
 
-You should have found that the tree systematically under-predicts the busiest days and
-over-predicts the quietest ones, and that averaging twenty unstable trees beat any one of them.
+You should have found that a tree can never predict outside its training range, that the pull
+toward the middle at both ends is regression to the mean rather than a tree failure, and that
+averaging twenty unstable trees beat any one of them.
 
-> **Discuss (the failure):** A tree pulls its predictions toward the middle at both ends. Give the
-> mechanical reason — think about what a leaf prediction actually is.
+> **Discuss (the pull to the middle):** The busiest test days were under-forecast and the quietest
+> over-forecast. Why does *any* imperfect forecaster show this when days are chosen by their actual
+> sales? What would you expect if you chose the busiest days by the tree's *prediction* instead?
 >
 > Then the operational version: this store is planning inventory. Which of those two errors costs
 > more, and does your answer change if the product is milk rather than canned goods?
