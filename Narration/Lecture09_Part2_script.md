@@ -1,6 +1,6 @@
-# Lecture 9 Part 2 — Recording Script
+# Lecture 9, Part 2 — Recording Script
 
-**ECON 8310: Business Forecasting · Transformers**
+**ECON 8310: Business Forecasting · Attention and Transformers**
 
 Deck: `Slides/Lecture09_Part2_Transformers.pdf` (20 pages) · Measured runtime: see the timing guide
 
@@ -18,7 +18,7 @@ Deck: `Slides/Lecture09_Part2_Transformers.pdf` (20 pages) · Measured runtime: 
 
 # ▶ SLIDE 1 — Title page
 
-Lecture 9, Part 2: Transformers.
+Lecture 9, Part 2: Attention and Transformers.
 
 Last week we built a recurrent network and found something surprising — the plain RNN beat the
 LSTM at every window length we tried. Today we build the architecture that displaced both of them
@@ -111,6 +111,10 @@ Now let me translate it, because the formula makes it look more exotic than it i
 also offers a **key** — "here's what I have" — and a **value** — "here's what I'd contribute if
 you pick me."
 
+Those are not three different inputs. Q, K and V are three learned projections of the same weeks —
+three weight matrices applied to one window. And d-k is just the length of each key: sixteen, per
+head, in our model.
+
 *(Point at the left panel.)*
 
 The picture is a two-dimensional cartoon of what one head does; ours works in sixteen dimensions,
@@ -152,6 +156,7 @@ on one position — where its gradient is nearly zero and nothing trains. Dividi
 the scores in a range where the softmax stays soft.
 
 It's a numerical fix, not a conceptual one, but leave it out and the model doesn't learn.
+
 ---
 
 # ▶ SLIDE 7 — What That Buys a Forecaster
@@ -278,6 +283,7 @@ Look at every operation in that block. Attention: a weighted average over weeks.
 Feed-forward: applied to each week independently. LayerNorm: per week. Skip: per week.
 
 **Nothing in there depends on the *order* of the input.**
+
 ---
 
 # ▶ SLIDE 11 — Positional Encoding: Attention Cannot Tell Time
@@ -285,20 +291,24 @@ Feed-forward: applied to each week independently. LayerNorm: per week. Skip: per
 Let's make that precise, because it's the most important slide in the lecture.
 
 Attention computes a weighted average over positions. Averaging does not care about order.
-Shuffle the input window, and every attention output is **unchanged**. The technical term is that
-attention is **permutation-invariant**.
+Shuffle the input window, and each week's output comes out **unchanged** — it just moves with its
+week. The technical term is that attention is **permutation-equivariant**: rearrange the input and
+the outputs are rearranged the same way, and nothing else changes. Each week sees the others only
+as an unordered bag.
 
 **[pause]**
 
-For language that's fatal — "dog bites man" and "man bites dog" would be identical inputs. For
-forecasting it's arguably worse. A model that cannot distinguish last week from thirty weeks ago
-is not forecasting at all; it's computing a weighted average of an unordered bag of numbers.
+For language that's fatal — "dog bites man" and "man bites dog" would contain identical bags of
+words. For forecasting it's arguably worse. Our model reads its forecast from the last position,
+so it does know which week is most recent. But it cannot distinguish two weeks ago from thirty
+weeks ago, and a model that can't do that is not forecasting at all; it's taking a weighted
+average of an unordered bag of numbers.
 
 So the fix is to add position information **to the input itself**, before attention ever sees it.
 
 *(Point at the formula, then straight to the dials.)*
 
-The original paper adds thirty-two pairs of numbers to each week: a sine and a cosine, each pair at
+Our model adds thirty-two pairs of numbers to each week: a sine and a cosine, each pair at
 its own speed. Here's the way to picture it. A sine and a cosine of the same angle are just the two
 coordinates of a point on a circle. So each pair is a **clock hand**, and as you move through the
 window, week by week, every hand turns — each at its own speed.
@@ -327,6 +337,7 @@ You can also learn the position vectors instead of fixing them; both are used in
 
 We measure exactly what removing this costs at the end of the lecture, on slide sixteen. Hold the
 question.
+
 ---
 
 # ▶ SLIDE 12 — Why Transformers Took Over
@@ -375,7 +386,7 @@ Read that list again with a forecaster's eye, though.
 Every single one of those advantages is about **large data and long sequences**.
 
 Hold that against what we actually have: a fifty-two-week window, and five thousand one hundred
-sixty training examples.
+sixty training windows.
 
 ---
 
@@ -404,7 +415,8 @@ And here is the one that will cost someone in this room a weekend.
 
 You add that yourself. It's the `+ self.pe` on the forward pass. And if you forget it, PyTorch
 does not complain. There's no error, no warning, no shape mismatch. The model trains perfectly
-happily on an unordered bag of weeks and returns a forecast.
+happily — it still knows which week is last, and sees the rest as an unordered bag — and returns a
+forecast.
 
 It's a **silent failure**, which by now you should recognize as the most dangerous kind. We'll
 quantify it in two slides.
@@ -412,8 +424,8 @@ quantify it in two slides.
 **[pause]**
 
 Add it to the catalogue we've been building all semester. `KFold` on a time series. Scaling
-outside the fold. A rolling feature you forgot to shift. `shuffle=True` on a DataLoader whose rows
-are ordered in time. And now a Transformer with no positional encoding.
+outside the fold. A rolling feature you forgot to shift. Shuffling rows before the time split.
+And now a Transformer with no positional encoding.
 
 Not one of those raises an exception. Every one of them returns a plausible number. The only
 defense is procedural — you check them because they're on a list, not because something broke.
@@ -436,6 +448,10 @@ RNN: eight-oh-five, on four and a half thousand parameters. Random forest: eight
 **Transformer encoder, two layers: nine ninety** — on sixty-seven thousand parameters. LSTM: nine
 ninety-eight. Best CNN: one thousand thirty-two — that one from Lecture 8, on twenty-six-week
 windows. Seasonal naive: twenty-one fifty-two.
+
+And notice the recurrent rows are not the ones you saw last week. Last week's headline eight
+forty-two and nine eighty-seven were at twenty-six weeks; these are the fifty-two-week runs, so
+every sequence model here reads the same window.
 
 **[pause]**
 
@@ -492,8 +508,8 @@ somewhere is orders of magnitude from here.
 But I don't want you to leave thinking the mechanism did nothing, because one part of it is doing
 very visible work — and we can measure it.
 
-Take the same model and remove the positional encoding. Now it has to forecast from an unordered
-bag of fifty-two weeks.
+Take the same model and remove the positional encoding. It still knows last week — that's where
+it reads its forecast — but the other fifty-one weeks become an unordered bag.
 
 *(Point at the two-row table.)*
 
@@ -503,7 +519,8 @@ That's a penalty of **two hundred ninety-two RMSE** — which drops it below eve
 
 **[pause]**
 
-That gap is the price of permutation invariance, and it's the reason the sinusoids exist. It also
+That gap is what the order of those fifty-one weeks is worth, and it's the reason the sinusoids
+exist. It also
 tells you the model genuinely is using temporal position when you give it to it.
 
 And remember: forgetting that one line produces no error message. It produces a model that is
@@ -537,7 +554,7 @@ Transformer, and nothing else comes close.
 
 That second case is language. Which is exactly why this architecture reshaped that field, and why
 it has been much slower to displace gradient boosting in tabular forecasting — where, notably, the
-M5 competition itself was won by ensembles of the methods you learned in Lectures 5 and 6.
+M5 competition itself was won by gradient-boosted trees, the method you learned in Lecture 5.
 
 Not by a Transformer. By gradient boosting.
 
@@ -548,17 +565,17 @@ Not by a Transformer. By gradient boosting.
 Let me anticipate a reasonable objection: if this architecture loses here, why spend an hour on it?
 
 Two answers. The first is that you now have a *reason* — you can say, before fitting anything,
-that a fifty-two-week window with recent-lag signal and five thousand training examples is not the
+that a fifty-two-week window with recent-lag signal and five thousand training windows is not the
 regime where attention pays. That prediction-in-advance is worth far more than the fitted number.
 
 The second is that most of you will encounter this architecture outside forecasting, in tools you
 use daily. Understanding that it is a soft lookup with learned weights, that it is
-permutation-invariant unless told otherwise, and that its advantages are advantages at scale —
+blind to order unless told otherwise, and that its advantages are advantages at scale —
 that understanding transfers well beyond this course.
 
 ---
 
-# ▶ SLIDE 19 — Lecture 9 Part 2: Key Takeaways
+# ▶ SLIDE 19 — Lecture 9, Part 2: Key Takeaways
 
 One. Attention is a learned soft lookup: score every query against every key, softmax the scores,
 average the values. Every week in the window is one step away.
@@ -572,7 +589,7 @@ one, by splitting the dimension rather than adding to it.
 Four. An encoder block is attention plus residual plus LayerNorm plus a feed-forward sublayer.
 Only attention is new — the residuals are ResNet, the sublayer is Lecture 7.
 
-Five. Attention is **permutation-invariant**, so position has to be added explicitly. PyTorch does
+Five. Attention **ignores order**, so position has to be added explicitly. PyTorch does
 not do it for you, and omitting it fails silently — two hundred ninety-two RMSE, no error message.
 
 And six. On our panel the Transformer tied the LSTM, beat the CNN, and lost to a vanilla RNN with

@@ -85,7 +85,7 @@ print(f"{X.shape[0]:,} windows of {WINDOW} weeks — train {tr.sum():,}, test {t
 # Step 1 — Positional encoding, before the model
 
 Attention computes a **weighted average** over positions. Averaging does not care about order:
-shuffle the input and every attention output is unchanged.
+shuffle the input and each week's attention output is unchanged, only moved along with its week.
 
 So position has to be added to the input itself. The standard device is a set of sinusoids of
 different frequencies.
@@ -176,9 +176,9 @@ print(pd.DataFrame(rows).to_string(index=False))
 ::: {.callout-important}
 ## Nothing raised an exception
 
-The model without positional encoding trained happily, converged, and returned forecasts. It was
-simply working from an **unordered bag of 52 weeks** — it could not tell last week from a year
-ago.
+The model without positional encoding trained happily, converged, and returned forecasts. It
+still knew which week was most recent, because it reads its forecast from the last position, but
+it saw the other 51 as an **unordered bag** — it could not tell two weeks ago from a year ago.
 
 Compare the gap against the run-to-run spread in the `sd` column. This is not noise.
 

@@ -67,14 +67,16 @@
     \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V
   \]
   A lookup with soft matching: each week's \textbf{query} is scored against every week's
-  \textbf{key}, and the scores weight the \textbf{values}.
+  \textbf{key}, and the scores weight the \textbf{values}. $Q$, $K$ and $V$ are three learned
+  projections of the same weeks; $d_k$ is the length of each key.
   \begin{center}
-    \includegraphics[height=3.4cm]{../Figures/Lecture09_Part2/attention_geometry.pdf}
+    \includegraphics[height=3.0cm]{../Figures/Lecture09_Part2/attention_geometry.pdf}
   \end{center}
   \vspace{-0.3cm}
-  {\small The score is the query's length times the key's shadow on it. Softmax makes the weights
-  positive and sum to one, so the output stays \emph{inside} the values: attention averages, it
-  cannot extrapolate. The $\sqrt{d_k}$ keeps the softmax from saturating.}
+  {\small The score is the query's length times the key's shadow on it. Softmax exponentiates the
+  scores and divides by their total, so the weights are positive and sum to one: the output stays
+  \emph{inside} the values. Attention averages; it cannot extrapolate. The $\sqrt{d_k}$ keeps the
+  softmax from saturating.}
 \end{frame}
 
 % --- Slide: what it does for forecasting -------------------------------------
@@ -137,14 +139,15 @@
 
 % --- Slide: positional encoding ----------------------------------------------
 \begin{frame}{Positional Encoding: Attention Cannot Tell Time}
-  \textbf{Attention is permutation-invariant}: shuffle the window and every output is unchanged.
-  A forecaster that cannot tell last week from thirty weeks ago is not forecasting.
+  \textbf{Attention ignores order}: shuffle the window and each week's output moves with it,
+  seeing the rest as an unordered bag. A forecaster that cannot tell two weeks ago from thirty is
+  not forecasting.
 
   \vspace{0.1cm}
   The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{-2i/d}$, to each
   week --- each pair a clock hand turning at its own speed:
   \begin{center}
-    \includegraphics[height=3.5cm]{../Figures/Lecture09_Part2/positional_clocks.pdf}
+    \includegraphics[height=3.1cm]{../Figures/Lecture09_Part2/positional_clocks.pdf}
   \end{center}
   \vspace{-0.3cm}
   {\small Moving $\Delta$ weeks turns every hand by its own fixed angle, so how alike two weeks
@@ -172,11 +175,11 @@
   \end{columns}
 
   \vspace{0.1cm}
-  {\small The price is the square's area, $O(T^2)$ in time and memory: fine at $T = 52$, painful
+  {\small Each cell is one query--key score: $O(T^2)$ time and memory, fine at $T = 52$, painful
   at $T = 10{,}000$.}
   \begin{warningbox}
     \small Every advantage here is about \textbf{large data and long sequences}. Hold that
-    against a 52-week window and 5{,}160 training examples.
+    against a 52-week window and 5{,}160 training windows.
   \end{warningbox}
 \end{frame}
 
@@ -192,13 +195,13 @@
   \begin{examplebox}{Minimal forecasting encoder}
     {\tiny\linespread{1.15}\selectfont
     \texttt{layer = nn.TransformerEncoderLayer(d\_model=64, nhead=4,}\\
-    \texttt{\ \ \ \ \ \ \ dim\_feedforward=128, dropout=0.1, batch\_first=True)}\\
+    \texttt{\mbox{}\ \ \ \ \ \ \ dim\_feedforward=128, dropout=0.1, batch\_first=True)}\\
     \texttt{self.enc = nn.TransformerEncoder(layer, num\_layers=2)}\\
     \texttt{self.inp = nn.Linear(n\_features, 64)}\\
     \texttt{self.fc\ \ = nn.Linear(64, 1)}\\[3pt]
     \texttt{def forward(self, x):}\\
-    \texttt{\ \ h = self.inp(x) + self.pe\ \ \ \ \ \# position must be added}\\
-    \texttt{\ \ return self.fc(self.enc(h)[:, -1, :]).squeeze(-1)}
+    \texttt{\mbox{}\ \ h = self.inp(x) + self.pe\ \ \ \ \ \# position must be added}\\
+    \texttt{\mbox{}\ \ return self.fc(self.enc(h)[:, -1, :]).squeeze(-1)}
     }
   \end{examplebox}
   \texttt{nn.TransformerEncoderLayer} gives you the whole block --- but not the positional
@@ -210,7 +213,7 @@
 % --- Slide: results ----------------------------------------------------------
 \begin{frame}{Does It Work?}
   Same weekly panel and test block as everything since Homework 3; every sequence model reads
-  52-week windows.
+  52-week windows (Part 1's headline 842 and 987 were at 26 weeks).
   \begin{center}
     {\small
     \begin{tabular}{lrr}
@@ -256,7 +259,8 @@
 
   \vspace{-0.05cm}
   \textbf{And positional encoding is doing real work, which we can measure.} Remove it and the
-  same model must forecast from an unordered bag of 52 weeks:
+  model still knows the last week, where it reads out, but sees the other 51 as an unordered
+  bag:
   \begin{center}
     {\small
     \begin{tabular}{lr}
@@ -269,8 +273,8 @@
   \end{center}
 
   \vspace{-0.05cm}
-  \textbf{292 RMSE} --- dropping it below even the 1D CNN. That gap is the price of permutation
-  invariance, and the reason the sinusoids exist.
+  \textbf{292 RMSE} --- dropping it below even the 1D CNN. That gap is what the order of those 51
+  weeks is worth, and the reason the sinusoids exist.
 \end{frame}
 
 % =============================================================================
@@ -305,11 +309,11 @@
   \vspace{0.15cm}
   That second case is language, which is why this architecture reshaped that field and has been
   slower to displace gradient boosting in tabular forecasting --- where the M5 competition was won
-  by ensembles of exactly the methods in Lectures 5 and 6.
+  by gradient-boosted trees, Lecture 5's method.
 \end{frame}
 
 % --- Slide: takeaways --------------------------------------------------------
-\begin{frame}{Lecture 9 Part 2: Key Takeaways}
+\begin{frame}{Lecture 9, Part 2: Key Takeaways}
   \begin{keybox}
     {\small
     \begin{enumerate}\itemsep3pt
@@ -319,8 +323,7 @@
       \item \textbf{Multi-head}: several notions of relevance for about the cost of one.
       \item An encoder block: attention, \textbf{skips}, LayerNorm, feed-forward. Only
             attention is new.
-      \item \textbf{Attention is permutation-invariant}: add position yourself; PyTorch will
-            not.
+      \item \textbf{Attention ignores order}: add position yourself; PyTorch will not.
       \item Here it \textbf{tied the LSTM} and lost to an RNN \textbf{one-fifteenth} its size:
             it needs scale.
     \end{enumerate}

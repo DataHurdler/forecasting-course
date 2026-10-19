@@ -78,14 +78,16 @@ comparisons per example per head per layer.
 Start with the problem, because the solution makes no sense without it.
 
 Attention computes a **weighted average** over positions. And an average does not care about
-order — reverse the sequence, shuffle it, deal it like a deck of cards, and every attention output
-is **identical**. The mechanism is permutation-invariant by construction.
+order — reverse the sequence, shuffle it, deal it like a deck of cards, and each week's attention
+output is **identical**; it just moves with its week. The mechanism is permutation-equivariant by
+construction.
 
 **[pause]**
 
-That is a catastrophe for forecasting. "Sales were 3,000 last week and 9,000 a year ago" and
-"sales were 9,000 last week and 3,000 a year ago" are the same bag of numbers and completely
-different futures.
+Our model reads its forecast from the last position, so it always knows which week is most
+recent. Everything before that is a bag. That is a catastrophe for forecasting. "Sales were 3,000
+two weeks ago and 9,000 a year ago" and "sales were 9,000 two weeks ago and 3,000 a year ago" are
+the same bag of numbers and completely different futures.
 
 So position has to be put into the input itself, before attention ever sees it. The standard
 device is a set of sinusoids at different frequencies.
@@ -161,8 +163,9 @@ The model without positional encoding trained for thirty epochs. The loss went d
 It returned forecasts in the right units, in the right shape, with a plausible RMSE that is better
 than the seasonal-naive benchmark of 2,152. If you had no comparison to make, you would ship it.
 
-What it was actually doing is working from an **unordered bag of 52 weeks.** It could not
-distinguish last week from a year ago. It knew what the year contained and nothing about when.
+What it was actually doing is reading last week plus an **unordered bag of the other 51.** It
+could not distinguish two weeks ago from a year ago. It knew what the year contained and nothing
+about when.
 
 **[pause]**
 
@@ -248,7 +251,7 @@ series — name one property of a series that would most likely flip it.
 And one closing thought that is worth more than the ranking. Everything you have built in the last
 four weeks — feedforward, convolutional, recurrent, attention — lost to a 46-coefficient LASSO
 from Homework 4. That is not an argument against neural networks. It is an argument about
-**matching the model to the problem**: 5,900 overlapping windows of weekly retail demand is not
+**matching the model to the problem**: 5,160 overlapping windows of weekly retail demand is not
 the regime any of these architectures was designed for, and the honest thing to do is say so and
 pick the model that fits the data you actually have.
 

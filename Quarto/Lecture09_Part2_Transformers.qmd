@@ -1,5 +1,5 @@
 ---
-title: "Transformers"
+title: "Attention and Transformers"
 subtitle: "ECON 8310: Business Forecasting --- Lecture 9, Part 2"
 author: "Department of Economics"
 institute: "University of Nebraska at Omaha"
@@ -59,15 +59,15 @@ A learned, weighted lookup — which is a more useful way to read it than the fo
 
 ---
 
-## Scaled Dot-Product Attention
+## Scaled Dot-Product Attention [@Vaswani2017]
 
 $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
 
-A lookup with soft matching [@Vaswani2017]: each week's **query** is scored against every week's **key**, and the scores weight the **values**.
+A lookup with soft matching: each week's **query** is scored against every week's **key**, and the scores weight the **values**. $Q$, $K$ and $V$ are three learned projections of the same weeks; $d_k$ is the length of each key.
 
-![](../Figures/Lecture09_Part2/attention_geometry.svg){fig-align="center" height="300px"}
+![](../Figures/Lecture09_Part2/attention_geometry.svg){fig-align="center" height="270px"}
 
-[The score is the query's length times the key's shadow on it. Softmax makes the weights positive and sum to one, so the output stays *inside* the values: attention averages, it cannot extrapolate. The $\sqrt{d_k}$ keeps the softmax from saturating.]{.smaller}
+[The score is the query's length times the key's shadow on it. Softmax exponentiates the scores and divides by their total, so the weights are positive and sum to one: the output stays *inside* the values. Attention averages; it cannot extrapolate. The $\sqrt{d_k}$ keeps the softmax from saturating.]{.smaller}
 
 ---
 
@@ -114,11 +114,11 @@ Stack $N$ of those and you have the encoder. Nothing in the block is new to you 
 
 ## Positional Encoding: Attention Cannot Tell Time
 
-**Attention is permutation-invariant**: shuffle the window and every output is unchanged. A forecaster that cannot tell last week from thirty weeks ago is not forecasting.
+**Attention ignores order**: shuffle the window and each week's output moves with it, seeing the rest as an unordered bag. A forecaster that cannot tell two weeks ago from thirty is not forecasting.
 
 The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{-2i/d}$, to each week — each pair a clock hand turning at its own speed:
 
-![](../Figures/Lecture09_Part2/positional_clocks.svg){fig-align="center" height="270px"}
+![](../Figures/Lecture09_Part2/positional_clocks.svg){fig-align="center" height="240px"}
 
 [Moving $\Delta$ weeks turns every hand by its own fixed angle, so how alike two weeks look depends only on their distance. **We measure what removing it costs at the end.**]{.smaller}
 
@@ -139,10 +139,10 @@ The fix adds 32 pairs $(\sin \omega_i t,\ \cos \omega_i t)$, $\omega_i = 10000^{
 :::
 ::::
 
-[The price is the square's area, $O(T^2)$ in time and memory: fine at $T = 52$, painful at $T = 10{,}000$.]{.smaller}
+[Each cell is one query–key score: $O(T^2)$ time and memory, fine at $T = 52$, painful at $T = 10{,}000$.]{.smaller}
 
 ::: {.warningbox}
-Every advantage here is about **large data and long sequences**. Hold that against a 52-week window and 5,160 training examples.
+Every advantage here is about **large data and long sequences**. Hold that against a 52-week window and 5,160 training windows.
 :::
 
 
@@ -179,7 +179,7 @@ def forward(self, x):
 
 ## Does It Work?
 
-Same weekly panel and test block as everything since Homework 3; every sequence model reads 52-week windows.
+Same weekly panel and test block as everything since Homework 3; every sequence model reads 52-week windows (Part 1's headline 842 and 987 were at 26 weeks).
 
 | Model | Test RMSE | Parameters |
 |---|---:|---:|
@@ -206,14 +206,14 @@ Every advantage on the "why Transformers took over" slide is an advantage *at sc
 | **Direct long-range paths** | Worth little when the signal is dominated by recent weeks. |
 | **Scales with data** | 5,160 training windows is not the regime where that pays. |
 
-**And positional encoding is doing real work, which we can measure.** Remove it and the same model must forecast from an unordered bag of 52 weeks:
+**And positional encoding is doing real work, which we can measure.** Remove it and the model still knows the last week, where it reads out, but sees the other 51 as an unordered bag:
 
 | | |
 |---|---:|
 | Transformer **with** positional encoding | **990** |
 | Transformer **without** positional encoding | 1,282 |
 
-[**292 RMSE**]{.key-result} — dropping it below even the 1D CNN. That gap is the price of permutation invariance, and the reason the sinusoids exist.
+[**292 RMSE**]{.key-result} — dropping it below even the 1D CNN. That gap is what the order of those 51 weeks is worth, and the reason the sinusoids exist.
 
 # Key Takeaways
 
@@ -232,11 +232,11 @@ Six architectures, one series, and what the ranking actually taught us.
 
 **Choose by the structure of your problem, not by recency of the architecture.** Short window and recent-lag signal: a plain RNN, or honestly a linear model. Long sequences, abundant data, dependencies at arbitrary distance: a Transformer, and nothing else comes close.
 
-That second case is language, which is why this architecture reshaped that field and has been slower to displace gradient boosting in tabular forecasting — where the M5 competition was won by ensembles of exactly the methods in Lectures 5 and 6.
+That second case is language, which is why this architecture reshaped that field and has been slower to displace gradient boosting in tabular forecasting — where the M5 competition was won by gradient-boosted trees, Lecture 5's method.
 
 ---
 
-## Lecture 9 Part 2: Key Takeaways
+## Lecture 9, Part 2: Key Takeaways
 
 ::: {.keybox}
 1. **Attention**: score queries against keys, softmax, average the values.
@@ -247,7 +247,7 @@ That second case is language, which is why this architecture reshaped that field
 
 4. An encoder block: attention, **skips**, LayerNorm, feed-forward. Only attention is new.
 
-5. **Attention is permutation-invariant**: add position yourself; PyTorch will not.
+5. **Attention ignores order**: add position yourself; PyTorch will not.
 
 6. Here it **tied the LSTM** and lost to an RNN **one-fifteenth** its size: it needs scale.
 :::
