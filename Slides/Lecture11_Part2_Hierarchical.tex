@@ -156,8 +156,7 @@
 \end{frame}
 
 % =============================================================================
-\section{Fitting It, and the Trap
-}
+\section{Fitting It, and the Trap}
 % =============================================================================
 
 \sectionslide{Fitting It, and the Trap}{%
@@ -169,17 +168,17 @@
   \begin{examplebox}{Non-centered hierarchical model}
     {\tiny\linespread{1.05}\selectfont
     \texttt{with pm.Model() as model:}\\
-    \texttt{\ \ mu\_b = pm.Normal("mu\_b", 0, 0.5)\ \ \ \ \ \ \ \# typical SNAP effect}\\
-    \texttt{\ \ sd\_b = pm.HalfNormal("sd\_b", 0.25)\ \ \ \ \ \# how much stores differ}\\
-    \texttt{\ \ z\ \ \ \ = pm.Normal("z", 0, 1, shape=J)\ \ \ \ \# non-centered}\\
-    \texttt{\ \ b\ \ \ \ = pm.Deterministic("b", mu\_b + z * sd\_b)}\\[2pt]
-    \texttt{\ \ a = pm.Normal("a", y.mean(), 1, shape=J)\ \ \# per-series level}\\
-    \texttt{\ \ s = pm.Exponential("s", 1.0)}\\[2pt]
-    \texttt{\ \ pm.Normal("obs", mu=a[idx] + b[idx]*snap, sigma=s, observed=y)}
+    \texttt{\mbox{}\ \ mu\_b = pm.Normal("mu\_b", 0, 0.5)\ \ \ \ \ \ \ \# typical SNAP effect}\\
+    \texttt{\mbox{}\ \ sd\_b = pm.HalfNormal("sd\_b", 0.25)\ \ \ \ \ \# how much stores differ}\\
+    \texttt{\mbox{}\ \ z\ \ \ \ = pm.Normal("z", 0, 1, shape=J)\ \ \ \ \# non-centered}\\
+    \texttt{\mbox{}\ \ b\ \ \ \ = pm.Deterministic("b", mu\_b + z * sd\_b)}\\[2pt]
+    \texttt{\mbox{}\ \ a = pm.Normal("a", y.mean(), 1, shape=J)\ \ \# per-series level}\\
+    \texttt{\mbox{}\ \ s = pm.Exponential("s", 1.0)}\\[2pt]
+    \texttt{\mbox{}\ \ pm.Normal("obs", mu=a[idx] + b[idx]*snap, sigma=s, observed=y)}
     }
   \end{examplebox}
-  \texttt{idx} maps each row to its series, so \texttt{b[idx]} picks out the right effect for
-  every observation. That indexing pattern is how every hierarchical model in PyMC is written.
+  \texttt{J} is the number of series (10). \texttt{idx} maps each row to its series, so
+  \texttt{b[idx]} picks out the right effect for every observation. That indexing pattern is how every hierarchical model in PyMC is written.
 
   \vspace{0.15cm}
   \textbf{Note what is \emph{not} here.} No decision about how much to pool, no weighting scheme,
@@ -209,7 +208,7 @@
   \textbf{43 divergences against a threshold of zero} is the objection to trust.
 
   \vspace{0.15cm}
-  \muted{\footnotesize\itshape Counts move with the seed, even the machine. Ten more seeds:
+  \muted{\footnotesize\itshape Counts move with the seed, and even with the machine. Ten more seeds:
   15--285 divergences centered, 0--11 non-centered; $\hat{R}$ or ESS objected in 2 of the 11 runs,
   divergences in all 11.}
 \end{frame}
@@ -228,7 +227,7 @@
   closely.}
 
   \vspace{0.05cm}
-  \muted{\footnotesize\itshape BMCP §4.6.1, \emph{Posterior Geometry Matters}.}
+  \muted{\footnotesize\itshape Posterior geometry matters \parencite[§4.6.1]{MartinKumarLao2021}.}
 \end{frame}
 
 % =============================================================================
@@ -258,13 +257,15 @@
 
 % --- Slide: held-out check --------------------------------------------------
 \begin{frame}{Checked Against Data the Model Never Saw}
-  The weeks we thinned away still exist. Each ring is the SNAP effect observed in them:
+  The weeks we thinned from CA\_1, CA\_3, TX\_1, TX\_3 and WI\_2 still exist. Each ring is the
+  SNAP effect observed in them:
   \begin{center}
     \includegraphics[height=4.1cm]{../Figures/Lecture11_Part2/shrinkage_heldout.pdf}
   \end{center}
   \vspace{-0.3cm}
   \textbf{RMSE against the truth: 0.126 unpooled, 0.048 pooled --- 2.6 times smaller.} Pooling won
-  on four series of five; WI\_2 shows the cost, pulled past its truth.
+  on four series of five; CA\_3 lost narrowly. WI\_2 was pulled past its truth, yet still ended
+  closer than its own estimate.
 
   \vspace{0.05cm}
   \muted{\footnotesize\itshape Borrowing strength is not a figure of speech: the thin series were

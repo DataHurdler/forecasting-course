@@ -310,8 +310,9 @@ Then a per-series intercept, observation noise, and the likelihood.
 
 *(Point at the indexing.)*
 
-The pattern to internalize is `b[idx]`. `idx` maps each row to its series number, so `b[idx]` picks
-out the right effect for every observation. Every hierarchical model in PyMC is written that way —
+The pattern to internalize is `b[idx]`. `J` is the number of series, ten here, and `idx` maps each
+row to its series number, so `b[idx]` picks out the right effect for every observation. Every
+hierarchical model in PyMC is written that way —
 once you can read that line, you can read most of the applied Bayesian literature.
 
 **[pause]**
@@ -431,8 +432,8 @@ One precision. The funnel-and-column statement is exact for the **prior**. The p
 data, which narrows things a little, but as you can see the draws follow the prior's shape
 closely. Same model. Same posterior. Different coordinates — and only one set of them is walkable.
 
-This is BMCP section four-point-six-point-one, and it is the single most common failure in applied
-hierarchical modeling.
+This is section four-point-six-point-one of Martin, Kumar and Lao, the book cited on the slide, and
+it is the single most common failure in applied hierarchical modeling.
 
 **[pause]**
 

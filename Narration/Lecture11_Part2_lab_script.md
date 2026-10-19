@@ -12,7 +12,7 @@ Lab: `Labs/Lecture11_Part2_lab.qmd` (6 steps) · Measured runtime: **~28 minutes
 - **`▶ STEP n — Title`** matches the lab's own headings exactly.
 - *Italic parentheticals* are stage directions. **[pause]** is a beat; **[STOP — learner works]**
   is where you tell the viewer to pause the video and do something.
-- `random_seed=42` throughout; six fits, most under 30 seconds. The whole lab runs in about
+- `random_seed=42` throughout; five fits, most under 30 seconds. The whole lab runs in about
   three minutes.
 - **This is the most important lab in the Bayesian block.** It is the only place in the course
   where a model passes every diagnostic, produces a textbook-looking result, and is wrong.
@@ -427,9 +427,9 @@ recommend the business do for the next SNAP week?
 **The thread.** This is the sixth time this semester a model improved by pulling estimates toward
 a common value. Name the other five, and say what is different about the shrinkage strength here.
 
-**[pause]** — *ridge, LASSO, the bagged ensemble, the random forest, boosting's learning rate —
-and the difference is that here the strength is* estimated from the data *rather than chosen by
-you and tuned on a validation set. `sd_b` is the shrinkage parameter, and the model infers it.*
+**[pause]** — *the GAM smoothing penalty, tree pruning, `reg_lambda`, Ridge and LASSO, weight
+decay — and the difference is that here the strength is* estimated from the data *rather than
+chosen by you and tuned on a validation set. `sd_b` is the shrinkage parameter, and the model infers it.*
 
 Solutions for the coded parts go up on Canvas after the deadline. Next week: Bayesian linear
 regression — and a preprocessing step you have used all semester that silently destroys the
@@ -439,7 +439,7 @@ answer.
 
 # Appendix — expected output
 
-`random_seed=42` throughout; six fits, whole lab ≈ 3 minutes.
+`random_seed=42` throughout; five fits, whole lab ≈ 3 minutes.
 
 | Quantity | Value |
 |---|---|
@@ -466,7 +466,7 @@ over it.
 
 *Plant `sd_b = 0.007` at the end of Step 2, before the grading.* It is the one clue available
 *before* the answer key, and it is not a diagnostic — it is a claim about the world ("all thirty
-stores respond identically") that a modeller can reject on subject-matter grounds. Students who
+stores respond identically") that a modeler can reject on subject-matter grounds. Students who
 learn to read it have learned something no threshold gives them.
 
 *Do not let "get more data" stand as the answer to Step 4.* The error is structural: more weeks

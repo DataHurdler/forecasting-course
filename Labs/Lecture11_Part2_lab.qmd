@@ -29,7 +29,7 @@ The difference between the two runs is not the code. It is a decision made befor
 written: **which series belong in the same hierarchy.**
 
 **Suggested time:** ~45 minutes · **You will need:** `pandas`, `numpy`, `matplotlib`, `pymc`, `arviz`, and
-`data/processed/m5_weekly.csv`. Six model fits, most under 30 seconds.
+`data/processed/m5_weekly.csv`. Five model fits, most under 30 seconds.
 
 ---
 

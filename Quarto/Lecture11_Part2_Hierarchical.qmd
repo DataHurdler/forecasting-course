@@ -142,7 +142,7 @@ with pm.Model() as model:
 ```
 :::
 
-`idx` maps each row to its series, so `b[idx]` picks out the right effect for every observation. That indexing pattern is how every hierarchical model in PyMC is written.
+`J` is the number of series (10). `idx` maps each row to its series, so `b[idx]` picks out the right effect for every observation. That indexing pattern is how every hierarchical model in PyMC is written.
 
 **Note what is *not* here.** No decision about how much to pool, no weighting scheme, no threshold for "enough data." Those all come out of estimating $\sigma_b$.
 
@@ -160,7 +160,7 @@ The natural way to write the hierarchy is `b = pm.Normal("b", mu_b, sd_b, shape=
 
 **Only one alarm fires.** $\hat{R}$ and ESS pass; on those alone you would ship it. **43 divergences against a threshold of zero** is the objection to trust.
 
-[Counts move with the seed, even the machine. Ten more seeds: 15–285 divergences centered, 0–11 non-centered; $\hat{R}$ or ESS objected in 2 of the 11 runs, divergences in all 11.]{.neutral .smaller}
+[Counts move with the seed, and even with the machine. Ten more seeds: 15–285 divergences centered, 0–11 non-centered; $\hat{R}$ or ESS objected in 2 of the 11 runs, divergences in all 11.]{.neutral .smaller}
 
 ---
 
@@ -172,7 +172,7 @@ Every posterior draw for one thin series (CA_1), against $\sigma_b$ on a log axi
 
 [Given $\sigma_b$, the prior spreads $b_j - \mu_b$ by $\sigma_b$: a funnel, pinched where $\sigma_b$ is small. The divergences sit in the neck (39 of 43 in the bottom tenth of $\sigma_b$), and the chains go no lower. $b_j = \mu_b + \sigma_b z_j$ is a change of coordinates: $z_j$ spreads by 1 at every height, a column the sampler can walk. Exact for the prior; the posterior follows closely.]{.smaller}
 
-[BMCP §4.6.1, *Posterior Geometry Matters*.]{.neutral .smaller}
+[Posterior geometry matters [@MartinKumarLao2021, §4.6.1].]{.neutral .smaller}
 
 # Reading the Result
 
@@ -194,11 +194,11 @@ Each series' own (unpooled) estimate, and where the hierarchy moved it:
 
 ## Checked Against Data the Model Never Saw
 
-The weeks we thinned away still exist. Each ring is the SNAP effect observed in them:
+The weeks we thinned from CA_1, CA_3, TX_1, TX_3 and WI_2 still exist. Each ring is the SNAP effect observed in them:
 
 ![](../Figures/Lecture11_Part2/shrinkage_heldout.svg){fig-align="center" height="300px"}
 
-**RMSE against the truth: 0.126 unpooled, 0.048 pooled — 2.6 times smaller.** Pooling won on four series of five; WI_2 shows the cost, pulled past its truth.
+**RMSE against the truth: 0.126 unpooled, 0.048 pooled — 2.6 times smaller.** Pooling won on four series of five; CA_3 lost narrowly. WI_2 was pulled past its truth, yet still ended closer than its own estimate.
 
 [Borrowing strength is not a figure of speech: the thin series were estimated better *because* the other five existed.]{.neutral .smaller}
 
