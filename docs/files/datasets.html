@@ -169,8 +169,8 @@ unemployment moves retail spending, not the reverse</td>
 <tr>
 <td><strong>Electricity demand</strong></td>
 <td>Lecture 3</td>
-<td>Half-hourly data has daily, weekly <em>and</em> yearly cycles at
-once. Retail has one</td>
+<td>Hourly data has daily, weekly <em>and</em> yearly cycles at once.
+Retail has one</td>
 </tr>
 <tr>
 <td><strong>Favorita</strong> (Ecuador)</td>
@@ -242,11 +242,11 @@ December</strong>, every year, the stores are shut and recorded sales
 are <strong>exactly zero</strong> — five occurrences in the sample,
 against a daily average of about 2,800 units. The seasonal-naive
 benchmark predicts roughly 2,300 on those days, so it is wrong by 100%
-of the true value on a date known years in advance. The
+of its own forecast on a date known years in advance. The
 <code>is_event</code> flag fires on <strong>158</strong> days, of which
 only <strong>5</strong> are closures, so the feature every model in this
 course relies on cannot distinguish “the doors are locked” from an
-ordinary Super Bowl. We use this in Week 16.</p>
+ordinary Super Bowl. We use this in Week 15.</p>
 <p><strong>Why it can carry the whole course.</strong></p>
 <ul>
 <li><strong>Lecture 1 (ETS).</strong> Aggregated to weekly it gives ~277
@@ -260,12 +260,13 @@ genuine exogenous regressor: price drives demand.</li>
 explicit holiday and event calendar — the input Prophet was designed
 around.</li>
 <li><strong>Lectures 4–6 (trees, boosting, regularization).</strong> A
-wide tabular feature set: price, promo, SNAP, calendar effects, store
-type, category, and lags. Plenty of correlated predictors, which is what
-makes regularization worth doing.</li>
-<li><strong>Lectures 7–9 (deep learning).</strong> Thousands of parallel
-series and nearly 2,000 time steps. Neural networks need volume, and
-this has it.</li>
+wide tabular feature set: price, SNAP, calendar events,
+store/category/state identifiers, and lags. Plenty of correlated
+predictors, which is what makes regularization worth doing.</li>
+<li><strong>Lectures 7–9 (deep learning).</strong> We train on a weekly
+aggregate: 30 parallel series of 277 weeks each. Neural networks need
+volume, and the synthesis lecture shows this is not enough for the
+largest models — a result worth knowing in its own right.</li>
 <li><strong>Lecture 11 (hierarchical Bayes).</strong> The hierarchy is
 real and explicit — state → store, and category → department → item.
 This is what partial pooling is <em>for</em>: a store with a short
@@ -279,8 +280,8 @@ a DAG is for.</li>
 2</h2>
 <p><strong>What it is.</strong> The Federal Reserve Bank of St. Louis
 publishes hundreds of thousands of economic time series, free and
-without a login. We use a handful of monthly US series: retail sales,
-unemployment, the consumer price index, and consumer sentiment.</p>
+without a login. We use three monthly US series: retail sales,
+unemployment, and consumer sentiment.</p>
 <p><strong>Where to get it.</strong> <a
 href="https://fred.stlouisfed.org">https://fred.stlouisfed.org</a>, or
 directly from Python with <code>pandas_datareader</code>, which pulls
@@ -307,11 +308,12 @@ informative rather than inevitable.</p>
 <hr />
 <h2 id="electricity-demand-lecture-3">3. Electricity demand — Lecture
 3</h2>
-<p><strong>What it is.</strong> Half-hourly electricity demand, with
-temperature as a covariate. We take it from the <a
-href="https://forecastingdata.org/">Monash Time Series Forecasting
-Repository</a>, a free curated archive of 30 forecasting datasets that
-requires no login.</p>
+<p><strong>What it is.</strong> Hourly electricity demand for PJM East,
+the eastern zone of the grid operator for 13 mid-Atlantic states and DC:
+one row per day from 2002 to 2018, and one row per hour from 2016 to
+2018. It is demand only — there is no temperature or other covariate.
+The prep script downloads it from a public mirror of PJM’s load data; no
+login is needed.</p>
 <p><strong>Why we need it and M5 cannot substitute.</strong> Lecture 3
 covers GAMs and Prophet, whose real strength is handling <strong>several
 seasonal cycles at the same time</strong>. Retail sales have one
@@ -324,11 +326,12 @@ evening),</li>
 weekends),</li>
 <li>a <strong>yearly</strong> cycle (heating and cooling).</li>
 </ul>
-<p>On top of that, temperature drives demand non-linearly — demand rises
-when it is very cold <em>and</em> when it is very hot. That U-shape is
-precisely what a smooth term in a GAM captures and a linear model
-cannot. Retail data would let you fit the method; electricity lets you
-see why it exists.</p>
+<p>On top of that, the yearly cycle has <strong>two peaks</strong>: a
+July maximum from air conditioning and a smaller January one from
+heating, with the lows in the mild spring and autumn months. That shape
+is precisely what a smooth term in a GAM captures and a straight line or
+a single yearly wave cannot. Retail data would let you fit the method;
+electricity lets you see why it exists.</p>
 <hr />
 <h2 id="favorita-optional-for-final-projects">4. Favorita — optional,
 for final projects</h2>
@@ -393,7 +396,7 @@ was badly specified, but because the future stopped resembling the past,
 and every method here assumes it does not. If your project wants to
 study a genuine structural break rather than simulate one, this is the
 cleanest one available.</p>
-<p><em>(We make the related point in Week 16 without leaving the spine
+<p><em>(We make the related point in Week 15 without leaving the spine
 dataset — see the Christmas closures in §1, where a <strong>known,
 dated</strong> event defeats every model in the course. Favorita’s
 earthquake is the harder case: an event nobody could have known about at
