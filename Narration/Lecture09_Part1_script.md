@@ -473,7 +473,8 @@ variant at one thousand thirty-two. Seasonal naive at the bottom, twenty-one fif
 
 Two readings, and the first is genuinely good news for recurrence.
 
-**Recurrence beats convolution decisively** — eight forty-two against one thousand thirty-two. And
+**The vanilla RNN beats convolution decisively** — eight forty-two against one thousand thirty-two. The
+LSTM beats it too, but only just: nine eighty-seven, forty-five better. And
 it did that on **four raw channels**, with no lag engineering at all, against forty-six hand-built
 features for LASSO. That is a real argument for reading a sequence in order, and it's the
 strongest result deep learning gets on our data.
@@ -600,10 +601,10 @@ last few weeks tell you that. No memory mechanism required.
 
 *(Point at the right panel.)*
 
-**Two. The series are smooth** — and this one is counter-intuitive, so take it slowly. That's the
+**Two. History helps, but it arrives smoothly** — and this one is counter-intuitive, so take it slowly. That's the
 autocorrelation of each series around its own mean, averaged over the thirty. Point eight three at
 lag one, and still point four three at lag fifty-two. That *looks* like long memory — and history
-does help: on the scoreboard the RNN improved from eight seventy-eight to eight oh five as the
+does help: in the table two slides back, the RNN improved from eight seventy-eight to eight oh five as the
 window grew from thirteen weeks to fifty-two. But it arrives smoothly. Because neighboring weeks
 are nearly the same number, no single value has to survive many steps untouched; the gap is filled
 in continuously along the way.
@@ -707,7 +708,7 @@ Five. On our panel, both recurrent models beat every CNN variant, on four raw ch
 still lose to a forty-six-coefficient LASSO.
 
 And six. The LSTM lost to the vanilla RNN at a thirty-epoch budget, at all three window lengths —
-and tied by a hundred epochs, with the LSTM still improving. Gating solves long-range
+and tied by a hundred epochs, with the LSTM still improving. So check that a margin survives the training budget before you call it a result. Gating solves long-range
 forgetting; a twenty-six-week window doesn't suffer from it. So the gates bought four times the
 parameters and nothing else. **Fit the architecture to the problem.**
 

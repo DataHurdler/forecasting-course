@@ -198,7 +198,7 @@ Same weekly panel, same 26-week windows, same test block as Homework 4.
 | 1D CNN, best variant | 1,032 | 8,161 |
 | Seasonal naive | 2,152 | 0 |
 
-[**Recurrence beats convolution decisively**]{.key-result} — and it did so on *four raw channels* with no lag engineering at all, against 46 hand-built features for LASSO. That is the case for reading a sequence in order, in one line.
+[**The vanilla RNN beats convolution decisively**]{.key-result} (842 against 1,032; the LSTM only edges it) — on *four raw channels* with no lag engineering at all, against 46 hand-built features for LASSO. That is the case for reading a sequence in order, in one line.
 
 **And the LSTM lost to the vanilla RNN** — at a fixed 30-epoch budget. That is not a typo, and the next four slides are about what it does and does not mean.
 
