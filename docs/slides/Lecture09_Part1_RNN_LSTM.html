@@ -1104,7 +1104,7 @@ Department of Economics
 <section id="two-architectures-that-cannot-see-time" class="slide level2">
 <h2>Two Architectures That Cannot See Time</h2>
 <p>Lecture 7’s feedforward network treats each row independently: everything it knows about <em>when</em>, you encoded by hand as lag columns.</p>
-<p>Lecture 8’s 1D CNN sees local shape, but its <strong>receptive field</strong> stops at about seven weeks, and pooling threw away <em>where</em> each pattern occurred — a measured 500 RMSE.</p>
+<p>Lecture 8’s 1D CNN sees local shape, but each filter’s <strong>receptive field</strong> is about seven weeks (our two small kernels; depth or dilation would widen it), and pooling threw away <em>where</em> each pattern occurred — a measured 500 RMSE.</p>
 <div class="keybox">
 <p>Both treat the input as a <strong>fixed-size block</strong>, processed all at once. Neither reads a sequence <em>in order</em>, carrying something forward. That is the gap today closes.</p>
 </div>

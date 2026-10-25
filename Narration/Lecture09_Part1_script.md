@@ -59,9 +59,10 @@ Lecture 7's feedforward network treats each row independently. Everything it kno
 something happened, you encoded by hand as a lag column. Shuffle the feature columns and the
 model is unchanged. Time is not in the architecture; it's in your feature engineering.
 
-Lecture 8's CNN does better — it genuinely sees local shape. But its **receptive field** is fixed
-by the architecture. Stacked width-five and width-three filters reach about seven weeks back, and
-no reasonable stack of small filters reaches an annual lag.
+Lecture 8's CNN does better — it genuinely sees local shape. But each filter's **receptive field** is
+fixed by the architecture we chose. Stacked width-five and width-three filters reach about seven
+weeks back. That was our choice, not a law of convolution: more layers, or dilated filters that skip
+inputs, would reach further. But no small stack of plain filters reaches an annual lag.
 
 And worse, pooling deliberately discarded *where* in the window each pattern occurred. We measured
 that costing about five hundred RMSE.
@@ -468,6 +469,13 @@ LASSO with forty-six engineered features: seven forty-four. XGBoost: seven eight
 **vanilla RNN** at eight forty-two, on four thousand five hundred parameters. Random forest: eight
 ninety-nine. The **LSTM** at nine eighty-seven, on eighteen thousand parameters. The best CNN
 variant at one thousand thirty-two. Seasonal naive at the bottom, twenty-one fifty-two.
+
+*(Point at the two dashes.)* The tree models have no parameter count, and that's not an omission. A
+tree's size isn't fixed before training; it grows from the data. Count their splits and leaves anyway
+and XGBoost holds about sixteen thousand numbers, roughly LSTM-sized. The random forest holds about
+**two million** — more than the five thousand training rows — and it still lands between the two
+recurrent models. Raw counts don't compare across model families; averaging two hundred trees
+cancels most of that size.
 
 **[pause]**
 

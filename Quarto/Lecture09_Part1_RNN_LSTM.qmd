@@ -44,7 +44,7 @@ Two architectures, two different ways of failing to see time.
 
 Lecture 7's feedforward network treats each row independently: everything it knows about *when*, you encoded by hand as lag columns.
 
-Lecture 8's 1D CNN sees local shape, but its **receptive field** stops at about seven weeks, and pooling threw away *where* each pattern occurred — a measured 500 RMSE.
+Lecture 8's 1D CNN sees local shape, but each filter's **receptive field** is about seven weeks (our two small kernels; depth or dilation would widen it), and pooling threw away *where* each pattern occurred — a measured 500 RMSE.
 
 ::: {.keybox}
 Both treat the input as a **fixed-size block**, processed all at once. Neither reads a sequence *in order*, carrying something forward. That is the gap today closes.

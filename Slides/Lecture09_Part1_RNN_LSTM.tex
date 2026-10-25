@@ -40,8 +40,8 @@
   \emph{when}, you encoded by hand as lag columns.
 
   \vspace{0.2cm}
-  Lecture 8's 1D CNN sees local shape, but its \textbf{receptive field} stops at about seven
-  weeks, and pooling threw away \emph{where} each pattern occurred --- a measured 500 RMSE.
+  Lecture 8's 1D CNN sees local shape, but each filter's \textbf{receptive field} is about seven
+  weeks (our two small kernels; depth or dilation would widen it), and pooling threw away \emph{where} each pattern occurred --- a measured 500 RMSE.
 
   \begin{keybox}
     Both treat the input as a \textbf{fixed-size block}, processed all at once. Neither reads a
