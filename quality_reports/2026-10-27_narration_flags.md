@@ -128,3 +128,19 @@ Nothing here has been changed unless the line says so.
 2. **Code read aloud.** This script writes code as it is said ("zero-grad", "loss dot backward",
    "n-n dot Linear"); others keep backticked identifiers. Both read fine to a person; the video
    tool respells the common backticked ones. *Recommend:* leave the mix.
+
+## Lecture 8
+
+1. **The lab's transpose warning is wrong — the most important flag in this list.** Lab 8's callout
+   says that if you get `(batch, time, channels)` backwards, "nothing crashes". Tested at
+   `2897f67` with the lab's own first layer, `Conv1d(4, 32, 5)`: a `(batch, 26, 4)` input raises
+   `RuntimeError: ... expected input[8, 26, 4] to have 4 channels, but got 26`. The narration was
+   kept matching the lab, and the claim travels: the Lecture 9 Part 2 lab script counts "a
+   transposed axis in Lab 8" among the course's silent failures. The genuinely silent version is
+   using `.reshape`/`.view` instead of `.transpose`: the shapes fit and the numbers are scrambled
+   across time and channels. *Recommend:* rewrite the callout around reshape-versus-transpose,
+   then update the Lab 8 script, slide 18's narration and the Lecture 9 Part 2 lab script to match.
+2. Lab "Before You Leave" questions 2 and 3 have no recorded answers; left as exercises.
+   *Recommend:* add an answer to question 2 (the flatten head's extra weights) to the lab notes.
+3. Slides 9 and 20 had no narration; each now speaks its subtitle (done). The lab header's
+   ~22-minute runtime is now about two minutes low. Left.

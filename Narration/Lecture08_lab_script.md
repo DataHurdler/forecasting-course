@@ -43,78 +43,88 @@ blocks. All converted below.
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 8, and it starts with the failure we ended on last week.
+This is Lab 8, and it starts with the failure we ended on last week.
 
-Last week you took a 26-week window, flattened it into 104 numbers, and handed it to a network.
-That model had no idea the window was ordered. Week 1 and week 26 were just two positions in a
-list, and nothing told it that positions 1 and 5 were the same quantity one week apart.
+Last week, in Lab 7, you took a twenty-six-week window, flattened it into one hundred four numbers,
+and handed it to a network. That model had no idea the window was ordered. Week one and week
+twenty-six were just two positions in a list, and nothing told it that positions one and five held
+the same quantity, one week apart.
 
 A convolution knows. It slides a small filter along the time axis and looks for local shapes, and
-the same filter is applied everywhere — so a pattern learned at week 3 is recognized at week 20.
+the same filter is applied everywhere, so a pattern learned at week three is recognized at week
+twenty.
 
 **[pause]**
 
-But today's real subject is not that convolutions work. It is **how far back one can actually
-see** — which is far less than the window you give it, is entirely calculable before you train
-anything, and is the single most useful thing to understand about this architecture.
+But today's real subject isn't that convolutions work. It's **how far back one can actually see**.
+That turns out to be far less than the window you give it, it's entirely calculable before you
+train anything, and it's the single most useful thing to understand about this architecture.
 
-And everything today runs on multiple seeds, because of last week.
+And every comparison today runs on three seeds, because of what last week's lab taught you about
+trusting a single run.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
 ```
 shapes at W=26: torch.Size([5940, 4, 26]) (batch, channels, time)
 ```
 
-Same windowing as Lab 7, wrapped in a `build()` function so we can rebuild it at three window
-lengths. Same panel, same cutoff, same train/test split, statistics from training rows only.
+This is the same windowing as Lab 7, wrapped in a `build()` function so we can rebuild it at three
+window lengths. It's the same panel, the same cutoff and the same split between training and test,
+and the standardizing statistics come from the training rows only.
 
-One change matters, and it is in the last line of `build`.
+One change matters, and it's in the last line of `build`.
 
 *(Point at the transpose.)*
 
-`Conv1d` wants **(batch, channels, time)**. Your natural windowing produces **(batch, time,
-channels)**. So there is a transpose, and the comment calls it "the whole point."
+Conv one-D wants its input as batch, then channels, then time. Your natural windowing produces
+batch, then time, then channels. So there's a transpose, and the comment calls it "the whole
+point."
 
-*(Screen: the warning callout.)*
+*(Show the warning callout.)*
 
-Read this callout properly, because it is the same species of bug as last week's missing
+Read this callout properly, because it's the same species of bug as last week's missing
 `zero_grad()`.
 
-Get the transpose backwards and **nothing crashes.** The shapes are still valid — you have four
-of one thing and twenty-six of another, and `Conv1d` will happily convolve across the four
-channels as though *they* were the time axis. It will slide a filter over "units, SNAP days, event
-days, price" in that order, learn something with no meaning at all, and return a number that looks
-like an RMSE.
+Get the transpose backwards, and **nothing crashes**. The shapes are still valid. You have four of
+one thing and twenty-six of another, and Conv one-D will happily convolve across the four channels
+as though *they* were the time axis. It will slide a filter over units, SNAP days, event days and
+price, in that order, learn something with no meaning at all, and return a number that looks like
+an RMSE.
 
 **[pause]**
 
-That is the third time this course has shown you the same shape of failure: `shuffle=True` on a
-time series, a missing `zero_grad()`, and now a transposed axis. None of them raise. All of them
-return a plausible number. This is what makes deep learning code different from regression code —
-the language cannot tell you that your tensor means the wrong thing.
+That's the third time this course has shown you the same shape of failure. First came a random
+split made before the time split, then a missing `zero_grad()` in Lab 7, and now a transposed axis.
+None of them raises an error, and all of them return a plausible number. That's what makes deep
+learning code different from regression code: the language can't tell you that your tensor means
+the wrong thing.
 
 ---
 
 # ▶ STEP 1 — How far back can the filter see?
 
-*(Screen: the receptive-field explanation, then run the cell.)*
+*(Show the receptive-field explanation, then run the cell.)*
 
-Before we build anything, we do the arithmetic on paper. This is the calculation that decides
+Before we build anything, we'll do the arithmetic on paper. This is the calculation that decides
 whether the architecture can possibly work, and it takes ten seconds.
 
-Our network is `Conv1d(4, 32, kernel_size=5)` and then `Conv1d(32, 64, kernel_size=3)`.
+Our network is a Conv one-D layer that takes the four channels to thirty-two filters with a kernel
+size of five, followed by a second Conv one-D layer that takes those thirty-two to sixty-four
+filters with a kernel size of three.
 
-A neuron in the first layer sees **five** consecutive weeks — that is what kernel size 5 means.
+A neuron in the first layer sees **five** consecutive weeks, because that's what a kernel size of
+five means.
 
-A neuron in the second layer sees three first-layer neurons. But those three overlap: each sees
-five weeks, shifted by one. So between them they span 3 + (5 − 1) = **seven** weeks.
+A neuron in the second layer sees three first-layer neurons. But those three overlap, since each
+one sees five weeks, shifted by one. So between them they span three, plus five minus one, which
+comes to **seven** weeks.
 
 ```
 kernels (5, 3)      -> receptive field 7 weeks
@@ -122,59 +132,63 @@ kernels (5, 3, 3)   -> receptive field 9 weeks
 kernels (5, 3, 3, 3)-> receptive field 11 weeks
 ```
 
-**[pause]** — *let this sit. It is the lab in one table.*
+*(Let the table sit for a moment. It's the whole lab in one table.)*
 
-**Seven weeks.** Not twenty-six. Seven.
+**[pause]**
 
-And look at what stacking buys: each extra kernel-3 layer adds **two** weeks. Two. You go from
-seven to nine to eleven, one whole convolutional layer at a time.
+That's **seven weeks**, not twenty-six.
 
-Hand this network a 52-week window and every convolution unit still sees only seven consecutive
-weeks of it. The flatten layer after them gives each position its own weight, so the network as a
-whole does see all fifty-two weeks — but it has to learn the annual relationship one weight per
-position, with nothing shared across positions.
+And look at what stacking buys. Each extra layer with a kernel of three adds just two weeks. You go
+from seven to nine to eleven, one whole convolutional layer at a time.
 
-Hold that. Step 4 measures what it costs.
+Hand this network a fifty-two-week window, and every convolution unit still sees only seven
+consecutive weeks of it. The flatten layer after them gives each position its own weight, so the
+network as a whole does see all fifty-two weeks. But it has to learn the annual relationship one
+weight per position, with nothing shared across positions.
+
+Hold that, because Step 4 measures what it costs.
 
 ---
 
 # ▶ STEP 2 — Build the CNN
 
-*(Screen: run the build-and-train cell.)*
+*(Run the build-and-train cell.)*
 
 ```
 parameters: 8,161
 test RMSE:  980
 ```
 
-Two convolutional layers, then a head that flattens and maps to one output.
+This is two convolutional layers, then a head that flattens and maps to one output.
 
 **[pause]**
 
-Compare that parameter count with last week: **8,161 against 21,761.** The CNN is about a third
-the size of the feedforward network — because the filters are *shared* across all time positions
-instead of every input getting its own weight. And on this single seed it scores 980, against the
-FFN's 1,109.
+Compare that parameter count with last week's network. It's **eight thousand one hundred
+sixty-one, against twenty-one thousand seven hundred sixty-one**. The CNN is about a third the size
+of the feedforward network, because its filters are *shared* across all the time positions,
+instead of every input getting its own weight. And on this single seed it scores nine eighty,
+against the feedforward network's eleven-oh-nine.
 
-Smaller model, better number. That is the convolutional bargain: weight sharing buys you
-efficiency, as long as the thing you are looking for is local.
+So it's a smaller model with a better number. That's the convolutional bargain: weight sharing buys
+you efficiency, as long as the thing you're looking for is local.
 
-Which — per Step 1 — means seven weeks local. Keep that qualifier attached.
+And after Step 1, you know that for these filters, local means seven weeks. Keep that qualifier
+attached.
 
 ---
 
 # ▶ STEP 3 — Does pooling belong here?
 
-*(Screen: start the cell — it takes about four minutes — then talk over the setup.)*
+*(Start the cell, which takes about four minutes, then talk over the setup while it runs.)*
 
-Lecture 8 argued that pooling buys **translation invariance.** An image classifier should not care
-*where* in the frame the cat is; pooling throws away position and keeps the presence of the
-pattern. That is exactly right for photographs.
+Lecture 8 argued that pooling buys **translation invariance**. An image classifier shouldn't care
+*where* in the frame the cat is, so pooling throws away position and keeps the presence of the
+pattern. That's exactly right for photographs.
 
 The claim was that a forecaster usually *should* care where the spike was. A demand spike three
 weeks ago and a demand spike twenty weeks ago are different facts about next week.
 
-Three heads, three seeds each.
+So we'll test three heads, with three seeds each.
 
 ```
    head  mean  sd               runs
@@ -185,116 +199,121 @@ avgpool  1534  81 [1643, 1448, 1509]
 
 **[pause]**
 
-**Read the spread before you read the means** — that is the habit last week was for.
+Now, **read the spread** before you read the means. That's the habit last week's lab was for.
 
-Run-to-run standard deviation is 47 to 81. The gap between `flatten` and `avgpool` is **502**.
-That is six to ten times the noise. Unlike last week's weight decay comparison, this difference
-is unambiguously real, and you can say so with three runs precisely because you measured the
-spread.
+The run-to-run standard deviation is forty-seven to eighty-one. The gap between the flatten head
+and average pooling is **five hundred two**, which is six to ten times the noise. Unlike last
+week's weight decay comparison, this difference is unambiguously real, and you can say so with
+three runs precisely because you measured the spread.
 
 **[pause]**
 
-The mechanism is worth stating exactly. `Flatten` keeps all 64 channels at all 20 surviving time
-positions and hands the final layer 1,280 numbers — so the model knows *where* each pattern was
-found. `AdaptiveAvgPool1d(1)` collapses the time axis to a single average per channel: 64 numbers.
-It keeps "this pattern occurred" and discards "it occurred in week 22."
+The mechanism is worth stating exactly. The flatten head keeps all sixty-four channels at all twenty
+surviving time positions, and it hands the final layer one thousand two hundred eighty numbers, so
+the model knows *where* each pattern was found. The adaptive average pooling layer collapses the
+time axis to a single average for each channel, which leaves sixty-four numbers. It keeps "this
+pattern occurred" and discards "it occurred in week twenty-two."
 
 **[STOP — learner works]** — *(replaces "say it in one sentence")*
 
-Pause and answer: why is averaging over position right for classifying photographs and wrong for
-forecasting demand?
+Pause the video and answer this: why is averaging over position right for classifying photographs,
+and wrong for forecasting demand?
 
 *(Resume.)*
 
-Because in a photograph, position is nuisance — the cat is a cat wherever it sits, and a model
-that has to learn "cat in the top left" and "cat in the middle" separately is wasting capacity.
-In a forecast, position *is* the signal. Recency is the single most informative thing about a lag,
-and average pooling deletes it.
+It's because in a photograph, position is a nuisance. The cat is a cat wherever it sits, and a
+model that has to learn "cat in the top left" and "cat in the middle" separately is wasting
+capacity. In a forecast, position *is* the signal. Recency is the single most informative thing
+about a lag, and average pooling deletes it.
 
-Note that max pooling is less bad than average pooling — 1,418 against 1,534 — which fits: max at
-least preserves the strongest response rather than diluting it across the window. Both are far
-behind keeping the positions.
+Notice, too, that max pooling is less bad than average pooling, at fourteen eighteen against
+fifteen thirty-four. That fits, because max pooling at least preserves the strongest response
+rather than diluting it across the window. Both are far behind keeping the positions.
 
 ---
 
 # ▶ STEP 4 — A longer window, the same receptive field
 
-*(Screen: start the cell — about three minutes — then talk through what it does.)*
+*(Start the cell, which takes about three minutes, then talk through what it does.)*
 
-Now the experiment Step 1 set up, and it is the reason this lab exists.
+Now comes the experiment Step 1 set up, and it's the reason this lab exists.
 
-Keep the architecture completely fixed — same two layers, same kernels, same seven-week receptive
-field — and vary only how much history you hand it. Thirteen weeks, twenty-six, fifty-two. Three
-seeds each, and we reuse Step 3's three `flatten` runs for the 26-week row rather than paying for
-them twice.
+Keep the architecture completely fixed, with the same two layers, the same kernels and the same
+seven-week receptive field, and vary only how much history you hand it: thirteen weeks, twenty-six,
+or fifty-two. There are three seeds each, and we reuse Step 3's three flatten runs for the
+twenty-six-week row, rather than paying for them twice.
 
 ```
  window  receptive_field  parameters  mean_RMSE  sd               runs
      13                7        7329        980  42   [1039, 960, 943]
-     26                7        8161       1032  80    [980, 1145, 972]
-     52                7        9825       1103  26  [1111, 1068, 1131]
+     26                7        8161       1032  80   [980, 1145, 972]
+     52                7        9825       1103  26 [1111, 1068, 1131]
 ```
 
-**[pause]** — *let it sit.*
-
-Quadrupling the window made the forecast **worse**.
-
-*(Screen: the callout.)*
-
-Now let me show you how to read this table honestly, because there are two different claims in it
-and only one of them is safe.
-
-**The middle comparison is not evidence.** Thirteen weeks against twenty-six is 980 against 1,032
-— a gap of 52, when the 26-week row's own standard deviation is 80. Last week you decided that
-differences smaller than about 100 RMSE, from a handful of runs, are not findings. That rule
-applies to results you like as much as results you don't. Those two windows are
-indistinguishable.
-
-**The ends are evidence.** Thirteen weeks against fifty-two is 980 against 1,103 — **123 RMSE**,
-and the spreads do not touch: the *worst* 13-week run, 1,039, still beats the *best* 52-week run,
-1,068. Three seeds each, no overlap. That one you can report.
+*(Let the table sit for a moment.)*
 
 **[pause]**
 
-So the finding is: giving this architecture four times the history made it measurably worse, and
-giving it twice the history did nothing at all.
+Quadrupling the window made the forecast **worse**.
 
-Why? Look at the two columns either side of the RMSE. The receptive field is **7** on every row —
-it does not move, because nothing about the architecture changed. The parameter count goes 7,329,
-8,161, 9,825 — because the flatten layer's input grows with the window.
+*(Show the callout.)*
+
+Now let me show you how to read this table honestly, because there are two different claims in it,
+and only one of them is safe.
+
+The middle comparison isn't evidence. Thirteen weeks against twenty-six is nine eighty against one
+thousand thirty-two, a gap of fifty-two, when the twenty-six-week row's own standard deviation is
+eighty. Last week you decided that differences smaller than about a hundred in RMSE, from a handful
+of runs, aren't findings. That rule applies to results you like as much as to results you don't.
+Those two windows are indistinguishable.
+
+The ends are evidence. Thirteen weeks against fifty-two is nine eighty against eleven-oh-three, a
+gap of **one hundred twenty-three**, and the spreads don't touch. The *worst* thirteen-week run,
+one thousand thirty-nine, still beats the *best* fifty-two-week run, one thousand sixty-eight.
+That's three seeds each with no overlap, and that's a result you can report.
+
+**[pause]**
+
+So here's the finding. Giving this architecture four times the history made it measurably worse,
+and giving it twice the history did nothing at all.
+
+Why? Look at the two columns on either side of the RMSE. The receptive field is **seven** on every
+row. It doesn't move, because nothing about the architecture changed. The parameter count goes from
+seven thousand three hundred twenty-nine, to eight thousand one hundred sixty-one, to nine thousand
+eight hundred twenty-five, because the flatten layer's input grows with the window.
 
 So a longer window adds reach and capacity together. The flatten head can now weigh last year's
-same week, but every extra week is also more weights to fit, from fewer training windows. Here the
-capacity won, and the 52-week column is what overfitting looks like.
+same week, but every extra week also means more weights to fit, from fewer training windows. Here
+the capacity won, and the fifty-two-week row is what overfitting looks like.
 
-**More history into the model is not automatically better: the context has to be worth the
-weights it costs.**
+The lesson is that **more history into the model isn't automatically better**. The context has to
+be worth the weights it costs.
 
 **[STOP — learner works]**
 
-Fill in the blank in the next cell and find out how many kernel-3 layers you would have to stack
-after that first kernel-5 layer to span a full 52 weeks.
+Now it's your turn. Pause the video, fill in the blank in the next cell, and find out how many
+layers with a kernel of three you'd have to stack after that first layer, the one with a kernel of
+five, to span a full fifty-two weeks.
 
 *(Resume.)*
 
-The answer is **24** — twenty-five convolutional layers in total, for a receptive field of 53
-weeks. Twenty-three is not enough; it reaches 51.
+The answer is **twenty-four**. That's twenty-five convolutional layers in total, for a receptive
+field of fifty-three weeks. Twenty-three isn't enough, because it only reaches fifty-one.
 
-Sit with that for a second. To let this architecture see one year, you would need a
-twenty-five-layer network — on 5,940 training examples that overlap almost completely. Nobody is
-going to do that, and if they did it would overfit spectacularly.
+Sit with that for a second. To let this architecture see one year, you'd need a twenty-five-layer
+network, trained on five thousand nine hundred forty examples that overlap almost completely.
+Nobody is going to do that, and if they did, it would overfit spectacularly.
 
-That is the honest limit of a plain 1D CNN for this problem, and it is why the next lecture is
-about a different mechanism rather than a deeper stack of the same one. Real practitioners reach
-for dilated convolutions here — filters with gaps in them, so the receptive field grows
-multiplicatively instead of by two per layer. That is a genuine third option and worth knowing the
-name of.
+That's the honest limit of a plain 1D CNN for this problem, and it's why the next lecture is about a
+different mechanism rather than a deeper stack of the same one. Real practitioners reach for dilated
+convolutions here. Those are filters with gaps in them, so the receptive field grows multiplicatively
+instead of by two per layer. That's a genuine third option, and it's worth knowing the name of.
 
 ---
 
 # ▶ STEP 5 — Where does it land?
 
-*(Screen: run the scoreboard.)*
+*(Run the scoreboard.)*
 
 ```
 LASSO, 46 features (HW4)          744
@@ -306,24 +325,26 @@ Seasonal naive                   2152
 
 **[pause]**
 
-Say the honest version of this table.
+Let's say the honest version of this table.
 
-The CNN at 1,032 and the FFN at 1,084 differ by **52** — and you measured the run-to-run spread at
-80. So the correct statement is *not* "the CNN beat the feedforward network." It is: **the two
-are indistinguishable on this problem.** One-third the parameters, a genuinely better inductive
-bias, ordering preserved — and it bought nothing measurable.
+The CNN at one thousand thirty-two and the feedforward network at one thousand eighty-four differ
+by **fifty-two**, and you measured the run-to-run spread at eighty. So the correct statement is
+*not* that the CNN beat the feedforward network. It's that **the two are indistinguishable on this
+problem**. The CNN has about a third of the parameters and a genuinely better inductive bias,
+meaning a better built-in assumption about the data, and it preserves the ordering. All of that
+bought nothing measurable.
 
-Both are well behind a 46-coefficient LASSO at 744.
+Both are well behind a LASSO with forty-six coefficients, at seven forty-four.
 
 **[pause]**
 
-That is not a failure of the lab and it is not a bad implementation. It is a result about the
-problem. The useful signal in weekly store sales sits at long lags — last year's same week, the annual
-shape — and this architecture reaches them only through the flatten layer, one weight per
-position. At twenty-six weeks the window does not reach a year at all; at fifty-two it does, and
-the extra weights cost more than the extra context bought.
+That isn't a failure of the lab, and it isn't a bad implementation. It's a result about the
+problem. The useful signal in weekly store sales sits at long lags, like last year's same week and
+the shape of the year, and this architecture reaches them only through the flatten layer, one
+weight per position. At twenty-six weeks, the window doesn't reach a year at all. At fifty-two it
+does, and the extra weights cost more than the extra context bought.
 
-Which is the honest reason to move on to Lecture 9, and not a reason to conclude that
+That's the honest reason to move on to Lecture 9, next week, and it isn't a reason to conclude that
 convolutions are bad.
 
 ---
@@ -332,26 +353,30 @@ convolutions are bad.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Three questions for the board.
+Here are three questions to work through on your own before you go.
 
-**The architecture.** You have now seen two distinct ways to waste a window. The FFN flattens it
-and loses the ordering entirely. The CNN preserves ordering but can only look at seven weeks at a
-time. Without naming an architecture, describe what a model would need in order to use a whole
-52-week window properly.
+The first is about the architecture. You've now seen two distinct ways to waste a window. The
+feedforward network flattens it and loses the ordering entirely. The CNN preserves the ordering,
+but its filters can only look at seven weeks at a time. Without naming an architecture, describe
+what a model would need in order to use a whole fifty-two-week window properly.
 
-**[pause]** — *they are describing recurrence or attention, and next week they get both.*
+**[pause]**
 
-**The practice.** Step 4's result — longer window, worse forecast — is the sort of
-thing a practitioner discovers after a week of tuning. What one calculation, done in Step 1 in ten
-seconds, would have predicted it?
+Whatever words you used, what you're describing is either recurrence or attention. Recurrence comes
+next week, in Lecture 9 Part 1, and attention follows the week after, in Part 2.
 
-**For Homework 5.** Part 1 Question 4 asks you to run this window experiment and explain the
-limit. You now have the answer. What it does *not* tell you is what to change. Name two
-architectural options and say which you would try first — and note that "stack more conv layers"
-is one of them, so work out how many you would need before you recommend it.
+The second question is about practice. Step 4's result, a longer window and a worse forecast, is
+the sort of thing a practitioner discovers after a week of tuning. What one calculation, done in ten
+seconds back in Step 1, would have predicted it?
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week: a model that carries
-state forward through the whole window.
+The third question looks ahead to Homework 5. Question 4 in Part 1 of that homework asks you to run
+this window experiment and explain the limit, and you now have the answer. What it does *not* tell
+you is what to change. Name two architectural options, and say which you'd try first. Note that
+"stack more convolutional layers" is one of them, so work out how many you'd need before you
+recommend it.
+
+Solutions go up on Canvas after class. Next week, we'll build a model that carries state forward
+through the whole window.
 
 ---
 
