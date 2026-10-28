@@ -110,3 +110,13 @@ Nothing here has been changed unless the line says so.
 2. Lab 5 Step 5's code comment says "fill in the two blanks", but the cell has one. *Recommend:*
    fix the comment in the lab .qmd (one word).
 3. The lecture script is 15.1% longer, just over the guide's 15%, all from numbers in words. Fine.
+
+## Lecture 6
+
+1. **Slide 14 quotes "the coefficient on lag seven was one hundred twenty-four"**; the number is in
+   neither the lab nor measured.json. Kept. *Recommend:* check it, or say it as an illustration.
+2. The lab closing calls the eleven-feature LASSO "the only model of the five you could write on a
+   whiteboard", yet Lab 4's tree is read aloud. *Recommend:* "the only one you could write as a
+   single equation".
+3. The Step 4 fill-in (the one-standard-error index) stays an exercise; no answer is recorded
+   outside the code.

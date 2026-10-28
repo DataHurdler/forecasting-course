@@ -40,36 +40,38 @@ is worth it," and the closing **Discuss** block. All converted below.
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 6, and today you are going to break a model on purpose.
+This is Lab 6, and today you're going to break a model on purpose.
 
-Lecture 6 made three claims about ordinary least squares when predictors pile up: coefficient
-variance grows with the number of parameters, correlated predictors produce wild offsetting
-estimates, and past the point where you have more predictors than observations there is no unique
-solution at all.
+Lecture 6 made three claims about ordinary least squares when predictors pile up. Coefficient
+variance grows with the number of parameters. Correlated predictors produce wild estimates that
+offset each other. And once you have more predictors than observations, there's no unique solution
+at all.
 
-Those are easy to nod along to and hard to feel. So today you will watch OLS fail — not
-degrade, *fail* — and then fix it by changing one line.
+Those claims are easy to nod along to and hard to feel. So today you'll watch OLS fail, not just
+degrade but *fail*, and then you'll fix it by changing one line.
 
 **[pause]**
 
-Same series as the last two labs: daily units for CA\_1 FOODS. But the feature set changes. Up to
-now you have used ten hand-picked columns. Today we build what an analyst would actually build
-after an afternoon of feature engineering, and that is where the trouble comes from.
+We're using the same series as the last two labs, Lab 4 on decision trees and Lab 5 on tree
+ensembles: daily units for CA\_1 FOODS. But the feature set changes. Up to now you've used ten
+hand-picked columns. Today we build what an analyst would actually build after an afternoon of
+feature engineering, and that's where the trouble comes from.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup. Scroll back through the feature-building block as you talk.)*
+*(Run the setup cell, and scroll back through the feature-building block as you talk.)*
 
 Look at what the setup does, because nothing in it is unreasonable.
 
-Twenty-eight consecutive lags, because you don't know which one matters. A few weekly lags — 35,
-42, 49, 56. Last year's lags, 364, 365, 366. Rolling means and standard deviations at five
-windows. Three Fourier pairs for annual seasonality. Day-of-week dummies. Then SNAP, events,
-day-of-year and price.
+There are twenty-eight consecutive lags, because you don't know which one matters. There are a few
+weekly lags, at thirty-five, forty-two, forty-nine, and fifty-six days, and last year's lags, at
+three sixty-four, three sixty-five, and three sixty-six. There are rolling means and standard
+deviations at five windows, three Fourier pairs for annual seasonality, and day-of-week dummies.
+Then come SNAP, events, day of year, and price.
 
 ```
 k = 62 features, n_train = 1210, n/k = 19.5
@@ -77,25 +79,25 @@ k = 62 features, n_train = 1210, n/k = 19.5
 
 **[pause]**
 
-Sixty-two predictors. Thirty-five lags, ten rolling statistics, six Fourier terms, seven
-day-of-week dummies, four others.
+That's sixty-two predictors: thirty-five lags, ten rolling statistics, six Fourier terms, seven
+day-of-week dummies, and four others.
 
 Nobody sat down and decided to fit a sixty-two-parameter model. Every one of those columns was a
-defensible small decision, and the total is what routine feature engineering produces. That is the
-honest version of how this problem arrives: not from ambition, from diligence.
+defensible small decision, and the total is what routine feature engineering produces. That's the
+honest version of how this problem arrives: not from ambition, but from diligence.
 
-Right now the ratio is comfortable — about twenty observations per parameter. Hold onto that
+Right now the ratio is comfortable, at about twenty observations per parameter. Hold on to that
 number, because Step 1 is going to take it apart.
 
 ---
 
 # ▶ STEP 1 — Break it
 
-*(Screen: run the shrinking-window table.)*
+*(Run the shrinking-window table.)*
 
-We keep the features and the test set fixed and shrink only the training window. About three
-years, then about one, then two hundred days, then a hundred and twenty, then eighty. Same problem throughout.
-Only the ratio changes.
+We keep the features and the test set fixed, and we shrink only the training window. It starts at
+about three years, then about one year, then two hundred days, then a hundred and twenty, and then
+eighty. The problem stays the same throughout, and only the ratio changes.
 
 ```
    n  n/k OLS_max_coef OLS_test_RMSE Ridge_test_RMSE
@@ -106,63 +108,69 @@ Only the ratio changes.
   80  1.3      355,629     2,072,167             770
 ```
 
-**[pause]** — *let it sit on screen. Do not talk over it.*
-
-Read across the OLS columns, and start with the test RMSE. At twenty observations per parameter it
-is **280** — a perfectly respectable model. At six observations per parameter the error has
-multiplied by seven. At three, it is 5,874.
-
-And then the bottom two rows stop being a degradation and become an explosion. The test RMSE is
-**three and a half million** — on a series where a busy day is four thousand units. The largest
-coefficient climbs past a million alongside it, but hold that column loosely; I'll come back to
-why in a moment.
+*(Let the table sit on screen, and don't talk over it.)*
 
 **[pause]**
 
-Now here is the part I want you to take away, and it is not in the printed table.
+Read across the OLS columns, and start with the test RMSE. At twenty observations per parameter,
+it's **two hundred eighty**, which is a perfectly respectable model. At six observations per
+parameter, the error has multiplied by seven. At three, it's five thousand eight hundred
+seventy-four.
 
-At n = 120, that model's **training** RMSE is about **145.** It looks fine. If you fitted it and
-looked only at how it fits the data you gave it, you would ship it — and it is wrong by a factor
-of a thousand on data it has not seen.
+Then the bottom two rows stop being a degradation and become an explosion. The test RMSE is **three
+and a half million**, on a series where a busy day is four thousand units. The largest coefficient
+climbs past a million right alongside it, but hold that column loosely. I'll come back to why in a
+moment.
+
+You may also notice that those bottom two rows aren't in order: a hundred and twenty rows does
+worse than eighty on both columns. There's no lesson in that ordering. Once a design is this badly
+conditioned, the size of the blow-up is essentially arbitrary. What matters is the scale of both
+numbers.
+
+Now here's the part I want you to take away, and it isn't in the printed table.
+
+At n equals a hundred and twenty, that model's **training** RMSE is about **a hundred forty-five**.
+It looks fine. If you fitted it and looked only at how well it fits the data you gave it, you would
+ship it. And on data it hasn't seen, its error is three and a half million.
 
 **[pause]**
 
-One technical point, because a careful student will ask. Sixty-two features and eighty rows —
-there are still more rows than parameters, so we never crossed the k-greater-than-n line the
-lecture warned about. **You do not need k greater than n to get this.** Twenty-eight consecutive
-lags of a smooth series are nearly collinear with one another, and that alone is enough to wreck
-the forecasts.
+Here's one technical point, because a careful student will ask about it. With sixty-two features
+and eighty rows, there are still more rows than parameters, so we never crossed the line the
+lecture warned about, where k is greater than n. **You don't need k greater than n to get this.**
+Twenty-eight consecutive lags of a smooth series are nearly collinear with one another, and that
+alone is enough to wreck the forecasts.
 
-And here is the honest footnote on the coefficient column. This design is not just nearly
-collinear, it is *exactly* collinear, at every window size. The seven-, fourteen- and
-twenty-eight-day rolling means are averages of lags that are already in the model, and the seven
-day-of-week dummies always add up to one. That is four exact dependencies, so the sixty-two
-columns have rank fifty-eight, and OLS has no unique set of coefficients anywhere in this table.
-`LinearRegression` does not complain. It quietly hands back one particular solution, the
-minimum-norm one, so read that column as the solver's pick, not as "the" OLS coefficients. The
-RMSE column is safe: the same identities hold in the test rows, so every one of those solutions
-makes the same forecasts.
+And here's the honest footnote on the coefficient column. This design isn't just nearly collinear.
+It's *exactly* collinear, at every window size. The seven-, fourteen- and twenty-eight-day rolling
+means are averages of lags that are already in the model, and the seven day-of-week dummies always
+add up to one. That's four exact dependencies, so the sixty-two columns have a rank of fifty-eight,
+and OLS has no unique set of coefficients anywhere in this table. `LinearRegression` doesn't
+complain. It quietly hands back one particular solution, the minimum-norm one, so read that column
+as the solver's pick, not as "the" OLS coefficients. The RMSE column is safe, because the same
+identities hold in the test rows, so every one of those solutions makes the same forecasts.
 
 *(Point at the last column.)*
 
-Now the right-hand column. Same data, same features, same rows — `Ridge(alpha=100)` instead of
-`LinearRegression()`. One word changed.
+Now look at the right-hand column. It's the same data, the same features, and the same rows, with
+`Ridge(alpha=100)` in place of `LinearRegression()`. One word changed.
 
-278, 323, 363, 621, 770.
+The numbers run two seventy-eight, three twenty-three, three sixty-three, six twenty-one, and seven
+seventy.
 
-It gets worse as data gets scarcer, which it should. But it degrades *gracefully*, and at the row
-where OLS is out by three and a half million, Ridge is at 621 — roughly the benchmark. Not good,
-but the model is still a model.
+It gets worse as the data gets scarcer, which it should. But it degrades *gracefully*, and at the
+row where OLS is out by three and a half million, Ridge is at six twenty-one, which is roughly the
+benchmark. It isn't good, but the model is still a model.
 
-That is Lecture 6's opening argument, and you just measured it.
+That's the opening argument of Lecture 6, and you just measured it.
 
 ---
 
 # ▶ STEP 2 — Two penalties, two behaviors
 
-*(Screen: run the three-model comparison.)*
+*(Run the three-model comparison.)*
 
-Back to the full training set, where OLS forecast well, and now compare the two penalties.
+Now go back to the full training set, where OLS forecast well, and compare the two penalties.
 
 ```
   OLS    test RMSE   280   non-zero coefficients  62/62
@@ -172,57 +180,58 @@ Back to the full training set, where OLS forecast well, and now compare the two 
 
 **[pause]**
 
-I want you to notice the disappointing thing first, because if I skip it you will notice it
-anyway and trust me less.
+I want you to notice the disappointing thing first, because if I skip it, you'll notice it anyway
+and trust me less.
 
-**On the full training set, regularization buys essentially nothing.** Ridge is two units better
-than OLS. LASSO is six units worse. With nineteen observations per parameter there was no problem
-to solve, and the penalty solved it.
+On the full training set, regularization buys **essentially nothing**. Ridge is two units better
+than OLS, and LASSO is six units worse. With nineteen and a half observations per parameter, there
+was no problem to solve, and the penalty solved it.
 
-That is the correct lesson, not a failed demo. Regularization is **insurance**, and Step 1 is the
-fire. You do not judge insurance by what it pays out in a year when the house doesn't burn down.
+That's the correct lesson, not a failed demo. Regularization is **insurance**, and Step 1 is the
+fire. You don't judge insurance by what it pays out in a year when the house doesn't burn down.
 
 **[pause]**
 
-But look at the last column, because that is where the two penalties differ in kind and not just
-in degree.
+But look at the last column, because that's where the two penalties differ in kind and not just in
+degree.
 
 Ridge keeps all sixty-two coefficients and shrinks them toward zero. LASSO sets forty-one of them
-to **exactly** zero and keeps twenty-one.
+to **exactly** zero, and keeps twenty-one.
 
-So for six units of RMSE — about two percent — LASSO handed you a model with a third as many
-moving parts. That is not an accuracy trade, it is a *communicability* trade. Twenty-one
-coefficients is a model you can print and discuss. Sixty-two is a model you can only run.
+So for six units of RMSE, about two percent, LASSO handed you a model with a third as many moving
+parts. That isn't an accuracy trade. It's a trade for *communicability*. Twenty-one coefficients is
+a model you can print and discuss, while sixty-two is a model you can only run.
 
-Neither penalty is better. They encode different beliefs: Ridge believes many predictors each
-matter a little, LASSO believes a few matter and the rest are noise. Which belief is right is a
-question about your data, and in Step 3 you get to see which one this series votes for.
+Neither penalty is better. They encode different beliefs. Ridge believes that many predictors each
+matter a little, and LASSO believes that a few matter and the rest are noise. Which belief is right
+is a question about your data, and in Step 3 you get to see which one this series votes for.
 
 ---
 
 # ▶ STEP 3 — The path, and the order features die in
 
-*(Screen: run the path plots.)*
+*(Run the path plots.)*
 
-Sixty LASSO fits along a grid of penalties, from 0.1 up to 1,000, and we plot every coefficient's
-trajectory.
+This step runs sixty LASSO fits along a grid of penalties, from zero point one up to one thousand,
+and it plots every coefficient's trajectory.
 
 *(Point at the left panel.)*
 
-Each line is one feature. At the left, weak penalty, everything is alive. Move right and lines
-collapse onto zero one after another. By the right-hand edge — and I checked this — **every single
-coefficient is zero.** The model at alpha = 1,000 predicts the mean and nothing else.
+Each line is one feature. At the left, where the penalty is weak, everything is alive. Move right,
+and the lines collapse onto zero one after another. By the right-hand edge, and I checked this,
+**every single coefficient is zero.** The model at an alpha of one thousand predicts the mean and
+nothing else.
 
 *(Point at the right panel.)*
 
-The right panel is the same thing counted: model size against penalty. It is a staircase down from
-62 to 0. At alpha = 100, nine features are left.
+The right panel counts the same thing, as model size against penalty. It's a staircase down from
+sixty-two to zero. At an alpha of one hundred, nine features are left.
 
 **[pause]**
 
-Lecture 6 argued that the **order** features leave is a more stable finding than any one
-coefficient table — coefficients wobble under resampling, the elimination order mostly does not.
-So let's read the order.
+Lecture 6 argued that the **order** in which features leave is a more stable finding than any one
+coefficient table. Coefficients wobble when you resample, but the order of elimination mostly
+doesn't. So let's read the order.
 
 *(Run the survivors cell.)*
 
@@ -238,96 +247,103 @@ the last 8 features standing, in reverse order of elimination:
    lag56
 ```
 
-Two pairs leave at the same penalty step, `lag28` with `lag7` and `lag21` with `lag1`. The lab
-sorts each tie, so this list comes out the same on every run.
+Two pairs leave at the same penalty step: lag twenty-eight with lag seven, and lag twenty-one with
+lag one. The lab sorts each tie, so this list comes out the same on every run.
 
 **[STOP — learner works]** — *(replaces "which survivor is not a multiple of 7")*
 
-Pause here. You saw this path in the lecture, with the weekly lags in red. Find the one survivor
-that is not a multiple of seven, and think about why the LASSO might keep it anyway.
+Pause the video here. You saw this path in the lecture, with the weekly lags drawn in red. Find the
+one survivor that isn't a multiple of seven, and think about why the LASSO might keep it anyway.
 
 *(Resume.)*
 
-28. 7. 35. 364. 14. 21. 56. Every one of them is a **multiple of seven** except `lag1`. And `lag1`
-survives for a different reason: yesterday is the freshest reading of the level the series is at
-right now, which no weekly lag gives you.
+Twenty-eight, seven, thirty-five, three sixty-four, fourteen, twenty-one, and fifty-six. Every one
+of them is a **multiple of seven** except lag one. And lag one survives for a different reason.
+Yesterday is the freshest reading of the level the series is at right now, and no weekly lag gives
+you that.
 
 **[pause]**
 
 Now think about what was available to be chosen. The feature set had twenty-eight consecutive
-lags — 1, 2, 3, all the way to 28 — and it also had seven day-of-week dummies, a direct encoding
-of the weekly cycle. At the weakest penalty some of those dummies carry the biggest coefficients
-in the model. Under heavy penalty the LASSO dropped every one of them.
+lags, from one, two, and three all the way to twenty-eight. It also had seven day-of-week dummies,
+which are a direct encoding of the weekly cycle. At the weakest penalty, some of those dummies
+carry the biggest coefficients in the model. Under heavy penalty, the LASSO dropped every one of
+them.
 
-Forced to give things up, it kept exactly the lags that align with day-of-week and discarded the
-ones that do not. It also kept `lag364` — which is fifty-two weeks,
-so the same-day-last-year lag that is *also* a multiple of seven, rather than `lag365`.
+Forced to give things up, it kept exactly the lags that align with the day of the week, and it
+discarded the ones that don't. It also kept lag three sixty-four, which is fifty-two weeks back. So
+it chose the same-day-last-year lag that is *also* a multiple of seven, rather than lag three
+sixty-five.
 
-That is why the dropout ordering is worth reporting to someone. It did not just rank your columns.
-It recovered the structure of the series — a weekly cycle plus an annual echo — from a pile of
-undifferentiated lags. And it agrees with what the tree found on its own in Lab 4, when
-day-of-week took 79% of the importance. Two completely different model families, same finding.
+That's why the dropout ordering is worth reporting to someone. It didn't just rank your columns.
+It recovered the structure of the series, a weekly cycle plus an annual echo, from a pile of
+undifferentiated lags. And it agrees with what the tree found on its own in Lab 4, when day of
+week took seventy-nine percent of the importance. Two completely different model families reached
+the same finding.
 
 ---
 
 # ▶ STEP 4 — Choosing alpha, and the one-standard-error rule
 
-*(Screen: run the CV block.)*
+*(Run the cross-validation block.)*
 
-So far I have been picking penalties by hand. Now do it properly: five-fold `TimeSeriesSplit`,
-thirty candidate alphas, and — this matters — the scaler goes **inside** the pipeline, so it is
-refitted on each fold's training rows and never sees the validation fold.
+So far I've been picking penalties by hand. Now let's do it properly, with five-fold
+`TimeSeriesSplit` and thirty candidate alphas. And this part matters: the scaler goes **inside**
+the pipeline, so it's refitted on each fold's training rows and never sees the validation fold.
 
 ```
   CV minimum   alpha   19.64   CV   323   test   286   non-zero  21
   one-SE rule  alpha   59.68   CV   346   test   309   non-zero  11
 ```
 
-Two ways to read the same CV curve.
+There are two ways to read the same cross-validation curve.
 
-The **CV minimum** takes the alpha with the best cross-validated score. Standard, and it lands on
-21 features.
+The **CV minimum** takes the alpha with the best cross-validated score. That's the standard
+choice, and it lands on twenty-one features.
 
-The **one-standard-error rule** takes the *largest* alpha — the simplest model — whose CV score is
-still within one standard error of the best. The argument is that the CV curve is itself an
-estimate with noise on it, so a model that is statistically indistinguishable from the best but
-much simpler is the better bet.
+The **one-standard-error rule** takes the *largest* alpha, meaning the simplest model, whose score
+is still within one standard error of the best. The argument is that the cross-validation curve is
+itself an estimate with noise on it, so a model that's statistically indistinguishable from the
+best, but much simpler, is the better bet.
 
-Here that means going from **21 features to 11**, and paying **23 units of test RMSE** for it —
-286 up to 309, about eight percent.
+Here that means going from **twenty-one features to eleven**, and paying **twenty-three units of
+test RMSE** for it. The test error goes from two eighty-six up to three oh nine, which is about
+eight percent.
 
 **[STOP — learner works]**
 
-Two things to do. First, uncomment the plot and fill in the blank — the one-SE index — so you can
-see the band and both verticals. Then answer the question the lab asks: is that trade worth it
-here?
+Pause the video, because there are two things to do. First, uncomment the plot and fill in the
+blank, which is the one-standard-error index, so that you can see the band and both vertical lines.
+Then answer the question the lab asks: is that trade worth it here?
 
 *(Resume.)*
 
-I'll give you the shape of the answer rather than the answer, because the honest reply is that
-**the lab has not told you enough to decide.**
+I'll give you the shape of the answer rather than the answer itself, because the honest reply is
+that **the lab hasn't told you enough to decide.**
 
 If this model is going into a dashboard that a person reads and questions, eleven coefficients
-against twenty-one is a real gain, and eight percent is cheap. If it is one component inside an
+against twenty-one is a real gain, and eight percent is cheap. If it's one component inside an
 automated replenishment system that nobody reads, you just paid eight percent for a property
-nobody consumes.
+nobody uses.
 
-It is worth knowing what the eleven survivors are: `lag1`, `lag7`, `lag14`, `lag21`, `lag27`,
-`lag28`, `lag35`, `lag56`, `lag364`, the 364-day rolling mean, and `snap`. Nine lags, a level, and
-the SNAP flag. That is a model you could describe out loud in one sentence — and notice `snap`
-survived to the very end, which is the same feature permutation importance rescued in Lab 5.
+It's worth knowing what the eleven survivors are. They're lags one, seven, fourteen, twenty-one,
+twenty-seven, twenty-eight, thirty-five, fifty-six, and three sixty-four, plus the
+three-hundred-sixty-four-day rolling mean and the SNAP flag. That's nine lags, a level, and SNAP, a
+model you could describe out loud in one sentence. And notice that SNAP made the cut. It's the
+same feature that permutation importance rescued in Lab 5.
 
 ---
 
 # ▶ STEP 5 — Why your CV number looks worse than the truth
 
-*(Screen: run the fold breakdown.)*
+*(Run the fold breakdown.)*
 
-One loose end from Step 4 that you should not let pass. The CV score at the minimum was **323**.
-The test RMSE of that same model was **286**. Cross-validation was pessimistic by about 13%.
+There's one loose end from Step 4 that you shouldn't let pass. The cross-validation score at the
+minimum was **three twenty-three**, and the test RMSE of that same model was **two eighty-six**.
+Cross-validation was pessimistic by about thirteen percent.
 
-If those had gone the other way you would be worried. This direction has a specific cause, and it
-is sitting in Step 1.
+If those had gone the other way, you'd be worried. This direction has a specific cause, and it's
+sitting in Step 1.
 
 ```
   fold 1: train n= 205 (n/k= 3.3)   val n=201   RMSE   433
@@ -339,39 +355,42 @@ is sitting in Step 1.
 
 **[pause]**
 
-Look at fold 1. It trains on 205 rows — three observations per parameter. That is the row from
-Step 1's table where OLS was already at 5,874, and it is scored as though it were the model you
-are going to ship. It comes in at 433, far worse than any other fold.
+Look at fold one. It trains on two hundred five rows, which is about three observations per
+parameter. That's the row from Step 1's table where OLS was already at five thousand eight hundred
+seventy-four, and this fold is scored as though it were the model you're going to ship. It comes in
+at four thirty-three, far worse than any other fold.
 
-The model you actually ship trains on all 1,210 rows. No fold ever saw that much data.
+The model you actually ship trains on all twelve hundred and ten rows, and no fold ever saw that
+much data.
 
-So expanding-window cross-validation is **structurally pessimistic**: it averages in early folds
-fitted on a fraction of your data. And you can put a number on how much that costs. The five folds
-average to 323. Drop fold 1 alone and the remaining four average to **296** — against a test RMSE
-of **286.** Almost the entire gap was that one starved fold.
+So expanding-window cross-validation is **structurally pessimistic**. It averages in early folds
+that were fitted on a fraction of your data. And you can put a number on what that costs. The five
+folds average to three twenty-three. Drop fold one alone, and the remaining four average to **two
+ninety-six**, against a test RMSE of **two eighty-six**. Almost the entire gap came from that one
+starved fold.
 
 **[pause]**
 
-Two conclusions, and the second is the one that gets violated in practice.
+There are two conclusions, and the second is the one that gets violated in practice.
 
-First: read a walk-forward CV number as a **conservative** estimate. It is a lower bound on your
-model's quality, not an unbiased estimate of it, and being conservative is a fine property in a
-forecast you are going to stake inventory on.
+The first is to read a walk-forward cross-validation number as a **conservative** estimate. It's a
+lower bound on your model's quality, not an unbiased estimate of it, and being conservative is a
+fine property in a forecast you're going to stake inventory on.
 
-Second, and please do not do this: the pessimism is **not** a reason to switch to random k-fold
-splits. Random folds would shrink the number, and they would do it by training on Thursday to
-predict the previous Tuesday. To be fair to them, on a lag regression like this one that does no
-harm: the paper Lecture 6 cites, Bergmeir and co-authors, shows k-fold is valid for a pure
-autoregression with uncorrelated errors. But you rarely know you are in that case, and when you
-are not, the number you get back measures your model's ability to interpolate inside a period it
-has already seen, which is not the job. A pessimistic estimate of the right quantity beats an
+The second, and please don't do this, is that the pessimism is **not** a reason to switch to random
+k-fold splits. Random folds would shrink the number, and they'd do it by training on Thursday to
+predict the previous Tuesday. To be fair to them, on a lag regression like this one, that does no
+harm. The paper Lecture 6 cites, by Bergmeir and his co-authors, shows that k-fold is valid for a
+pure autoregression with uncorrelated errors. But you rarely know that you're in that case. When
+you aren't, the number you get back measures your model's ability to interpolate inside a period
+it has already seen, which isn't the job. A pessimistic estimate of the right quantity beats an
 accurate estimate of the wrong one.
 
 ---
 
 # ▶ BEFORE YOU LEAVE
 
-*(Screen: run the scoreboard.)*
+*(Run the scoreboard.)*
 
 ```
 Benchmark (same day last year)    625
@@ -384,42 +403,43 @@ XGBoost (Lab 5)                   244
 Today's model, with six times as many features as the tree ensembles had, lands **third**.
 
 Say that plainly rather than skating past it. Sixty-two engineered features, a properly
-cross-validated penalty, and a careful pipeline produced 286 — comfortably better than one tree,
-and comfortably worse than a Random Forest you fitted in two lines with no feature engineering
-at all in Lab 5.
+cross-validated penalty, and a careful pipeline produced two eighty-six. That's comfortably better
+than one tree, and comfortably worse than the Random Forest you fitted in two lines in Lab 5, with
+just ten hand-picked columns.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Three questions for the board.
+Here are three questions to work through before you go. Pause the video after each one.
 
-**Why trees win here.** Name one property of daily store sales that favours a tree ensemble over
-an additive linear model, however many lags you feed it. It is in the tree you read out loud in
-Lab 4 — think about what happens on a weekend when yesterday was already busy, and whether a model
-that adds up separate effects can express that.
-
-**[pause]**
-
-**The counterpoint, and this one matters for Homework 4.** In Homework 4 you run this comparison on
-the weekly, thirty-series panel with forty-six features. The ranking may not come out the same.
-What is different about that problem that could change the answer? Think about how many
-observations per series you get at weekly frequency, and what pooling thirty series does to the
-noise.
-
-**The one to argue about.** You have now fitted five model families to this one series — a GAM in
-Homework 2, a tree, a forest, boosting, and a regularized linear model. Hand exactly one of them
-to a store manager who will never retune it and will not be retrained. Which, and is it the one
-with the lowest RMSE?
+The first is why trees win here. Name one property of daily store sales that favors a tree
+ensemble over an additive linear model, however many lags you feed it. It's in the tree you read
+out loud in Lab 4. Think about what happens on a weekend when yesterday was already busy, and
+whether a model that adds up separate effects can express that.
 
 **[pause]**
 
-Notice the two properties this lab measured that RMSE does not see. The eleven-feature LASSO is
-the only model of the five you could write on a whiteboard. And Step 1 showed you which models
-fail *loudly* versus quietly — OLS at n=120 had a beautiful training fit and was wrong by a factor
-of a thousand. In a year, if this store's data collection changes and the model quietly gets less
-data than it used to, which of your five would you rather be running unattended?
+The second is the counterpoint, and this one matters for Homework 4. In Homework 4 you run this
+comparison on the weekly panel of thirty series, with forty-six features, and the ranking may not
+come out the same. What's different about that problem that could change the answer? Think about
+how many observations per series you get at weekly frequency, and what pooling thirty series does
+to the noise.
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week we leave linear models
-behind for good and start on neural networks.
+The third is the one to argue about. You've now fitted five model families to this one series: a
+GAM in Homework 2, a tree, a forest, boosting, and a regularized linear model. Hand exactly one of
+them to a store manager who won't retune it for a year and won't be retrained. Which one do you
+choose, and is it the one with the lowest RMSE?
+
+**[pause]**
+
+Notice two properties that this lab measured and that RMSE doesn't see. The eleven-feature LASSO
+is the only model of the five you could write on a whiteboard. And Step 1 showed you which models
+fail *loudly* and which fail quietly. OLS at a hundred and twenty rows had a beautiful training
+fit, and its test error was three and a half million. A year from now, if this store's data
+collection changes and the model quietly gets less data than it used to, which of your five would
+you rather be running unattended?
+
+Solutions for the coded parts go up on Canvas after class. Next week, in Lecture 7, we
+leave linear models behind for a while and start on neural networks.
 
 ---
 
