@@ -120,3 +120,11 @@ Nothing here has been changed unless the line says so.
    single equation".
 3. The Step 4 fill-in (the one-standard-error index) stays an exercise; no answer is recorded
    outside the code.
+
+## Lecture 7
+
+1. The lab appendix says "45% loss to the LASSO"; 1,084 against 744 is 45.7% worse. Left.
+   *Recommend:* "about 46%".
+2. **Code read aloud.** This script writes code as it is said ("zero-grad", "loss dot backward",
+   "n-n dot Linear"); others keep backticked identifiers. Both read fine to a person; the video
+   tool respells the common backticked ones. *Recommend:* leave the mix.

@@ -41,34 +41,36 @@ Step 3's "say out loud what just happened", Step 4's "your turn", and the three 
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 7. Two things today, and I want to be honest at the start about which one matters.
+This is Lab 7. We're doing two things today, and I want to be honest from the start about which one
+matters.
 
-The first is the machinery: turning a panel of thirty series into windowed training examples and
-training a feedforward network on them. That is the part of Homework 5 most likely to cost you an
-evening, so we build it together and you keep the code.
+The first is the machinery. We'll turn a panel of thirty series into windowed training examples,
+and then train a feedforward network on them. That's the part of Homework 5 most likely to cost you
+an evening, so we'll build it together, and you keep the code.
 
-The second is the actual lesson, and it is not about neural networks specifically. You are going
-to train the same model several times, on the same data, with the same settings, and get a
-different answer every time. Then you are going to measure how big that variation is — and
-discover it is larger than the effect you were about to go looking for.
+The second is the actual lesson, and it isn't about neural networks specifically. You're going to
+train the same model several times, on the same data, with the same settings, and get a different
+answer every time. Then you're going to measure how big that variation is, and discover that it's
+larger than the effect you were about to go looking for.
 
 **[pause]**
 
-The data changes today. Labs 4 through 6 were one daily series. Homework 5 is the **weekly panel**
-— thirty series, all ten stores by category — so that is what we use, and every number today is
-comparable with your Homework 4 results on the same panel.
+The data changes today. Labs 4 through 6, over the last three weeks, all used one daily series.
+Homework 5 uses the **weekly panel**, which is thirty series, covering all ten stores by category.
+So that's what we use today, and every number you see is comparable with your Homework 4 results on
+the same panel.
 
-You need `torch`. Nothing today needs a GPU.
+You'll need torch, but nothing today needs a GPU.
 
 ---
 
 # ▶ STEP 1 — From a panel to windows
 
-*(This covers the setup block as well — they run together.)*
+*(This covers the setup block as well, because they run together.)*
 
-*(Screen: run setup, then the windowing loop.)*
+*(Run the setup cell, then the windowing loop.)*
 
 ```
 30 series, 8,310 rows
@@ -79,24 +81,27 @@ X shape (7530, 26, 4)  (windows, weeks, channels)
 train 5,940   test 1,590
 ```
 
-Here is the reframing that every method from here to the end of the course depends on.
+Here's the reframing that every method from here to the end of the course depends on.
 
-A network cannot read a dataframe. It needs a stack of identically-shaped examples. So for each
-series we slide a 26-week window along the history: those 26 weeks are the input, the units in
-week 27 are the target, and the *target's* date decides whether the example is training or test.
+A network can't read a dataframe. It needs a stack of examples that all have the same shape. So for
+each series, we slide a twenty-six-week window along the history. Those twenty-six weeks are the
+input, the units in week twenty-seven are the target, and the *target's* date decides whether the
+example goes into training or test.
 
-Four channels — units, SNAP days, event days, average price. Twenty-six weeks. So each example is
-a 26-by-4 block.
+There are four channels: units, SNAP days, event days and the average price. With twenty-six weeks,
+each example is a block of twenty-six by four.
 
 **[pause]**
 
-Now notice the count, because it is a trap dressed as good news. **8,310 rows became 7,530
-examples.** It looks like you have seven and a half thousand independent observations. You do not.
-Most weeks appear as input in twenty-six different windows, and once more as a target. The
-examples overlap almost completely with their neighbors.
+Now notice the count, because it's a trap dressed up as good news. **Eight thousand three hundred
+ten rows became seven thousand five hundred thirty examples.** It looks as if you have seven and a
+half thousand independent observations. You don't. Most weeks appear as input in twenty-six
+different windows, and once more as a target, so the examples overlap almost completely with their
+neighbors.
 
-So the effective sample size is far smaller than 7,530, and that matters for how much you should
-trust anything this network tells you. Half of Homework 5's difficulty is remembering this.
+So the effective sample size is far smaller than seven thousand five hundred thirty, and that
+matters for how much you should trust anything this network tells you. Half of the difficulty in
+Homework 5 is remembering this.
 
 *(Run the standardization block.)*
 
@@ -104,70 +109,74 @@ trust anything this network tells you. Half of Homework 5's difficulty is rememb
 flattened to 104 features per example
 ```
 
-Two details, both of which are graded in Homework 5.
+There are two details here, and both of them are graded in Homework 5.
 
-**The statistics come from training data only.** `mu` and `sd` are computed under `train_mask` and
-then applied to everything. Standardizing with statistics computed over the full dataset leaks
-test-period information into training, and it will not raise an error — it will just quietly make
-your results better than they are.
+The first is that the statistics come from the training data only. The mean and the standard
+deviation, mu and s-d in the code, are computed under the training mask and then applied to
+everything. If you standardize with statistics computed over the full dataset, you leak information
+from the test period into training. It won't raise an error. It will just quietly make your results
+look better than they are.
 
-**And then we flatten.** Twenty-six weeks by four channels becomes 104 numbers in a row. A
-feedforward network has no notion of sequence; it sees 104 unordered features. Hold that thought
-— it is the answer to one of the closing questions, and it is what Lecture 8 exists to fix.
+The second is that we then flatten. Twenty-six weeks by four channels becomes a hundred and four
+numbers in a row. A feedforward network has no notion of sequence, so it sees a hundred and four
+unordered features. Hold on to that thought, because it's the answer to one of the closing
+questions, and it's what Lecture 8, next week, exists to fix.
 
-**This block is Homework 5 Part 1 Question 1.** Keep it.
+This block is what Homework 5, Part 1, Question 1 asks for, so **keep it**.
 
 ---
 
 # ▶ STEP 2 — Train a network
 
-*(Screen: run the training cell.)*
+*(Run the training cell.)*
 
 ```
 parameters: 21,761
 test RMSE:  1,109
 ```
 
-Three layers — 104 in, 128, 64, one out — with ReLU and dropout between them. **Twenty-one
-thousand seven hundred and sixty-one parameters**, trained on 5,940 overlapping examples.
+The network has three layers. A hundred and four inputs go into a hundred twenty-eight units, then
+sixty-four, then one output, with ReLU and dropout between them. That's **twenty-one thousand seven
+hundred sixty-one parameters**, trained on five thousand nine hundred forty overlapping examples.
 
 *(Point at `shuffle=False`.)*
 
-One line deserves attention. `shuffle=False` in the DataLoader. Almost every PyTorch tutorial you
-will find sets it to `True`. Here it keeps every run identical, so a seed gives the same number
-each time. Shuffling these training windows would not leak anything — each window carries its own
-past, and they all come from before the cutoff. What leaks is a random split *before* the time
-split, and — this is the theme of the lab — **nothing warns you.** No error, no warning, just a
-number that is wrong in a way you cannot see.
+One line deserves attention, and that's shuffle equals False, in the DataLoader. Almost every
+PyTorch tutorial you'll find sets it to True. Here it keeps every run identical, so a given seed
+gives the same number each time. Shuffling these training windows wouldn't leak anything, because
+each window carries its own past, and they all come from before the cutoff. What leaks is a random
+split made *before* the time split. And this is the theme of the lab: **nothing warns you**. There's
+no error and no warning, just a number that's wrong in a way you can't see.
 
 **[pause]**
 
-Now the result. 1,109 on the test weeks, against a seasonal-naive benchmark of 2,152. So the
-network is roughly twice as good as the benchmark. On a panel where a typical week is about 9,300
-units, that is an error of about 12%.
+Now the result. The network scores eleven-oh-nine on the test weeks, against a seasonal-naive
+benchmark of twenty-one fifty-two, so it's roughly twice as good as the benchmark. On a panel where
+a typical week is about nine thousand three hundred units, that's an error of about twelve percent.
 
-*(Screen: the "compare against your records" paragraph.)*
+*(Show the paragraph that begins "Compare that RMSE against your records.")*
 
-And now the comparison you should not skip. On this same panel, in Homework 4, **XGBoost managed
-781** and a **46-coefficient LASSO managed 744.**
+Now for the comparison you shouldn't skip. On this same panel, in Homework 4, **XGBoost managed
+seven eighty-one**, and a LASSO with forty-six coefficients managed **seven forty-four**.
 
-Twenty-two thousand parameters lost to forty-six coefficients. Not narrowly — by about half.
+So twenty-two thousand parameters lost to forty-six coefficients, and not narrowly. They lost by
+about half.
 
 **[pause]**
 
-I am not going to soften that, and you should not expect the rest of the lab to rescue it. It is
-the honest result on this dataset, and *why* is one of your discussion questions. But hold the
-number 1,109 loosely for about ninety seconds, because Step 3 is going to tell you how much that
-particular number is worth.
+I'm not going to soften that, and you shouldn't expect the rest of the lab to rescue it. It's the
+honest result on this dataset, and *why* it happens is one of your discussion questions. But hold
+the number eleven-oh-nine loosely for about ninety seconds, because Step 3 is going to tell you how
+much that particular number is worth.
 
 ---
 
 # ▶ STEP 3 — Run it again
 
-*(Screen: run the three seeds.)*
+*(Run the three seeds.)*
 
-Same code. Same data. Same settings. Same machine. The only thing that changes is the random
-seed — which controls the initial weights and which units dropout switches off.
+It's the same code, the same data, the same settings and the same machine. The only thing that
+changes is the random seed, which controls the initial weights and which units dropout switches off.
 
 ```
 seed 1:  test RMSE 1,109
@@ -177,34 +186,37 @@ seed 3:  test RMSE 946
 
 **[STOP — learner works]** — *(replaces "say out loud what just happened")*
 
-Pause the video and say what just happened, in one sentence, before I do.
+Pause the video, and say what just happened in one sentence, before I do.
 
 *(Resume.)*
 
-Nothing about the problem changed and the answer moved by **230 RMSE** — from 946 to 1,176.
+Nothing about the problem changed, and the answer moved by **two hundred thirty** in RMSE, from nine
+forty-six to eleven seventy-six.
 
 **[pause]**
 
-Sit with the size of that. 230 is not a rounding error. It is about 20% of the result. It is
-larger than most differences you will ever see quoted between two competing architectures in a
-blog post.
+Sit with the size of that. Two hundred thirty isn't a rounding error. It's about twenty percent of
+the result, and it's larger than most of the differences you'll ever see quoted between two
+competing architectures in a blog post.
 
-And notice which seed won. Seed 3 gives **946** — the best number anywhere in this lab. If I had
-run seed 3 first and stopped there, I would have reported 946 and believed it. If I had run seed 2
-first, I would have reported 1,176 and believed *that*. The reported number would depend entirely
-on an integer nobody thinks of as part of the experiment.
+And notice which seed won. Seed three gives **nine forty-six**, the best number anywhere in this
+lab. If I'd run seed three first and stopped there, I would have reported nine forty-six and
+believed it. If I'd run seed two first, I would have reported eleven seventy-six and believed
+*that*. The number I reported would depend entirely on an integer that nobody thinks of as part of
+the experiment.
 
-That is the whole lab. Everything from here is working out the consequences.
+That's the whole lab. Everything from here on works out the consequences.
 
 ---
 
 # ▶ STEP 4 — So how would you compare two settings?
 
-*(Screen: run the single-seed weight-decay cell.)*
+*(Run the single-seed weight-decay cell.)*
 
-Here is the trap, and it is the single most common mistake in applied deep learning.
+Here's the trap, and it's the single most common mistake in applied deep learning.
 
-You want to know whether weight decay helps. Three values, one training run each, pick the winner.
+You want to know whether weight decay helps. So you try three values, train once on each, and pick
+the winner.
 
 ```
 weight_decay=0.0     test RMSE 1,109
@@ -212,12 +224,13 @@ weight_decay=0.0001  test RMSE 1,007
 weight_decay=0.01    test RMSE 1,142
 ```
 
-Clear result. `1e-4` wins by **102 RMSE** over no weight decay at all. Nine percent. You would
-write that down, you would put it in a slide, and honestly most people would put it in a paper.
+That looks like a clear result. A weight decay of one e minus four wins by **a hundred and two** in
+RMSE over no weight decay at all, which is nine percent. You'd write that down, you'd put it on a
+slide, and, honestly, most people would put it in a paper.
 
 **[pause]**
 
-Now do it honestly. Five seeds per setting, and report the spread as well as the mean.
+Now do it honestly, with five seeds per setting, and report the spread as well as the mean.
 
 *(Run the five-seed cell. It takes about a minute.)*
 
@@ -228,56 +241,63 @@ weight_decay  mean  sd  min  max
         0.01  1241 278 1050 1792
 ```
 
-**[pause]** — *let this sit next to the previous table. This is the moment of the lab.*
-
-The two means differ by **four**.
-
-Not "the effect was smaller than we thought." Not "the advantage was modest." The 102-point
-advantage that the single-seed experiment found **did not exist.** Seed 1 happened to be a good
-draw for `1e-4` and an average draw for zero, and that is the entire finding.
-
-*(Point at the min and max columns.)*
-
-Look closer and it is worse than that. On `min` and on `max`, no weight decay is *better* than
-`1e-4` — 946 against 991, 1,176 against 1,343. The setting with the tighter spread also has the
-marginally better mean, by four. There is no effect here in any direction.
+*(Let this table sit next to the previous one. This is the moment of the lab.)*
 
 **[pause]**
 
-Now the column the single run could never have produced: **`sd`**.
+The two means differ by **four**.
 
-`1e-2` is worse on average — 1,241 — but the important number is 278, more than three times the
-spread of no weight decay at all. It returned 1,050 once and 1,792 another time. That is a
-different *kind* of bad from a setting that reliably lands at 1,240. One is a model that is
-mediocre; the other is a model you cannot make promises about.
+That isn't "the effect was smaller than we thought," and it isn't "the advantage was modest." The
+advantage of a hundred and two points that the single-seed experiment found **didn't exist**. Seed
+one happened to be a good draw for one e minus four and an average draw for zero, and that's the
+entire finding.
 
-You cannot see that in one run. Ever.
+*(Point at the min and max columns.)*
+
+Look closer, and it's worse than that. On both the minimum and the maximum, no weight decay is
+*better* than one e minus four: nine forty-six against nine ninety-one, and eleven seventy-six
+against thirteen forty-three. The setting with the tighter spread also has the slightly better
+mean, by four. There's no effect here in either direction.
+
+**[pause]**
+
+Now look at the column a single run could never have produced, which is the standard deviation, s-d.
+
+The largest setting, one e minus two, which is zero point zero one, is worse on average, at twelve
+forty-one. But the important number is its spread of two hundred seventy-eight, which is more than
+three times the spread with no weight decay at all. It returned ten fifty once, and seventeen
+ninety-two another time. That's a different *kind* of bad from a setting that reliably lands at
+twelve forty. One is a model that's mediocre, and the other is a model you can't make promises
+about.
+
+You can't see that in one run, ever.
 
 **[STOP — learner works]**
 
-Fill in the blank and answer the question in your own words: what is the smallest RMSE difference
-you would be willing to call real on this problem?
+Fill in the blank, and answer the question in your own words: what's the smallest difference in
+RMSE that you'd be willing to call real on this problem?
 
 *(Resume.)*
 
-There is no single right answer, but there is a defensible way to reason. The run-to-run standard
-deviation at your best setting is about **86**. Two single runs differing by less than that are
-telling you nothing at all. If you want to claim a difference of that size is real, you need
-several seeds per setting and you need to compare the distributions, not the winners.
+There's no single right answer, but there is a defensible way to reason about it. The run-to-run
+standard deviation at your best setting is about **eighty-six**. Two single runs that differ by less
+than that are telling you nothing at all. If you want to claim that a difference of that size is
+real, you need several seeds per setting, and you need to compare the distributions, not the
+winners.
 
-Which means: **a difference under roughly 100 RMSE, from single runs, is not evidence.** And you
-will notice that this disqualifies almost every architecture comparison you have ever read.
+So a difference under roughly a hundred in RMSE, from single runs, **isn't evidence**. And you'll
+notice that this rules out almost every architecture comparison you've ever read.
 
 ---
 
 # ▶ STEP 5 — Break it on purpose
 
-*(Screen: the two training functions side by side.)*
+*(Show the two training functions side by side.)*
 
-One last thing, and it is the same theme in a different costume.
+There's one last thing, and it's the same theme in a different costume.
 
-Look at `train_broken`. One line is commented out — `opt.zero_grad()`. Everything else is
-identical.
+Look at the function called train broken. One line is commented out, the call to zero-grad on the
+optimizer, and everything else is identical.
 
 ```
 with    zero_grad():  1,109
@@ -286,23 +306,25 @@ without zero_grad():  7,325
 
 **[pause]**
 
-PyTorch **accumulates** gradients by default. It does not replace them, and nothing resets them
-at the end of an epoch. If you never zero them, every update is driven by the sum of every gradient
-computed since training began — sixty epochs' worth by the end — so the direction of each step has
-less and less to do with the batch in front of you.
+PyTorch **accumulates** gradients by default. It doesn't replace them, and nothing resets them at
+the end of an epoch. If you never zero them, every update is driven by the sum of every gradient
+computed since training began, which is sixty epochs' worth by the end. So the direction of each
+step has less and less to do with the batch in front of you.
 
-The result is 7,325. The seasonal-naive benchmark is 2,152. **The broken model is three and a half
-times worse than predicting last year's value.**
+The result is seven thousand three hundred twenty-five, and the seasonal-naive benchmark is
+twenty-one fifty-two. **The broken model is more than three times worse than predicting last
+year's value.**
 
-And the point is not the number, it is everything that did not happen. No exception. No warning.
-No NaN. The loop ran to completion in the normal amount of time and returned a float. If you had
-not had a benchmark to compare against, you would have had no way to know.
+And the point isn't the number. It's everything that didn't happen. There was no exception, no
+warning, and no NaN, meaning no "not a number." The loop ran to completion in the normal amount of
+time and returned an ordinary number. If you hadn't had a benchmark to compare against, you'd have
+had no way to know.
 
 **[pause]**
 
-That is why Lecture 1 spent a whole session on benchmarks, and it is why every scoreboard in this
-course starts with seasonal naive. A benchmark is not there to flatter your model. It is the only
-thing standing between you and a silent bug.
+That's why Lecture 1, back in the first week, told you to always beat a benchmark first, and it's
+why every scoreboard in this course starts with seasonal naive. A benchmark isn't there to flatter
+your model. It's the only thing standing between you and a silent bug.
 
 ---
 
@@ -310,34 +332,36 @@ thing standing between you and a silent bug.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Three questions for the board.
+Here are three questions to work through before you go.
 
-**The seeds.** You now know a single run tells you very little. But papers, blog posts, and vendor
-benchmarks routinely report exactly one. When you read "our model achieves RMSE 1,050", what do
-you need to know before believing it beats a baseline at 1,100? Be specific about what you would
-ask for — and notice that today, a 50-point gap is well inside one standard deviation.
-
-**[pause]**
-
-**The comparison.** Twenty-two thousand parameters lost to a forty-six-coefficient LASSO, 1,084
-against 744. Give one reason that is *not* "neural networks need more data." Think about what your
-network can actually see: 104 unordered numbers. It does not know that feature 1 and feature 5 are
-the same channel a week apart, or that the channels are four different quantities. It has to learn
-the layout of its own input from 5,940 heavily overlapping examples — and the LASSO was handed
-that structure by whoever engineered the features.
-
-**The practice.** In Homework 5 you compare five architectures. Given today, what will you
-actually do when one comes out 80 RMSE ahead of another?
+The first is about the seeds. You now know that a single run tells you very little. But papers,
+blog posts and vendor benchmarks routinely report exactly one. When you read "our model achieves an
+RMSE of ten fifty," what do you need to know before you believe it beats a baseline at eleven
+hundred? Be specific about what you'd ask for, and notice that today, a gap of fifty points is well
+inside one standard deviation.
 
 **[pause]**
 
-I'll tell you what the honest answer is, because it is also the assignment's answer: you say the
-difference is inside the noise, and you say so *even when the architecture you like is ahead*.
-Homework 5 Part 3 asks you to rank five architectures. Some of those gaps will be real and some
-will be seeds. Knowing which is which is the skill being tested.
+The second is about the comparison. Twenty-two thousand parameters lost to a LASSO with forty-six
+coefficients, ten eighty-four against seven forty-four. Give one reason that *isn't* "neural
+networks need more data." Think about what your network can actually see, which is a hundred and
+four unordered numbers. It doesn't know that feature one and feature five are the same channel a
+week apart, or that the channels are four different quantities. It has to learn the layout of its
+own input from five thousand nine hundred forty heavily overlapping examples, and the LASSO was
+handed that structure by whoever engineered the features.
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week: a network that knows
-its 104 inputs came from a sequence.
+The third is about practice. In Homework 5 you compare five architectures. Given what you saw
+today, what will you actually do when one of them comes out eighty points ahead of another in RMSE?
+
+**[pause]**
+
+I'll tell you the honest answer, because it's also the assignment's answer. You say the difference
+is inside the noise, and you say so *even when the architecture you like is ahead*. Part 3 of
+Homework 5 asks you to rank five architectures. Some of those gaps will be real, and some will be
+seeds. Knowing which is which is the skill being tested.
+
+Solutions go up on Canvas after class. Next week, in Lab 8, you'll meet a network that knows its
+hundred and four inputs came from a sequence.
 
 ---
 
