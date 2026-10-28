@@ -65,6 +65,10 @@ written naturally to be read from."*
 19. **Only the spoken text is rewritten.** The notes to the instructor ("How to use this document",
     correction notes, an "Appendix — expected output") are read, not recorded; leave them as they
     are unless a number in them is wrong.
+20. **Write for a viewer as well as a room.** The scripts also become recorded videos. When a
+    note to the instructor holds the answer to a question the learner was asked (after a
+    `**[STOP — learner works]**`), turn it into a spoken paragraph so the viewer hears it
+    (owner, 2026-10-27).
 
 ## A worked example
 
