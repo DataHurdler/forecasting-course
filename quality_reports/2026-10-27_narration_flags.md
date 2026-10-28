@@ -72,3 +72,12 @@ Nothing here has been changed unless the line says so.
    instructor note.
 5. Lab Step 3's claim that Holt-Winters won't fit three years of weekly data was not verified.
    Kept.
+
+## Lecture 3
+
+1. Slide 13 says Sunday runs "about twenty-five hundred below"; Prophet measured 2,458. Fine
+   rounded. *Recommend:* leave it.
+2. The lab's rendered page prints three rows in the final table because Step 5 is commented out;
+   the single-harmonic numbers (4,269 / 3,358) come only from the Appendix. *Recommend:* re-run
+   the solved version once to confirm them.
+3. Slide 20 now names FPP §7.4 and §7.7, the syllabus's Week 3 reading.
