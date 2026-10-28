@@ -28,57 +28,60 @@ and flags each divergence from the `.qmd`.
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 2. Two ideas from the lecture, and today you get to watch each one bite.
+This is Lab 2. It takes two ideas from Lecture 2, this week's lecture on ARIMA and VAR, and today
+you get to watch each one bite.
 
 The first is a rule: **test for stationarity before you read an ACF.** The second is a caveat:
-**Granger causality is not structural causality.** Both sound like the sort of thing you nod at
-in a lecture and skip in practice. So we're going to do exactly that and watch it go wrong.
+Granger causality is not structural causality. Both sound like the sort of thing you nod at in a
+lecture and skip in practice. So that's exactly what we'll do. We'll skip them, and watch it go
+wrong.
 
-The business question starts small. You're forecasting weekly household demand at store CA_1,
-and you want to know whether watching the food aisle helps predict it.
+The business question starts small. You're forecasting weekly household demand at store CA_1, and
+you want to know whether watching the food aisle helps you predict it.
 
-Then in Step 6 we leave the store entirely and run the same test on a macro question — does
-unemployment predict retail sales? — and you'll find the answer depends on which years you
-include. Not slightly. Completely.
+Then, in Step 6, we leave the store entirely and run the same test on a macro question: does
+unemployment predict retail sales? You'll find that the answer depends on which years you include,
+and not slightly, either. It changes completely.
 
 **[pause]**
 
-You need two prepared files this time: `m5_weekly.csv` from `prep_m5.py`, and
-`fred_monthly.csv` from `prep_fred.py`. Run both once from the repository root before you start.
-The FRED one caches to disk, so there's no network call and no API key.
+You need two prepared files this time: `m5_weekly.csv`, from `prep_m5.py`, and `fred_monthly.csv`,
+from `prep_fred.py`. Run both once from the repository root before you start. The FRED script needs
+no API key, and it caches its data to disk, so the lab itself makes no network call.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run the setup cell.)*
+*(Run the setup cell.)*
 
-Same pattern as Lab 1 — imports, a path helper, a series accessor, a split.
+The setup follows the same pattern as Lab 1, last week: imports, a path helper, a series accessor
+and a train-test split.
 
 ```
 277 weeks — train 225, test 52
 ```
 
-Same store dataset, different store and same category as Lab 1: CA_1 household. Fifty-two weeks
-held out.
+It's the same store dataset as Lab 1, with a different store and the same category: CA_1
+household. Fifty-two weeks are held out for testing.
 
-The one new import worth noticing is `redirect_stdout` from `contextlib`, and `io`. That's not
-statistics — that's damage control, and I'll show you why in Step 5.
+The one new import worth noticing is `redirect_stdout`, from `contextlib`, along with `io`. That
+isn't statistics. It's damage control, and I'll show you why in Step 5.
 
 ---
 
 # ▶ STEP 1 — Look, then test
 
-*(Screen: run the plot.)*
+*(Run the plot.)*
 
-Look first. Always look first.
+Always look at the series first.
 
 *(Trace the series.)*
 
-The level wanders. It drifts up, it drifts back, there's no fixed value it returns to. Your eye
-says non-stationary. Now make the test agree — because your eye is not evidence you can put in a
+The level wanders. It drifts up, it drifts back, and there's no fixed value it returns to. Your eye
+says it's non-stationary. Now make the test agree, because your eye isn't evidence you can put in a
 report.
 
 *(Run the two ADF cells.)*
@@ -90,79 +93,81 @@ first difference             ADF   -5.00   p  0.000   lags 11   stationary
 
 **[pause]**
 
-Read those two lines carefully, because this is what a *clean* case looks like and you want it
-in your memory for comparison later.
+Read those two lines carefully, because this is what a *clean* case looks like, and you want it in
+your memory for comparison later.
 
-In levels: ADF statistic minus one point three three, p-value point six one. Nowhere near
-significance. We fail to reject the null of a unit root — the series is non-stationary, exactly
-as your eye said.
+In levels, the ADF statistic is minus one point three three, with a p-value of zero point six one.
+That's nowhere near significance. We fail to reject the null of a unit root, so the series is
+non-stationary, exactly as your eye said.
 
-First difference: minus five point zero zero, p-value effectively zero. Decisive. One difference
-was enough.
+After the first difference, it's minus five point zero zero, with a p-value of effectively zero.
+That's decisive, so one difference was enough.
 
-That tells you *d* equals one, and you now have an evidence trail for that choice rather than a
-hunch. You'll be asked to justify a *d* in the homework. This is what the justification looks
-like.
+That tells you d equals one, and you now have an evidence trail for that choice rather than a hunch.
+You'll be asked to justify a d in Homework 1, and this is what the justification looks like.
 
 ---
 
 # ▶ STEP 2 — Now you are allowed to read the ACF
 
-*(Screen: run the four-panel figure.)*
+*(Run the four-panel figure.)*
 
-Four panels. Top row is the raw series, bottom row is differenced.
+There are four panels. The top row is the raw series, and the bottom row is the differenced series.
 
 *(Point at the top-left panel.)*
 
-Look at the top ACF. It crawls down — a long slow decay, bar after bar, staying well above the
-significance band for twenty-plus lags.
+Look at the top ACF. It crawls down in a long, slow decay, bar after bar, staying well above the
+significance band for more than twenty lags.
 
-Here's the trap. That pattern looks like enormously strong autocorrelation, and a reasonable
-person reads it as "there's a lot of structure here to model." **It isn't.** That slow decay is
-the signature of an *undifferenced* series, and it appears no matter what the underlying process
-is. A random walk produces it. An AR(1) with a unit root produces it. White noise plus a trend
-produces it.
+Here's the trap. That pattern looks like enormously strong autocorrelation, and a reasonable person
+reads it as a sign that there's a lot of structure here to model. **It isn't.** That slow decay is
+the signature of an *undifferenced* series, and it appears no matter what the underlying process is.
+A random walk produces it, and a random walk is just an AR one with a unit root. White noise plus a
+trend produces it too.
 
-It tells you nothing about *p* or *q*. It tells you only that you skipped a step.
+It tells you nothing about p or q. It tells you only that you skipped a step.
 
 *(Point at the bottom row.)*
 
-Now the bottom row, after differencing. That is interpretable. The bars drop into the band
-quickly and you can actually read structure off it.
+Now look at the bottom row, after differencing. That one is interpretable. The bars drop into the
+band quickly, and you can actually read structure off them.
 
 **[STOP — learner works]** — *(replaces "say it out loud to the person next to you")*
 
-Pause the video. Using the bottom row and the four reference patterns from Lecture 2, propose a
-*(p, d, q)*.
+Pause the video. Using the bottom row and the four reference patterns from Lecture 2, propose a p, a
+d and a q.
 
-Write it down before you continue, and write down *why* — which panel, which lags. Then post it
-in the Week 2 thread. I want to see the range of proposals, because there genuinely is one, and
-that's part of the lesson.
+Write it down before you continue, and write down *why*, meaning which panel and which lags decided
+it. Then post it in the Week 2 thread. I want to see the range of proposals, because there genuinely
+is one, and that's part of the lesson.
 
 ---
 
 # ▶ STEP 3 — Fit it
 
-*(Screen: show the `order` line.)*
+*(Show the `order` line.)*
 
-Line one of this cell is `order = (1, 1, 1)`. **Replace it with your proposal.** The lab ships
-with (1,1,1) as a placeholder so the file renders for everyone — it is not the answer.
+Line one of this cell is `order = (1, 1, 1)`. **Replace it with your proposal.** The lab ships with
+one, one, one as a placeholder, so that the file renders for everyone. It isn't the answer.
 
 *(Run the cell.)*
 
 *(Note for the narrator: with the shipped (1,1,1) the 52-week RMSE is **569**. Say your own
 number aloud, then say the following.)*
 
-Your number will differ from mine if you chose a different order, and that is fine — that is the
-exercise. What you should be able to do is say why you chose what you chose.
+With the placeholder order, one, one, one, the fifty-two-week RMSE comes out at five hundred
+sixty-nine.
+
+Your number will differ from mine if you chose a different order, and that's fine, because that's
+the exercise. What you should be able to do is say why you chose what you chose.
 
 ---
 
 # ▶ STEP 4 — Break it: the horizon trap
 
-*(Screen: run the walk-forward loop. It fits an ARIMA at every origin — this takes a moment.)*
+*(Run the walk-forward loop. It fits an ARIMA at every origin, so it takes a moment.)*
 
-Same model. Different evaluation. Watch what happens to the number.
+This is the same model with a different evaluation. Watch what happens to the number.
 
 ```
 walk-forward 1-step RMSE : 352   (172 origins)
@@ -171,37 +176,37 @@ single-split 52-step RMSE: 569
 
 **[pause]**
 
-Three fifty-two against five sixty-nine. The walk-forward number is nearly forty percent smaller,
-and it is computed from a hundred and seventy-two separate forecasts instead of one — so it even
-*looks* more rigorous. More origins, more evaluation, smaller error.
+That's three fifty-two against five sixty-nine. The walk-forward number is nearly forty percent
+smaller, and it's computed from one hundred seventy-two separate forecasts instead of one, so it
+even *looks* more rigorous. More origins and more evaluation give you a smaller error.
 
-It is enormously tempting to quote it. Do not.
+It's enormously tempting to quote it. Don't.
 
-They are not two estimates of the same thing. They answer different questions. One-step-ahead —
-knowing everything up to last week, forecasting next week — is a fundamentally easier problem
-than standing at a fixed origin and forecasting fifty-two weeks out. Of course the error is
-smaller. It would be alarming if it weren't.
+They aren't two estimates of the same thing, because they answer different questions. Forecasting
+one step ahead, knowing everything up to last week and forecasting next week, is a fundamentally
+easier problem than standing at a fixed origin and forecasting fifty-two weeks out. Of course the
+error is smaller. It would be alarming if it weren't.
 
 The question is which one matches the decision. If a planner is ordering inventory twelve months
-ahead, **the 52-step number is the honest one**, and quoting 352 to that person is not
-optimistic — it's wrong.
+ahead, **the fifty-two-step number is the honest one**, and quoting three fifty-two to that person
+isn't optimistic. It's wrong.
 
 **[pause]**
 
-This is the most common way I see forecast accuracy overstated in practice, and almost nobody
-does it dishonestly. They compute the number that's easy to compute, and it happens to be the
-flattering one.
+This is the most common way I see forecast accuracy overstated in practice, and almost nobody does
+it dishonestly. They compute the number that's easy to compute, and it happens to be the flattering
+one.
 
 ---
 
 # ▶ STEP 5 — Granger causality, and the trap in it
 
-*(Screen: show the helper function.)*
+*(Show the helper function.)*
 
 Does the food aisle help predict the household aisle?
 
-First, the practical note. `grangercausalitytests` prints four test variants for every lag up to
-`maxlag` — for lag 4, that's a screen and a half of output nobody asked for. The helper
+First, a practical note. `grangercausalitytests` prints four test variants for every lag up to
+`maxlag`, and for a lag of four, that's a screen and a half of output nobody asked for. The helper
 swallows it with `redirect_stdout` and pulls out the single F-test we want. That's what those
 imports were for.
 
@@ -211,17 +216,17 @@ imports were for.
       food -> household  F =  3.83   p = 0.0048   significant
 ```
 
-Now the argument order, and please write this down: **the second argument is the candidate
-cause.** `granger("household", "food")` asks whether food helps predict household. Getting this
-backwards is the single most common mistake with this function, and it is silent — you get a
-perfectly reasonable-looking result to the wrong question.
+Now the argument order, and please write this down: **the second argument is the candidate cause.**
+So `granger("household", "food")` asks whether food helps predict household. Getting this backwards
+is the single most common mistake with this function, and it's silent. You get a perfectly
+reasonable-looking result to the wrong question.
 
 **[STOP — learner works]**
 
-Your turn. Run the other direction and report both F-statistics. It's one line — uncomment and
-swap the arguments.
+Now it's your turn. Pause the video, run the other direction, and report both F-statistics. It's
+one line: uncomment it, then swap the two arguments.
 
-*(Screen: after the pause, run it.)*
+*(After the pause, run it.)*
 
 ```
  household -> food        F =  2.80   p = 0.0263   significant
@@ -231,23 +236,23 @@ swap the arguments.
 
 Both directions are significant. Food predicts household, and household predicts food.
 
-Sit with how strange that is. Household goods do not cause groceries. Groceries do not cause
-household goods. Nobody buys paper towels *because* they bought bananas. And yet the test says
-each helps predict the other, at conventional significance, in both directions.
+Sit with how strange that is. Household goods don't cause groceries, and groceries don't cause
+household goods. Nobody buys paper towels *because* they bought bananas. And yet the test says each
+one helps predict the other, at conventional significance, in both directions.
 
-We'll come back to what's generating that. Hold the question.
+We'll come back to what's generating that, so hold on to the question.
 
 ---
 
 # ▶ STEP 6 — The same test on macro data, and why the sample matters
 
-*(Screen: run the FRED cell.)*
+*(Run the FRED cell.)*
 
-Now the question from the lecture slide, on real macro data. Does unemployment Granger-cause
-retail sales?
+Now for the question from the Granger slides in Lecture 2, on real macro data: does unemployment
+Granger-cause retail sales?
 
-Both series arrive already stationary — retail growth is log-differenced monthly percent change,
-unemployment is the monthly change in the rate. So we can test directly.
+Both series arrive already stationary. Retail growth is the log-differenced monthly percent change,
+and unemployment is the monthly change in the rate. So we can test directly.
 
 ```
 Full sample: 1992-02 to 2026-06 (412 months)
@@ -257,17 +262,17 @@ Full sample: 1992-02 to 2026-06 (412 months)
 
 **[pause]**
 
-Both directions significant, and unemployment is the stronger of the two — F of eighteen against
-thirteen. That matches the story everybody expects. People lose jobs, people stop spending. You
-could write that paragraph without running anything, which is exactly why you should be
-suspicious of how satisfying it is.
+Both directions are significant, and unemployment is the stronger of the two, with an F of eighteen
+point two two against twelve point eight. That matches the story everybody expects: people lose
+jobs, so people stop spending. You could write that paragraph without running anything, which is
+exactly why you should be suspicious of how satisfying it is.
 
-**Now drop the COVID window.**
+Now let's drop the COVID window and run it again.
 
-*(Point at the comment in the cell.)* One detail in the code before you run it: the lags are built on
-the unbroken series first, and only then are the COVID months dropped — along with the four months
-after, whose lags still reach into the window. Drop the rows first and the test would treat January
-2020 and July 2021 as neighbors.
+*(Point at the comment in the cell.)* There's one detail in the code to notice before you run it.
+The lags are built on the unbroken series first, and only then are the COVID months dropped, along
+with the four months after them, whose lags still reach into the window. If you dropped the rows
+first, the test would treat January twenty twenty and July twenty twenty-one as neighbors.
 
 *(Run the ex-COVID cell.)*
 
@@ -277,18 +282,20 @@ Excluding Feb 2020 - Jun 2021 (395 months)
  retail_growth -> unrate_diff     F =   9.96   p = 0.0000   significant
 ```
 
-Seventeen months removed out of four hundred and twelve — four percent of the sample. The
-unemployment-to-retail F-statistic falls from **18.22 to 2.42.** It's still significant, but only
-just — a p-value of point zero four eight — and it has lost about seven-eighths of its strength.
+That's seventeen months removed out of four hundred twelve, or four percent of the sample. The
+unemployment-to-retail F-statistic falls from **eighteen point two two to two point four two.** It's
+still significant, but only just, with a p-value of zero point zero four eight, and it has lost
+about seven-eighths of its strength.
 
-The reverse direction went from 12.80 to 9.96. Barely weaker, and still overwhelming.
+The reverse direction went from twelve point eight to nine point nine six. That's only a little
+weaker, and still overwhelming.
 
 **[STOP — learner works]**
 
-Your turn. Restrict to everything *before* February 2020 — no COVID period at all, no recovery
-either — and run both directions.
+Now it's your turn. Pause the video, restrict the sample to everything *before* February twenty
+twenty, with no COVID period at all and no recovery either, and run both directions.
 
-*(Screen: after the pause, run it.)*
+*(After the pause, run it.)*
 
 ```
 Pre-COVID, before Feb 2020 (336 months)
@@ -296,54 +303,66 @@ Pre-COVID, before Feb 2020 (336 months)
  retail_growth -> unrate_diff     F =   9.67   p = 0.0000   significant
 ```
 
-**[pause]** — *let this sit.*
+**[pause]**
 
-Eighteen point two two. Two point nine one. One point eight five.
+Put the three numbers side by side: eighteen point two two, then two point four two, then one point
+eight five.
 
 On twenty-eight years of pre-pandemic data, unemployment does **not** Granger-cause retail sales.
-The intuitive direction — the one everybody expects, the one that has a mechanism, the one you'd
-put in a slide without checking — is gone.
+The intuitive direction, the one everybody expects, the one that has a mechanism, and the one you'd
+put in a slide without checking, is gone.
 
 And the direction nobody leads with, retail predicting unemployment, survives every single cut:
-12.80, then 9.96, then 9.67. Never above a p-value of point zero zero zero one.
+twelve point eight, then nine point nine six, then nine point six seven. Its p-value never rises
+above zero point zero zero zero one.
 
 ---
 
 # ▶ BEFORE YOU LEAVE
 
-*(Screen: the closing callouts.)*
+*(Show the closing callouts.)*
 
-Two questions, and I want both in the Week 2 thread before Lecture 3.
+There are two questions here, and I want both of them in the Week 2 thread before Lecture 3.
 
 **[STOP — learner works]** — *(replaces "Discuss (Step 5)")*
 
-**First, the aisles.** You found a two-way relationship between household goods and groceries.
-Neither causes the other. So what is generating it?
+The first question is about the aisles. You found a two-way relationship between household goods
+and groceries, and neither one causes the other. So what's generating it?
 
-And the commercial half, which is the one that matters: given what you found, is there anything a
-planner is *entitled* to do with it? Name one legitimate use and one thing they must not
+And then there's the commercial half, which is the one that matters. Given what you found, is there
+anything a planner is *entitled* to do with it? Name one legitimate use, and one thing they must not
 conclude.
 
 **[STOP — learner works]** — *(replaces "Discuss (Step 6)")*
 
-**Second, the macro result.** One analyst runs the full sample and reports that unemployment
-predicts retail sales. Another runs 1992 to 2019 and reports that it does not.
+The second question is about the macro result. One analyst runs the full sample and reports that
+unemployment predicts retail sales. Another runs nineteen ninety-two to twenty nineteen and reports
+that it doesn't.
 
-**Neither of them has made an error.** Both ran the correct test, correctly, on a defensible
-sample. That's what makes this worth twenty minutes of your attention rather than being a
+And neither of them has made an **error**. Both ran the correct test, correctly, on a defensible
+sample. That's what makes this worth twenty minutes of your attention, rather than being a
 cautionary tale about sloppy work.
 
-What actually happened — and what does it tell you about a Granger result computed on a sample
-containing one enormous shared shock?
+So what actually happened? And what does it tell you about a Granger result computed on a sample
+that contains one enormous shared shock?
 
-One hint worth using: retail sales are a coincident-to-leading indicator, and unemployment is a
-*lagging* one. Firms cut hours and stop hiring after demand falls, not before. Does that help
+Here's one hint worth using. Retail sales are a coincident-to-leading indicator, and unemployment is
+a *lagging* one. Firms cut hours and stop hiring after demand falls, not before. Does that help
 explain which direction survived every cut?
 
 **[pause]**
 
-Solutions for the coded parts go up on Canvas after the deadline. Lecture 3 next, where we leave
-retail data entirely — because it can't show you what we need to see.
+Here's where I'd land on that second question. COVID supplied one enormous shared shock. Both
+series moved violently in the same few months, and on the full sample those months were enough to
+make unemployment look like the stronger predictor. Take them out and that direction weakens, and
+before twenty twenty it's gone. So a Granger result on a sample like that can be reporting one
+episode rather than how the two series usually move, and it's worth rerunning it without the shock
+before you report it. The hint fits, too. Spending falls first and layoffs follow, which is why
+retail predicting unemployment survived every cut. And even then, it predicts. It doesn't cause.
+
+Solutions for the coded parts go up on Canvas after class. Next is Lecture 3, on generalized
+additive models, where we leave retail data entirely, because it can't show you what we need to
+see.
 
 ---
 

@@ -90,3 +90,15 @@ Nothing here has been changed unless the line says so.
 3. The milk-versus-canned-goods question has no recorded answer; left as an exercise.
 4. CART is spelled out at first mention ("classification and regression trees"); after that the
    voice says "C-A-R-T". *Recommend:* fine as is.
+
+## Lecture 2
+
+1. Under rule 20, the macro discussion question now has a spoken answer built from the appendix
+   note ("COVID supplies one enormous shared shock") and slide 20. It sits a little awkwardly with
+   "I want both in the Week 2 thread." *Recommend:* keep for the video.
+2. Lab Step 3 told the narrator to "say your own number"; a word-for-word reading or the video said
+   none. It now speaks the placeholder's result from the narrator note: "With the placeholder
+   order, one, one, one, the fifty-two-week RMSE comes out at five hundred sixty-nine." Done.
+3. The syllabus says Lab 2 is self-paced, yet the lab says solutions go up "after class" (and the
+   narration now matches the lab). *Recommend:* decide once for all labs; if labs are self-paced,
+   "after the deadline" in every lab page and script.
