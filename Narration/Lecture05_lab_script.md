@@ -43,29 +43,31 @@ numbers", Step 5's "find the disagreements", and the three closing **Discuss** b
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 5. Same store, same aisle, same ten features as last week — daily CA\_1 FOODS. Nothing about
-the data changes today. Everything that changes is what we do with trees.
+This is Lab 5. It's the same store, the same aisle and the same ten features as Lab 4, last week,
+which means daily sales for CA\_1 FOODS. Nothing about the data changes today. Everything that
+changes is what we do with trees.
 
-Last week you ended by accident with a bagged ensemble: twenty bootstrap trees, averaged, 324 down
-to 266. Today we do that properly, find out what the real algorithm adds on top of it, and then
-throw out averaging altogether for something that works differently.
+At the end of last week's lab, you built a bagged ensemble by accident. You averaged twenty
+bootstrap trees, and the RMSE fell from three twenty-four to two sixty-six. Today we'll do that
+properly, find out what the real algorithm adds on top of it, and then throw out averaging
+altogether for something that works differently.
 
 **[pause]**
 
-Because the series is unchanged, every number today lands on a scale you already know. That is the
-point of running Labs 4 and 5 as a pair. You have now fitted a GAM to this series in Homework 2, a
-single tree last week, and four more models today — and they are all directly comparable, because
-they all saw exactly the same table.
+Because the series hasn't changed, every number today lands on a scale you already know, and
+that's the point of running Labs 4 and 5 as a pair. You've now fitted a GAM to this series in
+Homework 2 and a single tree last week, and you'll fit four more models today. Last week's tree and
+today's models are directly comparable, because they all saw exactly the same table.
 
-You need `xgboost` installed. On a Mac that also means `brew install libomp`.
+You'll need `xgboost` installed, and on a Mac that also means running `brew install libomp`.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
 ```
 Benchmark (same day last year)          625
@@ -73,45 +75,49 @@ Single tree (Lab 4)                     324
 20 trees averaged by hand (Lab 4)       266
 ```
 
-The scoreboard carries forward. 625 is the benchmark we have used since Lecture 1. 324 was a
-single tree. 266 was your hand-built bagging, and those two numbers are hard-coded here
-deliberately — they are last week's measured results, not refitted.
+The scoreboard carries forward. Six twenty-five is the benchmark, which predicts each day with the
+same day last year, the kind of benchmark we've used since Lecture 1. Three twenty-four was a single
+tree, and two sixty-six was your hand-built bagging. Those last two numbers are hard-coded here on
+purpose. They're last week's measured results, not refitted ones.
 
-Everything today gets added to this list, and at the end you will read it as one table.
+Everything today gets added to this list, and at the end you'll read it as one table.
 
 ---
 
 # ▶ STEP 1 — The real thing
 
-*(Screen: run the forest.)*
+*(Run the forest.)*
 
 ```
 Random Forest: 248
 ```
 
-Three hundred trees, no tuning, two lines of code.
+That's three hundred trees, with no tuning, in two lines of code.
 
 **[pause]**
 
-248 against your hand-built 266, and against 324 for a single tree. So the library version buys
-about 7% over what you built yourself in three lines last week.
+It scores two forty-eight, against your hand-built two sixty-six, and three twenty-four for a single
+tree. So the library version buys about seven percent over what you built yourself, in three lines,
+last week.
 
-Sit with how small that is for a moment. **Most of the gain was already yours.** The idea —
-resample, refit, average — is where the improvement came from; the professional implementation
-adds a useful but modest amount on top. Two things account for that remainder: three hundred trees
-instead of twenty, and deeper trees — last week's stopped at depth five. Notice what does *not*
-account for it: scikit-learn's regression forest considers every feature at every split unless you
-tell it otherwise, so this "random forest" is, strictly, still bagging. The second source of
-randomness — the one that makes it a forest — we switch on in Step 3.
+Sit with how small that is for a moment. **Most of the gain was already yours.** The idea of
+resampling, refitting and averaging is where the improvement came from, and the professional
+implementation adds a useful but modest amount on top. Two things account for that remainder:
+three hundred trees instead of twenty, and deeper trees, since last week's stopped at depth five.
 
-That is worth saying because the reverse impression is common — that the value is in the library.
-It isn't. It's in the idea, and you already had it.
+Notice what does *not* account for it. Scikit-learn's regression forest considers every feature at
+every split unless you tell it otherwise, so this "random forest" is, strictly speaking, still
+bagging. The second source of randomness, the one that makes it a forest, gets switched on in
+Step 3.
+
+That's worth saying, because the reverse impression is common, that the value lives in the
+library. It doesn't. It's in the idea, and you already had it.
 
 ---
 
 # ▶ STEP 2 — How many trees is enough?
 
-*(Screen: run the curve.)*
+*(Run the curve.)*
 
 ```
   n_estimators=5    test RMSE 288
@@ -124,43 +130,45 @@ It isn't. It's in the idea, and you already had it.
 
 **[STOP — learner works]** — *(replaces "say what the curve does after about fifty trees")*
 
-Pause and describe this curve in one sentence, then say what it implies for a compute budget.
+Pause the video, and describe this curve in one sentence. Then say what it implies for a compute
+budget.
 
 *(Resume.)*
 
-It drops hard to about fifty trees, and then it is flat. Fifty trees gets you 251; six hundred
-gets you 248. You paid twelve times the compute for three units of RMSE — on a series where a
-typical day is around 2,900 units.
+It drops hard up to about fifty trees, and then it's flat. Fifty trees get you two fifty-one, and
+six hundred get you two forty-eight. So you paid twelve times the compute for three units of RMSE,
+on a series where a typical day is around two thousand nine hundred units.
 
 **[pause]**
 
-Now the property that makes this curve unusual, and please notice it, because Step 6 breaks it:
-**the curve never turns up.** More trees never made the forest worse. That is not the normal
-behavior of a model knob. Usually "more" eventually means overfitting, and here it simply does
-not, because each tree is fitted independently and averaging more independent things cannot make
-the average worse.
+Now here's the property that makes this curve unusual, and please notice it, because Step 6 breaks
+it: the curve **never turns up**. More trees never made the forest worse. That isn't the normal
+behavior of a model knob. Usually "more" eventually means overfitting, and here it simply doesn't,
+because each tree is fitted independently, and averaging more independent things can't make the
+average worse.
 
-So `n_estimators` in a forest is not really a tuning parameter — it is a budget question. Pick the
-point where the curve goes flat, spend nothing beyond it, and never worry that you have chosen
-badly. Hold that thought for twenty minutes.
+So `n_estimators` in a forest isn't really a tuning parameter. It's a budget question. Pick the
+point where the curve goes flat, spend nothing beyond it, and never worry that you've chosen badly.
+Hold on to that thought for about twenty minutes.
 
 ---
 
 # ▶ STEP 3 — The "random" in Random Forest
 
-*(Screen: run the max_features loop.)*
+*(Run the `max_features` loop.)*
 
-Here is the second randomness. Bagging gives every tree a different sample of **rows**. A random
-forest also gives every *split* a different random subset of **columns**. That is the entire
-difference between the two algorithms — and it is why what you built last week was bagging and
-not a forest. So, strictly, was Step 1's default: the "all features" row below is the same 248.
+Here's the second kind of randomness. Bagging gives every tree a different sample of **rows**. A
+random forest also gives every *split* a different random subset of **columns**. That's the entire
+difference between the two algorithms, and it's why what you built last week was bagging and not a
+forest. Strictly speaking, so was Step 1's default, and the "all features" row below is the same two
+forty-eight.
 
-The argument from Lecture 5: if one feature is strongly predictive, every bagged tree splits on
-it first, so the trees are near-copies and their errors do not cancel. Deny each split most of the
-columns and the trees are forced to be different.
+The argument from Lecture 5, this week's lecture, goes like this. If one feature is strongly
+predictive, every bagged tree splits on it first, so the trees are near-copies, and their errors
+don't cancel. Deny each split most of the columns, and the trees are forced to be different.
 
-You have already seen that failure mode. Last week, twenty out of twenty bootstrap trees found
-`dow` at the root.
+You've already seen that failure mode. Last week, all twenty of your bootstrap trees found the day
+of the week at the root.
 
 ```
   max_features=all features  test RMSE 248
@@ -169,41 +177,44 @@ You have already seen that failure mode. Last week, twenty out of twenty bootstr
   max_features=0.2           test RMSE 257
 ```
 
-**[pause]** — *let it sit; this table is not what students expect.*
-
-`max_features="sqrt"` is the textbook default. It is the third-best of four here, six units worse
-than simply using every column. And 0.2 — aggressive decorrelation — is worse still.
-
-*(Screen: the callout.)*
-
-This is not a bug and it is not a bad dataset. It is the rule meeting its own boundary condition,
-and the condition is stated in the callout: you have **ten** features, one of which carries most
-of the signal. The square root of ten is about three, so at a typical split most trees are not
-allowed to *look at* day-of-week — and day-of-week, as you measured last week, is roughly two
-thirds of the variance in this series.
-
-Decorrelation is a trade. You give up some accuracy per tree to gain independence between trees.
-That trade is a bargain when you have many partly-redundant features and no single dominant one.
-It is a bad trade when you have ten features and one of them is the answer.
+*(Let the table sit for a moment. It isn't what students expect.)*
 
 **[pause]**
 
-Notice the honest middle of the table: `0.6` is the best row, at 247. Mild subsampling helps by a
-hair. So the finding is not "decorrelation is wrong here," it is "the standard *dose* is too
-strong for this feature set."
+The square-root setting is the textbook default. Here it's the third best of four, six units worse
+than simply using every column. And zero point two, which is aggressive decorrelation, is worse
+still.
 
-Do not expect Homework 3 to flip this ranking. Its forest has twenty-seven features, but
-`units_lag1` dominates there the way `dow` dominates here, and `sqrt` loses there too.
-**What you are learning is the condition, not the default.**
+*(Show the callout.)*
+
+This isn't a bug, and it isn't a bad data set. It's the rule meeting its own boundary condition, and
+the callout states the condition. You have **ten** features, and one of them carries most of the
+signal. The square root of ten is about three, so at a typical split, most trees aren't allowed to
+*look at* the day of the week. And the day of the week, as you measured last week, accounts for
+roughly two thirds of the variance in this series.
+
+Decorrelation is a trade. You give up some accuracy in each tree to gain independence between the
+trees. That trade is a bargain when you have many partly redundant features and no single dominant
+one. It's a bad trade when you have ten features and one of them is the answer.
+
+**[pause]**
+
+Notice the honest middle of the table. Zero point six is the best row, at two forty-seven, so mild
+subsampling helps, by a hair. The finding isn't that decorrelation is wrong here. It's that the
+standard *dose* is too strong for this set of features.
+
+And don't expect Homework 3 to flip this ranking. Its forest has twenty-seven features, but last
+week's sales, `units_lag1`, dominate there the way the day of the week dominates here, and the
+square-root setting loses there too. **What you're learning is the condition, not the default.**
 
 ---
 
 # ▶ STEP 4 — Validation for free
 
-*(Screen: run the OOB fit.)*
+*(Run the out-of-bag fit.)*
 
-A bootstrap sample of n rows drawn with replacement leaves out about a third of them. Those rows
-never trained that tree, so they can score it — for free, with no holdout.
+A bootstrap sample of n rows, drawn with replacement, leaves out about a third of them. Those rows
+never trained that tree, so they can score it, for free, with no holdout.
 
 ```
 OOB R²   : 0.809
@@ -213,34 +224,37 @@ test RMSE: 248
 
 **[STOP — learner works]** — *(replaces "compare the two numbers and account for the gap")*
 
-Pause. The OOB estimate is 297 and the test RMSE is 248, so OOB is *pessimistic* by about 20%.
-Work out why before I tell you, and then decide which of the two you would quote to someone asking
-how this model will do next month.
+Pause the video here. The O-O-B estimate is two ninety-seven, and the test RMSE is two forty-eight,
+so O-O-B is *pessimistic*, by about twenty percent. Work out why before I tell you. Then decide
+which of the two you'd quote to someone who asks how this model will do next month.
 
 *(Resume.)*
 
-The obvious suspect is the wrong one. An OOB prediction for a given row comes from only the third
-of trees that did not see it — about a hundred trees rather than three hundred. But Step 2 told you
-what a smaller forest costs: a hundred trees score 249 against 248. One unit cannot explain 49.
+The obvious suspect is the wrong one. An O-O-B prediction for a given row comes from only the third
+of the trees that didn't see it, which is about a hundred trees rather than three hundred. But
+Step 2 told you what a smaller forest costs: a hundred trees score two forty-nine, against two
+forty-eight. One unit can't explain a gap of forty-nine.
 
-The gap is the rows. OOB rows are scattered across 2012 to 2015, the whole training period. By
-year, the OOB error runs 311, 319, 283 and 239: the earlier years are noisier. And the training
-period holds three Christmas days when the store sold nothing; drop those three days and OOB falls
-to 275. The test set is one solid block of the final year.
+The gap comes from the rows. O-O-B rows are scattered across twenty twelve to twenty fifteen, the
+whole training period. Year by year, the O-O-B error runs three eleven, three nineteen, two
+eighty-three and two thirty-nine, so the earlier years are noisier. And the training period holds
+three Christmas days when the store sold nothing. Drop those three days, and O-O-B falls to two
+seventy-five. The test set, by contrast, is one solid block of the final year.
 
 **[pause]**
 
-So which do you quote? Neither, uncritically. OOB is the cheap sanity check you can compute
-without giving up any data — genuinely valuable when data is scarce. But it is scoring the wrong
-period for a forecasting question, and it is not a walk-forward estimate. If
-someone asks how this does next month, the only honest answer comes from evaluating on time you
-held out, in order — which is what the test column is, and what Homework 3 makes you do properly.
+So which number do you quote? Neither one, uncritically. O-O-B is the cheap sanity check you can
+compute without giving up any data, and it's genuinely valuable when data is scarce. But it's
+scoring the wrong period for a forecasting question, and it isn't a walk-forward estimate. If
+someone asks how this model will do next month, the only honest answer comes from evaluating on
+time you held out, in order. That's what the test column is, and it's what Homework 3 makes you do
+properly.
 
 ---
 
 # ▶ STEP 5 — Two importances, two different answers
 
-*(Screen: run the comparison table.)*
+*(Run the comparison table.)*
 
 ```
                 MDI  permutation_ΔRMSE  MDI_rank  perm_rank
@@ -256,57 +270,65 @@ avg_price     0.017                0.0         9         10
 is_event      0.012               22.3        10          6
 ```
 
-First, the units, because they change what the numbers mean. MDI is a share of impurity reduction
-— it sums to one and it is computed on the **training** data by the fitting process. Permutation
-importance is measured in **RMSE**: shuffle that column in the **test** set and see how much worse
-the forecast gets. So `dow` at 284 means "destroy day-of-week and you lose 284 units of accuracy."
-You can say that sentence to a manager. You cannot say "0.583" to anyone.
+Let's start with the units, because they change what the numbers mean. M-D-I is a share of the
+impurity reduction. It sums to one, and it's computed on the **training** data, by the fitting
+process. Permutation importance is measured in RMSE: you shuffle that column in the **test** set and
+see how much worse the forecast gets. So the day of the week at two eighty-four means, "Destroy the
+day of the week, and you lose two hundred eighty-four units of accuracy." You can say that sentence
+to a manager. You can't say "zero point five eight three" to anyone.
 
 **[STOP — learner works]** — *(replaces "find the disagreements")*
 
-Pause and find the three disagreements before I name them.
+Pause the video, and find the three disagreements before I name them.
 
 *(Resume.)*
 
-**One.** `units_lag28` is second on MDI and fourth on permutation, at 36.8 — while `units_lag1`,
-which MDI ranks *below* it, is worth 116.9. Three times as much. MDI counts how often a feature
-was *used* for splitting; permutation measures what happens when you take it away. A feature used
-constantly for small refinements can lose to one used rarely for large ones.
+The first is the twenty-eight-day lag, `units_lag28`. It's second on M-D-I but fourth on
+permutation, at thirty-six point eight. Meanwhile yesterday's sales, `units_lag1`, which M-D-I ranks
+*below* it, are worth one hundred sixteen point nine. That's about three times as much. M-D-I counts
+how often a feature was *used* for splitting, while permutation measures what happens when you take
+it away. A feature used constantly for small refinements can lose to one used rarely for large ones.
 
-**Two, and this is the one that matters commercially.** `snap` is **eighth** on MDI and **third**
-on permutation, worth 40 units of RMSE. SNAP benefits land on fixed days of the month and this is
-a food aisle: SNAP days average 3,201 units against 2,839 otherwise, about 13% higher, on 400 of
-1,211 training days. MDI nearly buried a real, actionable effect.
+The second disagreement is the one that matters commercially. The SNAP flag is **eighth** on M-D-I
+and third on permutation, worth forty units of RMSE. SNAP benefits land on fixed days of the month,
+and this is a food aisle. SNAP days average three thousand two hundred one units, against two
+thousand eight hundred thirty-nine on other days. That's about thirteen percent higher, on four
+hundred of the one thousand two hundred eleven training days. M-D-I nearly buried a real, actionable
+effect.
 
-**Three.** Look at `avg_price` against `is_event`. MDI ranks price *above* the event flag —
-0.017 to 0.012. Permutation says price is worth **exactly zero** and the event flag is worth 22.
+The third is price against the event flag. M-D-I ranks `avg_price` *above* `is_event`, zero point
+zero one seven to zero point zero one two. Permutation says price is worth **exactly zero**, and the
+event flag is worth twenty-two.
 
-That inversion has a known mechanism, and Lecture 4's footnote named it: **MDI is biased toward
-features with many split points.** `avg_price` takes 173 distinct values in the training set, so it
-offers 172 candidate split points, and with that many chances some will reduce impurity by luck
-alone. `is_event` is binary — one possible split, no opportunity to get lucky. MDI rewards
-opportunity; permutation rewards contribution.
+That inversion has a known mechanism, and the footnote in Lecture 4, last week, named it: M-D-I is
+biased toward features with many split points. The price column takes one hundred seventy-three
+distinct values in the training set, so it offers one hundred seventy-two candidate split points,
+and with that many chances, some of them will reduce impurity by luck alone. The event flag is
+binary. It has one possible split, and no opportunity to get lucky. So M-D-I rewards opportunity,
+and permutation rewards contribution.
 
 **[pause]**
 
-The practical rule: **MDI is free and permutation is honest.** MDI comes out of the fit at no cost
-and is fine for a quick screen. Anything you are going to act on — or say out loud to a category
-manager — gets checked with permutation, on held-out data.
+The practical rule is that M-D-I is free and permutation is **honest**. M-D-I comes out of the fit at
+no cost, and it's fine for a quick screen. Anything you're going to act on, or say out loud to a
+category manager, gets checked with permutation, on held-out data.
 
-*(Screen: the your-turn plotting cell.)*
+*(Show the your-turn plotting cell.)*
 
-**[STOP — learner works]** — fill in the one blank and plot the two rankings side by side. The
-blank is the permutation series. Come back when you can see the `snap` bar jump.
+**[STOP — learner works]**
+
+Now it's your turn. Pause the video, fill in the one blank, and plot the two rankings side by side.
+The blank is the permutation series. Come back when you can see the SNAP bar jump.
 
 ---
 
 # ▶ STEP 6 — Stop averaging. Start correcting.
 
-*(Screen: the framing paragraph.)*
+*(Show the framing paragraph.)*
 
-Everything so far today has been the same idea: build many trees independently, average them.
-Boosting is a different idea. Trees are built **in sequence**, and each new one is fitted to what
-the ensemble so far got **wrong**.
+Everything so far today has been the same idea: build many trees independently, and average them.
+Boosting is a different idea. The trees are built **in sequence**, and each new one is fitted to
+what the ensemble so far got wrong.
 
 Nothing is averaged. Every tree is a correction.
 
@@ -321,34 +343,38 @@ Nothing is averaged. Every tree is a correction.
   lr=0.05  n=1000  train    54   test   239
 ```
 
-**[pause]** — *let the first four rows sit on screen. This is the payoff of the lab.*
-
-Read the first four rows as a curve — the learning rate is fixed, only the number of rounds
-changes. That is the identical experiment you ran in Step 2 on the forest.
-
-Training error goes 171, 95, 19, **zero**. Test error goes 244, 243, 250, 253. It bottoms out
-around three hundred rounds and then **turns up**.
-
-Now put that next to Step 2, where you took a forest from five trees to six hundred and it never
-got worse once.
+*(Let the first four rows sit on screen. This is the payoff of the lab.)*
 
 **[pause]**
 
-Same data, same features, same family of base learner. Opposite behavior on the same knob. The
-reason is structural, and it is worth stating carefully: a forest's trees are fitted independently
-of one another, so an extra one only adds to an average and cannot corrupt what is already there.
-A boosted tree is fitted to the *residuals* of everything before it — so once the real signal is
-used up, the next tree fits noise, and it is added to the ensemble anyway, with nothing to average
-it away.
+Read the first four rows as a curve. The learning rate is fixed, and only the number of rounds
+changes, so it's the identical experiment you ran on the forest in Step 2.
 
-So: `n_estimators` in a forest is a budget. `n_estimators` in boosting is a tuning parameter, and
-getting it wrong costs you accuracy in a way no amount of forest-tuning ever will. That is also
-why boosting *has* a learning rate — it is the knob that decides how much damage each additional
-tree is allowed to do.
+Training error goes from one seventy-one, to ninety-five, to nineteen, to **zero**. Test error goes
+from two forty-four, to two forty-three, to two fifty, to two fifty-three. It bottoms out around
+three hundred rounds, and then it **turns up**.
 
-The last two rows are the complement. A big rate with few rounds (238) and a small rate with many
-(239) end up in much the same place: roughly, the product sets the budget. What you cannot do is
-fix a rate and let the rounds run.
+Now put that next to Step 2, where you took a forest from five trees to six hundred and it never got
+worse once.
+
+**[pause]**
+
+It's the same data, the same features and the same family of base learner, with opposite behavior
+on the same knob. The reason is structural, and it's worth stating carefully. A forest's trees are
+fitted independently of one another, so an extra tree only adds to an average, and it can't corrupt
+what's already there. A boosted tree is fitted to the *residuals* of everything before it. So once
+the real signal is used up, the next tree fits noise, and it gets added to the ensemble anyway, with
+nothing to average it away.
+
+So `n_estimators` in a forest is a budget, while `n_estimators` in boosting is a tuning parameter,
+and getting it wrong costs you accuracy in a way no amount of forest tuning ever will. That's also
+why boosting *has* a learning rate. It's the knob that decides how much damage each additional tree
+is allowed to do.
+
+The last two rows are the complement. A big rate with few rounds scores two thirty-eight, and a small
+rate with many rounds scores two thirty-nine, so they end up in much the same place. Roughly
+speaking, it's the product of the two that sets the budget. What you can't do is fix a rate and let
+the rounds run.
 
 *(Run the final scoreboard.)*
 
@@ -360,64 +386,68 @@ Random Forest (300 trees)            248
 XGBoost (lr=0.1, 100 trees)          244
 ```
 
-**[pause]**
+Now, look at which XGBoost row we put on that scoreboard. It's the learning rate of zero point one
+with a hundred trees, at two forty-four. It isn't the zero point three row at two thirty-eight,
+which was the best number in the grid.
 
-Now, look at which XGBoost row we put on that scoreboard. `lr=0.1, n=100` — 244. Not the
-`lr=0.3` row at 238, which was the best number in the grid.
-
-That is deliberate, and it is not modesty. **Every test-RMSE number in the grid above was computed
-on the year we held out.** If I pick the winner out of that column and then report it as my
-result, I have used the test set to choose the model and I no longer have an honest estimate of
-anything. Lecture 1 said this about forecast evaluation and it does not stop being true because
-the grid has only six rows. So the scoreboard gets the conventional default, and the way to
-actually choose here is walk-forward validation inside the training period — Homework 4.
+That's deliberate, and it isn't modesty. **Every** test RMSE in the grid above was computed on the
+year we held out. If I pick the winner out of that column and then report it as my result, I've used
+the test set to choose the model, and I no longer have an honest estimate of anything. Lecture 1, in
+the first week, said this about forecast evaluation, and it doesn't stop being true just because the
+grid has only six rows. So the scoreboard gets the conventional default. The way to actually choose
+here is walk-forward validation inside the training period, and that's what you'll do in
+Homework 4.
 
 ---
 
 # ▶ BEFORE YOU LEAVE
 
-*(Screen: the closing block.)*
+*(Show the closing block.)*
 
-Read the scoreboard as one object. 625 to 244 — a 61% reduction against the benchmark, on one
-series, with the same ten features throughout. Almost all of it arrived in two jumps: a single
-tree over the benchmark, and averaging over the single tree. The last two steps, the forest and
-boosting, bought 22 units between them.
+Read the scoreboard as one object. It runs from six twenty-five down to two forty-four, a sixty-one
+percent reduction against the benchmark, on one series, with the same ten features throughout.
+Almost all of it arrived in two jumps: a single tree over the benchmark, and then averaging over the
+single tree. The last two steps, the forest and boosting, bought twenty-two units between them.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Three questions on the discussion board.
+Here are three questions to work through on the discussion board.
 
-**The ranking.** Boosting won, 244 to 248 — by about one and a half percent. Name one property of
-*this* dataset that favors it. Then name a situation where you would still reach for the forest
-first, thinking about two things specifically: how much tuning each one needed today, and what
-happens to each when nobody retunes it for a year.
-
-**[pause]** — *the honest answer is in Steps 2 and 6, and students should find it there: the forest
-was fire-and-forget, and boosting's best setting is a live decision that can go stale.*
-
-**The importances.** You have two tables that disagree about `snap` — eighth on one, third on the
-other. A category manager asks whether SNAP timing matters for stocking. Which table do you show
-them, what exactly do you say, and what would you check before committing to an answer? Be
-concrete about that last part.
-
-**The arc.** Across Labs 4 and 5 the error fell from 324 to 244 on the same series with the same
-features. What was purchased with that, and what was given up? Be specific about the thing you
-could do in Step 1 of Lab 4 that you cannot do now.
+The first is about the ranking. Boosting won, two forty-four to two forty-eight, by about one and a
+half percent. Name one property of *this* data set that favors it. Then name a situation where you'd
+still reach for the forest first, and think about two things in particular: how much tuning each
+model needed today, and what happens to each one when nobody retunes it for a year.
 
 **[pause]**
 
-I'll say the shape of that last answer, because it is the through-line of the whole course and I
-do not want it to be missed. In Lab 4, Step 1, you printed a tree and read a path out loud —
-*weekday, four weeks ago was busy, yesterday was busy, predict 2,950.* You cannot do that now.
-There is no path to read. Three hundred trees, or a hundred sequential corrections, and the best
-account you can give of the model is a permutation importance table.
+The answer to that second half is in Steps 2 and 6, and it's worth finding there yourself. The
+forest was fire-and-forget, while boosting's best setting is a live decision, and a live decision
+can go stale.
 
-You bought 25% accuracy with the entire explanation. Sometimes that is obviously right. Sometimes
-you are standing in front of a category manager and it is obviously wrong. Knowing which is which
-is the actual skill.
+The second question is about the importances. You have two tables that disagree about SNAP, eighth
+on one and third on the other. A category manager asks whether SNAP timing matters for stocking.
+Which table do you show them, what exactly do you say, and what would you check before committing to
+an answer? Be concrete about that last part.
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week: regularization, and
-what to do when you have far more features than this.
+The third question is about the arc. Across Labs 4 and 5, the error fell from three twenty-four to
+two forty-four, on the same series with the same features. What was purchased with that, and what
+was given up? Be specific about the thing you could do in Step 1 of Lab 4 that you can't do now.
+
+**[pause]**
+
+I'll give you the shape of that last answer, because it's the thread that runs through the whole
+course, and I don't want it to be missed. In Lab 4, Step 1, you printed a tree and read a path out
+loud: *it's a weekday, four weeks ago was busy, yesterday was busy, so predict two thousand nine
+hundred fifty.* You can't do that now. There's no path to read. With three hundred trees, or a
+hundred sequential corrections, the best account you can give of the model is a permutation
+importance table.
+
+You bought about twenty-five percent in accuracy, and you paid for it with the entire explanation.
+Sometimes that's obviously the right trade. Sometimes you're standing in front of a category
+manager, and it's obviously wrong. Knowing which is which is the actual skill.
+
+Solutions for the coded parts go up on Canvas after class. Next week, in Lecture 6, we turn to
+regularization, and to what you do when you have far more features than this.
 
 ---
 

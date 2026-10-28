@@ -102,3 +102,11 @@ Nothing here has been changed unless the line says so.
 3. The syllabus says Lab 2 is self-paced, yet the lab says solutions go up "after class" (and the
    narration now matches the lab). *Recommend:* decide once for all labs; if labs are self-paced,
    "after the deadline" in every lab page and script.
+
+## Lecture 5
+
+1. Slide 20 says regularization appears "a fourth time in Lecture 7"; counting Lecture 3's
+   smoothing penalty, it is the fifth. Kept. *Recommend:* "again in Lecture 7".
+2. Lab 5 Step 5's code comment says "fill in the two blanks", but the cell has one. *Recommend:*
+   fix the comment in the lab .qmd (one word).
+3. The lecture script is 15.1% longer, just over the guide's 15%, all from numbers in words. Fine.
