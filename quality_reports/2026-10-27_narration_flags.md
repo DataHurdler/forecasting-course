@@ -57,3 +57,18 @@ Nothing here has been changed unless the line says so.
    5,940 windows. Kept. *Recommend:* leave it.
 3. The lab's closing questions are now the lab's current four (result, budget, practice,
    Homework 5); the budget and practice questions stay as exercises (no recorded answers).
+
+## Lecture 1
+
+1. **Slide 20's narration mentions a "test script in the course repository"** that does not exist
+   (the student repo's scripts are data prep and submission checkers). Kept. *Recommend:* point to
+   the package list in STUDENT_QUICKSTART instead.
+2. **The lab's how-to bullet says every number is printed on the rendered page**, but the damped
+   Holt row (426 / 351, phi 0.800) is in a commented-out block; a re-run reproduces it.
+   *Recommend:* amend the bullet.
+3. **Lab .qmd Step 4 asks about "the model you expected in Step 2"**; the ordering is predicted in
+   Step 3, and the script says Step 3. *Recommend:* fix the .qmd (a one-word lab prose edit).
+4. The timing guide's 4,985-word count is stale (spoken text grew about 9%). Left as an
+   instructor note.
+5. Lab Step 3's claim that Holt-Winters won't fit three years of weekly data was not verified.
+   Kept.
