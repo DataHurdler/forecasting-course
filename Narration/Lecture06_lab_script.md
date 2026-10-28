@@ -432,9 +432,9 @@ choose, and is it the one with the lowest RMSE?
 **[pause]**
 
 Notice two properties that this lab measured and that RMSE doesn't see. The eleven-feature LASSO
-is the only model of the five you could write on a whiteboard. And Step 1 showed you which models
-fail *loudly* and which fail quietly. OLS at a hundred and twenty rows had a beautiful training
-fit, and its test error was three and a half million. A year from now, if this store's data
+is the only one of the five you could write down as a single equation. And Step 1 showed you
+which models fail *loudly* and which fail quietly. OLS at a hundred and twenty rows had a beautiful
+training fit, and its test error was three and a half million. A year from now, if this store's data
 collection changes and the model quietly gets less data than it used to, which of your five would
 you rather be running unattended?
 

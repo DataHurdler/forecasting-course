@@ -138,7 +138,8 @@ The problem is the **shape of the posterior**, not the model.
 A centered random walk couples the level to `sigma_level`. When the scale is small, the steps have
 to be small, so the posterior narrows into a funnel that the sampler can't traverse with a single
 step size. The fix is to write the walk as a cumulative sum of **standard** Normal draws, scaled
-afterwards. Now `z` and `sigma_level` are independent in the posterior geometry.
+afterwards. Now `z` and `sigma_level` are independent in the prior and much less coupled in the
+posterior, and the sampler gets a geometry it can navigate.
 
 ```
 R-hat        1.002   (want < 1.01)
@@ -264,8 +265,8 @@ nothing. On a series with a genuinely drifting level, it would cost a great deal
 
 And notice the only cell in the table that falls below nominal. The frozen version drops to
 **ninety-two percent** in weeks fourteen to thirty-nine. Its respectable ninety-six percent average
-is hiding a stretch where it's overconfident. Aggregates hide things, and that's the third time this
-course has said so.
+is hiding a stretch where it's overconfident. Aggregates hide things, and this isn't the first time
+this course has said so.
 
 ---
 
@@ -317,7 +318,7 @@ seconds to sample, a reparameterization to converge, and a page of code.
 If accuracy were the argument for this model, that number would be an embarrassment. But accuracy
 isn't the argument. What you bought is a level and a seasonal component you can plot and defend, a
 full distribution for every future week, and, the thing this whole lab has been about, an interval
-that **admits when it doesn't know**. Whether that trade is worth four percent is a business
+that **admits when it doesn't know**. Whether that trade is worth the effort is a business
 question, and it depends entirely on whether anyone downstream will use the uncertainty you went to
 the trouble of producing.
 

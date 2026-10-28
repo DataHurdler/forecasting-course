@@ -450,7 +450,7 @@ draws follow the prior's shape closely. It's the same model and the same posteri
 coordinates, and only one set of coordinates is walkable.
 
 This is section four point six point one of Martin, Kumar and Lao, the book cited on the slide,
-and it's the single most common failure in applied hierarchical modeling.
+and it's one of the most common failures in applied hierarchical modeling.
 
 *(A practical note, because students will reach for the wrong fix.)*
 

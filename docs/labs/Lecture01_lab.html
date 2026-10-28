@@ -2361,7 +2361,7 @@ window.Quarto = {
 <section id="setup" class="level1">
 <h1>Setup</h1>
 <p>Nothing to fill in here — run it and move on.</p>
-<div id="0a09fb0f" class="cell" data-execution_count="1">
+<div id="f0f4e08a" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2403,7 +2403,7 @@ window.Quarto = {
 <section id="step-1-look-at-it-first" class="level1">
 <h1>Step 1 — Look at it first</h1>
 <p>Never fit anything before you have seen the series.</p>
-<div id="e0b28d17" class="cell" data-execution_count="2">
+<div id="0501aa83" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="fl">3.5</span>))</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ax.plot(train.index, train.values, label<span class="op">=</span><span class="st">&quot;train&quot;</span>, lw<span class="op">=</span><span class="fl">1.4</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>ax.plot(test.index, test.values, label<span class="op">=</span><span class="st">&quot;test (held out)&quot;</span>, lw<span class="op">=</span><span class="fl">1.4</span>)</span>
@@ -2423,7 +2423,7 @@ window.Quarto = {
 <section id="step-2-establish-the-benchmark" class="level1">
 <h1>Step 2 — Establish the benchmark</h1>
 <p>Before any model, the thing to beat. <strong>Seasonal naive</strong> says: this week next year looks like this week last year.</p>
-<div id="c87fd894" class="cell" data-execution_count="3">
+<div id="c2b30d34" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rmse(actual, pred):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.sqrt(np.mean((np.asarray(actual) <span class="op">-</span> np.asarray(pred)) <span class="op">**</span> <span class="dv">2</span>)))</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2444,7 +2444,7 @@ window.Quarto = {
 <section id="step-3-fit-the-three-models" class="level1">
 <h1>Step 3 — Fit the three models</h1>
 <p>All three calls come straight from Lecture 1. Run this, then <strong>predict the ordering before you look at Step 4</strong> — write your guess down.</p>
-<div id="8ede8abe" class="cell" data-execution_count="4">
+<div id="aea370b4" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SES — level only.</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>ses_fit <span class="op">=</span> SimpleExpSmoothing(train).fit()</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>results[<span class="st">&quot;SES&quot;</span>] <span class="op">=</span> (rmse(test, ses_fit.forecast(N_TEST)),</span>
@@ -2478,7 +2478,7 @@ One constraint to respect
 </section>
 <section id="step-4-compare-honestly" class="level1">
 <h1>Step 4 — Compare honestly</h1>
-<div id="92be7710" class="cell" data-execution_count="5">
+<div id="ca1dbf29" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tbl <span class="op">=</span> (pd.DataFrame(results, index<span class="op">=</span>[<span class="st">&quot;RMSE&quot;</span>, <span class="st">&quot;MAE&quot;</span>]).T</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>         .sort_values(<span class="st">&quot;RMSE&quot;</span>).<span class="bu">round</span>(<span class="dv">0</span>).astype(<span class="bu">int</span>))</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(tbl.to_string())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2490,7 +2490,7 @@ Seasonal naive   973   848
 Holt            1166  1029</code></pre>
 </div>
 </div>
-<p><strong>Stop before reading on:</strong> did any model beat the benchmark? By how much? And was it the model you expected in Step 2?</p>
+<p><strong>Stop before reading on:</strong> did any model beat the benchmark? By how much? And was it the model you expected in Step 3?</p>
 <p><em>In the room:</em> say your answer to the person next to you, and make them say theirs.<br>
 <em>On your own:</em> score yourself against what you already wrote down. Scroll back to the RMSE number from Step 2 and the ordering from Step 3, and write two lines in a comment:</p>
 <pre><code># guess ____, actual ____, off by ____
@@ -2501,7 +2501,7 @@ Holt            1166  1029</code></pre>
 <section id="step-5-break-it-then-fix-it" class="level1">
 <h1>Step 5 — Break it, then fix it</h1>
 <p>Look at where Holt’s forecast goes.</p>
-<div id="5194e50a" class="cell" data-execution_count="6">
+<div id="9999d7b2" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="fl">3.5</span>))</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ax.plot(test.index, test.values, label<span class="op">=</span><span class="st">&quot;actual&quot;</span>, lw<span class="op">=</span><span class="fl">1.6</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>ax.plot(test.index, ses_fit.forecast(N_TEST), label<span class="op">=</span><span class="st">&quot;SES&quot;</span>, ls<span class="op">=</span><span class="st">&quot;--&quot;</span>)</span>
@@ -2517,7 +2517,7 @@ Holt            1166  1029</code></pre>
 </div>
 <p>Lecture 1 warned that undamped linear extrapolation gets unrealistic past about six periods. You are forecasting <strong>52</strong>.</p>
 <p><strong>Your turn:</strong> refit Holt with a damped trend and add it to the table. One keyword argument.</p>
-<div id="6005a9ec" class="cell" data-execution_count="7">
+<div id="f5f5beeb" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in the one keyword argument ----</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># holt_damped = Holt(train, ___).fit()             # &lt;- damped_trend=True</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
@@ -2534,7 +2534,7 @@ Holt            1166  1029</code></pre>
 <section id="step-6-same-store.-different-aisle.-opposite-answer." class="level1">
 <h1>Step 6 — Same store. Different aisle. Opposite answer.</h1>
 <p>Change one word — <code>HOUSEHOLD</code> becomes <code>FOODS</code>. Same store, same code, same horizon.</p>
-<div id="530d9fff" class="cell" data-execution_count="8">
+<div id="68de3036" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>y2 <span class="op">=</span> get_series(<span class="st">&quot;TX_1&quot;</span>, <span class="st">&quot;FOODS&quot;</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>train2, test2 <span class="op">=</span> y2.iloc[:<span class="op">-</span>N_TEST], y2.iloc[<span class="op">-</span>N_TEST:]</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>

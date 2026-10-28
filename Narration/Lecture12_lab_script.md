@@ -374,8 +374,8 @@ was a forecast interval two weeks ago that was honest and useless, and a hierarc
 pooled series that never belonged together. And today there was a coefficient that stopped being an
 elasticity three cells before anybody read it.
 
-None of those announced themselves. Every one of them was caught by holding something out and
-checking. That habit is the course.
+None of those announced themselves. Every one of them was caught by checking something the model
+couldn't check for itself. That habit is the course.
 
 Solutions go up on Canvas after class. See you next week, in Week 15, for the synthesis.
 

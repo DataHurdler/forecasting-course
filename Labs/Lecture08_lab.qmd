@@ -92,14 +92,20 @@ print("shapes at W=26:", DATA[26][0].shape, "(batch, channels, time)")
 ```
 
 ::: {.callout-warning}
-## The transpose that bites everyone
+## Transpose, never reshape
 
-Your `DataLoader` naturally yields `(batch, time, channels)`. `Conv1d` demands
+Your windows naturally come out as `(batch, time, channels)`. `Conv1d` demands
 `(batch, channels, time)`.
 
-Get it backwards and **nothing crashes**. The model convolves across the four channels instead of
-along time, learns something meaningless, and returns a number. Same failure mode as forgetting
-`zero_grad()` last week: no exception, just a wrong answer.
+Pass the wrong order and PyTorch **stops you**: hand `Conv1d(4, …)` a `(batch, 26, 4)` tensor and
+it raises *"expected input … to have 4 channels, but got 26 channels instead"*. That mistake is
+loud.
+
+The quiet one is fixing the shape with `.reshape(n, 4, W)` (or `.view`) instead of a transpose.
+The shape comes out right, so **nothing crashes**, but the numbers are scrambled: the first
+"channel" now holds the first six and a half weeks of all four variables, interleaved. The model
+trains on it and returns an RMSE. Same failure mode as forgetting `zero_grad()` last week: no
+exception, just a wrong answer.
 :::
 
 ---

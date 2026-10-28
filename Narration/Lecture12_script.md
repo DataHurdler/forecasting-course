@@ -550,7 +550,8 @@ Random forests, from Lecture 5, are robust and need minimal tuning, and the out-
 free. That's an error estimate, though, not an interval.
 
 XGBoost is also from Lecture 5. It captures interactions, and it scored seven eighty-one on our
-board.
+board. That number came from an earlier version of xgboost. The version pinned for this course
+gives seven ninety-two, which still leaves it in second place.
 
 Ridge and LASSO, from Lecture 6, are linear and interpretable, and they hold the best number on our
 scoreboard, seven forty-four. The simplest model in the table beat the boosted trees.

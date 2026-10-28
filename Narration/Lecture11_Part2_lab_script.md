@@ -462,6 +462,14 @@ genuinely differ. The unpooled fit put the thin stores' range at roughly five pe
 percent. Given both numbers, what do you actually recommend the business do for the next SNAP
 week?
 
+**[pause]**
+
+The answer the lecture gave comes in three parts. Plan on an eight percent FOODS uplift at every
+store, which is Step 5's `mu_b` of zero point zero seven eight. Allow for real but modest variation
+between stores around it, because `sd_b` says they do differ. And don't act on any one store's own
+estimate until that store has the weeks to support one. Step 5's grading showed how far eight weeks
+of a store's own data can mislead you.
+
 The last one is about the thread running through the course. This is the sixth time this semester
 that a model has improved by pulling estimates toward a common value. Name the other five, and say
 what's different about the shrinkage strength here.

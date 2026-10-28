@@ -662,8 +662,9 @@ ARIMA and VAR. Scikit-learn covers machine learning models, pipelines, and cross
 XGBoost is for gradient boosting, and PyTorch is for neural networks. Prophet and pyGAM handle the
 additive models, and PyMC handles the Bayesian work.
 
-Get these installed before the next class. There's a test script in the course repository. Run it,
-and if something fails, email me now rather than the night before Homework 1.
+Get these installed before the next class. The student quickstart in the course repository lists
+every package you need. Install them this week, and if something fails, email me now rather than
+the night before Homework 1.
 
 **[pause]**
 

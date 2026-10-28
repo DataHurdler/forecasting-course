@@ -214,7 +214,7 @@ how much worse the forecast gets. That is directly interpretable in a way MDI is
 are visible at a glance.
 
 ```{python}
-# ---- your turn: uncomment and fill in the two blanks ----
+# ---- your turn: uncomment and fill in the blank ----
 # fig, axes = plt.subplots(1, 2, figsize=(11, 3.5))
 # mdi.sort_values().plot.barh(ax=axes[0], title="MDI (impurity)")
 # ___.sort_values().plot.barh(ax=axes[1], title="Permutation (ΔRMSE)")   # <- which Series?

@@ -2375,7 +2375,7 @@ Two cells here are slow
 <section id="setup" class="level1">
 <h1>Setup</h1>
 <p>Same windowing as Lab 7, with one change that matters.</p>
-<div id="ee6551b8" class="cell" data-execution_count="1">
+<div id="466cdc49" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2428,12 +2428,13 @@ Two cells here are slow
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-The transpose that bites everyone
+Transpose, never reshape
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Your <code>DataLoader</code> naturally yields <code>(batch, time, channels)</code>. <code>Conv1d</code> demands <code>(batch, channels, time)</code>.</p>
-<p>Get it backwards and <strong>nothing crashes</strong>. The model convolves across the four channels instead of along time, learns something meaningless, and returns a number. Same failure mode as forgetting <code>zero_grad()</code> last week: no exception, just a wrong answer.</p>
+<p>Your windows naturally come out as <code>(batch, time, channels)</code>. <code>Conv1d</code> demands <code>(batch, channels, time)</code>.</p>
+<p>Pass the wrong order and PyTorch <strong>stops you</strong>: hand <code>Conv1d(4, …)</code> a <code>(batch, 26, 4)</code> tensor and it raises <em>“expected input … to have 4 channels, but got 26 channels instead”</em>. That mistake is loud.</p>
+<p>The quiet one is fixing the shape with <code>.reshape(n, 4, W)</code> (or <code>.view</code>) instead of a transpose. The shape comes out right, so <strong>nothing crashes</strong>, but the numbers are scrambled: the first “channel” now holds the first six and a half weeks of all four variables, interleaved. The model trains on it and returns an RMSE. Same failure mode as forgetting <code>zero_grad()</code> last week: no exception, just a wrong answer.</p>
 </div>
 </div>
 <hr>
@@ -2446,7 +2447,7 @@ The transpose that bites everyone
 <li>A neuron in <strong>layer 1</strong> sees <strong>5</strong> consecutive weeks.</li>
 <li>A neuron in <strong>layer 2</strong> sees 3 layer-1 neurons — which between them span <span class="math inline">\(3 + (5 - 1) = \mathbf{7}\)</span> weeks.</li>
 </ul>
-<div id="4ad342e0" class="cell" data-execution_count="2">
+<div id="881e5bf3" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> receptive_field(kernels):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    rf <span class="op">=</span> <span class="dv">1</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">reversed</span>(kernels):</span>
@@ -2468,7 +2469,7 @@ kernels (5, 3, 3, 3)-&gt; receptive field 11 weeks</code></pre>
 </section>
 <section id="step-2-build-the-cnn" class="level1">
 <h1>Step 2 — Build the CNN</h1>
-<div id="1a126e42" class="cell" data-execution_count="3">
+<div id="ff811d3f" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> conv_out_len(W):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W <span class="op">-</span> <span class="dv">4</span> <span class="op">-</span> <span class="dv">2</span>          <span class="co"># kernel 5, then kernel 3, no padding</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2511,7 +2512,7 @@ test RMSE:  980</code></pre>
 <h1>Step 3 — Does pooling belong here?</h1>
 <p>Lecture 8 argued that pooling buys <strong>translation invariance</strong> — an image classifier should not care where in the frame the cat is — and that a forecaster usually <em>should</em> care where the spike was.</p>
 <p>Test it. Three heads, three seeds each, because of last week.</p>
-<div id="6d190e80" class="cell" data-execution_count="4">
+<div id="7b856900" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>head_runs <span class="op">=</span> {}</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> head <span class="kw">in</span> (<span class="st">&quot;flatten&quot;</span>, <span class="st">&quot;maxpool&quot;</span>, <span class="st">&quot;avgpool&quot;</span>):</span>
@@ -2537,7 +2538,7 @@ avgpool  1534  81 [1643, 1448, 1509]</code></pre>
 <section id="step-4-a-longer-window-the-same-receptive-field" class="level1">
 <h1>Step 4 — A longer window, the same receptive field</h1>
 <p>Now the experiment Step 1 set up. Keep the architecture fixed and vary only the window.</p>
-<div id="bbdb10bb" class="cell" data-execution_count="5">
+<div id="12f594db" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> W <span class="kw">in</span> (<span class="dv">13</span>, <span class="dv">26</span>, <span class="dv">52</span>):</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># W=26 was already fitted in Step 3 -- reuse those three rather than paying twice</span></span>
@@ -2571,7 +2572,7 @@ The result runs the wrong way, and that is the lesson
 </div>
 </div>
 <p><strong>Your turn:</strong> using <code>receptive_field()</code>, find how many kernel-3 layers you would need to stack after the first kernel-5 layer to actually span 52 weeks.</p>
-<div id="2d18129d" class="cell" data-execution_count="6">
+<div id="28366fb9" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- your turn: uncomment and fill in ----</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># k = [5]</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># while receptive_field(k) &lt; 52:</span></span>
@@ -2582,7 +2583,7 @@ The result runs the wrong way, and that is the lesson
 </section>
 <section id="step-5-where-does-it-land" class="level1">
 <h1>Step 5 — Where does it land?</h1>
-<div id="842854be" class="cell" data-execution_count="7">
+<div id="1c808d42" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>board <span class="op">=</span> {</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;LASSO, 46 features (HW4)&quot;</span>: <span class="dv">744</span>,</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;XGBoost (HW4)&quot;</span>: <span class="dv">781</span>,</span>

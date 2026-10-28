@@ -59,7 +59,7 @@ Let's take stock for a second. Over ten weeks of forecasting, almost every model
 same kind of object: **one number per period**.
 
 ETS, ARIMA, random forests, XGBoost and the LSTM all hand you a point forecast. At best, you also
-got an interval derived from asymptotic theory that, let's be honest, nobody checked.
+got an interval from the model's own error formula that, let's be honest, nobody checked.
 
 **[pause]**
 
@@ -611,7 +611,7 @@ Homework 2, but we scored every model on its point forecast and never checked a 
 held-out weeks. Here, we did.
 
 A calibrated but too-wide interval is a worse forecast and a better *deliverable*, because it tells
-you something true about how much you actually know. That's worth paying four percent for.
+you something true about how much you actually know. That's worth far more than the four percent.
 
 ---
 

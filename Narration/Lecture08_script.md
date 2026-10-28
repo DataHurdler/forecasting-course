@@ -535,8 +535,9 @@ and a linear layer down to one number.
 
 One thing trips everyone up. The input shape is batch, then channels, then time, so channels come
 **before** time. That's the transpose of how the data naturally sits in a dataframe, and it's also
-the opposite of what `nn.LSTM` wants next week. You'll get this wrong at least once, and the error
-message won't help you much.
+the opposite of what `nn.LSTM` wants next week. You'll get this wrong at least once. If you pass
+time before channels, PyTorch stops you with an error about the channel count, which is the easy
+case. The version that doesn't stop you is in the lab.
 
 Everything from Lecture 7, last week, still applies. Use Adam with weight decay, call `zero_grad()`
 on every batch, set `shuffle=False`, and split by time, not at random.

@@ -182,9 +182,9 @@ is a separate question, and you're expected to answer it every single time, befo
 result.
 
 By now that sentence should sound familiar. It's the same shape as the forgotten `zero_grad()` in
-Lab 7, the transposed axis in Lab 8, and the missing positional encoding in last week's lab. The
-code runs, the output is plausible, and nothing tells you. Bayesian workflow just has better
-instruments for catching it.
+Lab 7, the reshape where a transpose belonged in Lab 8, and the missing positional encoding in
+last week's lab. The code runs, the output is plausible, and nothing tells you. Bayesian workflow
+just has better instruments for catching it.
 
 **[pause]**
 

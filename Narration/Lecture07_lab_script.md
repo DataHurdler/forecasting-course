@@ -397,6 +397,6 @@ whose standard deviation is 86 and whose range across five seeds is 230. The mea
 honest figure, and Step 3 arrives ninety seconds later to make that point — so flag it as
 provisional when you first say it.
 
-*The 45% loss to the LASSO is a real result and should not be hedged.* 1,084 against 744, on the
+*The 46% loss to the LASSO is a real result and should not be hedged.* 1,084 against 744, on the
 same panel and the same test weeks. It is the setup for Lecture 8 and for the closing question
 about what a flattened window throws away, and understating it would waste both.

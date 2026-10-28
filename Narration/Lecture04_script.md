@@ -2,7 +2,7 @@
 
 **ECON 8310: Business Forecasting · Decision Trees**
 
-Deck: `Slides/Lecture04_DecisionTrees.pdf` (21 pages) · Measured runtime: **~19 minutes** (17–21 depending on pace)
+Deck: `Slides/Lecture04_DecisionTrees.pdf` (21 pages) · Runtime: **~33 minutes** (30–37 depending on pace), estimated from the word count at the pace of the narrated video
 
 ---
 
@@ -671,11 +671,11 @@ See you then.
 
 | Segment | Slides | Target |
 |---|---|---:|
-| Opening & why beyond linear | 1–5 | ~5 min |
-| How trees work | 6–13 | ~12 min |
-| Python & interpretation | 14–17 | ~5 min |
-| Limitations & close | 18–21 | ~2 min |
-| **Total** | | **~24 min** |
+| Opening & why beyond linear | 1–5 | ~7 min |
+| How trees work | 6–13 | ~16 min |
+| Python & interpretation | 14–17 | ~6 min |
+| Limitations & close | 18–21 | ~4 min |
+| **Total** | | **~33 min** |
 
 If you're compressing, slide 15's hyperparameter table survives trimming — slides 12 and 13 have
 already covered the two parameters that matter. Do **not** compress slides 10, 11, or 19: the greedy

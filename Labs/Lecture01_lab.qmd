@@ -152,7 +152,7 @@ print(tbl.to_string())
 ```
 
 **Stop before reading on:** did any model beat the benchmark? By how much? And was it the model
-you expected in Step 2?
+you expected in Step 3?
 
 *In the room:* say your answer to the person next to you, and make them say theirs.\
 *On your own:* score yourself against what you already wrote down. Scroll back to the RMSE number

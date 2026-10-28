@@ -89,19 +89,25 @@ point."
 
 *(Show the warning callout.)*
 
-Read this callout properly, because it's the same species of bug as last week's missing
+Read this callout properly, because half of it is the same species of bug as last week's missing
 `zero_grad()`.
 
-Get the transpose backwards, and **nothing crashes**. The shapes are still valid. You have four of
-one thing and twenty-six of another, and Conv one-D will happily convolve across the four channels
-as though *they* were the time axis. It will slide a filter over units, SNAP days, event days and
-price, in that order, learn something with no meaning at all, and return a number that looks like
-an RMSE.
+The loud half first. If you skip the transpose and hand the network batch, then time, then
+channels, PyTorch stops you. The first layer expects four channels, it gets twenty-six, and the
+error message says exactly that. That mistake costs you a minute.
+
+The quiet half is the dangerous one. Suppose you fix the shape with `reshape` instead of a
+transpose. The shape comes out exactly right, four by twenty-six, so **nothing crashes**. But
+reshape doesn't move the axes. It pours the numbers into the new shape in their old order, so the
+first "channel" now holds the first six and a half weeks of all four variables, interleaved:
+units, SNAP days, event days, price, then units again. The model trains on that and returns a
+number that looks like an RMSE.
 
 **[pause]**
 
 That's the third time this course has shown you the same shape of failure. First came a random
-split made before the time split, then a missing `zero_grad()` in Lab 7, and now a transposed axis.
+split made before the time split, then a missing `zero_grad()` in Lab 7, and now a reshape where a
+transpose belonged.
 None of them raises an error, and all of them return a plausible number. That's what makes deep
 learning code different from regression code: the language can't tell you that your tensor means
 the wrong thing.
@@ -368,6 +374,15 @@ next week, in Lecture 9 Part 1, and attention follows the week after, in Part 2.
 The second question is about practice. Step 4's result, a longer window and a worse forecast, is
 the sort of thing a practitioner discovers after a week of tuning. What one calculation, done in ten
 seconds back in Step 1, would have predicted it?
+
+**[pause]**
+
+It's the receptive field: seven weeks. However long the window gets, no filter sees more than seven
+weeks of it, so a longer window can't show any filter a longer pattern. The only part of the network
+that reaches the extra weeks is the flatten head, and it does that by giving every new position its
+own weights, from seven thousand three hundred twenty-nine parameters at thirteen weeks to nine
+thousand eight hundred twenty-five at fifty-two, learned from fewer training windows. That one
+number told you the extra history would have to pay for those weights, and here it didn't.
 
 The third question looks ahead to Homework 5. Question 4 in Part 1 of that homework asks you to run
 this window experiment and explain the limit, and you now have the answer. What it does *not* tell

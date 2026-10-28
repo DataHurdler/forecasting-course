@@ -482,7 +482,7 @@ order in which they drop out mostly won't.
 
 So when you report, in the homework and in your final project, report the ordering. Saying that
 under increasing penalty the last predictors standing were the weekly lags is a much stronger claim
-than saying the coefficient on lag seven was one hundred twenty-four, a number that moves with
+than quoting a coefficient on lag seven of, say, one hundred twenty-four, a number that moves with
 every choice of lambda. The ordering is more honest about what the data supports, and it's the
 version that survives someone rerunning your analysis.
 

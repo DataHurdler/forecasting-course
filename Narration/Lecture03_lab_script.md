@@ -374,7 +374,7 @@ Reproducible; verified bit-identical across repeated runs. Prophet uses MAP esti
 | Two harmonics, in-sample | 1,348 MW (**factor of 2.5**, not 3) |
 | pyGAM (doy + dow) | RMSE 3,444 · MAE 2,550 |
 | Prophet | RMSE 3,935 · MAE 3,001 |
-| Prophet (yearly order = 1) | RMSE 4,269 · MAE 3,358 |
+| Prophet (yearly order = 1) | RMSE 4,269 · MAE 3,358 (Step 5 is commented out on the page; these come from running it, confirmed 2026-10-28) |
 | Seasonal naive (364d) | RMSE 4,608 · MAE 3,333 |
 | pyGAM effective d.o.f. | 22.5 |
 

@@ -579,7 +579,7 @@ cost-complexity pruning.
 So you're seeing next week's lecture, Lecture 6, one week early, wearing different clothes.
 
 That's not a coincidence. Regularization isn't a topic for linear models alone. It's how *every*
-flexible model is kept honest, and you'll meet it a fourth time in Lecture 7, on neural networks,
+flexible model is kept honest, and you'll meet it again in Lecture 7, on neural networks,
 as weight decay and dropout.
 
 **[pause]**

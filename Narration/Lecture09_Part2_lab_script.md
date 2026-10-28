@@ -248,8 +248,9 @@ Here are three questions to work through on your own before you go.
 
 The first is about the missing line. You've now met four failures that produce a plausible number
 and no error. The first was using `KFold` on a time series, back in Lecture 1. Then came a forgotten
-`zero_grad()` in Lab 7, a transposed axis in Lab 8, and today, a missing positional encoding. What
-do they have in common, and what single practice would have caught all four?
+`zero_grad()` in Lab 7, a reshape where a transpose belonged in Lab 8, and today, a missing
+positional encoding. What do they have in common, and what single practice would have caught all
+four?
 
 **[pause]**
 

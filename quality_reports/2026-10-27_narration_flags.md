@@ -4,6 +4,25 @@ Collected from each lecture's rewrite (2026-10-27). Corrections made against a s
 in the scripts and listed in each commit message; these are the items that need the owner's call.
 Nothing here has been changed unless the line says so.
 
+**Resolved 2026-10-28 (owner: "As recommended").** Every *Recommend* below was applied, except
+where it says "leave" or "keep" (left as is). Specifics worth knowing:
+
+- **Lab 8:** the callout is now "Transpose, never reshape". Swapped axes raise a `RuntimeError`
+  (re-tested); the silent bug is `.reshape(n, 4, W)`. Lab 8's script, Lecture 8 slide 18, and the
+  Lab 9 Part 2 *and* Lab 10 scripts (which also listed "a transposed axis") now say "a reshape where
+  a transpose belonged". The Lab 8 script also gains a spoken answer to question 2.
+- **Lecture 12 slide 15:** footnote added in Beamer and Quarto, same wording as Lecture 13.
+- **Lecture 6:** the 124 is now said as an illustration ("of, say, one hundred twenty-four"); the
+  standardized diamond in `lecture06_figures.py` can't be its source.
+- **Lecture 1:** the damped Holt row (426 / 351, phi 0.800) and **Lecture 3**'s single-harmonic row
+  (4,269 / 3,358) were both reproduced by running the commented-out cells.
+- **Lecture 4:** re-timed to about 33 minutes from the word count at the narrated video's pace
+  (4,677 words in 30.3 minutes). By the same measure the Lecture 2 and 3 headers (34 and 24 minutes)
+  are also low, at about 39 and 33; not changed.
+
+**Still open:** lab-solution timing (Lecture 2 item 3): the syllabus calls labs self-paced while
+every lab page and script says solutions go up "after class".
+
 ## Lecture 11 Part 1 (commit after `769ce09`)
 
 1. **"Worth paying four percent for"** (slide 17; lab Step 4). The four percent is a *gain* over

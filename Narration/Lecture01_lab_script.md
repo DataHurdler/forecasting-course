@@ -20,7 +20,9 @@ Lab: `Labs/Lecture01_lab.qmd` (6 steps) · Measured runtime: **~24 minutes** of 
   Its optimizer lands on a parameter boundary, so its numbers depend on the platform: 885 / 814
   on the rendered page, 875 / 804 on Linux with the pinned library versions. If any *other*
   number disagrees with this page, something upstream changed and you should stop and find out
-  what.
+  what. One row is not on the page at all: the damped Holt refit in Step 5 (426 / 351, phi 0.800)
+  sits in a commented-out cell, so the page never prints it. Uncommenting the cell reproduces it
+  exactly (checked 2026-10-28).
 - Nothing here is sacred. If a sentence doesn't sound like you, change it.
 
 ### One thing to fix before recording
