@@ -45,75 +45,76 @@ Step 2's "before you go on" note, Step 4's and Step 5's "your turn" blocks, and 
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 11, Part 2 — and this is the lab I would keep if I could keep only one.
+This is Lab 11, Part 2, and if I could keep only one lab from this course, it would be this one.
 
-A hierarchical model lets thirty series share information. Each gets its own effect, drawn from a
-common distribution that the data also estimates. Data-poor series borrow from data-rich ones, and
-nobody has to choose the weights by hand. That is genuinely powerful, and in the second half of
-today you will watch it work beautifully.
+A hierarchical model lets thirty series share information. Each series gets its own effect, drawn
+from a common distribution that the data also estimates. Series that are poor in data borrow from
+series that are rich in it, and nobody has to choose the weights by hand. That's genuinely
+powerful, and in the second half of today, you'll watch it work beautifully.
 
 **[pause]**
 
-In the first half you will watch it produce a confidently wrong answer. Same data. Same code.
-Clean diagnostics, textbook shrinkage, a defensible-sounding conclusion — and no warning of any
-kind.
+In the first half, you'll watch it produce a confidently wrong answer. It's the same data and the
+same code, with clean diagnostics, textbook shrinkage and a conclusion that sounds defensible, and
+there's no warning of any kind.
 
-The difference between the two runs is not in the code. It is a decision made **before any code
-was written**: which series belong in the same hierarchy.
+The difference between the two runs isn't in the code. It's a decision made **before any code was
+written**, about which series belong in the same hierarchy.
 
-That is the lab. Everything else is scaffolding for it.
+That's the lab, and everything else is scaffolding for it.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
 ```
 30 series | 8,310 rows | 22.1% of weeks are high-SNAP
 ```
 
-The question: **does a high-SNAP week lift units, and by how much in each store?**
+The question is this: **does a high-SNAP week lift units, and by how much in each store?**
 
 *(Point at `empirical_effect`.)*
 
-And note this helper, because it is what makes the whole lab possible. It computes the SNAP effect
-actually observed in a set of weeks — the difference in mean log units between high-SNAP weeks and
-the rest — with **no model involved.** Later we will hold weeks back, fit a model without them,
-and then use this function to ask what really happened in those weeks.
+Take note of this helper, because it's what makes the whole lab possible. It computes the SNAP
+effect actually observed in a set of weeks, which is the difference in mean log units between
+high-SNAP weeks and the rest, with **no model involved.** Later we'll hold some weeks back, fit a
+model without them, and then use this function to ask what really happened in those weeks.
 
-Most of the time you cannot grade a model this way. Today you can, because we are going to create
+Most of the time, you can't grade a model this way. Today you can, because we're going to create
 the missing data ourselves.
 
 ---
 
 # ▶ STEP 1 — Build the imbalance
 
-*(Screen: run the thinning.)*
+*(Run the thinning cell.)*
 
 ```
 train 5,620 rows | held-out 2,690 rows
 10 thin series (8 weeks each), 20 full series
 ```
 
-Real panels are lopsided — some series have years of history, others are new stores with a handful
-of weeks. We manufacture that imbalance: every third series cut down to **8 weeks**.
+Real panels are lopsided. Some series have years of history, and others are new stores with a
+handful of weeks. So we manufacture that imbalance: every third series gets cut down to **eight
+weeks**.
 
-The weeks we remove are not discarded. They go into `heldout`, the model never sees them, and in
+The weeks we remove aren't thrown away. They go into `heldout`, the model never sees them, and in
 Step 3 they become the answer key.
 
 **[pause]**
 
-Remember the rule: `j % 3 == 0`. Every third series. It looks arbitrary and it is about to matter
-enormously.
+Remember the rule in the code: j modulo three equals zero, which picks every third series. It
+looks arbitrary, and it's about to matter enormously.
 
 ---
 
 # ▶ STEP 2 — Fit it, and admire the shrinkage
 
-*(Screen: run both fits and the diagnostics.)*
+*(Run both fits and the diagnostics.)*
 
 ```
 Diagnostics
@@ -121,9 +122,9 @@ Diagnostics
   hierarchical   r_hat 1.003  ess  5077  divergences    0
 ```
 
-Both models sampled cleanly. R-hat near one, effective sample sizes in the thousands, not one
-divergence. If you were checking your work the way Lecture 10 taught you, you would stop here
-satisfied.
+Both models sampled cleanly. R-hat is near one, the effective sample sizes are in the thousands,
+and there isn't a single divergence. If you were checking your work the way Lecture 10 taught you,
+two weeks ago, you'd stop here, satisfied.
 
 *(Run the shrinkage table.)*
 
@@ -138,39 +139,42 @@ satisfied.
 
 **[pause]**
 
-And this is textbook. The thin series — 8 weeks each — moved **11.9 times further** toward the
-group mean than the full series did. Nobody told the model which series were starved. It worked
-that out from how much each one had to say.
+And this is textbook. The thin series, with eight weeks each, moved **eleven point nine times
+further** toward the group mean than the full series did. Nobody told the model which series were
+starved of data. It worked that out from how much each one had to say.
 
 *(Point at the shrinkage figure.)*
 
-The picture makes it obvious: the red lines, the thin series, collapse onto the dashed group mean.
-The blue lines barely move.
+The picture makes it obvious. The red lines, which are the thin series, collapse onto the dashed
+group mean, and the blue lines barely move.
 
 **[STOP — learner works]** — *(replaces the "before you go on" note)*
 
-Pause the video and write one sentence: what would you now tell the business about SNAP weeks?
-Keep it where you can see it. Step 3 is going to ask whether it was right.
+Pause the video, and write one sentence: what would you now tell the business about SNAP weeks?
+Keep it where you can see it, because Step 3 is going to ask whether it was right.
 
-*(Resume — but plant this before moving on.)*
+*(Resume, but plant this before moving on.)*
 
-Before we grade it, look at one number I have not commented on. **`sd_b` is 0.007.**
+Before we grade it, look at one number I haven't commented on yet. **`sd_b` is zero point zero
+zero seven.**
 
-That is the model's estimate of how much stores differ from one another. Seven thousandths of a
-log unit — which is to say, the model has concluded that all thirty of these series respond to
-SNAP **essentially identically**.
+That's the model's estimate of how much stores differ from one another. Seven thousandths of a log
+unit means the model has concluded that all thirty of these series respond to SNAP in **essentially
+the same way**.
 
-Hold that up against what you know about the world. Thirty series spanning three states, three
-product categories, stores of different sizes. Is "they are all the same" plausible?
+Hold that up against what you know about the world. These are thirty series spanning three
+states, three product categories and stores of different sizes. Is "they're all the same"
+plausible?
 
-It is not a diagnostic. Nothing flags it. But it is a **claim about the world**, and claims about
-the world can be sanity-checked in a way that R-hat cannot.
+It isn't a diagnostic, and nothing flags it. But it is a **claim about the world**, and you can
+check a claim about the world against what you know, which is something you can never do with
+R-hat.
 
 ---
 
 # ▶ STEP 3 — Grade it against the weeks it never saw
 
-*(Screen: run the grading table.)*
+*(Run the grading table.)*
 
 ```
     series  unpooled  hierarchical  held_out_truth
@@ -189,35 +193,40 @@ WI_3_FOODS     0.017         0.011           0.177
   mean held-out effect across these series: 0.089
 ```
 
-**[pause]** — *let the table sit. Do not talk over it. This is the moment of the lab.*
-
-Read the middle column first. **0.011, ten times.** The hierarchical model reported essentially the
-same effect for every one of these ten series.
-
-Now read the last column. The held-out weeks — hundreds of them per series, weeks the model never
-saw — say the true effects average **0.089**, and range from 0.011 up to 0.209.
-
-The model was not merely imprecise. It moved all ten series to a number roughly **eight times too
-small**, and reported tight intervals around it.
+*(Let the table sit, and don't talk over it. This is the moment of the lab.)*
 
 **[pause]**
 
-And look at the RMSE line, because it takes away the last consolation. Unpooled 0.103,
-hierarchical 0.098. All of that shrinkage — the beautiful collapsing lines, the 11.9× ratio —
-bought a **five percent** improvement over just fitting each series separately.
+Read the middle column first. It says **zero point zero one one, ten times over.** The hierarchical
+model reported essentially the same effect for every one of these ten series.
 
-*(Screen: the callout.)*
+Now read the last column. The held-out weeks, hundreds of them per series, weeks the model never
+saw, say that the true effects average **zero point zero eight nine**, and that they range from
+zero point zero one one up to zero point two zero nine.
 
-Now the sentence that matters most in this lecture. **The diagnostics could never have caught
-this.** R-hat, ESS and divergences ask whether the sampler explored the posterior of *the model
-you wrote*. They cannot ask whether that was the right model to write. Every diagnostic passed,
-and every diagnostic was answering a different question from the one you cared about.
+So the model wasn't merely imprecise. It moved all ten series to a number roughly **eight times too
+small**, and it reported tight intervals around it.
+
+**[pause]**
+
+Now look at the RMSE line, because it takes away the last consolation. It's zero point one zero
+three unpooled and zero point zero nine eight hierarchical. All of that shrinkage, the beautiful
+collapsing lines and the ratio of eleven point nine, bought a **five percent** improvement over
+simply fitting each series on its own.
+
+*(Show the callout.)*
+
+Now here's the sentence that matters most in this lab. **The diagnostics could never have caught
+this.** R-hat, the effective sample size and the divergences all ask whether the sampler explored
+the posterior of *the model you wrote*. They can't ask whether that was the right model to write.
+Every diagnostic passed, and every one of them was answering a different question from the one you
+cared about.
 
 ---
 
 # ▶ STEP 4 — Find out what went wrong
 
-*(Screen: print the thinned series.)*
+*(Print the thinned series.)*
 
 Two things went wrong, and they compound.
 
@@ -228,9 +237,9 @@ thinned series: ['CA_1_FOODS', 'CA_2_FOODS', 'CA_3_FOODS', 'CA_4_FOODS', 'TX_1_F
 
 **[pause]**
 
-Every thinned series is a **FOODS** series. All ten. That is not a coincidence and it is not bad
-luck — the panel is ordered store-major with three categories each, so `j % 3 == 0` selects the
-same category every time.
+Every thinned series is a **FOODS** series, all ten of them. That isn't a coincidence, and it isn't
+bad luck. The panel is ordered store by store, with three categories in each store, so taking
+every third series selects the same category every time.
 
 *(Run the category table.)*
 
@@ -241,54 +250,58 @@ Empirical high-SNAP effect by category (all data, no model):
   HOUSEHOLD  n=10  mean +0.011  sd 0.014
 ```
 
-And there it is. **SNAP is a food assistance program.** FOODS responds at +0.089. HOBBIES and
-HOUSEHOLD are at +0.006 and +0.011 — indistinguishable from nothing.
+And there it is. **SNAP is a food assistance program.** FOODS responds, at plus zero point zero
+eight nine. HOBBIES and HOUSEHOLD sit at plus zero point zero zero six and plus zero point zero one
+one, which is indistinguishable from nothing.
 
-So put the two together, because neither alone is fatal.
+So put the two together, because neither one alone is fatal.
 
 We told the model that thirty series were **thirty interchangeable draws from one distribution.**
-They are not: twenty of them have no effect and ten do. The group mean therefore landed near zero,
-dominated by the twenty. And then — the second error — we starved **precisely the ten series that
+They aren't. Twenty of them have no effect, and ten do. So the group mean landed near zero,
+dominated by the twenty. Then came the second error. We starved **precisely the ten series that
 had something to say**, so those ten had almost no data with which to resist being pulled toward a
 mean built from series unlike them.
 
-That is why `sd_b` came out at 0.007. Averaged across a group where two thirds genuinely have no
-effect, "stores are all the same" is the best summary of a badly-posed question.
+That's why `sd_b` came out at zero point zero zero seven. Averaged across a group where two-thirds
+of the series genuinely have no effect, "the stores are all the same" is the best summary of a
+badly posed question.
 
-*(Screen: the exchangeability warning box.)*
+*(Show the exchangeability warning box.)*
 
 **[STOP — learner works]** — *(replaces the "your turn" string)*
 
-Pause and answer the question in the code cell: **would a bigger sample have fixed this?**
+Pause the video, and answer the question in the code cell: **would a bigger sample have fixed
+this?**
 
 *(Resume.)*
 
-No — and this is worth being clear about, because "get more data" is the reflex. More weeks per
-series would sharpen each estimate, and the hierarchy would still be pulling FOODS series toward a
-mean computed from HOBBIES and HOUSEHOLD. The error is in the *structure* we imposed, and no
-quantity of data corrects a structural mistake. It just makes you more confident about it.
+No, it wouldn't, and this is worth being clear about, because "get more data" is the reflex. More
+weeks per series would sharpen each estimate, and the hierarchy would still be pulling the FOODS
+series toward a mean computed from HOBBIES and HOUSEHOLD. The error is in the *structure* we
+imposed, and no quantity of data corrects a structural mistake. It just makes you more confident
+about it.
 
-**Exchangeability is a modeling assumption and it is yours to defend.** Groups are exchangeable
+**Exchangeability is a modeling assumption, and it's yours to defend.** Groups are exchangeable
 when, before seeing the data, you have no reason to expect one to differ from another in a
-particular direction. Ten FOODS series across ten stores: plausible. FOODS against HOBBIES: you
-knew the answer before you looked.
+particular direction. Ten FOODS series across ten stores is plausible. FOODS against HOBBIES isn't,
+because you knew the answer before you looked.
 
-Nothing in PyMC checks this. No diagnostic reports it. It is subject-matter knowledge, applied
+Nothing in PyMC checks this, and no diagnostic reports it. It's subject-matter knowledge, applied
 before the model is written.
 
 ---
 
 # ▶ STEP 5 — Do it on the exchangeable set
 
-*(Screen: rebuild on FOODS only, then run the fits.)*
+*(Rebuild on FOODS only, then run the fits.)*
 
 ```
 10 FOODS series | 5 thinned to 8 weeks
 train 1,425 rows | held-out 1,345 rows
 ```
 
-Same code. Same priors. Same thinning trick — every other series cut to 8 weeks. The **only**
-change is which series are allowed into the hierarchy.
+It's the same code, the same priors and the same thinning trick, this time with every other series
+cut to eight weeks. The **only** change is which series are allowed into the hierarchy.
 
 ```
        mean     sd hdi94_lb hdi94_ub ess_bulk ess_tail r_hat
@@ -296,14 +309,17 @@ mu_b  0.078  0.035    0.017     0.15     1544     1588  1.00
 sd_b  0.065  0.038   0.0097     0.16     1027     1153  1.00
 ```
 
-**[pause]** — *the comparison to make out loud.*
+*(Make this comparison out loud.)*
 
-`mu_b` is **0.078** — a real SNAP effect, where before it was 0.011. And `sd_b` is **0.065**, where
-before it was 0.007. Nine times larger.
+**[pause]**
 
-That second number is the interesting one. The model now says stores genuinely differ from one
-another, because on a defensible group they do. The earlier 0.007 was not a finding about stores;
-it was an artifact of asking about the wrong group.
+`mu_b` is **zero point zero seven eight**, a real SNAP effect, where before it was zero point zero
+one one. And `sd_b` is **zero point zero six five**, where before it was zero point zero zero seven.
+That's nine times larger.
+
+That second number is the interesting one. The model now says that stores genuinely differ from
+one another, because on a group you can defend, they do. The earlier zero point zero zero seven
+wasn't a finding about stores. It was an artifact of asking about the wrong group.
 
 *(Run the shrinkage table.)*
 
@@ -315,13 +331,15 @@ it was an artifact of asking about the wrong group.
   ratio: thin moved 8.1x further
 ```
 
-Compare the middle column with Step 2's. There, **everything** collapsed — thin spread went to
-0.000, full to 0.001. Here the thin series collapse to 0.010 but the full series **keep most of
-their spread**: 0.055 down to 0.037, about two-thirds retained.
+Compare the middle column with the one in Step 2. There, **everything** collapsed: the thin spread
+went to zero point zero zero zero, and the full spread to zero point zero zero one. Here, the thin
+series collapse to zero point zero one zero, but the full series **keep most of their spread**,
+going from zero point zero five five down to zero point zero three seven. That's about two-thirds
+of it retained.
 
-That is what partial pooling is supposed to look like. The model discarded variation that 8 weeks
-could not support, and kept variation that 277 weeks could. In Step 2 it discarded everything,
-which should have been the tell.
+That's what partial pooling is supposed to look like. The model discarded variation that eight
+weeks couldn't support, and kept variation that two hundred seventy-seven weeks could. In Step 2 it
+discarded everything, and that should have been the tell.
 
 *(Run the grading table.)*
 
@@ -338,31 +356,40 @@ WI_2_FOODS     0.338         0.103           0.207
 
 **[pause]**
 
-Now read the middle column against the last one. 0.097 against 0.087. 0.082 against 0.102. 0.091
-against 0.072. These are *close*, and each one came from a series with **eight weeks of data.**
+Now read the middle column against the last one. It's zero point zero nine seven against zero
+point zero eight seven, then zero point zero eight two against zero point one zero two, then zero
+point zero nine one against zero point zero seven two. These are *close*, and each one came from a
+series with **eight weeks of data.**
 
-RMSE against the truth: 0.126 unpooled, **0.048** hierarchical. An error 2.6 times smaller.
+The RMSE against the truth is zero point one two six unpooled and **zero point zero four eight**
+hierarchical, an error two point six times smaller.
 
-**That is borrowing strength, and now it is real.** Same code, same priors, same diagnostics — and
-the thin series are estimated well because the other five exist. The only thing that changed was
-which series were allowed into the hierarchy.
+**That's borrowing strength, and now it's real.** It's the same code, the same priors and the same
+diagnostics, and the thin series are estimated well because the other five exist. The only thing
+that changed was which series were allowed into the hierarchy.
 
 **[STOP — learner works]**
 
-Fill in the comparison in the last cell: what percentage did pooling improve RMSE in Step 3, and
-what percentage here? *(Roughly 5% there against 61% here.)*
+Pause the video, and fill in the comparison in the last cell. By what percentage did pooling
+improve the RMSE in Step 3, and by what percentage here?
+
+*(Resume.)*
+
+In Step 3, pooling took the RMSE from zero point one zero three to zero point zero nine eight,
+which is an improvement of about five percent. Here it went from zero point one two six to zero
+point zero four eight, which is an improvement of about sixty-two percent.
 
 ---
 
 # ▶ STEP 6 — The trap in the code
 
-*(Screen: the centered form, then run.)*
+*(Show the centered form, then run it.)*
 
-One more failure, and this one **is** mechanical rather than conceptual.
+Here's one more failure, and this one **is** mechanical rather than conceptual.
 
-The natural way to write a hierarchy reads exactly like the equation:
-`b = pm.Normal("b", mu_b, sd_b, shape=J)`. Everybody writes it that way first. It is called the
-centered form.
+The natural way to write a hierarchy reads exactly like the equation. You declare b directly as a
+Normal, with mean `mu_b`, standard deviation `sd_b` and shape J. Everybody writes it that way
+first, and it's called the centered form.
 
 ```
 Diagnostics
@@ -372,31 +399,35 @@ Diagnostics
 
 **[pause]**
 
-Same model. Same data. The same posterior, if you could sample it — but the centered form makes the
-sampler walk a **funnel**: when `sd_b` is small the individual `b_j` must crowd into a narrow
-neck, and a sampler tuned for the wide part of the funnel cannot get into the neck.
+It's the same model and the same data. It would even give the same posterior, if you could sample
+it. But the centered form makes the sampler walk a **funnel**. When `sd_b` is small, the individual
+b-j have to crowd into a narrow neck, and a sampler tuned for the wide part of the funnel can't get
+into the neck.
 
-*(Screen: the callout.)*
+*(Show the callout.)*
 
-Now read the three numbers, because only one of them objects — and that is the lesson.
+Now read the three numbers, because only one of them objects, and that's the lesson.
 
-**ESS passes.** 966, more than twice the threshold. You would not look twice.
+The effective sample size **passes**. At nine hundred sixty-six, it's more than twice the
+threshold, and you wouldn't look twice.
 
-**R-hat passes** — 1.003 against 1.01. On those two numbers alone, the two Lecture 10 taught you to
-check, you would have shipped this model.
+R-hat **passes** too, at one point zero zero three against one point zero one. Those are two of the
+three numbers Lecture 10 taught you to check, and on those two alone, you would have shipped this
+model.
 
-**43 divergences against a threshold of exactly zero.** There is no version of "close to zero"
-that gets you to forty-three. It admits no conversation.
+Then there are **forty-three divergences, against a threshold of exactly zero.** There's no version
+of "close to zero" that gets you to forty-three, and there's nothing to argue about.
 
-*(Screen: the second paragraph of the callout.)*
+*(Show the second paragraph of the callout.)*
 
-If your number differs from this one, that is expected: divergence counts move with the seed and
-even the machine. Over ten other seeds we saw 15 to 285 centered and 0 to 11 non-centered. What
-held every time was the pattern — the centered form diverged on all eleven runs, and R-hat or ESS
-caught it on only two.
+If your number differs from this one, that's expected, because divergence counts move with the
+seed and even with the machine. Over ten other seeds, we saw fifteen to two hundred eighty-five
+divergences in the centered form, and zero to eleven in the non-centered form. What held every time
+was the pattern. The centered form diverged on all eleven runs, and R-hat or the effective sample
+size caught it on only two.
 
-So the rule: on hierarchical models, **divergences fire first and least ambiguously.** Do not wait
-for R-hat to decide for you.
+So here's the rule. On hierarchical models, **divergences fire first, and least ambiguously.**
+Don't wait for R-hat to decide for you.
 
 ---
 
@@ -404,36 +435,47 @@ for R-hat to decide for you.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Four questions for the board.
+Here are four questions to work through on your own before you go.
 
-**The failure.** Step 2 had clean diagnostics, textbook shrinkage and a defensible conclusion.
-Step 3 showed it was wrong. What kind of check caught it, and why could no amount of sampler
-diagnostics have done so?
+The first is about the failure. Step 2 had clean diagnostics, textbook shrinkage and a conclusion
+that sounded defensible, and Step 3 showed it was wrong. What kind of check caught it, and why
+could no amount of sampler diagnostics have done so?
 
-**[pause]** — *the answer to land: held-out data. Diagnostics audit the computation; only data the
-model never saw can audit the model.*
+**[pause]**
 
-**The assumption.** You are asked to pool weekly demand across the ten stores in one chain. Name
-one variable that, if it differed across those stores, would break exchangeability the way
-category did here — and say how you would handle it **without** abandoning the hierarchy.
+The answer is held-out data. Diagnostics audit the computation, and only data the model never saw
+can audit the model.
 
-**[pause]** — *the good answer is a level the hierarchy can absorb: put the offending variable in
-as a predictor, or nest the hierarchy — stores within regions — rather than giving up on pooling.*
+The second is about the assumption. Suppose you're asked to pool weekly demand across the ten
+stores in one chain. Name one variable that, if it differed across those stores, would break
+exchangeability the way category did here, and say how you'd handle it **without** abandoning the
+hierarchy.
 
-**The judgment.** In Step 5, `sd_b` came out around 0.065, so stores genuinely differ. The
-unpooled fit put the thin stores' range at roughly 5% to 40%. Given both numbers, what do you actually
-recommend the business do for the next SNAP week?
+**[pause]**
 
-**The thread.** This is the sixth time this semester a model improved by pulling estimates toward
-a common value. Name the other five, and say what is different about the shrinkage strength here.
+A good answer puts that variable at a level the hierarchy can absorb. You can put the offending
+variable into the model as a predictor, or you can nest the hierarchy, with stores within regions,
+rather than giving up on pooling.
 
-**[pause]** — *the GAM smoothing penalty, tree pruning, `reg_lambda`, Ridge and LASSO, weight
-decay — and the difference is that here the strength is* estimated from the data *rather than
-chosen by you and tuned on a validation set. `sd_b` is the shrinkage parameter, and the model infers it.*
+The third is about judgment. In Step 5, `sd_b` came out around zero point zero six five, so stores
+genuinely differ. The unpooled fit put the thin stores' range at roughly five percent to forty
+percent. Given both numbers, what do you actually recommend the business do for the next SNAP
+week?
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week: Bayesian linear
-regression — and a preprocessing step you have used all semester that silently destroys the
-answer.
+The last one is about the thread running through the course. This is the sixth time this semester
+that a model has improved by pulling estimates toward a common value. Name the other five, and say
+what's different about the shrinkage strength here.
+
+**[pause]**
+
+The other five are the smoothing penalty on GAMs in Lecture 3, tree pruning in Lecture 4,
+`reg_lambda` in Lecture 5, Ridge and LASSO in Lecture 6, and weight decay in Lecture 7. What's
+different here is that the strength is *estimated from the data*, rather than chosen by you and
+tuned on a validation set. `sd_b` is the shrinkage parameter, and the model infers it.
+
+Solutions for the coded parts go up on Canvas after class. Next week, in Lecture 12, we turn to
+Bayesian linear regression, and to a preprocessing step you've used all semester that silently
+destroys the answer.
 
 ---
 

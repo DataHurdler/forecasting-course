@@ -19,3 +19,23 @@ Nothing here has been changed unless the line says so.
 5. **Lab appendix 4.28%** comes from rounded RMSEs; exact is 4.26%. Both round to 4%. Left.
 6. **Slide 4: ETS intervals "derived from asymptotic theory"** is loose. Kept. *Recommend:* "from
    the model's own error formula".
+
+## Lecture 13 (`fda5f3c`)
+
+1. Slides 11 and 19, section dividers, had no narration; each now says its subtitle in one sentence
+   (done, so the video does not sit silent on them).
+2. Slide 16's Ecuador earthquake and Favorita mention are in the narration only, not on the slide.
+   Accurate, kept.
+3. Slide 7's "(If someone asks.)" aside on the damped Holt-Winters variants is reworded so it also
+   works when a video reads it every time. *Recommend:* keep.
+
+## Lecture 11 Part 2
+
+1. Slide 12 gains two sentences: Lecture 10 promised divergences "for real" here, and this is the
+   mirror image of Part 1 (R-hat and ESS failed there with zero divergences). *Recommend:* keep.
+2. The lab's "judgment" question has no spoken answer (no note records one); slide 17 of the deck
+   holds one. *Recommend:* add it from slide 17.
+3. "Before You Leave" keeps three pauses, one before each spoken answer — one over the guide's
+   limit. *Recommend:* keep.
+4. Slide 13: "the single most common failure in applied hierarchical modeling" is unsourced.
+   *Recommend:* "one of the most common".
