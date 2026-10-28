@@ -23,41 +23,46 @@ written naturally to be read from."*
 5. **Short, clear sentences, but not choppy ones.** Vary the length the way speech does. Avoid
    strings of three-word sentences used for effect ("Score, normalize, average. That's it.");
    say it once, plainly: "So attention does three things: it scores, it normalizes, and it averages."
+6. **Anchor every reference back.** A listener can't glance at the outline. Say when or what an
+   earlier piece was: "Part 1, which was last week," or "Lecture 6, on regularization," not a bare
+   "Part 1" or "Lecture 6."
+7. **Punctuate for the voice.** Put a comma where the speaker should take a breath, as in
+   "Now, read it." The punctuation is the reader's only cue for pacing.
 
 ## Words and numbers
 
-6. **Write numbers the way they are said**, in words: "eight forty-two," "one thousand thirty-two,"
+8. **Write numbers the way they are said**, in words: "eight forty-two," "one thousand thirty-two,"
    "zero point eight three," "ninety-one percent," "twenty twenty-six." Keep the same spoken form
    for the same number throughout a script.
-7. **Read math the way you would say it**: "Q times K-transpose, divided by the square root of
+9. **Read math the way you would say it**: "Q times K-transpose, divided by the square root of
    d-k," not symbols.
-8. **Nothing that is awkward to say**: no parentheses, no slashes, no "e.g." or "i.e.," few
+10. **Nothing that is awkward to say**: no parentheses, no slashes, no "e.g." or "i.e.," few
    semicolons, no em-dash chains. Say the aside as its own sentence.
-9. **Contractions are fine** ("it's," "we'll," "doesn't"). Plain words over jargon; when jargon is
+11. **Contractions are fine** ("it's," "we'll," "doesn't"). Plain words over jargon; when jargon is
    needed, say what it means the first time.
-10. **American spelling.**
+12. **American spelling.**
 
 ## Directions to the speaker
 
-11. **Stage directions only where the speaker has to do something** (point at a panel, advance,
+13. **Stage directions only where the speaker has to do something** (point at a panel, advance,
     run a cell). Keep them short, in italics and parentheses, on their own line:
     *(Point at the left panel.)*
-12. **Use [pause] sparingly**, at most once or twice a slide, where a pause genuinely helps. Drop
+14. **Use [pause] sparingly**, at most once or twice a slide, where a pause genuinely helps. Drop
     *(Beat.)* and similar cues.
-13. **Bold is for the word you lean on**, at most once or twice a paragraph, never for labels.
+15. **Bold is for the word you lean on**, at most once or twice a paragraph, never for labels.
 
 ## Content
 
-14. **Every number, claim and caveat must match the current slide and the code.** Never add a new
+16. **Every number, claim and caveat must match the current slide and the code.** Never add a new
     number or a new claim. If the old script and the slide disagree, the slide wins; if a number
     looks wrong, flag it rather than guess.
-15. **Keep the detail.** The narration carries what the slide no longer shows. Rewriting is for
+17. **Keep the detail.** The narration carries what the slide no longer shows. Rewriting is for
     the voice, not for cutting content; the length should stay about the same.
-16. **Keep the structure the tools rely on:** the header block, the `Deck:` or `Lab:` line, every
+18. **Keep the structure the tools rely on:** the header block, the `Deck:` or `Lab:` line, every
     `# ▶ SLIDE n — Exact Frame Title` or `# ▶ STEP n — Title` header unchanged, `---` between
     sections, `**[STOP — learner works]**` markers, and any timing table. Keep every "slide n" and
     "Step n" cross-reference correct.
-17. **Only the spoken text is rewritten.** The notes to the instructor ("How to use this document",
+19. **Only the spoken text is rewritten.** The notes to the instructor ("How to use this document",
     correction notes, an "Appendix — expected output") are read, not recorded; leave them as they
     are unless a number in them is wrong.
 
@@ -75,4 +80,5 @@ After:
 > weighted lookup and a lot less mysterious than its formula makes it look.
 
 The finished model of the voice is `Lecture09_Part2_script.md`, the first script rewritten to this
-guide (2026-10-26).
+guide (2026-10-26). The owner approved its voice on 2026-10-27, and rules 6 and 7 come
+from the owner's own edits to it.

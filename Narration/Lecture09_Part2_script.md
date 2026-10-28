@@ -57,7 +57,7 @@ This first section is about two limits that come with reading a sequence one ste
 
 # ▶ SLIDE 4 — Two Problems Built Into Recurrence
 
-Part 1 left us with a recurrent forecaster that works. Both of the problems it still has come from
+Part 1, which was last week, left us with a recurrent forecaster that works. Both of the problems it still has come from
 the same source: it reads strictly from left to right. So let's follow one week through it, the
 same week last year, which is week t minus fifty-two, and watch how it reaches the forecast.
 
@@ -191,7 +191,7 @@ We trained it twice, with two different seeds, and those are the left and right 
 
 **[pause]**
 
-Now read it. Almost all of the dark red sits in the last two to seven weeks, so that's where the
+Now, read it. Almost all of the dark red sits in the last two to seven weeks, so that's where the
 model looks. In each run, one or two heads spread their weight almost evenly across the window, and
 those are the flat, pale rows.
 
