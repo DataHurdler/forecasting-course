@@ -81,3 +81,12 @@ Nothing here has been changed unless the line says so.
    the single-harmonic numbers (4,269 / 3,358) come only from the Appendix. *Recommend:* re-run
    the solved version once to confirm them.
 3. Slide 20 now names FPP §7.4 and §7.7, the syllabus's Week 3 reading.
+
+## Lecture 4
+
+1. The lecture header says about 19 minutes; the timing table adds to about 24, and the script is
+   now longer. *Recommend:* re-time and update the header.
+2. Solutions "after class" (applied, as you decided for Lecture 10: the narration matches the lab).
+3. The milk-versus-canned-goods question has no recorded answer; left as an exercise.
+4. CART is spelled out at first mention ("classification and regression trees"); after that the
+   voice says "C-A-R-T". *Recommend:* fine as is.

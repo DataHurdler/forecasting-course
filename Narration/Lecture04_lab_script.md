@@ -43,66 +43,73 @@ Three places, all converted below:
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 4, and the course changes character today.
+This is Lab 4, and today the course changes character.
 
-Everything up to now worked the same way: you specified a structure — a trend and a season, an
-AR term and an MA term, a smooth function of day-of-year — and then estimated it. You chose the
-shape and the data filled in the numbers.
+Everything up to now has worked the same way. You specified a structure, like a trend and a season,
+an AR term and an MA term, or a smooth function of the day of the year, and then you estimated it.
+You chose the shape, and the data filled in the numbers.
 
-A tree does not work that way. You hand it a pile of columns and it finds the structure itself.
+A tree doesn't work that way. You hand it a pile of columns, and it finds the structure itself.
 Nobody tells it that weekends matter.
 
 **[pause]**
 
-The series is daily units for CA\_1 FOODS — the same store, same aisle you forecast in
-**Homework 2**. Not Lab 3; Lab 3 was electricity. Homework 2 was this series with a GAM, and it
-was due before today, which is deliberate. It means you can put a tree on identical data and say
-exactly what each method bought you. That comparison is the closing question.
+The series is daily units for CA\_1 FOODS, the same store and the same aisle you forecast in
+**Homework 2**. It isn't the Lab 3 data, because Lab 3, last week, used electricity demand.
+Homework 2 was this series with a GAM, and it was due before today, which is deliberate. It means
+you can put a tree on identical data and say exactly what each method bought you. That comparison
+is the closing question.
 
-Four things by the end: read a fitted tree out loud, watch the bias–variance tradeoff happen in
-a table, discover why one tree is not enough, and find the one place trees reliably fail.
+By the end you'll have done four things. You'll have read a fitted tree out loud, watched the
+bias–variance tradeoff happen in a table, discovered why one tree is not enough, and found the one
+place trees reliably fail.
 
-You need `scikit-learn` and `data/processed/m5_daily.csv`. Run `prep_m5.py` once if it is missing.
+You need `scikit-learn` and `data/processed/m5_daily.csv`. If the file is missing, run
+`prep_m5.py` once.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
 ```
 1576 usable days — train 1211, test 365
 benchmark (same day last year): RMSE 625
 ```
 
-Just over four years of daily data, holding out the final year — May 2015 through May 2016.
+That's just over four years of daily data, holding out the final year, which runs from May twenty
+fifteen through May twenty sixteen.
 
-The benchmark is the same one you have used since Lecture 1: predict today with the same day
-last year. **625 units.** Write it down. Every number today gets measured against it.
+The benchmark is the same one you've used since Lecture 1: predict today with the same day last
+year. It scores **six hundred twenty-five** units. Write that down, because every number today gets
+measured against it.
 
-**[pause]** — *let the `FEATURES` list sit on screen.*
+*(Leave the `FEATURES` list on screen for a moment.)*
+
+**[pause]**
 
 Now look at what we handed the model, because this is the important part of the setup.
 
-Ten columns: five lags, a SNAP flag, an event flag, day of week, day of year, and price.
-And **no date index.** There is no time in `X_train` at all. Every row is an independent example,
-and everything the model knows about *when* it is, is sitting in those columns because we put it
-there.
+There are ten columns: five lags, a SNAP flag, an event flag, the day of the week, the day of the
+year, and the price. And there's **no date index**. There's no time in `X_train` at all. Every row
+is an independent example, and everything the model knows about *when* it is, it knows because we
+put it in those columns.
 
-That reframing — a time series flattened into an ordinary table — is what lets everything from
-here to Lecture 9 be applied to forecasting at all. Trees, forests, boosting, neural networks:
-none of them know what a time series is. They all consume this table.
+That reframing, a time series flattened into an ordinary table, is what lets everything from here
+to Lecture 9 be applied to forecasting at all. Trees, forests, boosting and neural networks: none of
+them know what a time series is. They all consume this table.
 
 ---
 
 # ▶ STEP 1 — Fit a tree and read it out loud
 
-*(Screen: run the depth-3 fit and `export_text`.)*
+*(Run the depth-3 fit and `export_text`.)*
 
-Depth 3, deliberately. Eight leaves is small enough to read in full, and you should read it in
-full, because being able to do that is most of what a tree is for.
+We're using depth three, and that's deliberate. Eight leaves is small enough to read in full, and
+you should read it in full, because being able to do that is most of what a tree is for.
 
 ```
 |--- dow <= 4
@@ -117,31 +124,38 @@ test RMSE: 337
 
 **[pause]**
 
-The root split is `dow <= 4`. That is Monday-through-Friday on one side, Saturday and Sunday on
-the other — and the tree found it without being told that a week has a weekend in it.
+The root split is `dow <= 4`. That puts Monday through Friday on one side and Saturday and Sunday on
+the other, and the tree found it without being told that a week has a weekend in it.
 
 **[STOP — learner works]** — *(replaces "read it aloud to the person next to you")*
 
 Pause here and say the whole path out loud, in business language rather than in inequalities.
-Not "`dow` less than or equal to 4.5, then `units_lag28` above 2596." Something closer to:
-*it's a weekday, and four weeks ago was already busy, and last week was busy too, so predict
-about 2,950.*
+Don't say "`dow` less than or equal to four point five, then `units_lag28` above two thousand five
+hundred ninety-six." Say something closer to this: *it's a weekday, four weeks ago was already busy,
+and the same day last week was busy too, so predict about two thousand nine hundred fifty.* If
+you're on your own, write that sentence as a comment, the way the lab suggests, and add a guess
+about which side of the root sells more. Then check your guess against the two node values on the
+tree plot.
 
-If you can do that for one leaf, you can do it for a store manager, and that is a thing no
-model in Lectures 1 through 3 could offer you.
+If you can do that for one leaf, you can do it for a store manager, and that's something no model
+in Lectures 1 through 3 could offer you.
 
-*(Resume. Point at the bottom-right of the printed tree.)*
+*(Resume, and point at the bottom right of the printed tree.)*
 
-One branch worth reading before we move on. On the weekend side, on days when yesterday was
-already very busy, the tree splits on `is_event` — and it predicts **4,041** when there is no
-event and **3,583** when there is. The event lowers the forecast by about 450 units. Events in
-M5 include days like Christmas, when the store is shut or nearly so. The tree has no idea what
-Christmas is. It found the hole in the data anyway.
+If you guessed that the weekend side sells more, you were right, and we'll put numbers on that gap
+in a moment.
+
+There's one branch worth reading before we move on. On the weekend side, on days when yesterday was
+already very busy, the tree splits on `is_event`. It predicts **four thousand forty-one** when
+there's no event and **three thousand five hundred eighty-three** when there is, so the event lowers
+the forecast by more than four hundred fifty units. Events in M5 include days like Christmas, when
+the store is shut or nearly so. The tree has no idea what Christmas is, and it found the hole in the
+data anyway.
 
 **[pause]**
 
-And the accuracy: **337 against a benchmark of 625.** Roughly a 46% improvement, from eight
-leaves you can print on a slide.
+And the accuracy is **three hundred thirty-seven**, against a benchmark of six hundred twenty-five.
+That's roughly a forty-six percent improvement, from eight leaves you could print on a slide.
 
 *(Run the importances.)*
 
@@ -153,38 +167,41 @@ units_lag7     0.030
 is_event       0.011
 ```
 
-Day of week takes seventy-nine percent of the importance. On its own, day-of-week means explain
-about **66%** of the variance in training units — weekday average 2,632, weekend average 3,773,
-a gap of 43%. There is no mystery about why the tree grabbed it first.
+Day of week takes seventy-nine percent of the importance. On its own, the day-of-week averages
+explain about sixty-six percent of the variance in training units. The weekday average is two
+thousand six hundred thirty-two and the weekend average is three thousand seven hundred
+seventy-three, a gap of forty-three percent. There's no mystery about why the tree grabbed it first.
 
-*(Screen: the callout comparing this with the lecture slide.)*
+*(Show the callout that compares this with the lecture slide.)*
 
 **[STOP — learner works]** — *(replaces "say why before moving on")*
 
-Lecture 4's importance table, on the **weekly** version of this same store and aisle, had
-`units_lag4` at 0.62 and day-of-week nowhere — it isn't in the table at all. Here, on **daily**
-data, `dow` wins outright with 0.79 and the four-week lag drops to 0.11.
+This week's lecture, Lecture 4, had an importance table on the **weekly** version of this same store
+and aisle. There, `units_lag4` was at zero point six two, and day of week was nowhere. It isn't in
+the table at all. Here, on **daily** data, `dow` wins outright with zero point seven nine, and the
+four-week lag drops to zero point one one.
 
-Same store. Same product. Opposite answer. Pause and work out why before I say it.
+It's the same store and the same product, with the opposite answer. Pause and work out why before I
+say it.
 
 *(Resume.)*
 
-Because weekly data has no day-of-week variation left in it. Aggregating to a week averages the
-weekend and the weekdays together and destroys the largest single signal in the series. It was
-never that the four-week lag mattered more; it was that the thing that mattered most had already
-been summed away.
+It's because weekly data has no day-of-week variation left in it. Aggregating to a week averages the
+weekend and the weekdays together, and that destroys the largest single signal in the series. It
+was never that the four-week lag mattered more. The thing that mattered most had already been summed
+away.
 
-That is worth more than it looks. **Feature importance is a statement about the table you built,
-not about the business.** Change the frequency and the ranking inverts.
+That's worth more than it looks. **Feature importance is a statement about the table you built, not
+about the business.** Change the frequency, and the ranking inverts.
 
 ---
 
 # ▶ STEP 2 — Watch the bias–variance tradeoff happen
 
-*(Screen: run the depth sweep.)*
+*(Run the depth sweep.)*
 
-Lecture 4 drew this curve for the weekly series. Here it is measured on your own daily data, and
-the next cell draws the same curve.
+Lecture 4, this week's lecture, drew this curve for the weekly series. Here it is measured on your
+own daily data, and the next cell draws the same curve.
 
 ```
 depth  leaves  train_RMSE  test_RMSE
@@ -197,44 +214,50 @@ depth  leaves  train_RMSE  test_RMSE
  None    1200           0        406
 ```
 
-**[pause]** — *let this sit. Do not talk over it.*
-
-Read the two columns separately.
-
-**Training error** falls the whole way down and ends at **zero**. Not near zero — zero. Look at
-the leaf count on that row: **1,200 leaves for 1,211 training days.** The tree has given almost
-every single day its own leaf and memorized the answer. A model that has memorized the training
-set has a training error of zero by construction, and that number tells you nothing whatsoever.
-
-**Test error** does something else. It falls to **303 at depth 5**, and then turns around and
-climbs back to **406** — worse than the depth-2 tree with four leaves.
-
-The gap between the two columns is overfitting, drawn to scale. At depth 5 it's 284 against 303,
-almost nothing. At full depth it's 0 against 406.
+*(Let the table sit, and don't talk over it.)*
 
 **[pause]**
 
-Two things to carry out of this table.
+Read the two columns separately.
 
-First, the model that fits the training data best is worse on data it has not seen than every
-tree from depth 2 to depth 12. That is not a subtlety, that is the whole lesson, and it will repeat in every
-lecture for the rest of the course.
+The training error falls the whole way down and ends at **zero**. Not near zero, but zero. Look at
+the leaf count on that row: one thousand two hundred leaves for one thousand two hundred eleven
+training days. The tree has given almost every single day its own leaf and memorized the answer. A
+model that has memorized the training set has a training error of zero by construction, and that
+number tells you nothing whatsoever.
 
-Second — and this is the practical one — the depth-5 tree beats the fully grown tree, and the
-only thing separating them is one keyword argument. Nothing about the data changed. `max_depth`
-is the entire difference between 303 and 406.
+The test error does something else. It falls to **three hundred three** at depth five, and then it
+turns around and climbs back to **four hundred six**, which is worse than the depth-two tree with
+four leaves.
+
+The gap between the two columns is overfitting, drawn to scale. At depth five it's two hundred
+eighty-four against three hundred three, which is almost nothing. At full depth it's zero against
+four hundred six.
+
+**[pause]**
+
+There are two things to carry out of this table.
+
+First, the model that fits the training data best is worse on data it hasn't seen than every tree
+from depth two to depth twelve. That isn't a subtlety. That's the whole lesson, and it will repeat
+in every lecture for the rest of the course.
+
+Second, and this is the practical one, the depth-five tree beats the fully grown tree, and the only
+thing separating them is one keyword argument. Nothing about the data changed. `max_depth` is the
+entire difference between three hundred three and four hundred six.
 
 ---
 
 # ▶ STEP 3 — Why one tree is not enough
 
-*(Screen: run the bootstrap loop.)*
+*(Run the bootstrap loop.)*
 
-Lecture 4 claimed a tree is unstable — nudge the data and the structure changes. Let's test that
-properly rather than take it on faith.
+This week's lecture claimed that a tree is unstable: nudge the data, and the structure changes.
+Let's test that properly, rather than take it on faith.
 
-Twenty bootstrap resamples: draw 1,211 rows *with replacement*, refit a depth-5 tree, record what
-it split on first, and keep its test predictions.
+We draw twenty bootstrap resamples. Each one draws one thousand two hundred eleven rows *with
+replacement*, refits a depth-five tree, records what it split on first, and keeps its test
+predictions.
 
 ```
 root splits across 20 bootstrap trees:
@@ -246,16 +269,17 @@ per-day spread of predictions across the 20 trees:
 
 **[pause]**
 
-Now, that first result looks like it refutes the lecture. Twenty out of twenty found the same
-root. The root is perfectly stable.
+Now, that first result looks like it refutes the lecture. Twenty out of twenty found the same root,
+so the root is perfectly stable.
 
-It is stable because day-of-week is *overwhelming* — a 43% gap survives any resample you can
-draw. **A stable root is not a stable tree.** Look at the second number: on a typical test day
-the twenty trees disagree by 160 units, and on the worst day they are spread over **1,137 units**
-— about a third of an average day's sales. Every bit of that disagreement lives below the root,
-in the splits you cannot see from this printout.
+It's stable because day of week is *overwhelming*, and a forty-three percent gap survives any
+resample you can draw. But **a stable root is not a stable tree.** Look at the second number. On a
+typical test day, the twenty trees disagree by a hundred sixty units, and on the worst day they're
+spread over one thousand one hundred thirty-seven units, which is more than a third of an average
+day's sales. Every bit of that disagreement lives below the root, in the splits you can't see from
+this printout.
 
-That is the instability the lecture was talking about, and you can only see it by looking at
+That's the instability the lecture was talking about, and you can only see it by looking at
 predictions, not at structure.
 
 *(Run the averaging cell.)*
@@ -266,43 +290,49 @@ RMSE of the 20 trees averaged together  : 266
 improvement: 18%
 ```
 
-**[pause]** — *let it land before saying anything.*
+*(Let it land before you say anything.)*
 
-Eighteen percent. No tuning, no new features, no extra data — the twenty trees saw *less* data
-than the original fit, since a bootstrap sample leaves out about a third of the rows each time.
+**[pause]**
 
-And note where 266 sits against Step 2's table: the best single tree you found by sweeping depth
-was **303**. Averaging twenty individually *worse* trees — 324 on average — produced something
-better than the best one of them and better than the best tree in the whole sweep.
+That's an eighteen percent improvement, with no tuning, no new features and no extra data. In fact,
+the twenty trees saw *less* of the data than the original fit, since a bootstrap sample leaves out
+about a third of the rows each time.
 
-That is the result the next lecture is built on, and it is worth being precise about the
-mechanism. Nothing here reduced any individual tree's bias. What fell was the *variance* you
-measured two cells ago: the disagreement averages out, the signal does not.
+And notice where two hundred sixty-six sits against Step 2's table. The best single tree you found by
+sweeping depth scored **three hundred three**. Averaging twenty trees that are individually
+*worse*, at three hundred twenty-four on average, produced something better than the best one of
+them, and better than the best tree in the whole sweep.
 
-What you have built is called **bagging** — bootstrap aggregating. It is not yet a random forest.
-A forest adds one more idea, which is to stop the trees from all looking at day-of-week first,
-and you can already see why that might matter: twenty trees that agree perfectly on their root
-are twenty trees making correlated mistakes. That is Lecture 5, and it is one keyword argument.
+That's the result the next lecture is built on, and it's worth being precise about the mechanism.
+Nothing here reduced any individual tree's bias. What fell was the *variance* you measured two cells
+ago. The disagreement averages out, and the signal doesn't.
+
+What you've built is called **bagging**, which is short for bootstrap aggregating. It isn't yet a
+random forest. A forest adds one more idea, which is to stop the trees from all looking at day of
+week first, and you can already see why that might matter. Twenty trees that agree perfectly on
+their root are twenty trees making correlated mistakes. That's Lecture 5, next week, and it's one
+keyword argument.
 
 ---
 
 # ▶ STEP 4 — Where trees reliably fail
 
-*(Screen: run the full-tree range cell.)*
+*(Run the full-tree range cell.)*
 
-Every lecture in this course should end by telling you where the method breaks. Here is where a
-tree breaks, and it follows from one sentence: **a tree predicts the mean of the training rows in
-a leaf.** Every prediction it will ever make is an average of values it has already seen.
+Every lecture in this course should end by telling you where the method breaks. Here's where a tree
+breaks, and it follows from one sentence: **a tree predicts the mean of the training rows in a
+leaf.** Every prediction it will ever make is an average of values it has already seen.
 
 ```
 training target range : [0, 5,016]
 prediction range      : [0, 4,527]
 ```
 
-The prediction range sits inside the training range, and it *has* to — not "usually does," cannot.
-A tree can never forecast a value above the largest one in its training data, because there is no
-arithmetic in it that could produce one. No trend term, no extrapolation, nothing. If this store
-grows 20% next year, the tree will predict last year's ceiling forever.
+The prediction range sits inside the training range, and it *has* to. It isn't that it usually
+does. It cannot do anything else. A tree can never forecast a value above the largest one in its
+training data, because there's no arithmetic in it that could produce one. There's no trend term,
+no extrapolation, nothing. If this store grows twenty percent next year, the tree will predict last
+year's ceiling forever.
 
 **[pause]**
 
@@ -313,75 +343,81 @@ busiest 10% of test days  (n=37): actual 4,115   predicted 3,929   under by 186
 quietest 10% of test days (n=37): actual 2,030   predicted 2,237   over by  207
 ```
 
-Both ends are wrong, and **they are wrong in opposite directions**. The busy days are
-under-forecast by 186 units. The quiet days are over-forecast by 207.
+Both ends are wrong, and **they're wrong in opposite directions**. The busy days are under-forecast
+by a hundred eighty-six units, and the quiet days are over-forecast by two hundred seven.
 
-Now be precise about what this is, because it is not what it looks like. First, the hard ceiling
-did not bite this year: the busiest test day was 4,717 units and the training set had a 5,016-unit
-day, so nothing was clipped.
+Now let's be precise about what this is, because it isn't what it looks like. First, the hard
+ceiling didn't bite this year. The busiest test day was four thousand seven hundred seventeen units,
+and the training set had a day of five thousand sixteen, so nothing was clipped.
 
-Second, look at how we chose these days: by their *actual* sales. Part of what made a day one of
-the busiest was luck — a bigger crowd than its features suggested — and no forecast sees luck
-coming. So any imperfect forecaster under-predicts the days that turned out busiest and
-over-predicts the days that turned out quietest. That is **regression to the mean**, and it is not
-a tree failure. A linear regression on the same features, day of week as dummies, which *can* extrapolate,
-pulls harder:
-255 under at the top and 269 over at the bottom. And if you choose the busiest days by the tree's
-*prediction* instead, the sign flips: those days actually sold 3,820 against a forecast of 4,137.
+Second, look at how we chose these days: by their *actual* sales. Part of what made a day one of the
+busiest was luck, a bigger crowd than its features suggested, and no forecast sees luck coming. So
+any imperfect forecaster under-predicts the days that turned out busiest and over-predicts the days
+that turned out quietest. That's called **regression to the mean**, and it isn't a tree failure. A
+linear regression on the same features, with day of week entered as dummies, *can* extrapolate, and
+it pulls toward the middle even harder: two hundred fifty-five under at the top, and two hundred
+sixty-nine over at the bottom. And if you choose the busiest days by the tree's *prediction*
+instead, the sign flips. Those days actually sold three thousand eight hundred twenty, against a
+forecast of four thousand one hundred thirty-seven.
 
 **[STOP — learner works]**
 
-Uncomment the scatter block and fill in the two blanks — actual on x, predicted on y, with the
-45-degree line. Pause the video, run it, and come back when you can describe the shape.
+Uncomment the scatter block and fill in the two blanks, with actual on the x-axis, predicted on the
+y-axis, and the forty-five-degree line drawn in. Pause the video, run it, and come back when you can
+describe the shape.
 
 *(Resume.)*
 
-You should be looking at a cloud that is flatter than the 45-degree line. Below the line on the
-right, above it on the left, hinged in the middle. Once you have seen that shape you will
-recognize it everywhere: with the actual on the x-axis, every imperfect forecast looks like this,
-however good it is, because none of them can predict the luck.
+You should be looking at a cloud that's flatter than the forty-five-degree line. It sits below the
+line on the right and above it on the left, hinged in the middle. Once you've seen that shape, you'll
+recognize it everywhere. With the actual values on the x-axis, every imperfect forecast looks like
+this, however good it is, because none of them can predict the luck.
 
 ---
 
 # ▶ BEFORE YOU LEAVE
 
-*(Screen: the closing block.)*
+*(Show the closing block.)*
+
+By now you should have found three things. A tree can never predict outside its training range. The
+pull toward the middle at both ends is regression to the mean, not a tree failure. And averaging
+twenty unstable trees beat any one of them.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Two questions on the discussion board before the next session.
+There are two questions for the discussion board before the next session.
 
-**First, the pull to the middle.** You have just seen the busiest days under-forecast and the
+The first is about the pull to the middle. You've just seen the busiest days under-forecast and the
 quietest over-forecast. Explain why *any* imperfect forecaster shows that pattern when the days are
-picked by their actual sales — and what you would expect if they were picked by the forecast
-instead.
+picked by their actual sales, and what you'd expect if they were picked by the forecast instead.
 
-Then the operational half. This store is planning inventory. One of those two errors costs more
-than the other: under-forecasting a busy day means an empty shelf and a lost sale; over-forecasting
-a quiet day means stock sitting in the back. Which is worse — and does your answer change if the
-product is milk rather than canned goods?
-
-**[pause]**
-
-**Second, the comparison.** You fitted a GAM to this exact series in Homework 2, and a tree to it
-today. Which one would you actually hand to a store manager, and what specifically would each
-let you say that the other would not?
-
-Be concrete. The GAM gives you a smooth curve per feature and a partial-dependence plot you can
-show someone. The tree gives you a path — *weekday, four weeks ago was busy, yesterday was busy,
-predict 2,950* — that a manager can follow and argue with. Those are genuinely different kinds of
-explanation, and one of them will suit an audience better than the other.
+Then there's the operational half. This store is planning inventory, and one of those two errors
+costs more than the other. Under-forecasting a busy day means an empty shelf and a lost sale, while
+over-forecasting a quiet day means stock sitting in the back. Which is worse? And does your answer
+change if the product is milk rather than canned goods?
 
 **[pause]**
 
-One last thing before you close the file. Look back at Step 2's table and notice what is *not*
-in this lab: we chose depth 5 by looking at the test set. Every number in that column was
-computed on the year we held out, and then we picked the winner from it. Lecture 1 told you what
-that is worth. Fixing it properly needs walk-forward validation on the training data alone, and
-that is Homework 3's job.
+The second question is about the comparison. You fitted a GAM to this exact series in Homework 2,
+and a tree to it today. Which one would you actually hand to a store manager, and what specifically
+would each one let you say that the other wouldn't?
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week: what happens when
-you stop the twenty trees from all looking at day-of-week first.
+Be concrete. The GAM gives you a smooth curve for each feature, and a partial-dependence plot you can
+show someone. The tree gives you a path that a manager can follow and argue with: *it's a weekday,
+four weeks ago was busy, a week ago was busy, so predict two thousand nine hundred fifty.* Those are
+genuinely different kinds of explanation, and one of them will suit an audience better than the
+other.
+
+**[pause]**
+
+There's one last thing before you close the file. Look back at Step 2's table, and notice what's
+missing from this lab: we chose depth five by looking at the test set. Every number in that column
+was computed on the year we held out, and then we picked the winner from it. Lecture 1, on forecast
+evaluation, told you what that's worth. Fixing it properly needs walk-forward validation on the
+training data alone, and that's Homework 3's job.
+
+Solutions for the coded parts go up on Canvas after class. Next week, we'll see what happens
+when you stop the twenty trees from all looking at day of week first.
 
 ---
 
