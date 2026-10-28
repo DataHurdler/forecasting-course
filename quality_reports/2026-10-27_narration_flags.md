@@ -48,3 +48,12 @@ Nothing here has been changed unless the line says so.
 2. **Lab closing: every failure "was caught by holding something out and checking."** This lab's
    own confounder was caught by the DAG, not a holdout. Kept. *Recommend:* "caught by checking
    something the model couldn't check for itself".
+
+## Lecture 9 Part 1
+
+1. Instructor notes fixed (factual): the lab has four closing Discuss blocks, not three; the
+   lecture note now says the LSTM loses "at thirty epochs (they tie by a hundred)". Done.
+2. The tree aside's "five thousand training rows" matches Homework 4's 5,160; the RNN trained on
+   5,940 windows. Kept. *Recommend:* leave it.
+3. The lab's closing questions are now the lab's current four (result, budget, practice,
+   Homework 5); the budget and practice questions stay as exercises (no recorded answers).

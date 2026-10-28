@@ -43,93 +43,98 @@ before shipping; it is the same silent-failure species the lab is about.)*
 
 ### In-room language that needs replacing
 
-Step 3's "your turn" and the three closing **Discuss** blocks. Converted below.
+Step 3's "your turn" and the four closing **Discuss** blocks. Converted below.
 
 ---
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 9, Part 1. This is the third architecture in three weeks, and it is the first one that has no
-structural excuse.
+This is Lab 9, Part 1. It's the third architecture in three weeks, and it's the first one that has
+no structural excuse.
 
-Recall where the last two failed. The feedforward network in Lab 7 flattened the window and lost
-the ordering — it could not tell you which of its 104 inputs came first. The CNN in Lab 8 kept
-ordering but could only see seven weeks at a time, and you proved that by arithmetic before you
-trained anything.
+Recall where the last two fell short. The feedforward network in Lab 7, two weeks ago, flattened the
+window and lost the ordering. It couldn't tell you which of its one hundred four inputs came first.
+The CNN in Lab 8, last week, kept the ordering but could only see seven weeks at a time, and you
+proved that by arithmetic before you trained anything.
 
-A recurrent network has neither limit. It reads the sequence in order, one step at a time,
-carrying a hidden state forward. In principle nothing stops it using every week you give it.
+A recurrent network has neither limit. It reads the sequence in order, one step at a time, carrying
+a hidden state forward. In principle, nothing stops it from using every week you give it.
 
 **[pause]**
 
-So today you build two of them — a plain RNN and an LSTM — and the more sophisticated one loses.
+So today you'll build two of them, a plain RNN and an LSTM, and at the training budget anyone would
+have used, the more sophisticated one loses.
 
-I want to be clear that this is not a trick or a botched implementation. It is a genuine result
-about this data, it is repeated at three window lengths, and understanding *why* is the most
-transferable thing in this lab. You will meet the same shape of argument every time someone offers
-you a more powerful model.
+I want to be clear that this isn't a trick or a botched implementation. It's a genuine result on
+this data, it repeats at three window lengths, and working out exactly which claim the evidence
+supports, and why, is the most transferable thing in this lab. You'll meet the same shape of
+argument every time someone offers you a more powerful model.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
-Same `build()` function as Lab 8, same panel, same cutoff, same standardization from training rows
-only. Three window lengths again — 13, 26, 52.
+It's the same `build()` function as Lab 8, with the same panel, the same cutoff date, and the same
+standardization, computed from the training rows only. And there are three window lengths again:
+thirteen, twenty-six and fifty-two weeks.
 
 *(Point at the return line and the callout.)*
 
-One line is different from last week, and it is the one the callout is about.
+One line is different from last week, and it's the one the callout is about.
 
-**The layout flips back.** `Conv1d` wanted (batch, channels, time). `nn.RNN` and `nn.LSTM` with
-`batch_first=True` want (batch, **time**, channels) — so the transpose you carefully added last
-week has to come out again this week.
+The layout flips back. `Conv1d` wanted the batch first, then the channels, then time. But `nn.RNN`
+and `nn.LSTM`, with `batch_first=True`, want the batch, then **time**, then the channels. So the
+transpose you carefully added in Lab 8 has to come out again this week.
 
 **[pause]**
 
-And as always: neither library complains. Feed an RNN the Conv1d layout and it will read your four
-channels as a four-step sequence, treat the 26 weeks as features, train to convergence, and hand
-you a number.
+And as always, neither library complains. Feed an RNN the `Conv1d` layout, and it'll read your four
+channels as a four-step sequence, treat the twenty-six weeks as features, train to convergence, and
+hand you a number.
 
-That is now the fourth instance of the same failure mode in this course — shuffling before the
-time split, missing `zero_grad()`, transposed axes for the convolution, and now transposed back for the recurrence.
-None of them raise. I keep pointing at it because it is the single biggest practical difference
-between this material and the regression you did in Lecture 6, where a shape error is an error.
+That's now the fourth instance of the same failure mode in this course. First came shuffling the
+rows before the time split, then a missing `zero_grad()` in Lab 7, then the axes transposed for the
+convolution in Lab 8, and now the axes transposed back for the recurrence. None of them raises an
+error. I keep pointing at this because it's the single biggest practical difference between this
+material and the regression you did in Lecture 6, on regularization, where a shape error really is
+an error.
 
 ---
 
 # ▶ STEP 1 — A plain RNN
 
-*(Screen: the `Recurrent` class, then run.)*
+*(Show the `Recurrent` class, then run it.)*
 
-One recurrent layer, then a linear layer on the **final** hidden state — the summary after the
-model has read the whole window.
+There's one recurrent layer, and then a linear layer on the **final** hidden state, which is the
+summary after the model has read the whole window.
 
 ```
 vanilla RNN — 4,545 parameters, test RMSE 860
 ```
 
-**Four and a half thousand parameters.** Hold that against Lab 7's feedforward network, which had
-21,761, and Lab 8's CNN at 8,161. This is the smallest model in the entire neural section, and on
-this seed it is already the best.
+That's **four thousand five hundred forty-five** parameters. Hold that against Lab 7's feedforward
+network, which had twenty-one thousand seven hundred sixty-one, and Lab 8's CNN, at eight thousand
+one hundred sixty-one. This is the smallest model in the whole neural section of the course, and on
+this seed, with a test RMSE of eight sixty, it's already the best.
 
 *(Point at `clip_grad_norm_`.)*
 
-One line deserves a word. **`clip_grad_norm_` is not decoration.** Backpropagating through 26
-steps multiplies gradients together 26 times, and that product can explode as easily as it can
-vanish. Clipping caps the size of the update. It costs nothing, and recurrent models are exactly
-where you need it.
+One line deserves a word, because `clip_grad_norm_` isn't decoration. Backpropagating through
+twenty-six steps multiplies the gradients together twenty-six times, and that product can explode as
+easily as it can vanish. Clipping caps the size of the update. It costs nothing, and recurrent models
+are exactly where you need it.
 
 ---
 
 # ▶ STEP 2 — An LSTM
 
-*(Screen: run.)*
+*(Run the cell.)*
 
-Identical code. One word changed — `nn.RNN` becomes `nn.LSTM`.
+The code is identical, with one word changed: `nn.RNN` becomes `nn.LSTM`.
 
 ```
 LSTM        — 17,985 parameters, test RMSE 1,004
@@ -139,21 +144,22 @@ parameter ratio: 4.0x the RNN
 
 **[pause]**
 
-Account for the ratio before you look at the RMSE, because it is the whole economics of the
-comparison. An LSTM has a forget gate, an input gate, an output gate, and a candidate — four sets
-of weights where the plain RNN has one. Same hidden size, four times the parameters — almost
-exactly: the recurrent layer is exactly four times as big, and the shared linear head at the end
-pulls the total ratio to 3.96, which the printout rounds to 4.0.
+Account for the ratio before you look at the RMSE, because it's the whole economics of the
+comparison. An LSTM has a forget gate, an input gate, an output gate and a candidate, which makes
+four sets of weights where the plain RNN has one. So at the same hidden size, it has almost exactly
+four times the parameters. The recurrent layer is exactly four times as big, and the linear head the
+two models share at the end pulls the total ratio down to three point nine six, which the printout
+rounds to four point oh.
 
-And on this seed it scores 1,004 against the RNN's 860.
+And on this seed, the LSTM scores one thousand four, against the RNN's eight sixty.
 
 ---
 
 # ▶ STEP 3 — Which wins, and does it hold?
 
-*(Screen: run the window table.)*
+*(Run the window table.)*
 
-One comparison at one window is not evidence. Three windows, two seeds each.
+One comparison at one window isn't evidence. So we use three windows, with two seeds each.
 
 ```
  window  RNN  RNN_sd  LSTM  LSTM_sd winner
@@ -164,42 +170,53 @@ One comparison at one window is not evidence. Three windows, two seeds each.
 
 **[pause]**
 
-The RNN wins at all three. And unlike Lab 8's window experiment, the seed question is settled
-cleanly here: the spreads are 3 to 33 against gaps of 112 to 193. Three to sixty times the noise.
-This is not a seed artifact.
+The RNN wins at all three. And unlike the window experiment in Lab 8, the seed question is settled
+cleanly here. The spreads run from three to thirty-three, against gaps of one hundred twelve to one
+hundred ninety-three, so the gaps are roughly three to sixty times the noise. This isn't a seed
+artifact.
 
-*(Screen: the callout.)*
+*(Show the callout.)*
 
-Now read the callout carefully, because it does something the earlier version of this lab did not.
+Now read the callout carefully, because it does something the earlier version of this lab didn't. It
+tells you to read the columns in a particular order.
 
-**First**, it bounds the claim: *at this training budget, on this panel.* Three windows rules out
-a fluke of one window. It does not rule out much else — all three rows are the same thirty series,
-the same split, the same recency structure. **One finding measured three ways, not three
-independent tests.**
+Start with the winner column, and notice how the callout bounds the claim: at this training budget,
+on this panel, the plain RNN wins at every window length. Three windows rule out a fluke of one
+window, but they don't rule out much else. All three rows use the same thirty series, the same split,
+and the same pull from the most recent weeks. So it's **one finding measured three ways**, not three
+independent tests.
 
-**Second**, the parameter count: the model that lost has four times as many as the model that won.
+Then look at the parameter count. The model that lost has four times as many parameters as the model
+that won.
 
-**Third — and this is the new part — be suspicious.** Both models trained for exactly 30 epochs,
-because that is what `train()` defaults to. Nothing in this table establishes that 30 epochs is
-enough for *both* of them, and one of them has four times the parameters to fit.
+And then, and this is the new part, be suspicious. Both models trained for exactly thirty epochs,
+because that's what `train()` uses by default. Nothing in this table establishes that thirty epochs
+is enough for *both* of them, and one of them has four times the parameters to fit.
 
 **[STOP — learner works]**
 
-Before you go on: compute the gap at each window and say whether it is closing or widening. Then
-predict what Step 4 will find.
+Before you go on, pause the video. Compute the gap at each window, and say whether it's closing or
+widening. Then predict what Step 4 will find.
+
+*(Resume.)*
+
+The gaps are one hundred twelve at thirteen weeks, one hundred forty-five at twenty-six, and one
+hundred ninety-three at fifty-two, so the gap widens as the window grows. The table shows why: the
+RNN keeps improving as the window gets longer, while the LSTM barely moves. Hold on to your
+prediction for Step 4.
 
 ---
 
 # ▶ STEP 4 — Was that a fair fight?
 
-*(Screen: start the cell — about three minutes — then talk over it.)*
+*(Start the cell, which takes two or three minutes, then talk over it.)*
 
-This is the step the lab is really about, and I want to be honest that it was added after the
-fact. The first version of this lab stopped at Step 3.
+This is the step the lab is really about, and I want to be honest that it was added after the fact.
+The first version of this lab stopped at Step 3.
 
-Lab 7 taught you not to trust a comparison run at one seed. This is the same objection one level
-up: **not one seed, one budget.** So train both models to 100 epochs and record the test RMSE at
-seven checkpoints along the way, instead of only at the end.
+Lab 7 taught you not to trust a comparison run with one seed. This is the same objection, one level
+up: not one seed, but one **budget**. So we train both models to a hundred epochs, and we record the
+test RMSE at seven checkpoints along the way, instead of only at the end.
 
 ```
  epochs  RNN  LSTM  gap
@@ -212,61 +229,68 @@ seven checkpoints along the way, instead of only at the end.
     100  830   821   -9
 ```
 
-**[pause]** — *let it sit. Do not talk over this one.*
+*(Let it sit. Don't talk over this one.)*
 
-Read the gap column down. At ten epochs it is **negative** — the LSTM is ahead. At thirty it is
-**plus one forty-five**. Then 119, 98, 52, and at a hundred epochs it is **minus nine**.
+**[pause]**
 
-**The gap is largest at exactly the budget we used in Step 3.** Not near the largest — the largest
-anywhere in the range.
+Read the gap column from top to bottom. At ten epochs it's **negative**, minus ninety-seven, so the
+LSTM is ahead. At thirty it's **plus one hundred forty-five**. Then it falls to one hundred nineteen,
+ninety-eight and fifty-two, and at a hundred epochs it's **minus nine**.
+
+The gap is **largest at exactly the budget** we used in Step 3. It isn't merely near the largest.
+It's the largest anywhere in the range.
 
 *(Point at the two curves.)*
 
-And look at the shapes, because they are different. The RNN goes 834, 828, 833, 830 from epoch 45
-onward. Flat. Finished. The LSTM goes 953, 926, 885, 821 — still falling at epoch 100, and its
-curve has not turned over. **We ran out of patience, not the model.**
+Now look at the shapes, because they're different. From epoch forty-five on, the RNN goes eight
+thirty-four, eight twenty-eight, eight thirty-three, eight thirty. It's flat, and it's finished. Over
+the same checkpoints the LSTM goes nine fifty-three, nine twenty-six, eight eighty-five, eight
+twenty-one. It's still falling at epoch one hundred, and its curve hasn't turned over. **We ran out
+of patience, not the model.**
 
 **[pause]**
 
-So the honest verdict is not "the LSTM loses." It is three separate statements, and you need all
+So the honest verdict isn't that the LSTM loses. It's three separate statements, and you need all
 three.
 
-At a fixed 30-epoch budget, the RNN wins by a wide margin — that is true and it is what Step 3
-measured. Given enough epochs, the two **tie**. And the RNN reaches its best score roughly three
-times faster on a quarter of the parameters.
+First, at a fixed budget of thirty epochs, the RNN wins by a wide margin. That's true, and it's what
+Step 3 measured. Second, given enough epochs, the two **tie**. And third, the RNN reaches its best
+score roughly three times faster, on a quarter of the parameters.
 
-That third one is a real advantage and worth having. Convergence speed matters when you are
-tuning, when you are retraining nightly, when compute is billed. But it is an **optimization**
-advantage, not a verdict on gating — and those are different claims that the Step 3 table cannot
-tell apart.
+That third one is a real advantage, and it's worth having. Convergence speed matters when you're
+tuning, when you're retraining every night, and when compute is billed. But it's an advantage in
+**optimization**, not a verdict on gating, and the Step 3 table can't tell those two claims apart.
 
 **[STOP — learner works]**
 
-The run-to-run spread in Step 3 was about 20. From which checkpoint on is the gap smaller than
-that? Fill the blank in and find out.
+The run-to-run spread in Step 3 was about twenty. From which checkpoint on is the gap smaller than
+that? Pause the video, fill in the blank, and find out.
 
 *(Resume.)*
 
-**[pause]**
+Only the last checkpoint makes it. At a hundred epochs the gap is minus nine, inside the noise, and
+at every earlier checkpoint it's fifty-two or more, in one direction or the other.
 
-One more thing before we move on, and it is the transferable part. Nobody thinks of the epoch
-count as part of an experiment. It is boilerplate — you set it once, you copy it between
-projects, you stop seeing it. That is precisely what made it dangerous here: a number that felt
-like configuration turned out to be the thing determining the answer.
+One more thing before we move on, and it's the part that transfers. Nobody thinks of the epoch count
+as part of an experiment. It's boilerplate. You set it once, you copy it between projects, and you
+stop seeing it. That's exactly what made it dangerous here: a number that felt like configuration
+turned out to be the thing that decided the answer.
 
-Seeds in Lab 7. Windows in Lab 8. Budget here. Same mistake, three costumes.
+It was seeds in Lab 7, windows in Lab 8, and the budget here. It's the same mistake in three
+costumes.
 
 ---
 
 # ▶ STEP 5 — Why the gates buy nothing here
 
-*(Screen: run the gradient-shrink table.)*
+*(Run the gradient-shrink table.)*
 
-Step 4 told us the RNN's *margin* was mostly a budget artifact. It did not tell us why the LSTM
-never pulls **ahead** — and for that you have to look at the data.
+Step 4 told us that the RNN's *margin* was mostly an artifact of the budget. It didn't tell us why,
+given enough epochs, the LSTM only ties instead of pulling **ahead**, and for that you have to look
+at the data.
 
 Start with the problem gating exists to solve. In a plain RNN, gradients shrink as they propagate
-backward, so signal from far in the past never reaches the weights.
+backward, so the signal from far in the past never reaches the weights.
 
 ```
 gradient shrink factor 0.7 per step:      26 steps back -> 0.000094
@@ -274,16 +298,16 @@ gradient shrink factor 0.9 per step:      26 steps back -> 0.064611
                                           52 steps back -> 0.004175
 ```
 
-**[pause]**
-
-Notice this is a matter of degree and of **length**. At a shrink factor of 0.7 the signal is
-gone by 26 steps — that is the catastrophe the textbooks draw. At 0.9 it is 0.065 at 26 steps.
-Small, but not zero. And 26 weeks is a short sequence. Vanishing gradients are a real phenomenon
-that bites hard at hundreds of steps and only bites softly here.
+Notice that this is a matter of degree, and of **length**. At a shrink factor of zero point seven,
+the signal is gone by twenty-six steps, and that's the catastrophe the textbooks draw. At zero point
+nine, it's still zero point zero six five at twenty-six steps, and zero point zero zero four at
+fifty-two. That's small, but it isn't zero. And twenty-six weeks is a short sequence. Vanishing
+gradients are a real phenomenon that bites hard at hundreds of steps and only bites softly here.
 
 *(Run the diagnostics cell.)*
 
-Now stop asserting and measure whether this dataset has the problem at all. Three questions.
+Now let's stop asserting, and measure whether this dataset has the problem at all. There are three
+questions.
 
 ```
 1. between-series share of total variance : 91.0%
@@ -300,41 +324,43 @@ Now stop asserting and measure whether this dataset has the problem at all. Thre
 
 **[pause]**
 
-**One. Ninety-one percent of the variance is not sequential at all.** It is *between* series —
-which store, which category. Only nine percent is within a series over time. So the single
-biggest thing any model here must get right is the **level** of the series in front of it, and
-that is readable off the most recent few weeks. No memory mechanism is involved in it.
+The first answer is that **ninety-one percent** of the variance isn't sequential at all. It's
+*between* series, meaning which store and which category. Only nine percent is within a series over
+time. So the single biggest thing any model here has to get right is the **level** of the series in
+front of it, and you can read that off the most recent few weeks. No memory mechanism is involved.
 
-**Two, and this one is counter-intuitive, so slow down.** The autocorrelation is 0.83 at lag 1 and
-still 0.43 at lag 52. That *looks* like long memory — like exactly the case for an LSTM.
+The second answer is counterintuitive, so slow down for it. The autocorrelation is zero point eight
+three at lag one, and still zero point four three at lag fifty-two. That *looks* like long memory,
+which would be exactly the case for an LSTM.
 
-It is the opposite. Because neighboring weeks are nearly the same number, **the recent past is a
-sufficient statistic for the distant past.** Week 51 already tells you most of what week 40 knew.
-Gating earns its keep when a value must survive many steps that would otherwise **overwrite** it
-— and here nothing overwrites anything, because the series was filled in continuously the whole
-way along.
+It's actually the opposite. Because neighboring weeks are nearly the same number, **the recent past
+is a sufficient statistic for the distant past**. Week fifty-one already tells you most of what week
+forty knew. Gating earns its keep when a value has to survive many steps that would otherwise
+**overwrite** it. Here nothing overwrites anything, because the series was filled in continuously
+the whole way along.
 
-**Three. Nothing in the inputs arrives early.** SNAP correlates 0.14 with units in the same week.
-The printout shows minus 0.13 two weeks ahead and plus 0.12 four weeks ahead — and that is the
-calendar, not a warning. SNAP days fall on the same dates every month, so this week's count
-predicts the count two and four weeks out, and those weeks carry their own same-week effect. The
-same 0.14, echoed. Events are flat everywhere, including at zero. There is no
-**announcement** in this data — nothing shows up at time *t* that must be held until *t + k*.
+The third answer is that nothing in the inputs arrives early. SNAP days correlate zero point one four
+with units in the same week. The printout shows minus zero point one three two weeks ahead and plus
+zero point one two four weeks ahead, and that's the calendar, not a warning. SNAP days fall on the
+same dates every month, so this week's count predicts the count two and four weeks out, and those
+weeks carry their own same-week effect. It's the same zero point one four, echoed. Events are flat
+everywhere, including in the same week. There's no **announcement** in this data, nothing that shows
+up at time t and has to be held until time t plus k.
 
-That is the textbook use for a forget gate and an input gate, and this panel does not contain a
-single instance of it.
+That's the textbook use for a forget gate and an input gate, and this panel doesn't contain a single
+instance of it.
+
+*(Show the closing paragraph of the step.)*
 
 **[pause]**
 
-*(Screen: the closing paragraph of the step.)*
-
-And now the part to carry out of the lab, which is not the answer — it is the three questions.
-Before you reach for a gated model, or an attention model, on a series of your own: how much of my
-variance is cross-sectional rather than sequential? Is my series smooth enough that recent values
-already summarize the old ones? Does anything in my inputs **lead** the target?
+Now here's the part to carry out of the lab. It isn't the answer. It's the three questions. Before
+you reach for a gated model, or an attention model, on a series of your own, ask these. How much of
+my variance is cross-sectional rather than sequential? Is my series smooth enough that recent values
+already summarize the old ones? And does anything in my inputs **lead** the target?
 
 If the answers look like this panel's, the extra machinery has nothing to do. If they don't, it
-might be exactly what you need — and you will know which, before you spend a week finding out.
+might be exactly what you need, and you'll know which before you spend a week finding out.
 
 ---
 
@@ -342,30 +368,39 @@ might be exactly what you need — and you will know which, before you spend a w
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Three questions for the board.
+Here are four questions to work through on your own before you go.
 
-**The result.** Your table says the simpler model wins. Describe a forecasting problem where you
-would expect the LSTM to win instead, and be specific about the property of the data that changes
-the answer — not "more data," but what *kind* of dependence.
-
-**[pause]** — *what you want back: a series where something far in the past must be carried
-forward through many irrelevant steps. A promotion announced twelve weeks before it takes effect.
-A contract signed in January that governs deliveries in November. That is what gating is for.*
-
-**The practice.** Suppose you had run only `W=26`, one seed, and the LSTM had come out ahead.
-Given Lab 7, what would you have needed to do before reporting that an LSTM beats an RNN on this
-data?
-
-**For Homework 5.** Part 2 asks you to fit an RNN, an LSTM, and a Transformer, and to explain
-where the extra LSTM parameters go and whether they bought anything. You now have two thirds of
-that answer. What is your prediction for the Transformer — and, more usefully, what result would
-make you wrong?
+The first is about the result. Using the three diagnostics from Step 5, describe a forecasting
+problem where you'd expect the LSTM to beat the RNN outright. Be specific. What would the
+between-series share look like? What would the autocorrelation look like? And what would have to be
+true of the exogenous inputs?
 
 **[pause]**
 
-Next session you build the Transformer and find out. I will not spoil it, except to say that the
-argument you just made about the LSTM is the argument you should try on attention as well, and
-that you should check whether it survives.
+Here's the heart of the answer. You want a series where something far in the past has to be carried
+forward through many irrelevant steps. Think of a promotion announced twelve weeks before it takes
+effect, or a contract signed in January that governs deliveries in November. In the language of the
+third diagnostic, that's an input that leads the target, and carrying it forward is exactly what
+gating is for.
+
+The second question is about the budget. Step 3 and Step 4 support different claims, from the same
+two models on the same data. State the strongest claim you'd be willing to publish, in one sentence.
+Then say what a reader would need to be told alongside it for that sentence to be honest.
+
+The third question is about practice. You've now been caught twice, once by seeds in Lab 7 and once
+by the training budget here. Both times, a comparison looked settled and wasn't. What's the general
+form of that mistake, and what would you check the next time you see two models compared in a table?
+
+The fourth question looks ahead to Homework 5. Part 2 of that homework asks you to fit an RNN, an
+LSTM and a Transformer, and to explain where the extra LSTM parameters go and whether they bought
+anything. You now have the RNN and LSTM part of that answer. What's your prediction for the
+Transformer, and, more usefully, what result would make you wrong?
+
+**[pause]**
+
+Next week, in Lab 9, Part 2, you'll build the Transformer and find out. I won't spoil it, except to
+say that the argument you just made about the LSTM is the argument you should try on attention as
+well, and that you should check whether it survives.
 
 ---
 
