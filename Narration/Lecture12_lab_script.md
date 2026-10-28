@@ -40,51 +40,51 @@ Step 2's, Step 3's and Step 4's "your turn" blocks, and the four closing **Discu
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 12, the last one. And it is about a single number: a **price elasticity** — the percent change
-in demand per percent change in price. Of everything in this course, this is the number most
-likely to be acted on directly by somebody who will never read your code.
+This is Lab 12, the last lab of the course, and it's about a single number: a **price elasticity**,
+which is the percent change in demand per percent change in price. Of everything in this course,
+this is the number most likely to be acted on directly by somebody who will never read your code.
 
-Today you will estimate one, and then find **three separate ways it can be wrong** while every
+Today you'll estimate one, and then you'll find **three separate ways it can be wrong** while every
 diagnostic still says the model is fine.
 
 **[pause]**
 
-And here is the part I want you carrying into the recording. Only one of the three is a
-statistical failure. One is a causal-structure failure — the model answers a different question
-from the one you asked. And one is a **preprocessing convenience** you have used in nearly every
-lab since Lecture 6, which quietly changes what the number means and tells nobody.
+Here's the part I want you to carry through the recording. Only one of the three is a statistical
+failure. One is a failure of causal structure, where the model answers a different question from
+the one you asked. And one is a **preprocessing convenience** you've used in nearly every lab since
+Lecture 6, on regularization. It quietly changes what the number means, and it tells nobody.
 
-None of the three is detectable by R-hat, ESS, or divergences.
+None of the three can be detected by R-hat, by the effective sample size, or by divergences.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
 ```
 8,310 rows | 30 series | sd(log price) = 0.2444
 ```
 
-Both units and price are in logs, and that is what makes the price coefficient an elasticity —
-percent per percent. Say that sentence carefully now, because Step 3 is entirely about the moment
-it stops being true.
+Both units and price are in logs, and that's what makes the price coefficient an elasticity, percent
+per percent. Say that sentence carefully now, because Step 3 is entirely about the moment it stops
+being true.
 
 *(Point at the printed standard deviation.)*
 
-And note **0.2444**, the standard deviation of log price across the whole panel. Keep it in view.
-In Step 3 a different, much smaller number takes its place, and the gap between them is where the
-damage comes from.
+And note **zero point two four four four**, the standard deviation of log price across the whole
+panel. Keep it in view. In Step 3 a different, much smaller number takes its place, and the gap
+between them is where the damage comes from.
 
 ---
 
 # ▶ STEP 1 — The naive elasticity
 
-*(Screen: run the naive fit.)*
+*(Run the naive fit.)*
 
-Log units on log price, SNAP, and events. Nothing else.
+This first model regresses log units on log price, SNAP and events, and nothing else.
 
 ```
 Naive
@@ -94,39 +94,40 @@ b_price -2.8048   -2.8556   -2.7559  1.0018  2321.0850
 
 **[pause]**
 
-An elasticity of **minus 2.8**. A one percent price rise costs almost three percent of volume.
-That is a dramatic, highly elastic result — and it would change how a category is priced.
+That's an elasticity of **minus two point eight**. A one percent price rise costs almost three
+percent of volume. That's a dramatic, highly elastic result, and it would change how a category is
+priced.
 
-Look at the diagnostics. R-hat 1.002. ESS 2,321. The interval runs from −2.86 to −2.76 — a width
-of one tenth. This model is *certain*.
+Now look at the diagnostics. R-hat is one point zero zero two, and the effective sample size is two
+thousand three hundred twenty-one. The interval runs from minus two point eight six to minus two
+point seven six, a width of one tenth. This model is *certain*.
 
-It is also badly wrong, and the useful part is that we knew that before fitting it.
+It's also badly wrong, and the useful part is that we knew that before fitting it.
 
-*(Beat.)*
+The DAG from Lecture 12, this week's lecture, says why. Our thirty series are different
+**categories** in different stores, and categories differ systematically in both their typical
+price and their typical volume. Hobby items cost more per unit, and they sell fewer of them. So
+series identity is an arrow into price **and** an arrow into units, and that's the textbook shape of
+a confounder.
 
-Lecture 12's DAG says why. Our thirty series are different **categories** in different stores, and
-categories differ systematically in both typical price and typical volume — hobby items cost more
-per unit and sell fewer of them. So series identity is an arrow into price **and** an arrow into
-units. That is the textbook shape of a confounder.
-
-Comparing a hobby item to a food item is not measuring a price response. It is measuring the
-difference between two product categories, and calling it elasticity.
+Comparing a hobby item with a food item isn't measuring a price response. It's measuring the
+difference between two product categories, and calling it an elasticity.
 
 ---
 
 # ▶ STEP 2 — Control for the confounder
 
-*(Screen: run the controlled fit and the comparison.)*
+*(Run the controlled fit and the comparison.)*
 
-Add per-series intercepts and a trend. The intercepts are what confine the model to price
-variation inside a series over time, which is the only variation a manager could actually create.
-We also center log price *within* each series. That leaves the coefficient exactly where it was;
-what it improves is the sampler's job.
+Now we add an intercept for each series, and a trend. The intercepts are what confine the model to
+price variation inside a series over time, which is the only variation a manager could actually
+create. We also center log price *within* each series. That leaves the coefficient exactly where it
+was. What it improves is the sampler's job.
 
 Why the trend? Because time is a second confounder. Prices and volumes both rose over these five
-years, so within any one series the later weeks are dearer *and* busier. Leave the trend out and
-the within-series slope comes out *positive* — about plus 1.7. Lecture 12's confounding slide shows
-it.
+years, so within any one series the later weeks are dearer *and* busier. If you leave the trend out,
+the slope within a series comes out *positive*, at about plus one point seven. The confounding slide
+in this week's lecture shows it.
 
 ```
 Controlled
@@ -140,44 +141,47 @@ b_price -0.4931   -0.5963   -0.3872
   the naive estimate is 5.7x too large
 ```
 
-**[pause]** — *let this sit; the callout depends on it.*
+*(Let this sit, because the callout depends on it.)*
 
-Minus 0.49 rather than minus 2.8. The naive estimate was **5.7 times too large**.
+**[pause]**
 
-Now the line that matters, and it is the second column. The naive interval is **0.099** wide. The
-correct one is **0.208** — twice as wide.
+So the price coefficient is minus zero point four nine rather than minus two point eight. The naive
+estimate was **five point seven times too large**.
 
-*(Screen: the callout.)*
+Now here's the line that matters, and it's in the second column. The naive interval is **zero point
+zero nine nine** wide. The correct one is **zero point two zero eight**, about twice as wide.
 
-So the wrong model was not noisy. It was **more precise than the right one**, by a factor of two,
+*(Show the callout.)*
+
+So the wrong model wasn't noisy. It was **more precise than the right one**, by a factor of two,
 while being nearly six times off. It was confidently, tightly, precisely wrong.
 
 **[pause]**
 
-That is worth dwelling on, because it inverts an instinct almost everybody has. A narrow credible
+That's worth dwelling on, because it reverses an instinct almost everybody has. A narrow credible
 interval feels like a good sign. All it says is that the model is sure about the answer to the
-question it was actually asked — and the naive model was asked "how do hobby items differ from
-food items?", which the data answers very precisely indeed.
+question it was actually asked. The naive model was asked how hobby items differ from food items,
+and the data answer that very precisely indeed.
 
-No diagnostic in ArviZ will ever tell you the question was wrong. Only the DAG does, and the DAG
-is drawn before any code is written.
+No diagnostic in ArviZ will ever tell you the question was wrong. Only the DAG does, and the DAG is
+drawn before any code is written.
 
 **[STOP — learner works]**
 
-Answer the question in the cell: the naive estimate is too *negative*. Which arrow in the DAG
-makes the bias run that way rather than the other?
+Pause the video, and answer the question in the cell. The naive estimate is too *negative*. Which
+arrow in the DAG makes the bias run that way, rather than the other way?
 
 ---
 
 # ▶ STEP 3 — The preprocessing step that silently destroys the answer
 
-*(Screen: the framing paragraph, then run.)*
+*(Show the framing paragraph, then run the cell.)*
 
-You have standardized predictors in nearly every lab since Lecture 6. It makes `Normal(0,1)`
-priors mean the same thing across variables, it helps samplers, and it is a genuinely good habit
-that I am not about to tell you to abandon.
+You've standardized predictors in nearly every lab since Lecture 6. It makes a Normal zero, one prior
+mean the same thing for every variable, and it helps samplers. It's a genuinely good habit, and I'm
+not about to tell you to abandon it.
 
-Do it to log price here.
+Now do it to log price here.
 
 ```
   unstandardized  b_price = -0.4931
@@ -186,31 +190,32 @@ Do it to log price here.
   ratio                   = 21.9362
 ```
 
-**[pause]**
+The two fits agree perfectly, because they're the same model. Both have clean diagnostics, and both
+have intervals that exclude zero. But the coefficient went from minus zero point four nine to
+**minus zero point zero two two**, a factor of nearly twenty-two.
 
-The two fits agree perfectly — they are the same model, and both have clean diagnostics and
-intervals excluding zero. But the coefficient went from −0.49 to **−0.022**, a factor of nearly
-twenty-two.
-
-Nothing is broken. Standardizing divided log price by its standard deviation, so the coefficient
-is now the change in log units per **standard deviation of log price** rather than per percent.
-Same model, same fit, different unit — and the number no longer means "elasticity."
+Nothing is broken. Standardizing divided log price by its standard deviation, so the coefficient is
+now the change in log units per **standard deviation of log price**, rather than per percent. It's
+the same model and the same fit, in a different unit, and the number no longer means "elasticity."
 
 *(Point at 0.0455.)*
 
-Now look at what it was divided by. **0.0455.**
+Now look at what it was divided by: **zero point zero four five five**.
 
-Remember the setup printed 0.2444 for log price across the whole panel? This is not that number.
-This is the standard deviation of log price **within** a series, after centering — and it is five
-times smaller, because prices move very little inside a single store-category over time.
+Remember that the setup printed zero point two four four four for log price across the whole panel?
+This isn't that number. This is the standard deviation of log price **within** a series, after
+centering, and it's five times smaller, because prices move very little inside a single store and
+category over time.
 
-**[pause]** — *this is the subtle part; say it slowly.*
+*(This is the subtle part. Say it slowly.)*
 
-And here is the irony worth naming. The number we divided by is small **because of a good
-decision we made in Step 2.** The series intercepts removed the confounding; centering within
-series, which we did for the sampler, also stripped the between-series spread out of log price
-and left only the small within-series part. The smaller the number you divide by, the larger the
-distortion. **A sound modeling choice amplified the preprocessing error.**
+**[pause]**
+
+And here's the irony worth naming. The number we divided by is small **because of a good decision
+we made in Step 2.** The series intercepts removed the confounding. Centering within series, which we
+did for the sampler, also stripped the spread between series out of log price, and it left only the
+small part within each series. The smaller the number you divide by, the larger the distortion. So
+**a sound modeling choice amplified the preprocessing error.**
 
 *(Run the scenario block.)*
 
@@ -219,41 +224,52 @@ distortion. **A sound modeling choice amplified the preprocessing error.**
   standardized           5% price rise -> units -0.11%  revenue +4.88%
 ```
 
-**[pause]** — *this is the payoff. Let it land.*
+*(This is the payoff. Let it land.)*
+
+**[pause]**
 
 Read those two lines as advice given to a person.
 
-Using the standardized coefficient, a manager is told that a 5% price rise costs about **a tenth
-of a percent** of volume — essentially free. The truth is **−2.38%**, more than twenty times
-larger. And the revenue projection nearly doubles, from +2.5% to +4.9%.
+Using the standardized coefficient, a manager is told that a five percent price rise costs about
+**a tenth of a percent** of volume, which is essentially free. The truth is **minus two point three
+eight percent**, more than twenty times larger. And the revenue projection nearly doubles, from plus
+two point five percent to plus four point nine percent.
 
-That is a real decision, made from a real model, that passed every check.
+That's a real decision, made from a real model, and the model passed every check.
 
-*(Screen: the callout.)*
+*(Show the callout.)*
 
-The model was right. The sampler was right. The diagnostics were right. The error entered through
-a **preprocessing convenience three cells earlier**, and it survived all the way to a stocking
-decision because nothing downstream carries units. A float is a float. `-0.0225` looks exactly as
-authoritative as `-0.4931`.
+The model was right, the sampler was right, and the diagnostics were right. The error came in
+through a **preprocessing convenience three cells earlier**, and it survived all the way to a
+stocking decision, because nothing downstream carries units. A float is a float. Minus zero point
+zero two two five looks exactly as authoritative as minus zero point four nine three one.
 
 **[STOP — learner works]**
 
-Fill in the blank: to recover the elasticity from the standardized fit, what do you multiply by?
-*(The standard deviation you divided by — 0.0455 — which is the same as dividing by 21.94.)*
+Pause the video, and fill in the blank in the cell. To recover the elasticity from the standardized
+fit, what do you multiply it by?
 
 *(Resume.)*
 
-And the habit that prevents this, which is the one line to take from the lab: **write down what
-one unit of each variable is before you rescale it, and check that the coefficient still answers
-the question you asked.** Keep standardizing. Just know what you are holding afterwards.
+You multiply by the ratio the cell printed, about twenty-one point nine four, which is roughly one
+over zero point zero four five five. Standardizing divided log price by its standard deviation, and
+that multiplied the coefficient by the same standard deviation. So to undo it, you divide the
+coefficient by zero point zero four five five, which is the same as multiplying it by twenty-one
+point nine four. Do that to minus zero point zero two two five, and you're back at an elasticity of
+about minus zero point four nine.
+
+And the habit that prevents all this is the one line to take from the lab. **Write down what one
+unit of each variable is before you rescale it, and check that the coefficient still answers the
+question you asked.** Keep standardizing. Just know what you're holding afterwards.
 
 ---
 
 # ▶ STEP 4 — Ask the posterior a business question
 
-*(Screen: run the probability block.)*
+*(Run the probability block.)*
 
-Back to the correct fit. The posterior is samples, so any question is answered by counting.
+Now we go back to the correct fit. The posterior is samples, so any question is answered by
+counting.
 
 ```
   P(elasticity < 0)     = 1.000
@@ -263,18 +279,19 @@ Back to the correct fit. The posterior is samples, so any question is answered b
 
 **[pause]**
 
-The first line settles the direction completely. Every posterior sample is negative — demand falls
-when price rises, with no doubt whatsoever.
+The first line settles the direction completely. Every posterior sample is negative, so demand
+falls when price rises, with no doubt whatsoever.
 
-The second line settles the question a pricing manager asks first. Minus one is the boundary
-between **elastic** and **inelastic** demand: below it, a price rise loses revenue; above it, a price
+The second line settles the question a pricing manager asks first. Minus one is the boundary between
+**elastic** and **inelastic** demand. Below it, a price rise loses revenue, and above it, a price
 rise gains revenue. Not one posterior sample is below minus one. **Demand is inelastic in every
 draw.**
 
 The third line is a finer question about size: does a one percent price rise cost more than half a
-percent of volume? The posterior puts us at **0.460** — within a few points of a coin flip. So the
-honest report is: inelastic, certainly; *how* inelastic, the data cannot settle. The usual p-value,
-against zero, would have given only the direction — which was never in question.
+percent of volume? The posterior puts that at **zero point four six zero**, within a few points of a
+coin flip. So the honest report is that demand is certainly inelastic, but the data can't settle
+*how* inelastic. The usual p-value, tested against zero, would have given you only the direction,
+and the direction was never in question.
 
 *(Point at the histogram, then run the scenario.)*
 
@@ -286,22 +303,24 @@ against zero, would have given only the direction — which was never in questio
 
 **[pause]**
 
-And now the resolution, which is the most useful thing in the lab.
+Now for the resolution, which is the most useful thing in the lab.
 
-**Revenue rises with probability 1.000** — across every posterior sample — and the second line
-above says why. A five percent rise multiplies revenue by 1.05 to the power one plus the
-elasticity, which is above one exactly when the elasticity is above minus one, and every draw is.
-The finer size question is genuinely unresolved; the decision question is not.
+Revenue rises with a probability of **one point zero zero zero**, across every posterior sample,
+and the second line of the earlier block says why. A five percent rise multiplies revenue by one
+point zero five, raised to the power of one plus the elasticity. That's above one exactly when the
+elasticity is above minus one, and every draw is. The finer question about size is genuinely
+unresolved, but the decision question isn't.
 
 Only a posterior lets you say both. A point estimate forces you to pick one number and then argue
 about which side of the line it falls on. The distribution lets you answer the question that was
-actually asked — *should we raise the price?* — with a probability attached, while being honest
-that a different question remains open.
+actually asked, which is whether we should raise the price, with a probability attached, while
+being honest that a different question remains open.
 
 **[STOP — learner works]**
 
-Write the two strings: your two-sentence recommendation to the manager with a probability
-attached, and one DAG arrow that, if wrong, invalidates it.
+Pause the video, and fill in the two strings in the cell. The first is your two-sentence
+recommendation to the manager, with a probability attached. The second names one arrow in the DAG
+that, if it's wrong, invalidates that recommendation.
 
 ---
 
@@ -309,50 +328,56 @@ attached, and one DAG arrow that, if wrong, invalidates it.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Four questions, and the last one closes the course.
+Here are four questions to work through on your own before you go, and the last one closes the
+course.
 
-**The three failures.** You met three ways an elasticity analysis goes wrong — an omitted
-confounder, a rescaled coefficient, and a size question the data cannot settle. Which would any
-ArviZ diagnostic have caught?
-
-**[pause]** — *none of them. That is the answer, and it is worth sitting with: diagnostics verify
-that the computation did what the code said. Everything about whether the code said the right
-thing is yours.*
-
-**The habit.** Standardizing is good practice and you should keep doing it. State the rule that
-lets you keep the habit without repeating Step 3.
-
-**The decision.** Advise on the 5% rise using only Step 4's output. Then say what you would want
-measured before a **20%** rise — and why extrapolating this elasticity that far is a different
-kind of claim.
-
-**[pause]** — *the answer worth steering to: the elasticity was estimated from the price variation
-that actually occurred within series, and the standard deviation of that is 0.0455 — a few percent.
-A 20% move is far outside the range the data has ever seen. That is extrapolation, not estimation,
-and it is the same limit you met in Lab 4 when a tree could not predict beyond its training range.*
-
-**The course.** You have now estimated this kind of quantity with OLS, with XGBoost, and with a
-Bayesian regression. Only one of them naturally answers "how likely is it that revenue rises?"
-Explain what about the Bayesian output makes that question cheap — and name one forecasting task
-from this course where you would still not reach for it.
+The first is about the three failures. You met three ways an elasticity analysis goes wrong: an
+omitted confounder, a rescaled coefficient, and a question about size that the data can't settle.
+Which of the three would any ArviZ diagnostic have caught? And what does your answer tell you about
+what diagnostics are for?
 
 **[pause]**
 
-*(Closing — this is the last lab of the semester.)*
+The answer is none of them, and it's worth sitting with. Diagnostics verify that the computation did
+what the code said. Whether the code said the right thing is entirely up to you.
 
-And that is the last lab. Fifteen weeks, one dataset, a dozen model families, and a scoreboard
-that ends with a 46-coefficient linear model at the top.
+The second question is about the habit. Standardizing is good practice, and you should keep doing
+it. State the rule that lets you keep the habit without repeating Step 3.
+
+The third question is about the decision. Advise the manager on the five percent rise using only the
+output of Step 4. Then say what you'd want measured before a **twenty percent** rise, and why
+extrapolating this elasticity that far is a different kind of claim.
+
+**[pause]**
+
+Here's the answer I'd steer you toward. The elasticity was estimated from the price variation that
+actually occurred within series, and the standard deviation of that variation is zero point zero
+four five five, only a few percent. A twenty percent move is far outside the range the data have
+ever seen. That's extrapolation, not estimation, and it's the same limit you met in Lab 4, on
+decision trees, when a tree couldn't predict beyond its training range.
+
+The last question is about the course. You've now estimated this kind of quantity with OLS, with
+XGBoost and with a Bayesian regression. Only one of them naturally answers the question of how
+likely it is that revenue rises. Explain what it is about the Bayesian output that makes that
+question cheap, and name one forecasting task from this course where you still wouldn't reach for
+it.
+
+*(Closing. This is the last lab of the semester.)*
+
+And that's the last lab. It's been fourteen weeks, with one main dataset, a dozen model families,
+and a scoreboard that ends with a forty-six-coefficient linear model at the top.
 
 The through-line was never which method wins. It was that every one of these models will return a
-confident number whether or not it deserves one — a tree that cannot extrapolate, a network whose
-result moves 230 RMSE with the seed, a forecast interval that is honest and useless, a hierarchy
-pooling series that never belonged together, and today a coefficient that stopped being an
+confident number whether or not it deserves one. There was a tree in Lab 4 that couldn't
+extrapolate, and a network in Lab 7 whose result moved two hundred thirty RMSE with the seed. There
+was a forecast interval two weeks ago that was honest and useless, and a hierarchy last week that
+pooled series that never belonged together. And today there was a coefficient that stopped being an
 elasticity three cells before anybody read it.
 
 None of those announced themselves. Every one of them was caught by holding something out and
 checking. That habit is the course.
 
-Solutions go up on Canvas after the deadline. See you in Week 15 for the synthesis.
+Solutions go up on Canvas after class. See you next week, in Week 15, for the synthesis.
 
 ---
 

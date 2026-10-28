@@ -39,3 +39,12 @@ Nothing here has been changed unless the line says so.
    limit. *Recommend:* keep.
 4. Slide 13: "the single most common failure in applied hierarchical modeling" is unsourced.
    *Recommend:* "one of the most common".
+
+## Lecture 12
+
+1. **XGBoost 781 on slide 15.** The narration keeps 781 because the slide says it, but the pinned
+   xgboost 3.4.1 gives 792, and Lecture 13 footnotes this. *Recommend:* add the same footnote to
+   Lecture 12's slide 15.
+2. **Lab closing: every failure "was caught by holding something out and checking."** This lab's
+   own confounder was caught by the DAG, not a holdout. Kept. *Recommend:* "caught by checking
+   something the model couldn't check for itself".
