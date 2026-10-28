@@ -95,6 +95,11 @@ quarto render Labs/LectureNN_lab.qmd
 # Environment: Python 3.12 venv at .venv (see requirements.txt)
 python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # macOS also needs: brew install libomp   (for xgboost)
+
+# Narrated lecture video from a deck's PDF and its recording script (offline neural voice,
+# its own venv; output to ~/Movies/ECON8310/, never the repo)
+python3.12 -m venv .venv-video && .venv-video/bin/pip install -r scripts/video_requirements.txt
+.venv-video/bin/python scripts/make_lecture_video.py Lecture09_Part2    # --only 1 2 3 for a preview
 ```
 
 ---

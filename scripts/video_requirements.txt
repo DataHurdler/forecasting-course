@@ -1,0 +1,6 @@
+# For scripts/make_lecture_video.py only, in its own venv (.venv-video); not part of the course
+# environment. Kokoro downloads its voice model (~330 MB) from Hugging Face on first use.
+kokoro==0.9.4
+soundfile
+pymupdf
+imageio-ffmpeg
