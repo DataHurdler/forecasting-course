@@ -19,28 +19,30 @@ Deck: `Slides/Lecture13_Synthesis.pdf` (22 pages) · Measured runtime: see the t
 
 # ▶ SLIDE 1 — Title page
 
-Synthesis: what the results taught us.
+This is Lecture 13, the synthesis, and its subject is what the results taught us.
 
-Twelve lectures, four families of method, one dataset, and a scoreboard that almost nobody would
-have predicted in Week 1.
+Twelve lectures, four families of method and one dataset have left us with a scoreboard that
+almost nobody would have predicted in Week 1.
 
-Today is not new material. It's the session where the fourteen weeks become one argument — and where
-I want to hand you the handful of things that will still be true when every library in this course
-has been replaced.
+Today isn't new material. It's the session where the fourteen weeks become one argument, and
+where I want to hand you the handful of things that will still be true when every library in this
+course has been replaced.
 
 ---
 
 # ▶ SLIDE 2 — Lecture Outline
 
-Five parts. What we built, and how the four parts of the course relate. What the results actually
-taught — three lessons, each paid for with a measurement. How to choose a method. How to do it
-honestly, which is the longest section. And where to go next.
+We'll take this in five parts. First, what we built, and how the four parts of the course relate
+to each other. Second, what the results actually taught us, which comes down to three lessons,
+each one paid for with a measurement. Third, how to choose a method. Fourth, how to do the work
+honestly, which is the longest section. And last, where to go next.
 
 ---
 
 # ▶ SLIDE 3 — Section divider: What We Built
 
-Four parts, twelve lectures, one dataset — and a scoreboard nobody would have predicted in Week 1.
+This first section looks back at what we built: fourteen weeks, four families of method, and one
+dataset carried through all of them.
 
 ---
 
@@ -48,162 +50,179 @@ Four parts, twelve lectures, one dataset — and a scoreboard nobody would have 
 
 *(Walk the table, then land the reframing underneath it.)*
 
-Four parts. Classical time series, Lectures 1 to 3: **specify a structure** — level, trend, season
-— and estimate it. Trees, 4 to 6: **stop specifying**, hand an algorithm features and let it find
-the structure. Deep learning, 7 to 9: let the **architecture** encode what kind of structure to
-expect. Bayesian, 10 to 12: change the **deliverable** — return a distribution, not a number.
+The course came in four parts. The first was classical time series, Lectures 1 to 3, where the
+idea was to **specify a structure**, meaning level, trend and season, and then estimate it. The
+second was trees, Lectures 4 to 6, where we stopped specifying. You handed an algorithm features
+and let it find the structure. The third was deep learning, Lectures 7 to 9, where we let the
+architecture encode what kind of structure to expect. And the fourth was Bayesian, Lectures 10 to
+12, where we changed the deliverable to a distribution instead of a number.
 
 **[pause]**
 
-Now read down that last column again, because there's something there.
+Now, read down that last column again, because there's something there.
 
-This course is not really four toolkits. It's four answers to a single question: **where does the
+This course isn't really four toolkits. It's four answers to a single question: **where does the
 knowledge in a forecast come from?**
 
-From you, encoded in the model structure. From the data, via a search procedure. From the
-architecture's built-in assumptions. Or from a prior, stated openly and then updated.
+It can come from you, encoded in the structure of the model. It can come from the data, through
+a search procedure. It can come from the built-in assumptions of an architecture. Or it can come
+from a prior, stated openly and then updated.
 
-*(Beat.)*
-
-That framing is what survives when the libraries change. Every method you meet for the rest of your
-career sits somewhere on that spectrum, and knowing where tells you what it will be good at and
-what it will fail at.
+That framing is what survives when the libraries change. Every method you meet for the rest of
+your career sits somewhere on that spectrum, and knowing where it sits tells you what it will be
+good at and where it will fail.
 
 ---
 
 # ▶ SLIDE 5 — The Scoreboard
 
-*(Picture first, then the table. Take your time — this is the evidence for everything after it.)*
+*(Picture first, then the table. Take your time; this is the evidence for everything after it.)*
 
-Every model in this course, on the same M5 weekly panel. Same thirty series, same held-out block.
+Here is every model in this course on the same M5 weekly panel, with the same thirty series and
+the same held-out block.
 
 *(Point at the dots.)*
 
-One axis, starting at zero. Each dot is one model's test RMSE. Blue dots came from Lectures 4 to
-6 — trees and regularization. Red dots came from Lectures 7 to 9 — the neural networks. And the
-dashed line on the right is the seasonal-naive benchmark: same week last year, twenty-one
-fifty-two.
+There's one axis, and it starts at zero. Each dot is one model's test RMSE. The blue dots came
+from Lectures 4 to 6, on trees and regularization. The red dots came from Lectures 7 to 9, on
+neural networks. And the dashed line on the right is the seasonal-naive benchmark, which simply
+repeats the same week last year. It scores twenty-one fifty-two.
 
 **[pause]**
 
-Look at the shape before you read a single number. Seven models, built over nine weeks with four
-completely different philosophies, all land inside that gray band — between seven forty-four and
-ten thirty-two. A spread of under three hundred. And every one of them sits more than eleven
-hundred away from the benchmark.
+Look at the shape before you read a single number. Seven models, built over seven weeks with four
+completely different philosophies, all land inside that gray band, between seven forty-four and
+one thousand thirty-two. That's a spread of under three hundred. And every one of them sits more
+than eleven hundred away from the benchmark.
 
-*(Now the table — it says where each number came from.)*
+*(Now the table, which says where each number came from.)*
 
-LASSO with forty-six engineered features: **seven forty-four**, from Homework 4. XGBoost: seven
-eighty-one, also Homework 4. That one came from an earlier xgboost; the version pinned for this
-course gives seven ninety-two, which leaves it in second place. Vanilla RNN: eight-oh-five.
-Random forest: eight ninety-nine. Transformer encoder: nine ninety. LSTM: nine ninety-eight. 1D
-CNN: one thousand thirty-two.
+The LASSO with forty-six engineered features scores **seven forty-four**, from Homework 4, on
+XGBoost and regularization. XGBoost scores seven eighty-one, also from Homework 4. That number
+came from an earlier version of xgboost, and the version pinned for this course gives seven
+ninety-two, which still leaves it in second place. The vanilla RNN scores eight-oh-five, and the
+random forest from Homework 3 scores eight ninety-nine. The Transformer encoder scores nine
+ninety, the LSTM scores nine ninety-eight, and the 1D CNN scores one thousand thirty-two.
 
-One honest footnote on that list. The three recurrent and attention models all read fifty-two
-weeks of history. The CNN number comes from Lab 8, where it read twenty-six weeks, so the table
-says so. Lab 8 also found that handing the CNN a longer window made it worse, not better, so
-the label is a caveat, not an excuse.
+There's one honest footnote on that list. The three recurrent and attention models all read
+fifty-two weeks of history. The CNN number comes from Lab 8, the lab for the CNN lecture, where
+it read twenty-six weeks, and the table says so. Lab 8 also found that handing the CNN a longer
+window made it worse, not better, so the label is a caveat, not an excuse.
 
 **[pause]**
 
 *(Now the reading.)*
 
-That ordering is not the one anyone predicts in Week 1.
+That ordering isn't the one anyone predicts in Week 1.
 
-A **forty-six-coefficient linear model** is at the top. Above gradient boosting, above every
-neural architecture we built.
+A linear model with **forty-six coefficients** is at the top. It sits above gradient boosting,
+and above every neural architecture we built.
 
-And the two architectures with the most attention and money behind them — the Transformer and the
-LSTM — finished **fifth and sixth of eight**, behind a plain RNN with a fraction of their
+And the two architectures with the most attention and money behind them, the Transformer and the
+LSTM, finished **fifth and sixth of eight**, behind a plain RNN with a fraction of their
 parameters.
 
-*(Beat.)*
+Now, notice the last clause on the slide: at the training budget each was measured at. Lecture 9
+Part 1, on RNNs and LSTMs, showed why that matters. With twenty-six-week windows, if you give the
+LSTM a hundred epochs instead of thirty, it catches the RNN, and the two tie. So the RNN's real
+edge is speed. That's a different claim from saying the RNN is a better model, and the slide is
+careful to make only the first one.
 
-Notice the last clause on the slide: at the training budget each was measured at. Lecture 9 Part
-1 showed why that matters. At twenty-six-week windows, give the LSTM a hundred epochs instead of
-thirty and it catches the RNN — the two tie. So the RNN's real edge is speed. That's a different
-claim from "the RNN is a better model," and the slide is careful to make only the first one.
-
-I want to be careful about what the rest of it does and doesn't mean, too, because the wrong
-lesson is easy to take. It does not mean Transformers are overrated in general — they reorganized
-an entire field. It means they are **mismatched to this problem**, and the rest of this lecture is
-about learning to see that mismatch in advance rather than after nine hours of fitting.
+I want to be careful about what the rest of the ranking does and doesn't mean, too, because the
+wrong lesson is easy to take. It doesn't mean Transformers are overrated in general. They
+reorganized an entire field. It means they're **mismatched to this problem**, and the rest of
+this lecture is about learning to see that mismatch in advance, rather than after nine hours of
+fitting.
 
 ---
 
 # ▶ SLIDE 6 — Section divider: What the Results Taught
 
-Three lessons, each paid for with a measurement.
+The next section covers three lessons, and each one came out of a measurement rather than out of
+anyone's opinion.
 
 ---
 
 # ▶ SLIDE 7 — Lesson 1: The Benchmark Is a Real Competitor
 
-Start with the one that should be most uncomfortable.
+Let's start with the lesson that should make you the most uncomfortable.
 
-In Homework 1, forecasting the whole test year from one starting point, the seasonal-naive
-benchmark — same week last year, one line of code — **beat every exponential smoothing and ARIMA
-model the assignment asked you to fit.**
+In Homework 1, on exponential smoothing and ARIMA, you forecast the whole test year from one
+starting point. And the seasonal-naive benchmark, which is the same week last year and one line of
+code, **beat every exponential smoothing and ARIMA model the assignment asked you to fit.**
 
-That was not a trick question or a rigged setup. It is simply what the data supports at that
-horizon — and the reason is countable. Holt-Winters had to estimate fifty-two seasonal indices from
-four point three annual cycles of training data: about four observations per parameter. Seasonal
-naive estimates nothing. And the level it carries barely moves: calendar year on calendar year,
-plus three point seven percent, plus one point three, minus four point four, plus two point nine.
-That's since 2012. The year before, 2011 to 2012, the series jumped almost twenty-nine percent,
-which is why I say "since 2012" — the claim is about the years the benchmark actually had to copy.
+That wasn't a trick question or a rigged setup. It's simply what the data supports at that
+horizon, and the reason is something you can count. Holt-Winters had to estimate fifty-two
+seasonal indices from four point three annual cycles of training data, which is about four
+observations per parameter. Seasonal naive estimates nothing. And the level it carries barely
+moves. Taking each calendar year against the one before, the change was plus three point seven
+percent, then plus one point three, then minus four point four, then plus two point nine. Those
+are the years since twenty twelve. The year before that, from twenty eleven to twenty twelve, the
+series jumped almost twenty-nine percent, and that's why I say "since twenty twelve." The claim
+is about the years the benchmark actually had to copy.
 
 **[pause]**
 
-*(Point at the figure.)* Every bar is the same calculation: one minus the model's RMSE divided by
-the seasonal naive's RMSE, on the same series and the same test period. Right of zero beats the
-benchmark; left of zero loses to it. And each group has its **own** benchmark — sixteen hundred
-sixty units a week, four hundred five a day, twenty-one fifty-two a week across thirty series — so
-read the signs and the rough sizes, never one group's RMSE against another's.
+*(Point at the figure.)*
 
-*(Top group.)* Homework 1, on CA_1 FOODS. Holt-Winters, minus eight percent. SES, minus six.
-ARIMA two-one-zero, the best of the seven models the assignment asked for, minus three. Only three
-of the seven are drawn. The rest sit further left: damped Holt at minus sixteen, the other two
-ARIMAs at minus seven and minus twelve, and undamped Holt at minus ninety, which would have
-squashed every other bar on the slide.
+Every bar in the figure is the same calculation, and the slide calls it skill. It's one minus the
+model's RMSE divided by the seasonal naive's RMSE, on the same series and the same test period. A
+bar to the right of zero beats the benchmark, and a bar to the left of zero loses to it. Each
+group also has its **own** benchmark: sixteen hundred sixty units a week in the top group, four
+hundred five a day in the middle one, and twenty-one fifty-two a week across thirty series at the
+bottom. So read the signs and the rough sizes, and never compare one group's RMSE with another's.
 
-Under them, the Bayesian structural model from Lecture 11 — same series, same test year, same
-benchmark — at **plus four percent**. It crosses the line, and not by much.
+*(Point at the top group.)*
 
-*(Middle group.)* Homework 2: daily data, a whole year ahead. Prophet with the SNAP and event
-regressors, **plus twelve**; pyGAM, plus nine. On the year-ahead questions in this figure, twelve
-percent is the best margin anyone got.
+The top group is Homework 1, on CA_1 FOODS. Holt-Winters comes in at minus eight percent, and SES
+at minus six. ARIMA two-one-zero, the best of the seven models the assignment asked for, is at
+minus three. Only three of the seven are drawn, and the rest sit further left. Damped Holt is at
+minus sixteen, the other two ARIMAs are at minus seven and minus twelve, and undamped Holt is at
+minus ninety, which would have squashed every other bar on the slide.
 
-*(Bottom group.)* Then the bars get long: the random forest from Homework 3 at plus fifty-eight,
-and the LASSO with forty-six engineered features from Homework 4 at **plus sixty-five**. Read the
-group's header before you read its bars. These models see last week's sales and forecast **one
-week** ahead, not a year. Ask Homework 1's own ARIMA that easier question — refit every week, as
-in the walk-forward part — and on the same test year it goes from minus three to plus twenty-six.
-And on this panel last year is a weaker guide: the seasonal naive misses by twenty-three percent of
-a typical week, against eight percent on CA_1 FOODS. So the long bars are partly an easier
-question and a weaker benchmark — which is exactly why each group gets its own zero line.
+Under them is the Bayesian structural model from Lecture 11 Part 1, on Bayesian time series, with
+the same series, the same test year and the same benchmark. It comes in at **plus four percent**.
+It crosses the line, but not by much.
 
-*(If someone asks.)* Two Holt-Winters variants the assignment did not ask for — damped trend, and
-no trend at all — do beat the benchmark, by about six and seven percent. Both stop extrapolating
-the trend and keep the annual pattern: the slowdown from Homework 1 again. A student who fitted one
-and said so was right.
+*(Point at the middle group.)*
+
+The middle group is Homework 2, on GAMs, which used daily data and forecast a whole year ahead.
+Prophet with the SNAP and event regressors comes in at **plus twelve**, and pyGAM at plus nine.
+On the year-ahead questions in this figure, twelve percent is the best margin anyone got.
+
+*(Point at the bottom group.)*
+
+Then the bars get long. The random forest from Homework 3 is at plus fifty-eight, and the LASSO
+with forty-six engineered features from Homework 4 is at **plus sixty-five**. But read the group's
+header before you read its bars. These models see last week's sales and forecast **one week**
+ahead, not a year. If you ask Homework 1's own ARIMA that easier question, refitting it every week
+as in the walk-forward part of the assignment, then on the same test year it goes from minus three
+to plus twenty-six. And on this panel, last year is a weaker guide. The seasonal naive misses by
+twenty-three percent of a typical week here, against eight percent on CA_1 FOODS. So the long bars
+come partly from an easier question and partly from a weaker benchmark, and that's exactly why
+each group gets its own zero line.
+
+*(If someone asks.)*
+
+You might wonder about two Holt-Winters variants the assignment didn't ask for, one with a damped
+trend and one with no trend at all. Both of them do beat the benchmark, by about six and seven
+percent. Both stop extrapolating the trend and keep the annual pattern, which is the slowdown from
+Homework 1 again. A student who fitted one and said so was right.
 
 **[pause]**
 
 *(Point at the key box.)*
 
-**[pause]**
+So, compute the benchmark first, every time.
 
-So: **compute the benchmark first, every time.**
-
-It costs one line. It is often close. And it is the only number that tells you whether the rest of
-your work was worth doing.
+It costs one line of code, it's often close, and it's the only number that tells you whether the
+rest of your work was worth doing.
 
 *(Then make it about them.)*
 
 This is also the cheapest professional habit you can carry out of this course, and the one most
-likely to distinguish you early in a job. A forecast presented without a benchmark is a number
-nobody can evaluate — including you, including the person who built it.
+likely to set you apart early in a job. A forecast presented without a benchmark is a number
+nobody can evaluate, and that includes you, even if you're the one who built it.
 
 If you take one thing from fourteen weeks, take that.
 
@@ -211,78 +230,85 @@ If you take one thing from fourteen weeks, take that.
 
 # ▶ SLIDE 8 — Lesson 2: More Sophisticated Did Not Mean Better
 
-Four times this semester the more advanced method lost. And each time, we could **name the
-reason** — which is the part that matters.
+Four times in this course, the more advanced method failed to win. And each time, we could **name
+the reason**, which is the part that matters.
 
 *(Walk the table.)*
 
-The **LSTM lost to a plain RNN**, at three window lengths, at a fixed thirty-epoch budget. At
-twenty-six weeks, given a hundred epochs, the two tie — so even the honest version of this result
-is "no gain," not "the LSTM is worse." Gating fixes long-range forgetting, and ninety-one percent
-of this panel's variance is between series: there is very little to forget. Four times the
-parameters, no gain.
+The first time, the LSTM lost to a plain RNN. It lost at three window lengths, at a fixed
+thirty-epoch budget. At twenty-six weeks, given a hundred epochs, the two tie, so even the honest
+version of this result is "no gain," not "the LSTM is worse." Gating fixes long-range forgetting,
+and ninety-one percent of this panel's variance is between series, so there's very little to
+forget. The LSTM had four times the parameters, and they bought no gain.
 
-The **Transformer lost to an RNN**, with fifteen times the parameters. Its advantages are
-advantages *at scale*, and five thousand one hundred sixty overlapping fifty-two-week windows —
-roughly a hundred genuinely independent years of data — is not scale.
+The second time, the Transformer lost to an RNN. It had sixty-seven thousand three hundred
+twenty-nine parameters, about fifteen times as many as the RNN. Its advantages are advantages
+**at scale**, and our data isn't scale. We trained on five thousand one hundred sixty windows, each
+fifty-two weeks long, but neighboring windows overlap by ninety-eight percent. Together they hold only about a
+hundred effectively independent blocks of fifty-two weeks, which is roughly a hundred years of
+data.
 
-**CNNs lost to LASSO**, because their twenty-six-week window held no annual lag, and LASSO was handed one as a column.
+The third time, the CNNs lost to the LASSO, because their twenty-six-week window held no annual
+lag, and the LASSO was handed one as a column.
 
-And **tuning bought nothing measurable** — nine fits, and a three-unit change.
+And the last time, tuning bought nothing measurable: nine fits produced a three-unit change.
 
-*(Be precise here, because three units is not a result.)* Both numbers came from a stochastic fit:
-the assignment specifies `subsample=0.8, colsample_bytree=0.8`. Fixing `random_state=42` makes each
-number reproducible, but it does **not** make their difference meaningful — two different
-hyperparameter settings at the same seed draw entirely different subsamples. Vary only the seed at
-one fixed config on this panel and the spread is **twenty to ninety RMSE**. A three-unit gap is
-inside that many times over.
+*(Be precise here, because three units is not a result.)*
 
-So the lesson is not that tuning hurt. It is that nine fits bought nothing you could measure —
-XGBoost's defaults are well chosen for tabular data, and a grid search that improves
-cross-validation need not improve test.
+Both of those numbers came from a stochastic fit, because the assignment sets `subsample` and
+`colsample_bytree` to zero point eight. Fixing `random_state` at forty-two makes each number
+reproducible, but it does **not** make their difference meaningful. Two different hyperparameter
+settings at the same seed draw entirely different subsamples. If you vary only the seed, at one
+fixed configuration on this panel, the spread is **twenty to ninety** in RMSE. A three-unit gap
+fits inside that many times over.
+
+So the lesson isn't that tuning hurt. It's that nine fits bought nothing you could measure:
+cross-validation improved, and the test score didn't. XGBoost's defaults are well chosen for
+tabular data, and a grid search that improves cross-validation doesn't have to improve the test
+score.
 
 **[pause]**
 
 *(Point at the disclaimer, and mean it.)*
 
-None of these means the losing method is bad. Every one of them solves a problem this data does not
-have. LSTMs earn their gates on long dependency chains. Transformers earn their parameters on
-large corpora. Those are real capabilities that simply were not needed here.
+None of this means the losing method is bad. Every one of them solves a problem this data doesn't
+have. LSTMs earn their gates on long chains of dependency, and Transformers earn their parameters
+on large corpora. Those are real capabilities, and they simply weren't needed here.
 
 ---
 
 # ▶ SLIDE 9 — Lesson 2, Continued: A Problem This Data Does Not Have
 
-*(Two panels. You saw them in Lecture 9; same data, same numbers.)*
+*(Two panels from Lecture 9 Part 1, with the same data and the same numbers.)*
 
 Take the first row of that table and look at it, because "a problem this data does not have" is a
 claim you can draw.
 
 *(Point at the left panel.)*
 
-That's the panel the recurrent networks were trained on — all thirty store-and-category series on
-one axis. Foods up top, household in the middle, hobbies along the bottom, and the dashed grand
-mean at about eight thousand units a week. The big differences are between the lines, not along
-them.
+This is the panel the recurrent networks were trained on, with all thirty store-and-category
+series on one axis. Foods are up top, household is in the middle, and hobbies run along the
+bottom. The dashed line is the grand mean, at about eight thousand units a week. The big
+differences are between the lines, not along them.
 
 *(Point at the triangle.)*
 
-And the triangle says how big. Each week's distance from the grand mean splits into the series'
-own level and that week's wiggle around it, and the squares add exactly — Pythagoras, for
-variances. Between series, about six thousand eight hundred; within, about two thousand one
-hundred; total, about seven thousand one hundred. Between squared over total squared is
-**ninety-one percent.**
+The triangle tells you how big those differences are. Each week's distance from the grand mean
+splits into two pieces, the series' own level and that week's wiggle around it, and the squares
+add exactly. It's Pythagoras, for variances. The between-series side is about six thousand eight
+hundred, the within-series side is about two thousand one hundred, and the total is about seven
+thousand one hundred. Between squared over total squared comes to **ninety-one percent**.
 
-So what does this panel ask a model to remember? Mostly, which series it is looking at — and the
-last few weeks tell it that. There is very little for a gate to keep. The Transformer's version of
-the same story is the data size: its parameters pay off on large corpora, and we had about a
-hundred independent years.
+So what does this panel ask a model to remember? Mostly, it asks which series the model is
+looking at, and the last few weeks tell it that. There's very little for a gate to keep. The
+Transformer's version of the same story is the size of the data. Its parameters pay off on large
+corpora, and we had about a hundred independent years.
 
-*(Beat. Point at the key box.)*
+*(Point at the key box.)*
 
-**Match the method to the structure of the problem, not to the recency of the paper.**
+Match the method to the **structure of the problem**, not to the recency of the paper.
 
-And notice the standard I'm holding these to. It's not "the fancy model lost, therefore fancy
+And notice the standard I'm holding these results to. It isn't "the fancy model lost, so fancy
 models are bad." It's "the fancy model lost, and we can say precisely which of its assumptions
 didn't apply." That second statement is worth something. The first is just cynicism.
 
@@ -292,128 +318,138 @@ didn't apply." That second statement is worth something. The first is just cynic
 
 *(This is the intellectual spine of the course. Deliver it slowly.)*
 
-Here's the one I most want you to leave with.
+Here's the lesson I most want you to leave with.
 
 *(Walk the table.)*
 
-Lecture 3: the GAM smoothing penalty, penalizing the wiggliness of a spline. Lecture 4:
-cost-complexity pruning, penalizing the number of leaves. Lecture 5: `reg_lambda` and `gamma`,
-penalizing leaf weights and leaf count. Lecture 6: Ridge, LASSO, Elastic Net, penalizing
-coefficient size. Lecture 7: weight decay and dropout, penalizing network weights. Lecture 11: the
-hierarchical prior, penalizing distance from the group mean.
+In Lecture 3, on GAMs, it was the smoothing penalty, which penalizes the wiggliness of a spline.
+In Lecture 4, on decision trees, it was cost-complexity pruning, which penalizes the number of
+leaves. In Lecture 5, on tree ensembles, it was `reg_lambda` and `gamma`, which penalize the leaf
+weights and the leaf count. In Lecture 6, on regularization, it was Ridge, LASSO and Elastic Net,
+which penalize the size of the coefficients. In Lecture 7, on neural networks, it was weight decay
+and dropout, which penalize the network's weights. And in Lecture 11 Part 2, on hierarchical
+models, it was the hierarchical prior, which penalizes distance from the group mean.
 
 **[pause]**
 
-Six model families that look nothing like each other. Splines, trees, boosted trees, linear
-models, neural networks, and a Bayesian hierarchy.
+That's six model families that look nothing like each other: splines, trees, boosted trees,
+linear models, neural networks and a Bayesian hierarchy.
 
-One bargain underneath all of them: **fit against complexity, with a single parameter setting the
-exchange rate.**
+Underneath all of them is one bargain: **fit against complexity, with a single parameter setting
+the exchange rate.**
 
 *(Point at the distinction.)*
 
-And five of those six tune that parameter by cross-validation — you try values and pick one. The
-sixth, the hierarchical prior, **estimates** it, with a posterior and its own uncertainty. That
-makes it the cleanest version of the idea in the course.
+Five of those six tune that parameter by cross-validation, which means you try values and pick
+one. The sixth, the hierarchical prior, **estimates** it, with a posterior and its own
+uncertainty. That makes it the cleanest version of the idea in the course.
 
 **[pause]**
 
 *(Land the transferability.)*
 
-This is what to remember when the tools change. And they will change — most of the specific
+This is what to remember when the tools change. And they will change. Most of the specific
 libraries in this course will look dated within a decade.
 
-The **trade between fit and complexity** will not. When you meet a method none of us have heard of
-yet, one of the first useful questions is: where is its complexity penalty, and what sets it?
+The trade between fit and complexity won't. When you meet a method none of us have heard of yet,
+one of the first useful questions to ask is where its complexity penalty is, and what sets it.
 
 ---
 
 # ▶ SLIDE 11 — Section divider: Choosing a Method
 
+Next comes a decision guide, built from what we actually measured.
+
 ---
 
 # ▶ SLIDE 12 — Which Method, When
 
-*(A practical slide. Walk it briskly — students will photograph it.)*
+*(A practical slide. Walk it briskly; students will photograph it.)*
 
-One series, clear seasonality, short history? ETS or ARIMA — and check the benchmark.
+If you have one series with clear seasonality and a short history, start with ETS or ARIMA, and
+check the benchmark.
 
-Several seasonal cycles at once? GAM or Prophet.
+If you have several seasonal cycles at once, start with a GAM or Prophet.
 
-Many engineered features, tabular data? **Regularized regression first**, then XGBoost.
+If you have many engineered features in tabular data, start with **regularized regression**, and
+then try XGBoost.
 
-Many parallel series with shared drivers? Gradient boosting with series identifiers.
+If you have many parallel series with shared drivers, start with gradient boosting, using
+identifiers for the series.
 
-Genuinely long dependencies and lots of data? Recurrent or attention architectures.
+If you have genuinely long dependencies and lots of data, reach for recurrent or attention
+architectures.
 
-Few observations per group? Hierarchical Bayesian — partial pooling.
+If you have few observations per group, use a hierarchical Bayesian model, with partial pooling.
 
-The decision needs a probability? Bayesian, for the predictive distribution.
+And if the decision needs a probability, go Bayesian, for the predictive distribution.
 
 **[pause]**
 
 *(Two notes on the table.)*
 
-Two things about that list.
+There are two things to notice about that list.
 
-"Regularized regression first" is not a concession or a beginner's option. It **won our largest
-comparison**, and its coefficients can be read aloud in a meeting. Start there and make the
-complicated model prove it deserves to replace it.
+"Regularized regression first" isn't a concession, or an option for beginners. It **won our
+largest comparison**, and its coefficients can be read aloud in a meeting. Start there, and make
+the complicated model prove it deserves to replace it.
 
-And the last row is the only one where the **question changes** rather than the accuracy.
-Everything above it is a horse race on RMSE. That row is about needing a different kind of answer
-— which is the thing Lectures 10 through 12 were really for.
+And the last row is the only one where the **question changes**, rather than the accuracy.
+Everything above it is a horse race on RMSE. That row is about needing a different kind of
+answer, which is what Lectures 10 through 12, the Bayesian part of the course, were really for.
 
 ---
 
 # ▶ SLIDE 13 — Section divider: Doing It Honestly
 
-The errors that do not announce themselves.
+This section is about doing the work honestly, because the errors in this field don't announce
+themselves.
 
 ---
 
 # ▶ SLIDE 14 — Errors That Fail Silently I: the Pipeline
 
-Every error on this slide produces a confident, plausible, **wrong** answer with no error message.
-And every one of them is a **bug in the code**.
+Every error on this slide produces a confident, plausible, **wrong** answer, with no error
+message. And every one of them is a bug in the code.
 
-*(Point at the picture. Left half first.)*
+*(Point at the picture, left half first.)*
 
 Start with the first one, because it's the one you can see. On the left is walk-forward
-validation — `TimeSeriesSplit`, the Lecture 1 picture three times over. Gray is training, red is
-the test block, and every fold trains only on weeks *before* the block it is scored on. The dotted
-boxes are weeks that fold never touches.
+validation, which is `TimeSeriesSplit`. It's the picture from Lecture 1, on forecast evaluation,
+drawn three times over. Gray is training, red is the test block, and every fold trains only on
+weeks *before* the block it's scored on. The dotted boxes are weeks that fold never touches.
 
-*(Right half.)*
+*(Point at the right half.)*
 
 On the right is plain `KFold`. It cuts the timeline into folds and holds each one out in turn.
-Look at the hatched boxes: those are weeks *after* the test block, sitting in the training set.
-The model learns from the future and is then graded on the past. Your CV error looks excellent,
-and your forecast fails. And notice the bottom row: the last fold happens to be honest. One clean
-fold proves nothing about the others.
+Now, look at the hatched boxes. Those are weeks *after* the test block, sitting in the training
+set. The model learns from the future and is then graded on the past. Your cross-validation error
+looks excellent, and your forecast fails. And notice the bottom row, where the last fold happens
+to be honest. One clean fold proves nothing about the others.
 
 *(Walk the rest of the table.)*
 
-Scaling outside the fold. Validation statistics leak into training. Smaller effect, same class of
-error.
+The second error is scaling outside the fold, which lets validation statistics leak into
+training. It's a smaller effect, but it's the same class of error.
 
-Rolling features unshifted. A window that includes the current week leaks the target into its own
-predictor.
+The third is leaving rolling features unshifted. A window that includes the current week leaks
+the target into its own predictor.
 
-Reading MDI importance. In Homework 3, **pure noise ranked seventeenth of twenty-nine** — above a
-real feature — purely because it had many distinct values.
+The last is taking MDI importance at face value. In Homework 3, on trees and random forests,
+**pure noise ranked seventeenth of twenty-nine**, above a real feature, purely because it had many
+distinct values.
 
 **[pause]**
 
 *(Point at the last line.)*
 
-The common thread is that the failure is not a crash. It's a number that looks fine.
+The common thread is that the failure isn't a crash. It's a number that looks fine.
 
-Which is exactly why the discipline has to be **procedural**. Split by time. Scale inside the
-fold. Shift the window. Plant a control.
+That's exactly why the discipline has to be **procedural**. You split by time, you scale inside
+the fold, you shift the window, and you plant a control.
 
-You do those things because they're on a list, not because something broke — because nothing is
-ever going to break.
+You do those things because they're on a list, not because something broke. Nothing is ever going
+to break.
 
 ---
 
@@ -421,43 +457,43 @@ ever going to break.
 
 *(This is the most important slide in the deck. Slow right down.)*
 
-Now the harder category, and the one that is far more common in professional work.
+Now comes the harder category, and it's the one that's far more common in professional work.
 
-Here **nothing is wrong with your program.** The model fits. The sampler converges. Every
+Here, **nothing is wrong with your program.** The model fits, the sampler converges, and every
 diagnostic passes. And the answer is still wrong.
 
 *(Walk the four rows deliberately.)*
 
-**Pooling groups that are not exchangeable.** Lecture 11 Part 2's lab pooled ten FOODS series with
-twenty that ignore SNAP. Textbook shrinkage, clean diagnostics — and it reported an effect of
-plus point-oh-one-one where the held-out weeks said plus point-oh-eight-nine.
+The first row is pooling groups that are not exchangeable. The lab for Lecture 11 Part 2, on
+hierarchical models, pooled ten FOODS series with twenty series that ignore SNAP. The shrinkage
+was textbook and the diagnostics were clean, and it reported an effect of plus zero point zero
+one one, where the held-out weeks said plus zero point zero eight nine.
 
-**Standardizing a coefficient you then interpret.** Lecture 12: divide log price by its standard
-deviation, and `b_price` stops being an elasticity. Identical fit, identical diagnostics, and the
-five percent price scenario moves by a factor of **twenty-two**.
+The second row is standardizing a coefficient that you then interpret. In Lecture 12, on Bayesian
+regression, if you divide log price by its standard deviation, `b_price` stops being an
+elasticity. The fit is identical, the diagnostics are identical, and the five percent price
+scenario moves by a factor of **twenty-two**.
 
-**Omitting a confounder.** The naive elasticity was six times too large — *with an interval half the
-width* of the correct one. Precision is not accuracy.
+The third row is omitting a confounder. The naive elasticity was six times too large, and it came
+*with an interval half the width* of the correct one. Precision is not accuracy.
 
-**Ignoring R-hat and divergences.** Our centered fits in Lecture 11 looked fine and were not. In
-Part 1 the centered structural model handed back a forecast with an R-hat of one point oh two two.
-In Part 2 the centered hierarchy passed R-hat and ESS, and failed only on its forty-three
-divergences.
+The fourth row is ignoring R-hat and divergences. Our centered fits in Lecture 11 looked fine, and
+they weren't. In Part 1, on Bayesian time series, the centered structural model handed back a
+forecast with an R-hat of one point oh two two. In Part 2, the centered hierarchy passed R-hat and
+ESS, and it failed only on its forty-three divergences.
 
 **[pause]**
 
 *(Now the line the whole deck is built toward.)*
 
-Look at that list and ask which of them a diagnostic would have caught.
+Look at that list, and ask which of these a diagnostic would have caught.
 
-**Only the last one.**
+**Only the last one would.**
 
 The first three were caught by held-out data, by a DAG drawn before the model, and by asking what
 one unit of a variable actually means. None of those is something a library will run for you.
-There is no `check_exchangeability()`. There is no warning when your coefficient stops being an
-elasticity.
-
-*(Beat.)*
+There's no `check_exchangeability()` function, and there's no warning when your coefficient stops
+being an elasticity.
 
 That's the difference between knowing how to call a method and knowing what it assumes. Fourteen
 weeks of this course have been aimed at the second one.
@@ -466,80 +502,75 @@ weeks of this course have been aimed at the second one.
 
 # ▶ SLIDE 16 — The Day Every Model in This Course Fails
 
-*(Figure up. This is the last new result of the course — give it room.)*
+*(Figure up. This is the last new result of the course, so give it room.)*
 
-One more failure, and it is not on the previous slide's list because it is not a mistake anybody
-made. It is a limit.
+There's one more failure, and it isn't on the previous slide's list, because it isn't a mistake
+anybody made. It's a limit.
 
-Every twenty-fifth of December, the stores close. Recorded sales are **exactly zero** — five times
-in our sample, against a daily average near twenty-eight hundred.
+Every twenty-fifth of December, the stores close, and recorded sales are **exactly zero**. That
+happens five times in our sample, against a daily average of about twenty-eight hundred.
 
 *(Point at the left panel.)*
 
-This is CA_1 FOODS, daily, from the eighteenth of December to the first of January, four
-Christmases laid on top of each other. Black lines are what actually sold. Every one of them dives
-to zero on the twenty-fifth — that black dot at the bottom.
+This is CA_1 FOODS, daily, from the eighteenth of December to the first of January, with four
+Christmases, twenty twelve through twenty fifteen, laid on top of each other. The black lines are
+what actually sold. Every one of them dives to zero on the twenty-fifth, at that black dot at the
+bottom.
 
-The dashed lines are the seasonal-naive forecast: the same weekday, one year earlier. On the
-twenty-fifth they sit at twenty-two thirty, twenty forty-five, twenty-four eighty-five,
-twenty-three sixty-five. The red bars are the errors — a hundred percent of the forecast, every
-time, on a date known years in advance.
+The dashed lines are the seasonal-naive forecast, which is the same weekday one year earlier. On
+the twenty-fifth they sit at twenty-two thirty, twenty forty-five, twenty-four eighty-five and
+twenty-three sixty-five. The red bars are the errors. Each one is a hundred percent of the
+forecast, every time, on a date that was known years in advance.
 
 *(Point at the hollow circles.)*
 
-And look what the dashed lines do the day before. They dive to zero too. That's last year's
-closure, replayed: fifty-two weeks back from the twenty-fourth lands on last year's Christmas. In
-2012 it lands on the twenty-third, because 2012 was a leap year. So the benchmark pays twice — once
-for not knowing the store is closed, and once for thinking it is closed when it isn't. That echo
-costs another seven percent of the squared error on its own.
+Now, look at what the dashed lines do the day before. They dive to zero too. That's last year's
+closure, replayed, because fifty-two weeks back from the twenty-fourth lands on last year's
+Christmas. In twenty twelve it lands on the twenty-third, because twenty twelve was a leap year.
+So the benchmark pays twice: once for not knowing the store is closed, and once for thinking it's
+closed when it isn't. That echo costs another seven percent of the squared error on its own.
 
 **[pause]**
 
 *(Point at the right panel.)*
 
-Now the picture that makes this more than an anecdote. A squared error is an area. The small gray
-square is an average day: its side is the benchmark's RMSE over the whole evaluation window,
-five thirty-seven. Each red square's side is one Christmas error. Count the gray squares that fit
-inside: seventeen, fifteen, twenty-one, nineteen. On average, **one closed day weighs eighteen
-ordinary days**.
+Here's the picture that makes this more than an anecdote. A squared error is an area. The small
+gray square is an average day, and its side is the benchmark's RMSE over the whole evaluation
+window, which is five thirty-seven. Each red square's side is one Christmas error. Count the gray
+squares that fit inside each red one, and you get seventeen, fifteen, twenty-one and nineteen. On
+average, **one closed day weighs as much as eighteen ordinary days**.
 
-Which is why four days — **one quarter of one percent** of the evaluation window — carry **four
-point six percent** of its squared error. Eighteen times their share. Drop those four days out of
-fifteen hundred and the benchmark's RMSE falls from 537 to 525 without changing a single thing
-about the model.
+That's why four days, which are **one quarter of one percent** of the evaluation window, carry
+**four point six percent** of the seasonal naive's squared error. That's eighteen times their
+share. Drop those four days out of fifteen hundred seventy-seven, and the benchmark's RMSE falls
+from five thirty-seven to five twenty-five, without changing a single thing about the model.
 
-*(Beat.)*
+So why did nobody catch it? It wasn't for want of information.
 
-So why did nobody catch it? Not for want of information.
+The `is_event` flag fires on **a hundred and fifty-eight** days in this data, and **five** of them
+are closures. Every model in this course saw that flag: the trees that split on it, the networks
+that took it as a channel, and the Bayesian regressions that gave it a coefficient. And the flag
+lumps a locked front door together with a hundred and fifty-three Super Bowls and Easters.
 
-`is_event` fires on **158** days in this data. **Five** of them are closures. Every model in this
-course — the trees that split on it, the networks that took it as a channel, the Bayesian
-regressions that gave it a coefficient — saw a flag that lumps a locked front door together with a
-hundred and fifty-three Super Bowls and Easters.
-
-The feature could not express the difference, so no model could learn it.
+The feature couldn't express the difference, so no model could learn it.
 
 **[pause]**
 
 *(Point at the key box.)*
 
-And that is the honest shape of this failure. It was knowable years ahead. Nothing was missing
-from the world; something was missing from the **encoding**. The model was not misspecified — it
-was asked a question in a vocabulary that had no word for "closed."
+That's the honest shape of this failure. It was knowable years ahead. Nothing was missing from the
+world, but something was missing from the **encoding**. The model wasn't misspecified. It was asked
+a question in a vocabulary that had no word for "closed."
 
-*(Beat — then the harder case.)*
+The harder case is a shock that nobody could have known about at all. On the sixteenth of April,
+twenty sixteen, a magnitude seven point eight earthquake struck Ecuador, and sales at a large
+grocery chain there spiked for weeks as people bought water and relief supplies. A forecast made on
+the fifteenth, by any method in this course, is catastrophically wrong for the following month.
+That's not because the model was bad. It's because the future stopped resembling the past, which
+is the one assumption every method here shares.
 
-The harder case is a shock nobody could have known about at all. On the sixteenth of April 2016 a
-magnitude 7.8 earthquake struck Ecuador, and sales at a large grocery chain there spiked for weeks
-as people bought water and relief supplies. A forecast made on the fifteenth — by any method in
-this course — is catastrophically wrong for the following month. Not because the model was bad,
-but because the future stopped resembling the past, which is the one assumption every method here
-shares.
-
-That dataset is available if your project wants a real structural break rather than a simulated
-one.
-
-**[pause]**
+That chain's sales data is available if your project wants a real structural break rather than a
+simulated one.
 
 Knowing where the whole toolkit stops working is part of knowing how to use it.
 
@@ -551,17 +582,18 @@ So what does good work actually look like when you hand it to someone?
 
 *(Walk the table.)*
 
-**A benchmark** — computed, not cited. Every model measured against it.
+It starts with a benchmark that you computed, not one you cited, and every model is measured
+against it.
 
-**A time-aware split** — walk-forward or a held-out final block. Never random.
+It uses a time-aware split, either walk-forward or a held-out final block, and never a random one.
 
-**More than one evaluation.** A single test split can flatter. Homework 4 ranked models the same
-way twice, and that's why that ranking is believable.
+It has more than one evaluation, because a single test split can flatter a model. Homework 4
+ranked the models the same way twice, and that's why that ranking is believable.
 
-**The result that went against you** — including tuning that didn't help, and the model you
-expected to win.
+It reports the result that went against you, including the tuning that didn't help and the model
+you expected to win.
 
-**An interpretation**, in the units of the business rather than of the loss function.
+And it gives an interpretation in the units of the business, rather than of the loss function.
 
 **[pause]**
 
@@ -570,132 +602,146 @@ expected to win.
 That fourth row is the one that distinguishes professional work, and it's the one that feels
 counterintuitive when you're junior.
 
-A report where **every** result confirms the author's expectation is not a report anyone should act
-on. Either the author got lucky, or they stopped looking, or they're not telling you everything.
-Reporting what went against you is what makes the rest of it credible.
+A report where **every** result confirms the author's expectation isn't a report anyone should
+act on. Either the author got lucky, or they stopped looking, or they aren't telling you
+everything. Reporting what went against you is what makes the rest of it credible.
 
-*(Last paragraph.)*
+*(Point at the last paragraph.)*
 
-And you have practiced this all semester, whether or not it felt like it. The assignments were
-built so that the obvious answer is frequently the wrong one — and the credit was for **noticing**,
-not for getting the flattering number.
+And you've practiced this all semester, whether or not it felt like it. The assignments were built
+so that the obvious answer is frequently the wrong one, and the credit was for **noticing**, not
+for getting the flattering number.
 
 ---
 
 # ▶ SLIDE 18 — Where You Do This Yourself
 
-Which brings us to the final project, because it asks for exactly the report on the previous slide,
+That brings us to the final project, because it asks for exactly the report on the previous slide,
 on data of your choosing.
 
 *(Walk the requirements.)*
 
-**Three methods, from at least two parts of the course.** Time series, trees, deep learning,
-Bayesian. Three variations on one family do not satisfy this — the comparison has to be between
-approaches that differ *in kind*.
+First, it needs three methods, from at least two parts of the course, and the four parts are time
+series, trees, deep learning and Bayesian. Three variations on one family don't satisfy this. The
+comparison has to be between approaches that differ *in kind*.
 
-**Plus a benchmark**, which does not count toward the three and is not optional. Lesson 1 is why.
+Second, it needs a benchmark on top of those three. The benchmark doesn't count toward the three,
+and it isn't optional. Lesson 1, from earlier today, is why.
 
-**Walk-forward validation** for every comparison. Not a random split, and not once.
+Third, it needs walk-forward validation for every comparison. That means no random split, and no
+single split done once.
 
-**A recommendation a non-specialist can act on**, in business units, with the uncertainty attached.
+Fourth, it needs a recommendation that a non-specialist can act on, in the units of the business,
+with the uncertainty attached.
 
-**A methods reflection** — which model won, and what about *your* data made it win.
+And last, it needs a methods reflection: which model won, and what it was about *your* data that
+made it win. This is where the course is actually assessed.
 
 **[pause]**
 
 *(Point at the last row and make the standard explicit.)*
 
-That last row is not a formality, and it's where the grade actually lives.
+That last row isn't a formality, and it's where the grade actually lives.
 
 Every scoreboard in this course came with a **reason**. The LSTM lost because gating solves a
-problem this data doesn't have. The CNN lost because seven weeks can't see an annual lag. The
-Transformer lost because its advantages are advantages at scale.
+problem this data doesn't have. The CNN lost because its twenty-six-week window held no annual
+lag. The Transformer lost because its advantages are advantages at scale.
 
-A project that reports a ranking without a reason has done the computation but not the work.
+A project that reports a ranking without a reason has done the computation, but not the work.
 
 ---
 
 # ▶ SLIDE 19 — Section divider: Where to Go Next
 
+To finish, here's what we left out, and what to read next.
+
 ---
 
 # ▶ SLIDE 20 — What This Course Did Not Cover
 
-Some honest gaps, so you know what you don't know.
+Here are some honest gaps, so that you know what you don't know.
 
 *(Walk the table.)*
 
-**Hierarchical reconciliation** — making store forecasts add up to regional totals. Genuinely
-different from Lecture 11's hierarchy, and FPP Chapter 11 covers it.
+The first is hierarchical reconciliation, which means making store forecasts add up to regional
+totals. It's genuinely different from the hierarchy in Lecture 11 Part 2, and Chapter 11 of
+Forecasting: Principles and Practice covers it.
 
-**Intermittent demand** — series that are mostly zeros. Croston's method and its relatives. Very
-common in spare parts and slow-moving SKUs, and none of our methods handle it well.
+The second is intermittent demand, meaning series that are mostly zeros. That's the territory of
+Croston's method and its relatives. It's very common with spare parts and slow-moving products,
+and none of our methods handle it well.
 
-**Structural breaks** — when the future stops resembling the past.
+The third is structural breaks, which is what happens when the future stops resembling the past,
+and every method fails together.
 
-**Causal inference** — DAGs told us confounders exist. Estimating causal effects credibly is a
-separate course.
+The fourth is causal inference. The DAGs told us that confounders exist, but estimating causal
+effects credibly is a separate course.
 
-**Foundation models** — pretrained forecasters applied zero-shot. Moving fast; FPP-Py Chapter 15 is
-a starting point.
+The fifth is foundation models, which are pretrained forecasters applied zero-shot, meaning to
+series they were never trained on. That area is moving fast, and Chapter 15 of FPP-Py, the Python
+edition of the same textbook, is a starting point.
 
 **[pause]**
 
 *(Point at the photo.)*
 
-You have seen this photo before — it was the input image for the convolution filters in Lecture
-8. A grocery aisle in Washington, DC, on the eighteenth of March 2020, five days after the national
-emergency was declared. Lecture 8 promised we'd come back to it. The shelves are empty because
-demand jumped overnight, and every forecast for that aisle was built on weeks that had stopped
-being any guide.
+You've seen this photo before. It was the input image for the convolution filters in Lecture 8,
+on CNNs. It's a grocery aisle in Washington, DC, on the eighteenth of March, twenty twenty, five
+days after the national emergency was declared. Lecture 8 promised we'd come back to it. The
+shelves are empty because demand jumped overnight, and every forecast for that aisle was built on
+weeks that had stopped being any guide.
 
-*(Point at the third row and close hard on it.)*
+*(Point at the third row, and close hard on it.)*
 
 The third row is the one most likely to matter in your career, so let me be explicit about why.
 
-**Every model in this course assumes the future resembles the past.** Every single one. And when
-that stops being true — a pandemic, a competitor entering, a supply shock, a pricing change — the
-model does not tell you.
+**Every model in this course assumes the future resembles the past.** Every single one does. And
+when that stops being true, because of a pandemic, a competitor entering the market, a supply
+shock or a change in pricing, the model doesn't tell you.
 
-Worse: **the benchmark fails at exactly the same moment**, so your usual safety net goes with it.
-Your forecast is wrong, your comparison is wrong, and everything still looks internally consistent.
+Worse, **the benchmark fails at exactly the same moment**, so your usual safety net goes with it.
+Your forecast is wrong, your comparison is wrong, and everything still looks internally
+consistent.
 
-Detecting that early is its own field, and it's worth knowing that field exists.
+Detecting that early is a field of its own, and it's worth knowing that the field exists.
 
 ---
 
 # ▶ SLIDE 21 — Closing
 
-*(Seven points. Steady pace. This is the last thing they hear.)*
+*(Seven points, at a steady pace. This is the last thing they hear.)*
 
-One. **Compute the benchmark first.** It's often close, and it's the only number that says whether
-your work was worth doing.
+Let me leave you with seven points.
 
-Two. **Match the method to the problem**, not to the paper's publication date. The most advanced
-model on our data, the Transformer, finished fifth.
+First, **compute the benchmark** before anything else. It's often close, and it's the only number
+that tells you whether your work was worth doing.
 
-Three. **One idea recurs**: fit against complexity, with a parameter setting the rate. Six times,
-under six names.
+Second, **match the method to the problem**, not to the date the paper was published. The most
+advanced model on our data, the Transformer, finished fifth.
 
-Four. **Split by time, always.** The leakage errors in this field don't crash — they return a
+Third, remember that **one idea recurs**: fit against complexity, with a parameter setting the
+rate. We saw it six times, under six names.
+
+Fourth, **split by time, always.** The leakage errors in this field don't crash. They return a
 better-looking number.
 
-Five. **Diagnostics check the model you wrote, not whether it was the right one.** Convergence,
-R-hat and ESS all passed on the two worst answers this course produced. Held-out data caught one
-of them; a DAG drawn before the model caught the other.
+Fifth, remember that **diagnostics check the model you wrote, not whether it was the right one.**
+Convergence, R-hat and ESS all passed on the two worst answers this course produced. Held-out data
+caught one of them, and a DAG drawn before the model caught the other.
 
-Six. **Report what went against you.** It's the part that makes the rest credible.
+Sixth, **report what went against you.** It's the part that makes the rest credible.
 
-Seven. **Know what your forecast is for.** A point estimate and a predictive distribution answer
-different questions, and only one of them supports a decision under uncertainty.
+And the last one is to **know what your forecast is for.** A point estimate and a predictive
+distribution answer different questions, and only one of them supports a decision under
+uncertainty.
 
 **[pause]**
 
 *(The last line. Say it plainly and stop.)*
 
-The libraries will change. The habits are the transferable part.
+The libraries will change, but the habits are the transferable part.
 
-Thank you — and good luck with the project.
+Thank you, and good luck with the project.
 
 ---
 
