@@ -43,59 +43,59 @@ Step 3's two "your turn" blocks, Step 4's "your turn", and the three closing **D
 
 # ▶ OPENING
 
-*(Screen: rendered lab, top of document.)*
+*(Show the rendered lab, at the top of the document.)*
 
-Lab 11, Part 1. Last week's model had one parameter and no time in it. This week we point the same
-machinery at an actual time series.
+This is Lab 11, Part 1. Last week's model, in Lab 10, had one parameter and no time in it. This week,
+we point the same machinery at an actual time series.
 
-A structural model writes a series as **parts you can name** — a level that drifts, a seasonal
-shape, and noise — and puts a prior on each. That is the appeal, and it is a real one: the output
-is not a forecast line, it is a distribution for every future week, and you can pull the level and
-the seasonality out and look at them separately.
+A structural model writes a series as **parts you can name**: a level that drifts, a seasonal shape,
+and noise. Then it puts a prior on each one. That's the appeal, and it's a real one. The output isn't
+a forecast line. It's a distribution for every future week, and you can pull out the level and the
+seasonality and look at each one separately.
 
 **[pause]**
 
-Today has an unusual shape, so let me tell you where it goes. You will build the model and hit a
-failure that the diagnostics catch. You will fix it with a change that alters nothing about the
-model. Then you will forecast two ways — and find that the **theoretically correct** way produces
-a *worse-calibrated* interval than the shortcut.
+Today has an unusual shape, so let me tell you where it goes. You'll build the model, and you'll hit
+a failure that the diagnostics catch. You'll fix it with a change that leaves the model itself almost
+exactly as it was. Then you'll forecast two ways, and you'll find that the **theoretically correct**
+way produces a *worse-calibrated* interval than the shortcut.
 
-That last result is not a bug in the lab. It is the model telling you something about itself, and
+That last result isn't a bug in the lab. It's the model telling you something about itself, and
 working out what takes the rest of the session.
 
 ---
 
 # ▶ SETUP
 
-*(Screen: run setup.)*
+*(Run the setup cell.)*
 
 ```
 train 225 weeks, test 52 weeks | 6 Fourier coefficients standing in for 52
 ```
 
-CA\_1 FOODS again — the series you have been forecasting since Homework 2 — held out for a full
-final year.
+It's CA\_1 FOODS again, the series you've been forecasting since Homework 1, and this time we hold
+out a full final year.
 
 *(Point at the Fourier line.)*
 
-One line deserves attention. **Six coefficients standing in for fifty-two.** Three sine-cosine
-pairs describe the annual shape, rather than fifty-two weekly dummies. That is a modeling choice
-with a cost and a benefit: you cannot represent a one-week spike, but you have six parameters to
-estimate instead of fifty-two, on 225 observations. Remember it — it comes back in Step 3 as a
-suspect.
+One line deserves your attention: **six coefficients standing in for fifty-two**. Three sine-cosine
+pairs describe the annual shape, instead of fifty-two weekly dummies. That's a modeling choice with a
+cost and a benefit. You can't represent a one-week spike, but you have six parameters to estimate
+instead of fifty-two, on two hundred twenty-five observations. Remember it, because it comes back in
+Step 3 as a suspect.
 
-Also note the standardization. `y_z` is the series in standard units, because the priors below —
-`Exponential(10)`, `Normal(0, 0.5)` — assume unit scale. Priors are not scale-free, and this is
-the line that makes them defensible.
+Also notice the standardization. `y_z` is the series in standard units, because the priors below, an
+Exponential with rate ten and a Normal with standard deviation zero point five, assume unit scale.
+Priors aren't scale-free, and this is the line that makes them defensible.
 
 ---
 
 # ▶ STEP 1 — Fit it the obvious way
 
-*(Screen: run the centered model.)*
+*(Run the centered model.)*
 
 The model is a drifting level plus seasonality. PyMC has a distribution for a random walk, so the
-obvious thing is to reach for it: `pm.GaussianRandomWalk`. It reads exactly like the maths.
+obvious thing is to reach for it: `pm.GaussianRandomWalk`. It reads exactly like the math.
 
 ```
 R-hat        1.022   (want < 1.01)
@@ -105,40 +105,39 @@ divergences  0
 
 **[pause]**
 
-**It did not converge**, and I want you to look carefully at *how* you know.
+It **did not converge**, and I want you to look carefully at *how* you know.
 
-R-hat is 1.022, above the 1.01 threshold — the four chains do not agree with each other.
-Effective sample size is 274, below 400 — the draws are so autocorrelated that six thousand
-samples carry less information than a few hundred independent ones.
+R-hat is one point zero two two, above the threshold of one point zero one, which means the four
+chains don't agree with each other. The effective sample size is two hundred seventy-four, below
+four hundred. The draws are so autocorrelated that six thousand samples carry less information than
+a few hundred independent ones.
 
-And **divergences are zero.**
-
-*(Beat.)*
+And the divergences are zero.
 
 That last line matters, because divergences are the diagnostic everyone learns first, and here
-they are silent. The sampler never had to give up on a step; it just wandered badly. **Different
-pathologies trip different instruments** — which is precisely why you check all three, every time,
+they're silent. The sampler never had to give up on a step. It just wandered badly. **Different
+pathologies trip different instruments**, which is precisely why you check all three, every time,
 rather than the one you remember.
 
-Next week you will see the mirror image: a model where R-hat and ESS both pass and forty-three
-divergences are the only thing objecting.
+Next week, in Lab 11, Part 2, you'll see the mirror image: a model where R-hat and the effective
+sample size both pass, and forty-three divergences are the only thing objecting.
 
 *(Point at `target_accept`.)*
 
-And note this is **not** fixed by asking the sampler to try harder. `target_accept` is already at
-0.95. The problem is not effort.
+And notice that this is **not** fixed by asking the sampler to try harder. `target_accept` is already
+at zero point nine five. The problem isn't effort.
 
 ---
 
 # ▶ STEP 2 — Reparameterize
 
-*(Screen: the two model blocks side by side, then run.)*
+*(Show the two model blocks side by side, then run.)*
 
 The problem is the **shape of the posterior**, not the model.
 
-A centered random walk couples the level to `sigma_level`: when the scale is small, the steps must
-be small, so the posterior narrows into a funnel that the sampler cannot traverse at a single step
-size. The fix is to write the walk as a cumulative sum of **standard** Normal draws, scaled
+A centered random walk couples the level to `sigma_level`. When the scale is small, the steps have
+to be small, so the posterior narrows into a funnel that the sampler can't traverse with a single
+step size. The fix is to write the walk as a cumulative sum of **standard** Normal draws, scaled
 afterwards. Now `z` and `sigma_level` are independent in the posterior geometry.
 
 ```
@@ -149,43 +148,47 @@ divergences  0
 
 **[pause]**
 
-R-hat 1.022 to 1.002. Effective sample size 274 to **2,376** — nearly nine times more information
-out of the same number of draws.
+R-hat went from one point zero two two to one point zero zero two. The effective sample size went
+from two hundred seventy-four to **two thousand three hundred seventy-six**, which is nearly nine
+times more information out of the same number of draws.
 
-And here is the sentence to say slowly: **same data, same random walk, new coordinates.**
-`cumsum(z * sigma)` and `GaussianRandomWalk(sigma=sigma)` describe the same walk. What changed is
-the coordinate system the sampler explores.
+And here's the sentence to say slowly: **same data, same random walk, new coordinates.** A `cumsum`
+of z times sigma, and a `GaussianRandomWalk` with that same sigma, describe the same walk. What
+changed is the coordinate system the sampler explores.
 
-That is worth internalizing, because it is unlike everything else in this course. This is not a
-modeling improvement or a bias-variance trade. It is a **computational** fix to a **computational**
+That's worth internalizing, because it's unlike everything else in this course. It isn't a modeling
+improvement, and it isn't a bias-variance trade. It's a **computational** fix to a **computational**
 problem.
 
-*(One honest footnote, and read the callout under the code.)* The two fits are *almost* the same
-model, not exactly. `GaussianRandomWalk` lets week one's level start anywhere, because its default
-start is a Normal with standard deviation one hundred. PyMC warns about that default, and our Setup
-cell silences warnings, so you never saw it. The `cumsum` version starts the walk near zero. That
-one difference nudges sigma-level up, from about four hundred fifty units a week to about five
-hundred twenty. A default you didn't choose is still a prior.
+*(Read the callout under the code.)*
 
-*(Screen: the components figure.)*
+There's one honest footnote. The two fits are *almost* the same model, not exactly.
+`GaussianRandomWalk` lets week one's level start anywhere, because its default start is a Normal
+with a standard deviation of one hundred. PyMC warns about that default, and our Setup cell silences
+warnings, so you never saw it. The `cumsum` version starts the walk near zero. That one difference
+nudges sigma-level up, from about four hundred fifty units a week to about five hundred twenty. A
+default you didn't choose is still a prior.
 
-And now the payoff of a structural model — you can look at the parts. Top panel, the level: a slow
-drift under the noise. Bottom panel, the seasonal shape the six Fourier coefficients recovered.
-Neither of those is available from XGBoost at any price.
+*(Show the components figure.)*
+
+And now you get the payoff of a structural model, which is that you can look at the parts. The top
+panel shows the level, a slow drift under the noise. The bottom panel shows the seasonal shape that
+the six Fourier coefficients recovered. Neither of those is available from XGBoost at any price.
 
 ---
 
 # ▶ STEP 3 — Forecast, two ways
 
-*(Screen: the two methods, then run the table.)*
+*(Show the two methods, then run the table.)*
 
-To forecast you need the level at each future week, and there are two candidates.
+To forecast, you need the level at each future week, and there are two candidates.
 
-**Held constant.** Carry the last estimated level forward unchanged. Simple — and it asserts that
-the level stops drifting the moment your data ends, which is not what the model says.
+The first is to hold the level constant. You carry the last estimated level forward, unchanged.
+That's simple, and it asserts that the level stops drifting the moment your data ends, which isn't
+what the model says.
 
-**Propagated.** Let the level keep random-walking forward exactly as it did in-sample. This is
-what the fitted model actually implies. It is the defensible choice.
+The second is to propagate it. You let the level keep random-walking forward, exactly as it did
+in-sample. This is what the fitted model actually implies, and it's the defensible choice.
 
 ```
              method  RMSE  coverage_%  mean_width
@@ -193,41 +196,42 @@ level held constant  1589          96        6340
    level propagated  1589         100       11667
 ```
 
-**[pause]** — *let it sit.*
-
-The point forecasts are **identical** — 1,589 on both rows, and not by coincidence. Propagating
-the level adds steps whose mean is zero, so the expected level is unchanged and RMSE simply cannot
-tell these two apart. Everything separating them is in the **interval**, which differs by a factor
-of nearly two, and not in the direction you would predict.
-
-The theoretically correct method **over-covers**: 100% of weeks fell inside a 94% interval. The
-shortcut lands at 96%, close to nominal. **The defensible choice calibrated worse.**
-
-*(Screen: the callout.)*
-
-**[STOP — learner works]**
-
-Pause and work out why before I tell you. Then do the first "your turn" — print the two scale
-parameters and the drift accumulated over 52 weeks.
-
-*(Resume.)*
-
-Over 52 weeks a random walk accumulates about $\sqrt{52}$ — call it seven — times `sigma_level` of
-drift. So if `sigma_level` is even somewhat too large, the interval inflates fast, and it inflates
-with the *square root of the horizon*.
-
-**And there is good reason to think it is too large**, which brings back the Fourier choice from
-the setup. The random walk is the most flexible component in this model. Anything the six
-coefficients cannot represent — a promotion, a holiday that moves, a single bad week — has nowhere
-else to go, so it gets absorbed into the level. That inflates `sigma_level` beyond genuine drift,
-and the forecast then propagates that inflated drift for a year.
+*(Let the table sit for a moment.)*
 
 **[pause]**
 
-So — and this is the sentence that matters — the frozen version is **not right**. It is wrong in a
-way that happens to **cancel** an overestimated drift, on this series, at this horizon. Rely on
-that and it will fail somewhere else, silently, and you will not know which of the two errors
-moved.
+The point forecasts are **identical**, one thousand five hundred eighty-nine on both rows, and that's
+not a coincidence. Propagating the level adds steps whose mean is zero, so the expected level is
+unchanged, and RMSE simply can't tell these two apart. Everything that separates them is in the
+**interval**, which differs by a factor of nearly two, and not in the direction you'd predict.
+
+The theoretically correct method over-covers. A hundred percent of the weeks fell inside a
+ninety-four percent interval, while the shortcut lands at ninety-six percent, close to nominal. So
+the **defensible choice calibrated worse**.
+
+*(Show the callout.)*
+
+**[STOP — learner works]**
+
+Pause the video, and work out why before I tell you. Then do the first "your turn," which prints the
+two scale parameters and the drift accumulated over fifty-two weeks.
+
+*(Resume.)*
+
+Over fifty-two weeks, a random walk accumulates about the square root of fifty-two times
+`sigma_level` of drift, and the square root of fifty-two is about seven. So if `sigma_level` is even
+somewhat too large, the interval inflates fast, and it inflates with the *square root of the
+horizon*.
+
+And there's good reason to think it **is** too large, which brings back the Fourier choice from the
+setup. The random walk is the most flexible component in this model. Anything the six coefficients
+can't represent, like a promotion, a holiday that moves, or a single bad week, has nowhere else to
+go, so it gets absorbed into the level. That inflates `sigma_level` beyond genuine drift, and the
+forecast then propagates that inflated drift for a year.
+
+So, and this is the sentence that matters, the frozen version is **not right**. It's wrong in a way
+that happens to cancel an overestimated drift, on this series, at this horizon. Rely on that, and it
+will fail somewhere else, silently, and you won't know which of the two errors moved.
 
 *(Run the by-horizon table.)*
 
@@ -238,33 +242,38 @@ level held constant 100% / 6,255   92% / 6,537  100% / 6,027
    level propagated 100% / 8,081 100% / 11,974 100% / 14,637
 ```
 
-**[pause]** — *this table is the real lesson of the step.*
+*(This table is the real lesson of the step.)*
+
+**[pause]**
 
 Read the **widths** across each row, not the coverage.
 
-The frozen version: 6,255 at weeks 1–13, and 6,027 at weeks 40–52. It is *narrower* a year out
-than a month out. It has no mechanism to widen, because nothing in it knows that time has passed.
+The frozen version is six thousand two hundred fifty-five wide in weeks one to thirteen, and six
+thousand twenty-seven wide in weeks forty to fifty-two. It's *narrower* a year out than a month out.
+It has no mechanism to widen, because nothing in it knows that time has passed.
 
-The propagated version: 8,081, then 11,974, then 14,637. It nearly doubles.
+The propagated version goes from eight thousand eighty-one, to eleven thousand nine hundred
+seventy-four, to fourteen thousand six hundred thirty-seven. It nearly doubles.
 
-**One of these models knows that forecasting further ahead is harder, and the other does not.**
-That is a structural difference, not a scoring difference, and it is why the aggregate table on
-its own would have misled you. On this series, at this horizon, the ignorance happened to cost
-nothing. On a series with a genuinely drifting level it would cost a great deal.
+So one of these models **knows** that forecasting further ahead is harder, and the other one
+doesn't. That's a structural difference, not a scoring difference, and it's why the aggregate table
+on its own would have misled you. On this series, at this horizon, the ignorance happened to cost
+nothing. On a series with a genuinely drifting level, it would cost a great deal.
 
 *(One more, if you have time.)*
 
-And notice the only sub-nominal cell in the table: the frozen version drops to **92%** in weeks
-14–39. Its respectable 96% average is hiding a stretch where it is overconfident. Aggregates hide
-things; that is the third time this course has said so.
+And notice the only cell in the table that falls below nominal. The frozen version drops to
+**ninety-two percent** in weeks fourteen to thirty-nine. Its respectable ninety-six percent average
+is hiding a stretch where it's overconfident. Aggregates hide things, and that's the third time this
+course has said so.
 
 ---
 
 # ▶ STEP 4 — Calibrated is not the same as useful
 
-*(Screen: run the summary block.)*
+*(Run the summary block.)*
 
-Take the propagated version — the one the model implies — and ask it two **separate** questions.
+Take the propagated version, the one the model implies, and ask it two **separate** questions.
 
 ```
 coverage      100%   against a nominal 94%
@@ -274,39 +283,43 @@ RMSE          1,589
 seasonal naive  1,660
 ```
 
-**Question one: is it calibrated?** Yes, and then some. 100% against a nominal 94% — not
-overconfident. Conservative.
+The first question is whether it's calibrated. It is, and then some. It covered a hundred percent of
+the weeks against a nominal ninety-four, so it isn't overconfident. It's conservative.
 
-**Question two: is it useful?**
+The second question is whether it's useful.
 
 **[pause]**
 
-The interval is **11,667 units wide on average, on a series averaging about 19,700** — call it plus
-or minus thirty percent, *on average*: about twenty percent in the first quarter, thirty-seven in the
-last. Now say that out loud as a business sentence: *"I am 94% confident that demand six months
-from now is somewhere between roughly thirty percent below and thirty percent above average."*
+The interval is **eleven thousand six hundred sixty-seven units wide on average**, on a series that
+averages about nineteen thousand seven hundred. Call it plus or minus thirty percent, *on average*:
+about twenty percent in the first quarter, and thirty-seven in the last. Now say that out loud as a
+business sentence: "I'm ninety-four percent confident that demand six months from now is somewhere
+between roughly thirty percent below and thirty percent above average."
 
-Nobody places an inventory order against that. It is honest and it is useless, and those are not
-the same axis.
+Nobody places an inventory order against that. It's honest, and it's useless, and those aren't the
+same axis.
 
 **[STOP — learner works]**
 
-Write your one-sentence answer to each question, and then the third question the lab actually
-asks: does passing the first excuse failing the second?
+Pause the video, and write a one-sentence answer to each question. Then answer the third question
+the lab actually asks: does passing the first excuse failing the second?
 
 *(Resume.)*
 
-And the point forecast: 1,589 against seasonal naive's 1,660. **About 4% better**, for a model
-that took twenty seconds to sample, a reparameterization to converge, and a page of code.
+The answer to that third question is no. A hundred percent coverage against a nominal ninety-four
+isn't praise. It's a miss in the conservative direction, and an interval can be honest and still be
+too wide to act on. Passing the first doesn't excuse failing the second.
 
-*(Beat.)*
+Then there's the point forecast: one thousand five hundred eighty-nine, against seasonal naive's one
+thousand six hundred sixty. That's **about four percent better**, for a model that took twenty
+seconds to sample, a reparameterization to converge, and a page of code.
 
-If accuracy were the argument for this model, that number would be an embarrassment. Accuracy is
-not the argument. What you bought is a level and a seasonal component you can plot and defend, a
-full distribution for every future week, and — the thing the whole lab has been about — an
-interval that **admits when it does not know**. Whether that trade is worth 4% is a business
-question, and it depends entirely on whether anyone downstream will use the uncertainty you went
-to the trouble of producing.
+If accuracy were the argument for this model, that number would be an embarrassment. But accuracy
+isn't the argument. What you bought is a level and a seasonal component you can plot and defend, a
+full distribution for every future week, and, the thing this whole lab has been about, an interval
+that **admits when it doesn't know**. Whether that trade is worth four percent is a business
+question, and it depends entirely on whether anyone downstream will use the uncertainty you went to
+the trouble of producing.
 
 ---
 
@@ -314,32 +327,46 @@ to the trouble of producing.
 
 **[STOP — learner works]** — *(replaces the in-room "Discuss")*
 
-Three questions for the board.
+Here are three questions to work through on your own before you go.
 
-**The two problems.** The convergence failure was caught by a **diagnostic** — R-hat and ESS,
-computed from the fit alone, before you looked at any data you were predicting. The over-wide
-interval was caught by nothing of the sort: it needed a **held-out year and a coverage
-calculation**. What is the structural difference between those two kinds of error, and what habit
-catches the second kind?
+The first is about the two problems. The convergence failure was caught by a **diagnostic**: R-hat
+and the effective sample size, computed from the fit alone, before you looked at any data you were
+predicting. The over-wide interval was caught by nothing of the sort. It needed a **held-out year and
+a coverage calculation**. What's the structural difference between those two kinds of error, and
+what habit catches the second kind?
 
-**[pause]** — *the difference worth landing: a diagnostic asks "did the computation work?", a
-held-out check asks "is the model any good?" — and no amount of the first substitutes for the
-second. A perfectly converged sampler will happily give you a useless interval.*
+**[pause]**
 
-**The payoff.** The point forecast beat seasonal naive by about four percent. Given that, what did
-fitting this model actually buy? Name one business question it answers that XGBoost from Homework
-4 cannot.
+Here's the difference worth landing. A diagnostic asks whether the computation worked, and a
+held-out check asks whether the model is any good. No amount of the first substitutes for the
+second, so the habit that catches the second kind is the held-out check. A perfectly converged
+sampler will happily give you a useless interval.
 
-**The fix.** The interval is honest and too wide to act on. Propose one change to the **model** —
-not the forecasting code — that would narrow it, and say what you are assuming in exchange.
+The second question is about the payoff. The point forecast beat seasonal naive by about four
+percent. Given that, what did fitting this model actually buy? Name one business question it can
+answer that XGBoost from Homework 4 can't.
 
-**[pause]** — *the two good answers are both in this lab: a tighter prior on `sigma_level`, which
-assumes the level really does drift slowly; or more seasonal flexibility so the Fourier terms stop
-dumping their residual into the level. The second is the more interesting answer because it
-addresses the cause rather than the symptom.*
+**[pause]**
 
-Solutions for the coded parts go up on Canvas after the deadline. Next week: ten series instead of
-one, and what happens when some of them barely have any data.
+Step 4 already gave you the first half: a level and a seasonal component you can defend, a full
+distribution for every future week, and an interval that's honest about what it doesn't know. For
+the business question, start from the one in this week's lecture: how much stock keeps the chance of
+a stockout under five percent? XGBoost hands you one number per week, and that question needs a
+distribution.
+
+The third question is about the fix. The interval is honest and too wide to act on. Propose one
+change to the **model**, not the forecasting code, that would narrow it, and say what you're assuming
+in exchange.
+
+**[pause]**
+
+There are two good answers, and both are in this lab. One is a tighter prior on `sigma_level`, which
+assumes the level really does drift slowly. The other is more seasonal flexibility, so that the
+Fourier terms stop dumping their residual into the level. The second is the more interesting answer,
+because it addresses the cause rather than the symptom.
+
+Solutions for the coded parts go up on Canvas after class. Next week, in Lab 11, Part 2, we'll have
+ten series instead of one, and we'll see what happens when some of them barely have any data.
 
 ---
 
