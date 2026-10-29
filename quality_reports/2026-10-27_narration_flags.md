@@ -20,8 +20,9 @@ where it says "leave" or "keep" (left as is). Specifics worth knowing:
   (4,677 words in 30.3 minutes). By the same measure the Lecture 2 and 3 headers (34 and 24 minutes)
   are also low, at about 39 and 33; not changed.
 
-**Still open:** lab-solution timing (Lecture 2 item 3): the syllabus calls labs self-paced while
-every lab page and script says solutions go up "after class".
+**Lab-solution timing (Lecture 2 item 3), closed 2026-10-28:** "after class" stays everywhere.
+Only this term's Weeks 2 and 5 are self-paced, and the owner ruled that the materials describe the
+normal week ("normally Week 5 has classes"); a term's exceptions belong on Canvas.
 
 ## Lecture 11 Part 1 (commit after `769ce09`)
 
