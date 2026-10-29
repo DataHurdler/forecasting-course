@@ -1,44 +1,48 @@
 # ECON 8310 Final Project — Grading Rubric
+### Example scores on a 100-point scale
+
+*The points below show how much each part counts, on a 100-point scale. Your course may use a
+different total; the proportions are what carry over.*
 
 [← Course website](https://www.luozijun.com/forecasting-course/) · [About this course](https://www.luozijun.com/forecasting-course/files/about.html)
 
-Groups of no more than three. Four graded deliverables, broken down here. Read this before the proposal, not after — most of what the
-proposal is graded on is decided before you write any code.
+Groups of no more than three. Four graded deliverables, broken down here. Read this before the proposal, not after — the proposal is worth 20 points and most
+of what it is graded on is decided before you write any code.
 
-| Deliverable | Due |
-|---|---|
-| Group formation | Week 4 |
-| Project proposal | Week 9 |
-| Project presentation | Week 16 |
-| Final report | after the presentations |
+| Deliverable | Due | Points |
+|---|---|---|
+| Group formation | Week 4 | 5 |
+| Project proposal | Week 9 | 20 |
+| Project presentation | Week 16 | 25 |
+| Final report | after the presentations | 50 |
 
 *The week numbers above match the course schedule. Calendar dates for your term come from your
 course calendar — they are not the same in every offering.*
 
 ---
 
-## 1. Group Formation
+## 1. Group Formation — 5 points
 
-| Credit | Standard |
+| Points | Standard |
 |---|---|
-| Full | Group of 1–3 submitted by the deadline, with a named contact and a one-line statement of the intended dataset or domain. |
-| Partial | Late, or missing the dataset/domain line. |
-| None | Not submitted; I assign you to a group. |
+| 5 | Group of 1–3 submitted by the deadline, with a named contact and a one-line statement of the intended dataset or domain. |
+| 3 | Late, or missing the dataset/domain line. |
+| 0 | Not submitted; I assign you to a group. |
 
 This is free credit for meeting a deadline. Take it.
 
 ---
 
-## 2. Project Proposal
+## 2. Project Proposal — 20 points
 
 One to two pages. The purpose is to catch a doomed project while there is still time to change it.
 
-| Criterion | What earns full marks |
-|---|---|
-| **Business question** | A specific, decidable question tied to an action someone would take — "forecast weekly demand for category X to set reorder points," not "predict sales." States who the decision-maker is. |
-| **Dataset** | Source named and accessible; at least 100 time periods; frequency stated; you have actually loaded it. Known limitations named honestly. |
-| **Planned methods** | At least three methods from two or more parts of the course, plus the benchmark you will use. A sentence on *why those* suit this series — seasonality, sample size, exogenous drivers. |
-| **Preliminary EDA** | At least one plot of the target over time, plus a stated observation about trend, seasonality, or breaks that will shape the modeling. |
+| Criterion | Pts | What earns full marks |
+|---|---|---|
+| **Business question** | 5 | A specific, decidable question tied to an action someone would take — "forecast weekly demand for category X to set reorder points," not "predict sales." States who the decision-maker is. |
+| **Dataset** | 5 | Source named and accessible; at least 100 time periods; frequency stated; you have actually loaded it. Known limitations named honestly. |
+| **Planned methods** | 5 | At least three methods from two or more parts of the course, plus the benchmark you will use. A sentence on *why those* suit this series — seasonality, sample size, exogenous drivers. |
+| **Preliminary EDA** | 5 | At least one plot of the target over time, plus a stated observation about trend, seasonality, or breaks that will shape the modeling. |
 
 **Common ways to lose points here:** a question that no decision follows from; a dataset you have
 not yet opened; three methods from a single part of the course; no benchmark named.
@@ -76,34 +80,34 @@ Re-running Homework 4 is not a project.
 
 ---
 
-## 3. Project Presentation
+## 3. Project Presentation — 25 points
 
 Roughly 10–12 minutes plus questions. Every group member presents some part. The format —
 in person, live online, or recorded — differs by section; your instructor sets it.
 
-| Criterion | What earns full marks |
-|---|---|
-| **Problem framing** | The audience understands the business question and why it matters within the first two minutes. |
-| **Method and validation** | What you fit, how you compared, and evidence that the comparison was time-aware. The benchmark appears on the same axis as the models. |
-| **Results and interpretation** | Findings stated in business units with uncertainty attached. You say what the number means for the decision, not only what it is. |
-| **Delivery and Q&A** | Within time, legible slides, and answers that engage the question asked. "We didn't test that" is a fine answer; inventing one is not. |
+| Criterion | Pts | What earns full marks |
+|---|---|---|
+| **Problem framing** | 5 | The audience understands the business question and why it matters within the first two minutes. |
+| **Method and validation** | 8 | What you fit, how you compared, and evidence that the comparison was time-aware. The benchmark appears on the same axis as the models. |
+| **Results and interpretation** | 7 | Findings stated in business units with uncertainty attached. You say what the number means for the decision, not only what it is. |
+| **Delivery and Q&A** | 5 | Within time, legible slides, and answers that engage the question asked. "We didn't test that" is a fine answer; inventing one is not. |
 
 ---
 
-## 4. Final Report
+## 4. Final Report — 50 points
 
 A rendered Quarto HTML file (`.qmd` + `.html`), submitted through the course repository. All code,
 outputs, and written analysis in one self-contained document. No page limit; a well-organized
 15–20 pages beats a disorganized 40.
 
-| Criterion | What earns full marks |
-|---|---|
-| **Methods implemented** | Three or more methods, drawn from **at least two** of the four parts of the course, each correctly specified and actually fitted. Three variants of one family does not satisfy this. |
-| **Benchmark** | A benchmark computed on your own data — seasonal naive or another one-line rule — reported alongside every model. A report without one cannot show that any of its work was worth doing, and loses this criterion outright, plus the credibility cost throughout. |
-| **Walk-forward validation** | Time-aware validation used for **all** model comparisons. No random splits, no `KFold`, no scaling fitted outside the fold, no unshifted rolling features. |
-| **Business recommendation** | Written for a non-technical decision-maker: actionable, jargon-free, in the units of the business, with uncertainty stated. A reader who skipped the modeling section can act on it. |
-| **Methods reflection** | Which model performed best, and **what about your specific dataset** made it win. Connects the result to a property of the series — sample size, seasonal structure, exogenous drivers, noise level. |
-| **Reproducibility and craft** | Renders top to bottom from a clean restart. Random seeds set. Figures labeled. Sources cited. AI use logged per the course policy. |
+| Criterion | Pts | What earns full marks |
+|---|---|---|
+| **Methods implemented** | 12 | Three or more methods, drawn from **at least two** of the four parts of the course, each correctly specified and actually fitted. Three variants of one family does not satisfy this. |
+| **Benchmark** | 6 | A benchmark computed on your own data — seasonal naive or another one-line rule — reported alongside every model. A report without one cannot show that any of its work was worth doing, and caps at 6 lost points here plus the credibility cost throughout. |
+| **Walk-forward validation** | 8 | Time-aware validation used for **all** model comparisons. No random splits, no `KFold`, no scaling fitted outside the fold, no unshifted rolling features. |
+| **Business recommendation** | 10 | Written for a non-technical decision-maker: actionable, jargon-free, in the units of the business, with uncertainty stated. A reader who skipped the modeling section can act on it. |
+| **Methods reflection** | 8 | Which model performed best, and **what about your specific dataset** made it win. Connects the result to a property of the series — sample size, seasonal structure, exogenous drivers, noise level. |
+| **Reproducibility and craft** | 6 | Renders top to bottom from a clean restart. Random seeds set. Figures labeled. Sources cited. AI use logged per the course policy. |
 
 ### The four parts of the course
 
