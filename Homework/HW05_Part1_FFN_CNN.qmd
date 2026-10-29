@@ -205,6 +205,7 @@ that early and often is how you avoid finding a problem at the deadline.
 
 **The `Your response` blocks are written answers, not code.** They are yours to write, in your own
 words — your assistant explains output to you, it does not draft these.
+This is graded: the rubric's Appropriate Use of AI criterion checks it, through your prompt log.
 :::
 
 ### Q1 — Windows, Dataset and DataLoader *(Suggested prompts: 3)*
@@ -318,7 +319,7 @@ Retrain the CNN at windows of **13, 26 and 52** weeks. Report test RMSE for each
 
 - [ ] All code cells run without errors from top to bottom
 - [ ] Your name replaces the `author:` placeholder at the top of the document
-- [ ] Written responses completed in your own words
+- [ ] Written responses are in your own words — none drafted by an AI assistant
 - [ ] `INITIAL_PROMPT.md` saved in `submissions/hw05_part1_<your_name>/`
 - [ ] `PROMPT_LOG.md` complete with **9 or fewer** entries for Part 1
 - [ ] Every file above uploaded to the **Canvas** assignment

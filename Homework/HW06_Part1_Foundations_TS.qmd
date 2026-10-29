@@ -188,6 +188,7 @@ that early and often is how you avoid finding a problem at the deadline.
 
 **The `Your response` blocks are written answers, not code.** They are yours to write, in your own
 words — your assistant explains output to you, it does not draft these.
+This is graded: the rubric's Appropriate Use of AI criterion checks it, through your prompt log.
 :::
 
 ### Q1 — Prior Predictive Check *(Suggested prompts: 3)*
@@ -292,7 +293,7 @@ Report three things: RMSE, the seasonal-naive RMSE for comparison, and the **cov
 
 - [ ] All code cells run without errors from top to bottom
 - [ ] Your name replaces the `author:` placeholder at the top of the document
-- [ ] Written responses completed in your own words
+- [ ] Written responses are in your own words — none drafted by an AI assistant
 - [ ] `INITIAL_PROMPT.md` saved in `submissions/hw06_part1_<your_name>/`
 - [ ] `PROMPT_LOG.md` complete for Part 1: every prompt logged; over-budget prompts noted
 - [ ] Every file above uploaded to the **Canvas** assignment

@@ -2390,7 +2390,7 @@ Your numbers will not match mine, and that is fine
 </section>
 <section id="dataset-and-setup" class="level2">
 <h2 class="anchored" data-anchor-id="dataset-and-setup">Dataset and Setup</h2>
-<div id="67ea7a57" class="cell" data-execution_count="1">
+<div id="26aee805" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2507,7 +2507,7 @@ Confirm by responding with: HW06P2_CONTEXT_ACK</code></pre>
 <section id="part-c-pooling-across-series" class="level2">
 <h2 class="anchored" data-anchor-id="part-c-pooling-across-series">Part C: Pooling Across Series</h2>
 <p>The quantity of interest: the effect of a high-SNAP week on log units, store by store.</p>
-<div id="a3a95076" class="cell" data-execution_count="2">
+<div id="38483d8b" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>weekly[<span class="st">&quot;ly&quot;</span>] <span class="op">=</span> np.log(weekly.units.clip(lower<span class="op">=</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2523,14 +2523,14 @@ How the code cells work
 <p><strong>A cell that is empty except for a comment is where you write.</strong> The comment states the task; your code goes underneath it.</p>
 <p><strong>Some cells already contain setup code</strong> — a train/test split, a rename, a cutoff date — and end with a comment marking where your part begins. Leave the setup as it is and write below the comment. It is there so that everyone’s results are computed on the same basis.</p>
 <p>Every cell runs as the document stands, so <strong>you can render at any point, finished or not</strong>. Doing that early and often is how you avoid finding a problem at the deadline.</p>
-<p><strong>The <code>Your response</code> blocks are written answers, not code.</strong> They are yours to write, in your own words — your assistant explains output to you, it does not draft these.</p>
+<p><strong>The <code>Your response</code> blocks are written answers, not code.</strong> They are yours to write, in your own words — your assistant explains output to you, it does not draft these. This is graded: the rubric’s Appropriate Use of AI criterion checks it, through your prompt log.</p>
 </div>
 </div>
 <section id="q1-what-are-you-allowed-to-pool-suggested-prompts-1" class="level3">
 <h3 class="anchored" data-anchor-id="q1-what-are-you-allowed-to-pool-suggested-prompts-1">Q1 — What Are You Allowed to Pool? <em>(Suggested prompts: 1)</em></h3>
 <p>A hierarchy says the groups are <strong>exchangeable</strong>: before seeing the data, you have no reason to expect one to differ from another in a particular direction. That is an assumption about the world, and nothing in PyMC will check it for you.</p>
 <p>Before fitting anything, compute the raw high-SNAP effect — the difference in mean log units between high-SNAP weeks and the rest — for every one of the thirty series, and summarize it <strong>by category</strong>.</p>
-<div id="6af5827a" class="cell" data-execution_count="3">
+<div id="1ebfc324" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Raw effect per series; mean and spread within each category</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
@@ -2554,7 +2554,7 @@ This question decides the rest of the assignment
 <section id="q2-three-models-suggested-prompts-3" class="level3">
 <h3 class="anchored" data-anchor-id="q2-three-models-suggested-prompts-3">Q2 — Three Models <em>(Suggested prompts: 3)</em></h3>
 <p>Work from here on with the series you defended in Q1. Build the information imbalance that partial pooling exists to handle: thin every other series down to <strong>8 weeks</strong>, and keep the weeks you removed — you will need them in Q4.</p>
-<div id="56172aab" class="cell" data-execution_count="4">
+<div id="a0d91458" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>foods <span class="op">=</span> weekly[weekly.cat_id <span class="op">==</span> <span class="st">&quot;FOODS&quot;</span>].dropna(subset<span class="op">=</span>[<span class="st">&quot;units&quot;</span>]).copy()</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>codes, uniq <span class="op">=</span> pd.factorize(foods.series)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>foods[<span class="st">&quot;idx&quot;</span>] <span class="op">=</span> codes</span>
@@ -2584,7 +2584,7 @@ This question decides the rest of the assignment
 <li><strong>Hierarchical</strong> — <code>b_j ~ Normal(mu_b, sd_b)</code>, written <strong>non-centered</strong></li>
 </ul>
 <p>Each also needs a per-series intercept <code>a</code> with <code>shape=J</code>.</p>
-<div id="44eda2e6" class="cell" data-execution_count="5">
+<div id="f796ca0f" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit pooled, unpooled and hierarchical</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-warning callout-titled">
@@ -2610,7 +2610,7 @@ The centered form will fail, and that is the lesson
 <p>Compare the per-series estimates from the unpooled and hierarchical fits.</p>
 <p><strong>(a)</strong> Plot each series’ estimate before and after pooling — unpooled on the left, hierarchical on the right, a line connecting each series. Color thin series differently from full ones.</p>
 <p><strong>(b)</strong> Compute, separately for thin and full series: the spread of estimates before and after, and the <strong>mean absolute distance moved</strong> toward the group mean.</p>
-<div id="286a38ba" class="cell" data-execution_count="6">
+<div id="03abe07b" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Shrinkage plot and the movement table</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
@@ -2621,7 +2621,7 @@ The centered form will fail, and that is the lesson
 <section id="q4-grade-it-against-data-it-never-saw-suggested-prompts-2" class="level3">
 <h3 class="anchored" data-anchor-id="q4-grade-it-against-data-it-never-saw-suggested-prompts-2">Q4 — Grade It Against Data It Never Saw <em>(Suggested prompts: 2)</em></h3>
 <p>You thinned those series yourself, so the removed weeks are sitting in <code>heldout</code>. For each thin series compute the high-SNAP effect that <strong>actually occurred</strong> in its held-out weeks, and compare it against both estimates.</p>
-<div id="1ffb7dcf" class="cell" data-execution_count="7">
+<div id="09914b0b" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Held-out effect per thin series; RMSE of each model against it</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
@@ -2632,7 +2632,7 @@ The centered form will fail, and that is the lesson
 <section id="q5-the-business-recommendation-suggested-prompts-1" class="level3">
 <h3 class="anchored" data-anchor-id="q5-the-business-recommendation-suggested-prompts-1">Q5 — The Business Recommendation <em>(Suggested prompts: 1)</em></h3>
 <p>Report the estimated <code>mu_b</code> and <code>sd_b</code> with their HDIs.</p>
-<div id="f76e9b8f" class="cell" data-execution_count="8">
+<div id="0422fb24" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Group-level parameters</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
@@ -2657,7 +2657,7 @@ The centered form will fail, and that is the lesson
 <ul class="task-list">
 <li><label><input type="checkbox">All code cells run without errors from top to bottom</label></li>
 <li><label><input type="checkbox">Your name replaces the <code>author:</code> placeholder at the top of the document</label></li>
-<li><label><input type="checkbox">Written responses completed in your own words</label></li>
+<li><label><input type="checkbox">Written responses are in your own words — none drafted by an AI assistant</label></li>
 <li><label><input type="checkbox"><code>INITIAL_PROMPT.md</code> saved in <code>submissions/hw06_part2_&lt;your_name&gt;/</code></label></li>
 <li><label><input type="checkbox"><code>PROMPT_LOG.md</code> complete for Part 2: every prompt logged; over-budget prompts noted</label></li>
 <li><label><input type="checkbox">Every file above uploaded to the <strong>Canvas</strong> assignment</label></li>

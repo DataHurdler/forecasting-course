@@ -2248,7 +2248,7 @@ Your numbers will not match mine, and that is fine
 <section id="dataset-and-setup" class="level2">
 <h2 class="anchored" data-anchor-id="dataset-and-setup">Dataset and Setup</h2>
 <p>We construct fixed-length sliding windows over each store-category series. Each input is a window of past weeks; the target is the next week’s units. <strong>Part A</strong> (FFN, CNN) uses a 26-week window; <strong>Part B</strong> (RNN, LSTM, Transformer) uses 52 weeks, so the sequence models get a full annual cycle.</p>
-<div id="2e0258a2" class="cell" data-execution_count="1">
+<div id="d8bbf71f" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -2369,7 +2369,7 @@ Confirm by responding with: HW05P2_CONTEXT_ACK</code></pre>
 <section id="part-b-sequence-models-window-52-weeks" class="level2">
 <h2 class="anchored" data-anchor-id="part-b-sequence-models-window-52-weeks">Part B: Sequence Models (window = 52 weeks)</h2>
 <p>Rebuild the datasets with <code>WINDOW_B = 52</code> so the sequence models get a full annual cycle.</p>
-<div id="45e4de17" class="cell" data-execution_count="2">
+<div id="0d5147d5" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WINDOW_B <span class="op">=</span> <span class="dv">52</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-instantiate SeriesWindowDataset and DataLoaders with WINDOW_B</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -2387,7 +2387,7 @@ How the code cells work
 <p><strong>A cell that is empty except for a comment is where you write.</strong> The comment states the task; your code goes underneath it.</p>
 <p><strong>Some cells already contain setup code</strong> — a train/test split, a rename, a cutoff date — and end with a comment marking where your part begins. Leave the setup as it is and write below the comment. It is there so that everyone’s results are computed on the same basis.</p>
 <p>Every cell runs as the document stands, so <strong>you can render at any point, finished or not</strong>. Doing that early and often is how you avoid finding a problem at the deadline.</p>
-<p><strong>The <code>Your response</code> blocks are written answers, not code.</strong> They are yours to write, in your own words — your assistant explains output to you, it does not draft these.</p>
+<p><strong>The <code>Your response</code> blocks are written answers, not code.</strong> They are yours to write, in your own words — your assistant explains output to you, it does not draft these. This is graded: the rubric’s Appropriate Use of AI criterion checks it, through your prompt log.</p>
 </div>
 </div>
 <section id="q1-vanilla-rnn-suggested-prompts-3" class="level3">
@@ -2398,7 +2398,7 @@ How the code cells work
 <li>Take the <strong>final</strong> hidden state and pass it through <code>Linear(64 → 1)</code></li>
 </ul>
 <p>Train 40 epochs, Adam <code>lr=1e-3</code>, <code>weight_decay=1e-4</code>. Add <code>torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)</code> after <code>loss.backward()</code> — recurrent models are prone to exploding gradients.</p>
-<div id="a26a7de0" class="cell" data-execution_count="3">
+<div id="58ce9d35" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RNNForecaster(nn.Module):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_channels, hidden<span class="op">=</span><span class="dv">64</span>):</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -2417,7 +2417,7 @@ How the code cells work
 <h3 class="anchored" data-anchor-id="q2-lstm-suggested-prompts-3">Q2 — LSTM <em>(Suggested prompts: 3)</em></h3>
 <p>Same structure, swapping <code>nn.RNN</code> for <code>nn.LSTM(input_size=4, hidden_size=64, batch_first=True)</code>. Note that <code>nn.LSTM</code> returns <code>out, (h, c)</code> rather than <code>out, h</code>.</p>
 <p>Train identically to Q1 so the comparison is clean.</p>
-<div id="98b3aa44" class="cell" data-execution_count="4">
+<div id="7c517447" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LSTMForecaster(nn.Module):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># </span><span class="al">TODO</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2437,7 +2437,7 @@ How the code cells work
 <li>Take the final position and pass through <code>Linear(64 → 1)</code></li>
 </ul>
 <p><strong>(b)</strong> Then train a second copy <strong>without</strong> the positional encoding and report both RMSEs.</p>
-<div id="4de2ff18" class="cell" data-execution_count="5">
+<div id="eadbae7c" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sinusoidal(seq_len, d_model):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># </span><span class="al">TODO</span><span class="co">: returns (1, seq_len, d_model)</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span>
@@ -2457,7 +2457,7 @@ How the code cells work
 <ul class="task-list">
 <li><label><input type="checkbox">All code cells run without errors from top to bottom</label></li>
 <li><label><input type="checkbox">Your name replaces the <code>author:</code> placeholder at the top of the document</label></li>
-<li><label><input type="checkbox">Written responses completed in your own words</label></li>
+<li><label><input type="checkbox">Written responses are in your own words — none drafted by an AI assistant</label></li>
 <li><label><input type="checkbox"><code>INITIAL_PROMPT.md</code> saved in <code>submissions/hw05_part2_&lt;your_name&gt;/</code></label></li>
 <li><label><input type="checkbox"><code>PROMPT_LOG.md</code> complete for Part 2: every prompt logged; over-budget prompts noted</label></li>
 <li><label><input type="checkbox">Every file above uploaded to the <strong>Canvas</strong> assignment</label></li>
