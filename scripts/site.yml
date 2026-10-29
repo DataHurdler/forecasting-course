@@ -257,7 +257,7 @@ documents:
   covers: What each dataset is and why it is in the course &mdash; read before Homework 1
 - href: files/project-rubric.html
   text: Final project rubric
-  covers: How all 100 project points are awarded
+  covers: How the final project is graded, deliverable by deliverable
 textbooks:
 - book: '<a href="https://otexts.com/fpppy/" target="_blank" rel="noopener">FPP-Py</a> &mdash; <em>Forecasting:
     Principles and Practice, the Pythonic Way</em>'
