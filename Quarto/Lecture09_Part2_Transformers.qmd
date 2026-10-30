@@ -46,7 +46,8 @@ Part 1's forecaster reads strictly left to right. Follow one week, $t-52$, to th
 
 ![](../Figures/Lecture09_Part2/recurrence_paths.svg){fig-align="center" height="290px"}
 
-[**The information bottleneck:** week $t-52$ must survive 52 squeezes through one 64-number state. **The sequential bottleneck:** each update waits for the last, however many GPUs you own.]{.smaller}
+[**The information bottleneck:** week $t-52$ must survive 52 squeezes through one 64-number state.\
+**The sequential bottleneck:** each update waits for the last, however many GPUs you own.]{.smaller}
 
 ::: {.keybox}
 **Attention removes both at once:** every week reads every other directly, and all are computed together. Path length counts operations, not what a trained model uses.
