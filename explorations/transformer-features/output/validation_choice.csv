@@ -1,0 +1,15 @@
+model,features,val_mean,test_mean,test_sd,epochs_chosen,chosen_on_validation
+ffn,A,713.5,877,43,30 / 39 / 51,False
+ffn,B,715.9,972,52,68 / 24 / 34,False
+ffn,C,703.3,839,21,97 / 76 / 48,False
+ffn,D,690.5,926,68,57 / 26 / 95,True
+lstm,A,645.3,813,14,148 / 139 / 142,False
+lstm,B,618.9,783,15,150 / 108 / 135,True
+lstm,C,652.9,821,23,123 / 149 / 134,False
+lstm,D,621.5,820,15,76 / 99 / 135,False
+rnn,A,658.9,779,2,97 / 84 / 62,False
+rnn,B,627.1,789,26,80 / 76 / 96,False
+rnn,C,661.6,781,53,81 / 77 / 46,False
+rnn,D,622.2,743,19,54 / 93 / 65,True
+transformer,A,685.3,840,22,43 / 80 / 98,False
+transformer,D,628.1,817,12,50 / 71 / 87,True

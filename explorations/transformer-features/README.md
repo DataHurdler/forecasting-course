@@ -1,6 +1,6 @@
 # Giving the sequence models the LASSO's features
 
-**Status:** complete, 2026-10-29. Exploratory: these numbers are not in any slide or lab. Student write-up: `report.html` (also a private claude.ai page for the owner to share).
+**Status:** complete, 2026-10-29. Exploratory: these numbers are not in any slide or lab. Student write-up: `report.qmd`, rendered to `report.html` (`quarto render report.qmd` from this folder).
 
 **Question (owner, during Lecture 9 Part 2 prep).** The 46-feature LASSO tops the course
 scoreboard at 744 RMSE. It knew three things the Transformer in Lab 9 Part 2 does not: which
