@@ -1,0 +1,5 @@
+variant,inputs per week,forecast-week inputs,params,mean,sd,runs
+A. Lab 9 Part 2 as is (4 channels),4,0,67329,862,25,833 / 858 / 895
+B. + which series (store and category),17,0,68161,852,42,910 / 814 / 830
+"C. + forecast week's SNAP, events, price, calendar",4,5,67334,906,40,939 / 850 / 929
+D. B + C + each week's calendar (all),19,5,68294,851,37,832 / 903 / 818

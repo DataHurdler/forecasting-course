@@ -1,0 +1,290 @@
+<title>Did the Networks Lose Fairly?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: a single reading column in the course's crimson-and-black document style; tables and the chart sit full width within it. */
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #5b5557;
+  --rule: #e6e1e2;
+  --panel: #f7f4f4;
+  --crimson: #c8141b;
+  --blue: #005ca9;
+  --ink-soft: #8a8385;
+  --font-display: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-data: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141213; --fg: #ece8e9; --muted: #b3abad; --rule: #353032; --panel: #1e1b1c;
+    --crimson: #ff5a5f; --blue: #6cb2ff; --ink-soft: #8f8789; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141213; --fg: #ece8e9; --muted: #b3abad; --rule: #353032; --panel: #1e1b1c;
+  --crimson: #ff5a5f; --blue: #6cb2ff; --ink-soft: #8f8789; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.65; }
+.page { max-width: 46rem; margin: 0 auto; padding-block: 3rem 5rem;
+        padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: .5rem; padding-bottom: 1.5rem; border-bottom: 3px solid var(--crimson); }
+.eyebrow { font-family: var(--font-display); font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--crimson); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 5vw, 2.7rem); line-height: 1.1; margin: 0; text-wrap: balance; }
+.dek { font-size: 1.12rem; color: var(--muted); margin: 0; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; line-height: 1.25; margin: 2.6rem 0 .6rem; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.08rem; margin: 1.6rem 0 .3rem; }
+p, li { max-width: 65ch; }
+p { margin: .6rem 0; }
+ul, ol { padding-left: 1.3rem; margin: .5rem 0; }
+li { margin: .3rem 0; }
+strong { font-weight: 600; }
+code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .86em; background: var(--panel); padding: .08em .35em; border-radius: 3px; }
+.summary { margin-top: 1.6rem; display: grid; gap: .4rem; }
+.summary p { margin: 0; }
+.figure { margin: 1.8rem 0 .4rem; }
+.figure svg { display: block; width: 100%; height: auto; }
+.caption { font-family: var(--font-display); font-size: .88rem; color: var(--muted); margin-top: .4rem; }
+.tablewrap { overflow-x: auto; margin: 1rem 0; }
+table { border-collapse: collapse; width: 100%; font-family: var(--font-data); font-size: .95rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .5rem .7rem .5rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; border-bottom: 2px solid var(--rule); color: var(--muted); font-size: .82rem; letter-spacing: .03em; text-transform: uppercase; }
+td.num, th.num { text-align: right; padding-left: .7rem; white-space: nowrap; }
+tr.ref td { color: var(--muted); }
+.best { color: var(--crimson); font-weight: 600; }
+.note { font-family: var(--font-display); font-size: .88rem; color: var(--muted); }
+.callout { border-left: 3px solid var(--crimson); background: var(--panel); padding: .9rem 1.1rem; margin: 1.2rem 0; }
+.callout p { margin: .3rem 0; }
+pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .84rem; background: var(--panel); padding: 1rem 1.1rem; overflow-x: auto; border-left: 3px solid var(--ink-soft); line-height: 1.5; }
+a { color: var(--crimson); }
+a:focus-visible { outline: 2px solid var(--crimson); outline-offset: 2px; }
+.svg-axis { stroke: var(--rule); }
+.svg-text { fill: var(--muted); font-family: var(--font-data); font-size: 12px; }
+.svg-label { fill: var(--fg); font-family: var(--font-data); font-size: 13px; font-weight: 600; }
+.svg-lasso { stroke: var(--fg); stroke-dasharray: 4 4; }
+.svg-link { stroke: var(--ink-soft); stroke-width: 2; }
+.svg-old { fill: var(--bg); stroke: var(--ink-soft); stroke-width: 2; }
+.svg-new { fill: var(--crimson); }
+.svg-feat { fill: var(--blue); }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; font-family: var(--font-display); font-size: .86rem; color: var(--muted); margin-top: .6rem; }
+.legend span { display: inline-flex; align-items: center; gap: .4rem; }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.dot.old { border: 2px solid var(--ink-soft); background: var(--bg); }
+.dot.new { background: var(--crimson); }
+.dot.feat { background: var(--blue); transform: rotate(45deg); border-radius: 1px; width: 10px; height: 10px; }
+.dash { width: 18px; border-top: 2px dashed var(--fg); display: inline-block; }
+@media (max-width: 520px) { body { font-size: 16px; } th, td { padding-right: .45rem; } }
+</style>
+
+<main class="page">
+  <header>
+    <div class="eyebrow">ECON 8310 · Business Forecasting · A second look at the scoreboard</div>
+    <h1>Did the Networks Lose Fairly?</h1>
+    <p class="dek">Every neural network in this course finished behind a 46-coefficient LASSO. We re-ran all four with fairer training and more information, to find out whether the architectures lost or the setup did.</p>
+  </header>
+
+  <section class="summary">
+    <p><strong>Short answer: mostly the setup.</strong></p>
+    <ul>
+      <li><strong>Training order mattered most.</strong> Every lab fed its network the training windows one series at a time. Shuffling them between batches, which is safe once the data is split by time, improved all four networks.</li>
+      <li><strong>The LSTM needed far longer training</strong> than the labs gave it: about 140 epochs instead of 30.</li>
+      <li><strong>Extra features helped little.</strong> Next week's price and SNAP days were already in the window the networks read.</li>
+      <li><strong>The best network now ties the LASSO.</strong> An RNN with all the extra features scored 743 against the LASSO's 744. No network clearly beats it.</li>
+    </ul>
+  </section>
+
+  <figure class="figure" aria-labelledby="chart-cap">
+    <svg viewBox="0 0 640 290" role="img" aria-label="Test RMSE for four neural networks: the labs' results against the same networks retrained, with the LASSO at 744 marked.">
+      <!-- x(v) = 150 + (v - 700) * 1.15 -->
+      <line class="svg-axis" x1="150" y1="250" x2="610" y2="250"/>
+      <g class="svg-text" text-anchor="middle">
+        <line class="svg-axis" x1="150" y1="40" x2="150" y2="250"/><text x="150" y="268">700</text>
+        <line class="svg-axis" x1="265" y1="40" x2="265" y2="250"/><text x="265" y="268">800</text>
+        <line class="svg-axis" x1="380" y1="40" x2="380" y2="250"/><text x="380" y="268">900</text>
+        <line class="svg-axis" x1="495" y1="40" x2="495" y2="250"/><text x="495" y="268">1,000</text>
+        <line class="svg-axis" x1="610" y1="40" x2="610" y2="250"/><text x="610" y="268">1,100</text>
+        <text x="380" y="286">test RMSE, weekly units (lower is better)</text>
+      </g>
+      <line class="svg-lasso" x1="200.6" y1="30" x2="200.6" y2="250"/>
+      <text class="svg-text" x="204" y="26">LASSO 744</text>
+
+      <!-- Feedforward: scoreboard 1084, retrained 877, features chosen on validation 926 -->
+      <text class="svg-label" x="140" y="74" text-anchor="end">Feedforward</text>
+      <line class="svg-link" x1="353.6" y1="70" x2="591.6" y2="70"/>
+      <circle class="svg-old" cx="591.6" cy="70" r="6"/>
+      <circle class="svg-new" cx="353.6" cy="70" r="6"/>
+      <rect class="svg-feat" x="403.5" y="64.5" width="11" height="11" transform="rotate(45 409 70)"/>
+
+      <!-- RNN: 805, 779, 743 -->
+      <text class="svg-label" x="140" y="124" text-anchor="end">RNN</text>
+      <line class="svg-link" x1="199.5" y1="120" x2="270.8" y2="120"/>
+      <circle class="svg-old" cx="270.8" cy="120" r="6"/>
+      <circle class="svg-new" cx="240.9" cy="120" r="6"/>
+      <rect class="svg-feat" x="194" y="114.5" width="11" height="11" transform="rotate(45 199.5 120)"/>
+
+      <!-- LSTM: 998, 813, 783 -->
+      <text class="svg-label" x="140" y="174" text-anchor="end">LSTM</text>
+      <line class="svg-link" x1="245.5" y1="170" x2="492.7" y2="170"/>
+      <circle class="svg-old" cx="492.7" cy="170" r="6"/>
+      <circle class="svg-new" cx="280" cy="170" r="6"/>
+      <rect class="svg-feat" x="240" y="164.5" width="11" height="11" transform="rotate(45 245.5 170)"/>
+
+      <!-- Transformer: 990, 840, 817 -->
+      <text class="svg-label" x="140" y="224" text-anchor="end">Transformer</text>
+      <line class="svg-link" x1="284.6" y1="220" x2="483.5" y2="220"/>
+      <circle class="svg-old" cx="483.5" cy="220" r="6"/>
+      <circle class="svg-new" cx="311" cy="220" r="6"/>
+      <rect class="svg-feat" x="279.1" y="214.5" width="11" height="11" transform="rotate(45 284.6 220)"/>
+    </svg>
+    <div class="legend">
+      <span><i class="dot old"></i>Labs' result</span>
+      <span><i class="dot new"></i>Same inputs, retrained</span>
+      <span><i class="dot feat"></i>Extra features, chosen on validation</span>
+      <span><i class="dash"></i>LASSO, 46 features</span>
+    </div>
+    <figcaption class="caption" id="chart-cap">Each marker is the mean of three training runs with different random seeds. "Retrained" means shuffled training batches and a training length chosen on a validation block. Seasonal naive, the benchmark, sits far off the right edge at 2,152.</figcaption>
+  </figure>
+
+  <h2>The question</h2>
+  <p>The course scoreboard ranks every method on the same 30 weekly sales series and the same 53 test weeks. A LASSO with 46 hand-built features scored 744. The best neural network, a plain RNN, scored 805, and the LSTM and Transformer came in near 1,000.</p>
+  <p>That gap could mean the networks are the wrong tool for this data. It could also mean we trained them badly or gave them less to work with. The LASSO knew which store and category it was forecasting, and it knew the forecast week's own SNAP days, events and price. The networks knew neither. This experiment separates those explanations.</p>
+
+  <h2>What stayed the same</h2>
+  <ul>
+    <li><strong>Data:</strong> the M5 weekly panel, 30 series (10 stores × 3 categories), units sold per week.</li>
+    <li><strong>Split:</strong> train on weeks before 17 May 2015; test on the 53 weeks after it, 1,590 forecasts in all. This is the same test block as Homework 4's LASSO.</li>
+    <li><strong>Models:</strong> the exact networks from the labs. They are Lab 7's feedforward network (26-week window), Lab 9 Part 1's RNN and LSTM, and Lab 9 Part 2's Transformer (52-week windows), all with the labs' sizes and optimizer settings.</li>
+    <li><strong>Seeds:</strong> every result is the mean of three runs with seeds 1, 2 and 3, reported as mean ± standard deviation.</li>
+  </ul>
+
+  <h2>Step 1: reproduce the labs first</h2>
+  <p>Before changing anything, we re-ran each lab's model exactly as the lab does. If those numbers had not matched, any later comparison would mean nothing.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Model</th><th>Lab's recorded result</th><th>Our re-run</th></tr></thead>
+    <tbody>
+      <tr><td>Feedforward, 60 epochs</td><td>1,109 · 1,176 · 946</td><td>1,109 · 1,176 · 946</td></tr>
+      <tr><td>RNN, 30 epochs</td><td>805 (seeds 1–2)</td><td>805</td></tr>
+      <tr><td>LSTM, 30 epochs</td><td>998 (seeds 1–2)</td><td>998</td></tr>
+      <tr><td>Transformer, 30 epochs</td><td>1,013 · 967</td><td>1,013 · 967</td></tr>
+    </tbody>
+  </table></div>
+  <p>All four matched. Every difference below comes from what we changed, not from a different setup.</p>
+
+  <h2>Step 2: change one thing at a time</h2>
+  <h3>Training order</h3>
+  <p>A PyTorch <code>DataLoader</code> with <code>shuffle=False</code> serves the training windows in the order they were built, series by series. Each batch then comes from a single store and category, and the model spends a stretch of every pass on one series before moving to the next. With <code>shuffle=True</code>, every batch mixes all 30 series.</p>
+  <p>Shuffling the training windows does not leak the future. Every training window still ends before the test period, and each window carries its own past. What leaks is shuffling or splitting at random <em>before</em> the time split. The labs used <code>shuffle=False</code> so that a run repeats exactly. A shuffled run with a fixed seed repeats exactly too: we ran the same shuffled RNN twice and got 752.591 both times.</p>
+
+  <h3>Training length, chosen honestly</h3>
+  <p>The labs trained for a fixed 30 or 60 epochs. Picking a longer length because it scored best on the test weeks would quietly use the test set to tune the model. Instead we followed Lecture 7's advice on early stopping and let a validation block decide:</p>
+  <ol>
+    <li>Set aside the last 52 weeks of the training period as a validation block.</li>
+    <li>Train on the weeks before it, and note the epoch with the lowest validation error.</li>
+    <li>Retrain on the whole training period for that many epochs, then score the test weeks once.</li>
+  </ol>
+
+  <h3>Features</h3>
+  <p>We gave each network the information the LASSO had, in groups:</p>
+  <ul>
+    <li><strong>Which series:</strong> store and category as one-hot columns.</li>
+    <li><strong>The forecast week itself:</strong> its SNAP days, event days, price and week of the year, joined to the network's final layer.</li>
+    <li><strong>All of the above,</strong> plus the week of the year for every week in the window.</li>
+  </ul>
+  <p>Which feature set counts for each network was also chosen on the validation block, never on the test weeks.</p>
+
+  <h2>Results</h2>
+  <h3>Training order, at the labs' own training lengths</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Model</th><th class="num">Lab order</th><th class="num">Shuffled</th><th class="num">Change</th></tr></thead>
+    <tbody>
+      <tr><td>Feedforward (60 epochs)</td><td class="num">1,077 ± 96</td><td class="num">893 ± 60</td><td class="num">−184</td></tr>
+      <tr><td>RNN (30 epochs)</td><td class="num">820 ± 21</td><td class="num">752 ± 1</td><td class="num">−68</td></tr>
+      <tr><td>LSTM (30 epochs)</td><td class="num">997 ± 2</td><td class="num">975 ± 0</td><td class="num">−22</td></tr>
+      <tr><td>Transformer (30 epochs)</td><td class="num">950 ± 60</td><td class="num">859 ± 30</td><td class="num">−91</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The lab-order rows here use three seeds, so the RNN shows 820 rather than the scoreboard's two-seed 805.</p>
+
+  <h3>Training length, shuffled, the labs' inputs</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Model</th><th class="num">30 epochs</th><th class="num">60</th><th class="num">100</th><th class="num">Chosen on validation</th><th>Epochs chosen</th></tr></thead>
+    <tbody>
+      <tr><td>Feedforward</td><td class="num">850</td><td class="num">893</td><td class="num">890</td><td class="num">877 ± 43</td><td>30–51</td></tr>
+      <tr><td>RNN</td><td class="num">752</td><td class="num">752</td><td class="num">779</td><td class="num">779 ± 2</td><td>62–97</td></tr>
+      <tr><td>LSTM</td><td class="num">975</td><td class="num">845</td><td class="num">773</td><td class="num">813 ± 14</td><td>139–148 of 150</td></tr>
+      <tr><td>Transformer</td><td class="num">859</td><td class="num">840</td><td class="num">842</td><td class="num">840 ± 22</td><td>43–98</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Features, shuffled, training length chosen on validation</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Model</th><th class="num">Labs' inputs</th><th class="num">+ series</th><th class="num">+ forecast week</th><th class="num">All</th><th class="num">Chosen on validation</th></tr></thead>
+    <tbody>
+      <tr><td>Feedforward</td><td class="num">877</td><td class="num">972</td><td class="num">839</td><td class="num">926</td><td class="num">926 (all)</td></tr>
+      <tr><td>RNN</td><td class="num">779</td><td class="num">789</td><td class="num">781</td><td class="num">743</td><td class="num best">743 (all)</td></tr>
+      <tr><td>LSTM</td><td class="num">813</td><td class="num">783</td><td class="num">821</td><td class="num">820</td><td class="num">783 (+ series)</td></tr>
+      <tr><td>Transformer</td><td class="num">840</td><td class="num">·</td><td class="num">·</td><td class="num">817</td><td class="num">817 (all)</td></tr>
+      <tr class="ref"><td>LASSO, 46 features</td><td class="num" colspan="5">744</td></tr>
+      <tr class="ref"><td>XGBoost</td><td class="num" colspan="5">781 (792 with the course's pinned version)</td></tr>
+      <tr class="ref"><td>Seasonal naive</td><td class="num" colspan="5">2,152</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">For the Transformer we ran only the labs' inputs and the full feature set under validation, because each run takes several minutes.</p>
+
+  <h2>Why it came out this way</h2>
+  <h3>Unshuffled batches pull the model back and forth</h3>
+  <p>With <code>shuffle=False</code>, each update moves the weights toward whichever series the current batch came from. By the end of a pass, the model is tuned toward the last few series it saw. Shuffled batches give every update a mix of all 30 series, so the weights settle where they fit the whole panel.</p>
+  <p>The clearest symptom came from the store and category columns. Under the labs' training order they made the Transformer far worse, 950 to 1,850. The training error rose too, so this was not overfitting. The week-to-week error did not change; all of the damage was in each series' overall level. Each series' identity weights only move during its own short stretch of each pass, so by the end they are out of step with the rest of the model. Once the batches were shuffled, the same columns were harmless (853).</p>
+
+  <h3>The LSTM was undertrained</h3>
+  <p>The validation block chose 139 to 148 epochs for the LSTM, close to the 150 we allowed. At 30 epochs it had barely started. Lecture 9 Part 1 warned that a comparison can flip with the training budget, and this is that warning playing out. The LSTM may improve further with even longer training.</p>
+
+  <h3>Next week's price and SNAP days were already in the window</h3>
+  <p>The network reads the 52 weeks before the forecast week, so it never sees the forecast week's own values. But two of the three are almost fully predictable from the weeks it does see. We checked how much of each the window explains:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Forecast week's…</th><th class="num">Share predictable from the window</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Price</td><td class="num">100%</td><td>Next week's average price equals last week's.</td></tr>
+      <tr><td>SNAP days</td><td class="num">91%</td><td>SNAP follows a fixed monthly calendar, and the window starts one year back.</td></tr>
+      <tr><td>Event days</td><td class="num">13%</td><td>Holidays move. This is new information, but events barely move weekly sales.</td></tr>
+    </tbody>
+  </table></div>
+  <p>So the forecast-week features gave the networks either something they already had or something that matters little at the weekly level.</p>
+
+  <h3>Validation is a guide, not an oracle</h3>
+  <p>For the feedforward network, the validation block preferred the full feature set (926 on the test weeks), while the forecast-week features alone would have scored 839. The validation year and the test year differ. That is the price of choosing honestly, and it is still the right way to choose: picking 839 because it won on the test weeks would make the number meaningless.</p>
+
+  <h2>What this changes, and what it does not</h2>
+  <p>The scoreboard numbers were measured correctly. Each one is what that lab's setup produces, and we reproduced every one. What changes is the lesson drawn from them. The networks trailed the LASSO largely because of how they were trained. With fair training, the best network ties a 46-coefficient linear model, and none beats it clearly. On 30 series with about 5,000 training windows, a well-built linear model is still as good as anything in the course, and it is far simpler to explain.</p>
+
+  <div class="callout">
+    <p><strong>For your homework and final project</strong></p>
+    <ul>
+      <li>Split by time first. After that, shuffle the training batches, with a fixed seed.</li>
+      <li>Choose training length, and any other setting, on a validation block taken from the training period. Never choose on the test weeks.</li>
+      <li>Run more than one seed, and report the mean and the spread.</li>
+      <li>Reproduce the original result before changing anything, so you know your changes caused the difference.</li>
+      <li>Before adding a feature, ask whether the model can already infer it from what it sees.</li>
+      <li>When a result looks wrong, compare training error with test error, and level error with week-to-week error. That tells you which kind of failure you have.</li>
+    </ul>
+  </div>
+
+  <h2>Limits</h2>
+  <ul>
+    <li><strong>One test block.</strong> All results come from the same 53 weeks. A different year could rank the models differently.</li>
+    <li><strong>Three seeds.</strong> Spreads are estimates from three runs, and seed-to-seed spreads here run from near zero to about 70, so differences of a few dozen are within the noise.</li>
+    <li><strong>Only training order, training length and features were varied.</strong> Network size, learning rate and dropout stayed at the labs' values, and the LASSO was not re-tuned.</li>
+    <li><strong>The LSTM's validation choice hit the 150-epoch limit.</strong> Its best result may be lower than reported.</li>
+  </ul>
+
+  <h2>Rerun it yourself</h2>
+  <p>The code is in the course repository under <code>explorations/transformer-features/</code>. From the repository root, with the course environment active:</p>
+<pre>python explorations/transformer-features/scripts/run_features.py            # labs' order, 30 epochs
+SHUFFLE=1 python explorations/transformer-features/scripts/run_features.py  # shuffled batches
+SHUFFLE=1 EPOCHS=100 MODEL=rnn python explorations/transformer-features/scripts/run_features.py A B C D
+VALID=1 SHUFFLE=1 EPOCHS=150 MODEL=lstm python explorations/transformer-features/scripts/run_features.py A
+MODEL=ffn WINDOW=26 EPOCHS=100 python explorations/transformer-features/scripts/run_features.py A</pre>
+  <p class="note"><code>MODEL</code> is <code>transformer</code> (default), <code>rnn</code>, <code>lstm</code> or <code>ffn</code>. The letters choose feature sets: A is the labs' inputs, B adds the series, C adds the forecast week, D adds everything. <code>scripts/summarize.py</code> rebuilds the full results table.</p>
+</main>

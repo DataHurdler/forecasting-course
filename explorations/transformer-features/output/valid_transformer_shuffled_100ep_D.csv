@@ -1,0 +1,2 @@
+model,variant,epochs,shuffled,params,mean,sd,runs
+transformer,D. B + C + each week's calendar (all),best of 100 on validation,True,68294,817,12,815 (ep 50) / 802 (ep 71) / 833 (ep 87)

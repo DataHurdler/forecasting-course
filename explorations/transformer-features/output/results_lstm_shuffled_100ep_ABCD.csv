@@ -1,0 +1,13 @@
+model,variant,epochs,shuffled,inputs per week,forecast-week inputs,params,mean,sd,runs
+lstm,A. Lab 9 Part 2 as is (4 channels),30,True,4,0,17985,975,0,975 / 975 / 975
+lstm,A. Lab 9 Part 2 as is (4 channels),60,True,4,0,17985,845,41,808 / 824 / 903
+lstm,A. Lab 9 Part 2 as is (4 channels),100,True,4,0,17985,773,18,756 / 797 / 765
+lstm,B. + which series (store and category),30,True,17,0,21313,834,13,839 / 846 / 816
+lstm,B. + which series (store and category),60,True,17,0,21313,802,19,806 / 824 / 776
+lstm,B. + which series (store and category),100,True,17,0,21313,807,28,846 / 793 / 781
+lstm,"C. + forecast week's SNAP, events, price, calendar",30,True,4,5,17990,968,27,1004 / 940 / 962
+lstm,"C. + forecast week's SNAP, events, price, calendar",60,True,4,5,17990,828,36,802 / 879 / 804
+lstm,"C. + forecast week's SNAP, events, price, calendar",100,True,4,5,17990,786,13,768 / 794 / 796
+lstm,D. B + C + each week's calendar (all),30,True,19,5,21830,824,6,831 / 815 / 826
+lstm,D. B + C + each week's calendar (all),60,True,19,5,21830,813,7,809 / 823 / 806
+lstm,D. B + C + each week's calendar (all),100,True,19,5,21830,787,26,779 / 760 / 821

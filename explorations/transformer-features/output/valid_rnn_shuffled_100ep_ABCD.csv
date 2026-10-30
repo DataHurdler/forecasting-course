@@ -1,0 +1,5 @@
+model,variant,epochs,shuffled,params,mean,sd,runs
+rnn,A. Lab 9 Part 2 as is (4 channels),best of 100 on validation,True,4545,779,2,778 (ep 97) / 777 (ep 84) / 782 (ep 62)
+rnn,B. + which series (store and category),best of 100 on validation,True,5377,789,26,764 (ep 80) / 777 (ep 76) / 825 (ep 96)
+rnn,"C. + forecast week's SNAP, events, price, calendar",best of 100 on validation,True,4550,781,53,856 (ep 81) / 737 (ep 77) / 751 (ep 46)
+rnn,D. B + C + each week's calendar (all),best of 100 on validation,True,5510,743,19,770 (ep 54) / 728 (ep 93) / 731 (ep 65)

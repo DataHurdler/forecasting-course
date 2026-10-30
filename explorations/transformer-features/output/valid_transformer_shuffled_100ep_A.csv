@@ -1,0 +1,2 @@
+model,variant,epochs,shuffled,params,mean,sd,runs
+transformer,A. Lab 9 Part 2 as is (4 channels),best of 100 on validation,True,67329,840,22,834 (ep 43) / 817 (ep 80) / 870 (ep 98)

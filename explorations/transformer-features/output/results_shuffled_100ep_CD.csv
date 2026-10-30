@@ -1,0 +1,7 @@
+model,variant,epochs,shuffled,inputs per week,forecast-week inputs,params,mean,sd,runs
+transformer,"C. + forecast week's SNAP, events, price, calendar",30,True,4,5,67334,905,40,944 / 850 / 921
+transformer,"C. + forecast week's SNAP, events, price, calendar",60,True,4,5,67334,819,26,783 / 838 / 837
+transformer,"C. + forecast week's SNAP, events, price, calendar",100,True,4,5,67334,809,8,798 / 814 / 815
+transformer,D. B + C + each week's calendar (all),30,True,19,5,68294,846,34,823 / 894 / 822
+transformer,D. B + C + each week's calendar (all),60,True,19,5,68294,858,57,815 / 819 / 938
+transformer,D. B + C + each week's calendar (all),100,True,19,5,68294,837,16,840 / 817 / 855

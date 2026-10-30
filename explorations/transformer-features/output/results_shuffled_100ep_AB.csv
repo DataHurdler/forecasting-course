@@ -1,0 +1,7 @@
+model,variant,epochs,shuffled,inputs per week,forecast-week inputs,params,mean,sd,runs
+transformer,A. Lab 9 Part 2 as is (4 channels),30,True,4,0,67329,859,30,821 / 862 / 894
+transformer,A. Lab 9 Part 2 as is (4 channels),60,True,4,0,67329,840,20,861 / 814 / 843
+transformer,A. Lab 9 Part 2 as is (4 channels),100,True,4,0,67329,842,33,881 / 800 / 845
+transformer,B. + which series (store and category),30,True,17,0,68161,853,37,905 / 829 / 824
+transformer,B. + which series (store and category),60,True,17,0,68161,847,15,853 / 826 / 862
+transformer,B. + which series (store and category),100,True,17,0,68161,870,28,894 / 830 / 887

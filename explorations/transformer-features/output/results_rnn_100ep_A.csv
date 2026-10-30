@@ -1,0 +1,4 @@
+model,variant,epochs,shuffled,inputs per week,forecast-week inputs,params,mean,sd,runs
+rnn,A. Lab 9 Part 2 as is (4 channels),30,False,4,0,4545,820,21,800 / 810 / 849
+rnn,A. Lab 9 Part 2 as is (4 channels),60,False,4,0,4545,864,19,868 / 839 / 885
+rnn,A. Lab 9 Part 2 as is (4 channels),100,False,4,0,4545,850,63,936 / 830 / 785

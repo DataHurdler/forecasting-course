@@ -1,0 +1,13 @@
+model,variant,epochs,shuffled,inputs per week,forecast-week inputs,params,mean,sd,runs
+ffn,A. Lab 9 Part 2 as is (4 channels),30,False,4,0,21761,1274,64,1352 / 1275 / 1195
+ffn,A. Lab 9 Part 2 as is (4 channels),60,False,4,0,21761,1077,96,1109 / 1176 / 946
+ffn,A. Lab 9 Part 2 as is (4 channels),100,False,4,0,21761,951,41,965 / 895 / 992
+ffn,B. + which series (store and category),30,False,4,13,23425,1163,120,1157 / 1312 / 1019
+ffn,B. + which series (store and category),60,False,4,13,23425,1713,81,1599 / 1769 / 1771
+ffn,B. + which series (store and category),100,False,4,13,23425,1331,97,1233 / 1298 / 1462
+ffn,"C. + forecast week's SNAP, events, price, calendar",30,False,4,5,22401,1236,206,994 / 1498 / 1217
+ffn,"C. + forecast week's SNAP, events, price, calendar",60,False,4,5,22401,1341,328,1149 / 1803 / 1072
+ffn,"C. + forecast week's SNAP, events, price, calendar",100,False,4,5,22401,1065,43,1126 / 1041 / 1027
+ffn,D. B + C + each week's calendar (all),30,False,6,18,30721,1279,135,1143 / 1231 / 1464
+ffn,D. B + C + each week's calendar (all),60,False,6,18,30721,1508,167,1283 / 1682 / 1558
+ffn,D. B + C + each week's calendar (all),100,False,6,18,30721,1201,110,1123 / 1357 / 1124
