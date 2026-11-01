@@ -90,7 +90,9 @@ shipped.
   recomputes and compares. Qualified 4/4 — including a replay of the actual quickstart failure —
   with 0/2 false alarms.
 
-**Inventory at release: 60 skills, 18 agents, 37 rules, 8 hooks, 13 gates**
+- **The `house-style-checker` agent and `scripts/review_diff.py`, 2026-10-31.** The agent reads one file against the house writing rules in `CLAUDE.md` and `Narration/STYLE_GUIDE.md`, qualified in the ledger against planted errors. The script shows a prose edit as before/after paragraphs. Both come from the owner's Ocarina Museum repo.
+
+**Inventory at release: 60 skills, 19 agents, 37 rules, 8 hooks, 13 gates**
 (was 60 / 18 / 37 / 8 / 10 at template v2.5.1).
 
 ---

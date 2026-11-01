@@ -30,6 +30,7 @@ A wrong "looks fine" from one of these is expensive (a desk-reject, a hallucinat
 | `proofreader` | Grammar, typos, overflow, terminology | read-only | `/proofread`, `/slide-excellence`, `/seven-pass-review` (prose lens) |
 | `pedagogy-reviewer` | Narrative arc, prerequisites, worked examples, notation, pacing | read-only | `/pedagogy-review`, `/slide-excellence` |
 | `humanize-auditor` | AI-voice tell detection (10 categories) | read-only | `/humanize` |
+| `house-style-checker` | House writing rules, by line (`CLAUDE.md` Writing, `Narration/STYLE_GUIDE.md`) | read-only | direct, before a document, page, deck, or script is called ready |
 
 ## Apply / translate tier — Sonnet tier, effort: medium
 
