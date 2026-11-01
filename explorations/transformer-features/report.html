@@ -2195,9 +2195,10 @@ vertical-align: -.125em;
   </ul></li>
   <li><a href="#why-it-came-out-this-way" id="toc-why-it-came-out-this-way" class="nav-link" data-scroll-target="#why-it-came-out-this-way">Why it came out this way</a>
   <ul class="collapse">
-  <li><a href="#unshuffled-batches-pull-the-model-back-and-forth" id="toc-unshuffled-batches-pull-the-model-back-and-forth" class="nav-link" data-scroll-target="#unshuffled-batches-pull-the-model-back-and-forth">Unshuffled batches pull the model back and forth</a></li>
+  <li><a href="#unshuffled-batches-make-the-model-less-stable" id="toc-unshuffled-batches-make-the-model-less-stable" class="nav-link" data-scroll-target="#unshuffled-batches-make-the-model-less-stable">Unshuffled batches make the model less stable</a></li>
+  <li><a href="#series-identity-under-the-labs-order" id="toc-series-identity-under-the-labs-order" class="nav-link" data-scroll-target="#series-identity-under-the-labs-order">Series identity under the labs’ order</a></li>
   <li><a href="#the-lstm-was-undertrained" id="toc-the-lstm-was-undertrained" class="nav-link" data-scroll-target="#the-lstm-was-undertrained">The LSTM was undertrained</a></li>
-  <li><a href="#next-weeks-price-and-snap-days-were-already-in-the-window" id="toc-next-weeks-price-and-snap-days-were-already-in-the-window" class="nav-link" data-scroll-target="#next-weeks-price-and-snap-days-were-already-in-the-window">Next week’s price and SNAP days were already in the window</a></li>
+  <li><a href="#next-weeks-price-and-snap-days-could-be-inferred-from-the-window" id="toc-next-weeks-price-and-snap-days-could-be-inferred-from-the-window" class="nav-link" data-scroll-target="#next-weeks-price-and-snap-days-could-be-inferred-from-the-window">Next week’s price and SNAP days could be inferred from the window</a></li>
   <li><a href="#validation-is-a-guide-not-an-oracle" id="toc-validation-is-a-guide-not-an-oracle" class="nav-link" data-scroll-target="#validation-is-a-guide-not-an-oracle">Validation is a guide, not an oracle</a></li>
   </ul></li>
   <li><a href="#what-this-changes-and-what-it-does-not" id="toc-what-this-changes-and-what-it-does-not" class="nav-link" data-scroll-target="#what-this-changes-and-what-it-does-not">What this changes, and what it does not</a></li>
@@ -2211,7 +2212,7 @@ vertical-align: -.125em;
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Did the Networks Lose Fairly?</h1>
-<p class="subtitle lead">ECON 8310: Business Forecasting — a second look at the scoreboard</p>
+<p class="subtitle lead">A second look at the ECON 8310 scoreboard</p>
 </div>
 
 
@@ -2228,15 +2229,14 @@ vertical-align: -.125em;
 </header>
 
 
-<p>Every neural network in this course finished behind a 46-coefficient LASSO. We re-ran all four with fairer training and more information, to find out whether the architectures lost or the setup did.</p>
-<p><strong>Short answer: mostly the setup.</strong></p>
+<p>Every neural network in this course finished behind a 46-coefficient LASSO, which scored 744. We re-ran four of the five with different training and more information, and most of the gap closed. We did not re-run Lab 8’s 1D CNN, which scored 1,032.</p>
 <ul>
-<li><strong>Training order mattered most.</strong> Every lab fed its network the training windows one series at a time. Shuffling them between batches, which is safe once the data is split by time, improved all four networks.</li>
-<li><strong>The LSTM needed far longer training</strong> than the labs gave it: about 140 epochs instead of 30.</li>
-<li><strong>Extra features helped little.</strong> Next week’s price and SNAP days were already in the window the networks read.</li>
-<li><strong>The best network now ties the LASSO.</strong> An RNN with all the extra features scored 743 against the LASSO’s 744. No network clearly beats it.</li>
+<li>Shuffling the training batches improved all four networks, by 22 to 184. Every lab fed its network the training windows one series at a time. Shuffling them is safe once the data is split by time.</li>
+<li>Training length mattered most for the LSTM, which went from 975 at 30 epochs to 813 at the length a validation block chose.</li>
+<li>Extra features helped little. Next week’s price and SNAP days can be inferred almost fully from the window the networks read.</li>
+<li>The best network ties the LASSO. An RNN with all the extra features scored 743 against the LASSO’s 744, and no network clearly beats it.</li>
 </ul>
-<div id="7f7a6059" class="cell" data-fig-height="3.6" data-fig-width="8" data-execution_count="1">
+<div id="cf1f1e80" class="cell" data-fig-height="3.6" data-fig-width="8" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -2245,19 +2245,19 @@ vertical-align: -.125em;
 </div>
 </div>
 </div>
-<p><em>Each marker is the mean of three training runs with different random seeds. “Retrained” means shuffled training batches and a training length chosen on a validation block. Seasonal naive, the benchmark, sits far off the right edge at 2,152.</em></p>
+<p><em>Each filled marker is the mean of three training runs with different random seeds. Hollow markers are the labs’ recorded results. “Retrained” means shuffled training batches and a training length chosen on a validation block. Seasonal naive, the benchmark, sits far off the right edge at 2,152.</em></p>
 <section id="the-question" class="level1">
 <h1>The question</h1>
-<p>The course scoreboard ranks every method on the same 30 weekly sales series and the same 53 test weeks. A LASSO with 46 hand-built features scored 744. The best neural network, a plain RNN, scored 805, and the LSTM and Transformer came in near 1,000.</p>
-<p>That gap could mean the networks are the wrong tool for this data. It could also mean we trained them badly or gave them less to work with. The LASSO knew which store and category it was forecasting, and it knew the forecast week’s own SNAP days, events and price. The networks knew neither. This experiment separates those explanations.</p>
+<p>The course scoreboard ranks every method on the same 30 weekly sales series and the same 53 test weeks. A LASSO with 46 hand-built features scored 744. The best neural network, a plain RNN, scored 805. The Transformer scored 990, the LSTM 998, and the CNN 1,032.</p>
+<p>That gap could mean the networks are the wrong tool for this data. It could also mean we trained them badly or gave them less to work with. The LASSO knew which store and category it was forecasting, and it knew the forecast week’s own SNAP days, events, and price. The networks knew neither.</p>
 </section>
 <section id="what-stayed-the-same" class="level1">
 <h1>What stayed the same</h1>
 <ul>
-<li><strong>Data:</strong> the M5 weekly panel, 30 series (10 stores × 3 categories), units sold per week.</li>
-<li><strong>Split:</strong> train on weeks before 17 May 2015; test on the 53 weeks after it, 1,590 forecasts in all. This is the same test block as Homework 4’s LASSO.</li>
-<li><strong>Models:</strong> the exact networks from the labs: Lab 7’s feedforward network (26-week window), Lab 9 Part 1’s RNN and LSTM, and Lab 9 Part 2’s Transformer (52-week windows), all with the labs’ sizes and optimizer settings.</li>
-<li><strong>Seeds:</strong> every result is the mean of three runs with seeds 1, 2 and 3, reported as mean ± standard deviation.</li>
+<li>The data are the M5 weekly panel: 30 series (10 stores × 3 categories), units sold per week.</li>
+<li>We train on the weeks before May 17, 2015, and test on the 53 weeks after it, 1,590 forecasts in all. This is the same test block as Homework 4’s LASSO.</li>
+<li>The models are the exact networks from the labs: Lab 7’s feedforward network (26-week window), Lab 9 Part 1’s RNN and LSTM, and Lab 9 Part 2’s Transformer (52-week windows), all with the labs’ sizes and optimizer settings.</li>
+<li>Every result is the mean of three runs with seeds 1, 2, and 3, reported as mean ± standard deviation.</li>
 </ul>
 </section>
 <section id="step-1-reproduce-the-labs-first" class="level1">
@@ -2301,7 +2301,7 @@ vertical-align: -.125em;
 <section id="training-order" class="level2">
 <h2 class="anchored" data-anchor-id="training-order">Training order</h2>
 <p>A PyTorch <code>DataLoader</code> with <code>shuffle=False</code> serves the training windows in the order they were built, series by series. Each batch then comes from a single store and category, and the model spends a stretch of every pass on one series before moving to the next. With <code>shuffle=True</code>, every batch mixes all 30 series.</p>
-<p>Shuffling the training windows does not leak the future. Every training window still ends before the test period, and each window carries its own past. What leaks is shuffling or splitting at random <em>before</em> the time split. The labs used <code>shuffle=False</code> so that a run repeats exactly. A shuffled run with a fixed seed repeats exactly too: we ran the same shuffled RNN twice and got 752.591 both times.</p>
+<p>Shuffling the training windows does not leak the future. Every training window still ends before the test period, and each window carries its own past. What leaks is shuffling or splitting at random <em>before</em> the time split. The labs used <code>shuffle=False</code> so that a run repeats exactly. A shuffled run with a fixed seed repeats exactly too: we ran the same shuffled RNN twice and got 752.591 both times. The number of CPU threads can change a result slightly, so two of our Transformer runs with the same seed and different thread settings scored 859 and 862.</p>
 </section>
 <section id="training-length-chosen-honestly" class="level2">
 <h2 class="anchored" data-anchor-id="training-length-chosen-honestly">Training length, chosen honestly</h2>
@@ -2316,9 +2316,9 @@ vertical-align: -.125em;
 <h2 class="anchored" data-anchor-id="features">Features</h2>
 <p>We gave each network the information the LASSO had, in groups:</p>
 <ul>
-<li><strong>Which series:</strong> store and category as one-hot columns.</li>
-<li><strong>The forecast week itself:</strong> its SNAP days, event days, price and week of the year, joined to the network’s final layer.</li>
-<li><strong>All of the above,</strong> plus the week of the year for every week in the window.</li>
+<li>Which series: store and category as one-hot columns.</li>
+<li>The forecast week itself: its SNAP days, event days, price, and week of the year. These join the network’s final layer, or its inputs for the feedforward network.</li>
+<li>All of the above, plus the week of the year for every week in the window.</li>
 </ul>
 <p>Which feature set counts for each network was also chosen on the validation block, never on the test weeks.</p>
 </section>
@@ -2499,18 +2499,74 @@ vertical-align: -.125em;
 </section>
 <section id="why-it-came-out-this-way" class="level1">
 <h1>Why it came out this way</h1>
-<section id="unshuffled-batches-pull-the-model-back-and-forth" class="level2">
-<h2 class="anchored" data-anchor-id="unshuffled-batches-pull-the-model-back-and-forth">Unshuffled batches pull the model back and forth</h2>
-<p>With <code>shuffle=False</code>, each update moves the weights toward whichever series the current batch came from. By the end of a pass, the model is tuned toward the last few series it saw. Shuffled batches give every update a mix of all 30 series, so the weights settle where they fit the whole panel.</p>
-<p>The clearest symptom came from the store and category columns. Under the labs’ training order they made the Transformer far worse, 950 to 1,850. The training error rose too, so this was not overfitting. The week-to-week error did not change; all of the damage was in each series’ overall level. Each series’ identity weights only move during its own short stretch of each pass, so by the end they are out of step with the rest of the model. Once the batches were shuffled, the same columns were harmless (853).</p>
+<section id="unshuffled-batches-make-the-model-less-stable" class="level2">
+<h2 class="anchored" data-anchor-id="unshuffled-batches-make-the-model-less-stable">Unshuffled batches make the model less stable</h2>
+<p>With <code>shuffle=False</code>, each batch comes from one series, so each update follows that series’ error rather than the panel’s. We watched the last training pass batch by batch, scoring the test weeks after every update, to see what that does.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Test RMSE range across the last pass, lab order</th>
+<th>Shuffled</th>
+<th style="text-align: right;">Series better just after their own stretch, lab order</th>
+<th style="text-align: right;">Shuffled</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Feedforward</td>
+<td>841–1,665</td>
+<td>·</td>
+<td style="text-align: right;">19 of 30</td>
+<td style="text-align: right;">·</td>
+</tr>
+<tr class="even">
+<td>RNN</td>
+<td>784–909</td>
+<td>736–828</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr class="odd">
+<td>LSTM</td>
+<td>974–1,137</td>
+<td>·</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">·</td>
+</tr>
+<tr class="even">
+<td>Transformer</td>
+<td>884–1,235</td>
+<td>816–955</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">14</td>
+</tr>
+</tbody>
+</table>
+<p><em>Means of three seeds. A dot means we did not run that case. The last two columns count the series whose test error, right after the batch that ends that series’ stretch of the pass, is below its median for the pass. Chance is 15, and in a shuffled run there is no real stretch, so those runs are the control.</em></p>
+<p>The first two columns show the instability. Under the lab order, the test score swings widely within a single pass, so a final score depends partly on which batch training happens to stop on. In the two models where we ran the control, shuffling narrowed the swing and lowered it.</p>
+<p>The last two columns test a natural explanation, that the model ends each pass tuned toward the series it saw last. The data give that little support: a series is barely more likely to be well fit right after its own stretch than a shuffled run would suggest. We can say what shuffling changes, but these measurements do not show exactly why it helps.</p>
+</section>
+<section id="series-identity-under-the-labs-order" class="level2">
+<h2 class="anchored" data-anchor-id="series-identity-under-the-labs-order">Series identity under the labs’ order</h2>
+<p>The store and category columns made the lab-order Transformer far worse, 950 to 1,850. The training error rose too, so this was not overfitting. The week-to-week error did not change, and all of the damage was in each series’ overall level. Once the batches were shuffled, the same columns were harmless (853).</p>
+<p>Each series’ identity weights move mostly during its own stretch of each pass, so we checked whether they fall out of step with the rest of the model afterward. Partly, they do. Measured on the training windows, the typical level error was about 970 right after a series’ own stretch and about 1,410 by the end of the pass, against 190 and 260 when shuffled. The error grows after a series’ stretch, in all three seeds, but most of it is already there before that growth begins, so falling out of step is at most part of the story.</p>
 </section>
 <section id="the-lstm-was-undertrained" class="level2">
 <h2 class="anchored" data-anchor-id="the-lstm-was-undertrained">The LSTM was undertrained</h2>
-<p>The validation block chose 139 to 148 epochs for the LSTM, close to the 150 we allowed. At 30 epochs it had barely started. Lecture 9 Part 1 warned that a comparison can flip with the training budget, and this is that warning playing out. The LSTM may improve further with even longer training.</p>
+<p>At 30 epochs the shuffled LSTM scored 975, well behind the RNN’s 752. At 100 epochs it scored 773, ahead of the RNN’s 779. Lecture 9 Part 1 warned that a comparison can flip with the training budget, and these two models flipped.</p>
+<p>With the labs’ inputs, validation chose 139 to 148 epochs for the LSTM, which scored 813. That is worse than the 773 from a fixed 100 epochs, so more epochs were not simply better on the test weeks. We report 813 as the honest figure, because choosing 100 after seeing the test weeks would use the test set to tune the model.</p>
 </section>
-<section id="next-weeks-price-and-snap-days-were-already-in-the-window" class="level2">
-<h2 class="anchored" data-anchor-id="next-weeks-price-and-snap-days-were-already-in-the-window">Next week’s price and SNAP days were already in the window</h2>
-<p>The network reads the 52 weeks before the forecast week, so it never sees the forecast week’s own values. But two of the three are almost fully predictable from the weeks it does see:</p>
+<section id="next-weeks-price-and-snap-days-could-be-inferred-from-the-window" class="level2">
+<h2 class="anchored" data-anchor-id="next-weeks-price-and-snap-days-could-be-inferred-from-the-window">Next week’s price and SNAP days could be inferred from the window</h2>
+<p>A network reads the weeks before the forecast week, 52 for the sequence models and 26 for the feedforward network, so it never sees the forecast week’s own values. But two of the three are almost fully predictable from a 52-week window:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -2527,8 +2583,8 @@ vertical-align: -.125em;
 <tbody>
 <tr class="odd">
 <td>Price</td>
-<td style="text-align: right;">100%</td>
-<td>Next week’s average price equals last week’s.</td>
+<td style="text-align: right;">99%</td>
+<td>Next week’s average price is almost always within 1% of last week’s.</td>
 </tr>
 <tr class="even">
 <td>SNAP days</td>
@@ -2542,16 +2598,16 @@ vertical-align: -.125em;
 </tr>
 </tbody>
 </table>
-<p>So the forecast-week features gave the networks either something they already had or something that matters little at the weekly level.</p>
+<p>So the forecast-week features gave the networks either something they could already infer or something that matters little at the weekly level.</p>
 </section>
 <section id="validation-is-a-guide-not-an-oracle" class="level2">
 <h2 class="anchored" data-anchor-id="validation-is-a-guide-not-an-oracle">Validation is a guide, not an oracle</h2>
-<p>For the feedforward network, the validation block preferred the full feature set (926 on the test weeks), while the forecast-week features alone would have scored 839. The validation year and the test year differ. That is the price of choosing honestly, and it is still the right way to choose: picking 839 because it won on the test weeks would make the number meaningless.</p>
+<p>For the feedforward network, the validation block preferred the full feature set (926 on the test weeks), while the forecast-week features alone would have scored 839. The validation year and the test year differ. Choosing on validation is still right, because picking 839 after seeing that it won on the test weeks would make the number meaningless.</p>
 </section>
 </section>
 <section id="what-this-changes-and-what-it-does-not" class="level1">
 <h1>What this changes, and what it does not</h1>
-<p>The scoreboard numbers were measured correctly. Each one is what that lab’s setup produces, and we reproduced every one. What changes is the lesson drawn from them. The networks trailed the LASSO largely because of how they were trained. With fair training, the best network ties a 46-coefficient linear model, and none beats it clearly. On 30 series with about 5,000 training windows, a well-built linear model is still as good as anything in the course, and it is far simpler to explain.</p>
+<p>The scoreboard numbers were measured correctly. Each one is what that lab’s setup produces, and we reproduced every one. What changes is the lesson drawn from them. The four networks we re-ran trailed the LASSO largely because of how they were trained. With shuffled batches, a validated training length, and the extra features, the best network ties a 46-coefficient linear model, and none beats it clearly. On 30 series with about 5,000 training windows, a well-built linear model is still as good as anything in the course, and it is far simpler to explain.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2563,7 +2619,7 @@ For your homework and final project
 </div>
 <div class="callout-body-container callout-body">
 <ul>
-<li>Split by time first. After that, shuffle the training batches, with a fixed seed.</li>
+<li>Split by time first. After that, shuffle the training batches, with a fixed seed. Homework 5 is the exception: it specifies <code>shuffle=False</code>, so follow the assignment there.</li>
 <li>Choose training length, and any other setting, on a validation block taken from the training period. Never choose on the test weeks.</li>
 <li>Run more than one seed, and report the mean and the spread.</li>
 <li>Reproduce the original result before changing anything, so you know your changes caused the difference.</li>
@@ -2576,10 +2632,11 @@ For your homework and final project
 <section id="limits" class="level1">
 <h1>Limits</h1>
 <ul>
-<li><strong>One test block.</strong> All results come from the same 53 weeks. A different year could rank the models differently.</li>
-<li><strong>Three seeds.</strong> Spreads are estimates from three runs, and seed-to-seed spreads here run from near zero to about 70, so differences of a few dozen are within the noise.</li>
-<li><strong>Only training order, training length and features were varied.</strong> Network size, learning rate and dropout stayed at the labs’ values, and the LASSO was not re-tuned.</li>
-<li><strong>The LSTM’s validation choice hit the 150-epoch limit.</strong> Its best result may be lower than reported.</li>
+<li>All results come from one test block of 53 weeks. A different year could rank the models differently.</li>
+<li>Each result uses three seeds. Spreads in the tables above run from near zero to about 100, so differences of a few dozen are within the noise.</li>
+<li>We varied only training order, training length, and features. Network size, learning rate, and dropout stayed at the labs’ values, and the LASSO was not re-tuned.</li>
+<li>Lab 8’s CNN was not re-run, so we cannot say how much of its gap comes from the setup.</li>
+<li>Validation’s epoch choices for the LSTM sat near the 150-epoch limit we set, and one seed reached it, so a higher limit could change what validation picks.</li>
 </ul>
 </section>
 <section id="rerun-it-yourself" class="level1">
@@ -2589,8 +2646,9 @@ For your homework and final project
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">SHUFFLE</span><span class="op">=</span>1 <span class="ex">python</span> explorations/transformer-features/scripts/run_features.py  <span class="co"># shuffled batches</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">SHUFFLE</span><span class="op">=</span>1 <span class="va">EPOCHS</span><span class="op">=</span>100 <span class="va">MODEL</span><span class="op">=</span>rnn <span class="ex">python</span> explorations/transformer-features/scripts/run_features.py A B C D</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">VALID</span><span class="op">=</span>1 <span class="va">SHUFFLE</span><span class="op">=</span>1 <span class="va">EPOCHS</span><span class="op">=</span>150 <span class="va">MODEL</span><span class="op">=</span>lstm <span class="ex">python</span> explorations/transformer-features/scripts/run_features.py A</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">MODEL</span><span class="op">=</span>ffn <span class="va">WINDOW</span><span class="op">=</span>26 <span class="va">EPOCHS</span><span class="op">=</span>100 <span class="ex">python</span> explorations/transformer-features/scripts/run_features.py A</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><code>MODEL</code> is <code>transformer</code> (default), <code>rnn</code>, <code>lstm</code> or <code>ffn</code>. The letters choose feature sets: A is the labs’ inputs, B adds the series, C adds the forecast week, D adds everything. <code>scripts/summarize.py</code> rebuilds the full results table, and <code>output/validation_choice.csv</code> records which feature set the validation block chose for each network.</p>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">MODEL</span><span class="op">=</span>ffn <span class="va">WINDOW</span><span class="op">=</span>26 <span class="va">EPOCHS</span><span class="op">=</span>100 <span class="ex">python</span> explorations/transformer-features/scripts/run_features.py A</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="va">MODEL</span><span class="op">=</span>transformer <span class="ex">python</span> explorations/transformer-features/scripts/test_mechanism.py A B   <span class="co"># the last pass, batch by batch</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>MODEL</code> is <code>transformer</code> (default), <code>rnn</code>, <code>lstm</code>, or <code>ffn</code>. The letters choose feature sets: A is the labs’ inputs, B adds the series, C adds the forecast week, D adds everything. <code>scripts/summarize.py</code> rebuilds the full results table, <code>output/validation_choice.csv</code> records which feature set the validation block chose for each network, and <code>output/mechanism.csv</code> holds the batch-by-batch measurements.</p>
 </section>
 
 </main>
