@@ -63,8 +63,10 @@ For each `verification_question`:
 2. Use `Read` / `WebFetch` / `WebSearch` / `Grep` as needed to find a grounded answer.
 3. Record:
    - `independent_answer`: what the source actually says
-   - `matches_claim`: yes / partial / no / cannot-verify
+   - `matches_claim`: yes / partial / overstates / no / cannot-verify
    - `evidence`: direct quote, page number, or URL
+
+   Use `overstates` when the source supports something weaker than the claim: "needed about 140 epochs" where the source shows only that validation chose 139 to 148. Quote the source, then write the sentence it *would* support. This is different from `no`, which means the source says something else, and from `partial`, which means a reasonable gloss.
 
 Never answer "the claim is correct because it sounds right." Either you found evidence or you didn't.
 
@@ -95,7 +97,7 @@ Each per-claim finding now carries a **severity tier** (v1.9.0):
 
 | ID | Claim (draft) | Independent answer | Evidence | Match? | Tier |
 |----|--------------|---------------------|----------|--------|------|
-| C1 | [quoted claim] | [what source says] | [quote + loc] | yes / partial / no / cannot-verify | — / LOW / MED / HIGH / EXPLAINED |
+| C1 | [quoted claim] | [what source says] | [quote + loc] | yes / partial / overstates / no / cannot-verify | — / LOW / MED / HIGH / EXPLAINED |
 
 ### HIGH-WARN (gate-refuse `/commit`)
 
@@ -121,6 +123,7 @@ Each per-claim finding now carries a **severity tier** (v1.9.0):
 - A numerical contradiction (draft says X, source says Y, X ≠ Y within rounding) is **HIGH-WARN by default** — *unless* the claim carries a concrete `author_alternative` that names a defensible reason for the gap (different edition/table, specification, sample, rounding convention), in which case record it as **EXPLAINED** (surfaced, non-gating). A blank or vague `author_alternative` does not soften — stay HIGH-WARN.
 - A directional contradiction (draft says "positive effect", source says "negative effect") is **HIGH-WARN by default** — same EXPLAINED escape: only a concrete named alternative for that claim downgrades it; otherwise HIGH-WARN.
 - A paraphrase mismatch where the draft's gloss is a reasonable summary of the source — not HIGH-WARN. Flag as `partial` with no tier (or LOW if you want to surface the gloss difference).
+- An `overstates` finding is **LOW-WARN**: surfaced with the weaker sentence the source supports, not gate-refused. It becomes HIGH-WARN only if the stronger claim reverses the conclusion a reader would draw.
 
 Be conservative on HIGH-WARN. It blocks `/commit`. False positives erode the gate's authority; false negatives let known-bad claims ship. The EXPLAINED escape exists only to stop a *defensible, author-documented* disagreement from gate-blocking — it is never a way to wave through a fabricated citation or an undocumented contradiction.
 
