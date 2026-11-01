@@ -53,7 +53,7 @@ written naturally to be read from."*
 
 ## Content
 
-16. **Every number, claim and caveat must match the current slide and the code.** Never add a new
+16. **Every number, claim, and caveat must match the current slide and the code.** Never add a new
     number or a new claim. If the old script and the slide disagree, the slide wins; if a number
     looks wrong, flag it rather than guess.
 17. **Keep the detail.** The narration carries what the slide no longer shows. Rewriting is for
@@ -69,6 +69,17 @@ written naturally to be read from."*
     note to the instructor holds the answer to a question the learner was asked (after a
     `**[STOP — learner works]**`), turn it into a spoken paragraph so the viewer hears it
     (owner, 2026-10-27).
+
+## Hooks and house style
+
+21. **Trim hooks, and write any that stays as a full sentence.** A hook is a line whose job is to
+    make the next one sound important. Rule 4 still asks for a sentence that carries the listener
+    from one idea to the next, so a hook can stay when it does that work. When deleting it loses
+    nothing, delete it. Owner, 2026-10-31: *"The hooks must be a full sentence."*
+    - Not: *"The catch? It never converges."* Not: *"Here's the surprising part."*
+    - But: *"This has a cost, which is that it never converges."*
+22. **Follow the house rules in `CLAUDE.md`, under Writing:** the serial comma, American dates, and
+    no drafting history. A script is spoken to someone who never saw an earlier version.
 
 ## A worked example
 

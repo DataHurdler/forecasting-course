@@ -17,6 +17,55 @@
 
 ---
 
+## Writing
+
+Adopted from the owner's Ocarina Museum repo on October 31, 2026. These cover everything written in
+this course's voice. `Narration/STYLE_GUIDE.md` adds the rules for scripts read aloud, and the
+`house-style-checker` agent reads a file against both.
+
+**Write it correctly the first time. Do not fix it with a sweep.** Owner, September 16, 2026: *"It's
+easier if you have the rule already and always WRITE/CREATE in American English. That way, you don't
+need to check whatever you copied because running a sweep could change more than you should."* A
+sweep cannot tell the course's voice from a quotation. Apply these to new writing and to what a task
+is already editing, and never respell someone else's words.
+
+- American spelling.
+- American dates: May 17, 2015, or May 2015. Never 17 May 2015.
+- The serial comma, in `and` lists and `or` lists. Owner, September 22, 2026: *"I write with oxford
+  commas too."*
+- No em dash doing a comma's job. Frame titles keep theirs, because the tools match them exactly.
+- No drafting history. A reader does not know there was an earlier version, so "the prompts now
+  tell your assistant" becomes "the prompts tell your assistant." Change that happened in the world
+  is fine to report.
+
+**Hooks and bold lead-ins.** A hook is a sentence whose job is to make the next one sound important;
+the test is to delete it and ask whether a fact was lost. Owner, October 13, 2026: *"There is no
+reason to have so many 'hooks'."* Owner, October 21, 2026: *"I don't like those bolded lead-ins …
+lead-ins should still be a full sentence."*
+
+| Where | Hooks | Bold lead-ins |
+|---|---|---|
+| Documents, Canvas pages | none | none |
+| Slides | none | bold labels stay |
+| Narration | trim them; any that stays is a full sentence (owner, October 31, 2026: *"The hooks must be a full sentence."*) | bold speaker cues stay; no bold labels (style guide rule 2) |
+| Messages to the owner | none | none |
+
+**Working with the owner.**
+
+- Queue only decisions. A plain fact with evidence gets fixed, and the evidence goes in the commit
+  message. Whether something should change is the owner's; whether a number or a date is right is not.
+- Before reporting a correction, or leaving one out of a report, ask: *"Could a reader have carried
+  away a conclusion that is false, and had no ordinary way to notice?"* If yes, it gets said.
+- One lecture per commit when several are changing. Owner, October 11, 2026: *"How about when we need
+  to make incremental changes to multiple articles, we do one article per commit so I can easily
+  check?"* The deck, its mirror, its narration, and its lab travel together; a script, an agent, or a
+  second lecture gets its own. To read an edit as paragraphs rather than lines:
+  `python scripts/review_diff.py <file>`.
+- A checker's finding is a candidate, not a verdict. Open the line, confirm the rule applies, and
+  check the proposed fix too. Report what happened to each finding: fixed, refuted, held, or open.
+
+---
+
 ## Folder Structure
 
 ```
@@ -117,7 +166,7 @@ python3.12 -m venv .venv-video && .venv-video/bin/pip install -r scripts/video_r
 
 ## Skills Quick Reference
 
-The full workflow ships in `.claude/` (60 skills, 18 agents, 8 hooks, 30 rules), inherited
+The full workflow ships in `.claude/` (60 skills, 19 agents, 8 hooks, 37 rules), inherited
 from the [claude-code-my-workflow](https://github.com/pedrohcgs/claude-code-my-workflow)
 template at v2.5.1. The ones that matter most for this course:
 
